@@ -1,6 +1,6 @@
-import type { CanvasTypes, MemoryImageTypes } from "../html/canvas";
+import type { CanvasTypes } from "../html/canvas";
 import type { progressCallback } from "../tasks/progressCallback";
-import { IFetcher } from "./IFetcher";
+import type { IFetcher } from "./IFetcher";
 
 export interface IImageFetcher extends IFetcher {
     getImageBitmap(path: string): Promise<ImageBitmap>;
@@ -28,14 +28,4 @@ export interface IImageFetcher extends IFetcher {
     getCanvas(path: string, onProgress?: progressCallback): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes>;
-
-    getCubes(path: string): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-
-    getEquiMaps(path: string, maxWidth: number): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
 }

@@ -1,7 +1,7 @@
-import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
-import { progressCallback } from "../tasks/progressCallback";
+import { hasImageBitmap } from "../html/canvas";
+import type { progressCallback } from "../tasks/progressCallback";
 import { WorkerServer } from "../workers/WorkerServer";
-import { BufferAndContentType } from "./BufferAndContentType";
+import type { BufferAndContentType } from "./BufferAndContentType";
 import { ImageFetcher } from "./ImageFetcher";
 
 export class ImageFetcherWorkerServer extends WorkerServer {
@@ -54,20 +54,6 @@ export class ImageFetcherWorkerServer extends WorkerServer {
                 (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
                     fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress),
                 (imgBmp: ImageBitmap) => [imgBmp]);
-
-            if (hasOffscreenCanvasRenderingContext2D) {
-                this.add(
-                    "getCubes",
-                    (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
-                        fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress),
-                    (imgBmps: ImageBitmap[]) => imgBmps);
-
-                this.add(
-                    "getEquiMaps",
-                    (path: string, maxWidth: number, headerMap: Map<string, string>, onProgress: progressCallback) =>
-                        fetcher._getEquiMapViaImageBitmaps(path, maxWidth, headerMap, onProgress),
-                    (imgBmps: ImageBitmap[]) => imgBmps);
-            }
         }
     }
 }

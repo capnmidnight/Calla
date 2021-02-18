@@ -1,6 +1,6 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import { BufferAndContentType } from "./BufferAndContentType";
-import { IFetcher } from "./IFetcher";
+import type { BufferAndContentType } from "./BufferAndContentType";
+import type { IFetcher } from "./IFetcher";
 export declare class Fetcher implements IFetcher {
     protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined;
     protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined;

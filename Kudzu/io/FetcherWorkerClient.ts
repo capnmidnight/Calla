@@ -1,8 +1,8 @@
-import { progressCallback } from "../tasks/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
+import type { BufferAndContentType } from "./BufferAndContentType";
 import { Fetcher } from "./Fetcher";
-import { BufferAndContentType } from "./BufferAndContentType";
 
 export class FetcherWorkerClient extends Fetcher {
 

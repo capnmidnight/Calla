@@ -1,4 +1,4 @@
-import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
+import { hasImageBitmap } from "../html/canvas";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { ImageFetcher } from "./ImageFetcher";
@@ -97,30 +97,6 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
         else {
             return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
-        }
-    }
-    async _getCubes(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        if (this.worker.enabled
-            && hasImageBitmap
-            && hasOffscreenCanvasRenderingContext2D) {
-            return await this.worker.execute("getCubes", [path, headerMap], onProgress);
-        }
-        else {
-            return await super._getCubes(path, headerMap, onProgress);
-        }
-    }
-    async _getEquiMaps(path, maxWidth, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        if (this.worker.enabled
-            && hasImageBitmap
-            && hasOffscreenCanvasRenderingContext2D) {
-            return await this.worker.execute("getEquiMaps", [path, maxWidth, headerMap], onProgress);
-        }
-        else {
-            return await super._getEquiMaps(path, maxWidth, headerMap, onProgress);
         }
     }
 }

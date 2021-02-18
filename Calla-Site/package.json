@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/node": "^14.14.20",
     "calla": "file:../Calla",
-    "kudzu": "file:../Kudzu",
-    "gl-matrix": "^3.3.0"
+    "gl-matrix": "^3.3.0",
+    "kudzu": "file:../Kudzu"
   }
 }

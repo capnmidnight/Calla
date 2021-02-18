@@ -90,7 +90,7 @@ export declare class User extends TypedEventBase<UserEvents> {
     /**
      * Returns the current avatar
      **/
-    get avatar(): VideoAvatar | EmojiAvatar | PhotoAvatar;
+    get avatar(): EmojiAvatar | PhotoAvatar | VideoAvatar;
     get displayName(): string;
     set displayName(name: string);
     moveTo(x: number, y: number): void;

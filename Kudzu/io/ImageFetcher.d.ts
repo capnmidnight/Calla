@@ -1,4 +1,4 @@
-import { CanvasTypes, MemoryImageTypes } from "../html/canvas";
+import { CanvasTypes } from "../html/canvas";
 import type { progressCallback } from "../tasks/progressCallback";
 import { Fetcher } from "./Fetcher";
 import { IImageFetcher } from "./IImageFetcher";
@@ -27,26 +27,10 @@ export declare class ImageFetcher extends Fetcher implements IImageFetcher {
     postObjectForImage<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement>;
     private _getCanvasViaImageBitmap;
     private _getCanvasViaImage;
-    _getCubesViaImageBitmaps(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]>;
-    private _getCubesViaImage;
-    _getEquiMapViaImageBitmaps(path: string, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]>;
-    private _getEquiMapViaImage;
     private __getCanvas;
     protected _getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes>;
     getCanvas(path: string): Promise<CanvasTypes>;
     getCanvas(path: string, onProgress?: progressCallback): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes>;
-    private __getCubes;
-    protected _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getCubes(path: string): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    getCubes(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    private __getEquiMaps;
-    protected _getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
 }

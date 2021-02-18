@@ -1,16 +1,12 @@
 import { once } from "../events/once";
-import { sliceCubeMap, sliceCubeMapToImageBitmaps } from "../graphics2d/sliceCubeMap";
 import {
     CanvasTypes,
     createUtilityCanvasFromImage,
     createUtilityCanvasFromImageBitmap,
-    hasImageBitmap,
-    MemoryImageTypes
+    hasImageBitmap
 } from "../html/canvas";
 import type { progressCallback } from "../tasks/progressCallback";
-import { splitProgress } from "../tasks/splitProgress";
-import { using, usingAsync } from "../using";
-import { equirectangularToCubemap } from "../webgl/equirectangularToCubemap";
+import { using } from "../using";
 import { Fetcher } from "./Fetcher";
 import { IImageFetcher } from "./IImageFetcher";
 
@@ -23,14 +19,6 @@ export class ImageFetcher
         this.__getCanvas = hasImageBitmap
             ? this._getCanvasViaImageBitmap
             : this._getCanvasViaImage;
-
-        this.__getCubes = hasImageBitmap
-            ? this._getCubesViaImageBitmaps
-            : this._getCubesViaImage;
-
-        this.__getEquiMaps = hasImageBitmap
-            ? this._getEquiMapViaImageBitmaps
-            : this._getEquiMapViaImage;
     }
 
     private async readFileImage(file: string): Promise<HTMLImageElement> {
@@ -123,42 +111,6 @@ export class ImageFetcher
         return createUtilityCanvasFromImage(img);
     }
 
-    async _getCubesViaImageBitmaps(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        return await usingAsync(await this._getImageBitmap(path, headerMap, onProgress), sliceCubeMapToImageBitmaps);
-    }
-
-    private async _getCubesViaImage(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        const img = await this._getImage(path, headerMap, onProgress);
-        return sliceCubeMap(img);
-    }
-
-    async _getEquiMapViaImageBitmaps(path: string, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        const splits = splitProgress(onProgress, [10, 1]);
-        return await usingAsync(await this._getImageBitmap(path, headerMap, splits.shift()), async (img: ImageBitmap) => {
-            const canv = await equirectangularToCubemap(img, maxWidth, splits.shift());
-            return sliceCubeMapToImageBitmaps(canv);
-        });
-    }
-
-    private async _getEquiMapViaImage(path: string, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        const splits = splitProgress(onProgress, [10, 1]);
-        const img = await this._getImage(path, headerMap, splits.shift());
-        const canv = await equirectangularToCubemap(img, maxWidth, splits.shift());
-        return sliceCubeMap(canv);
-    }
-
     private __getCanvas: (path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<CanvasTypes>;
     protected async _getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
@@ -173,37 +125,5 @@ export class ImageFetcher
     async getCanvas(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes>;
     async getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes> {
         return await this._getCanvas(path, headerMap, onProgress);
-    }
-
-    private __getCubes: (path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<MemoryImageTypes[]>;
-    protected async _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        return await this.__getCubes(path, headerMap, onProgress);
-    }
-
-    async getCubes(path: string): Promise<MemoryImageTypes[]>;
-    async getCubes(path: string, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    async getCubes(path: string, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    async getCubes(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    async getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        return await this._getCubes(path, headerMap, onProgress);
-    }
-
-    private __getEquiMaps: (path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<MemoryImageTypes[]>;
-    protected async _getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        return await this.__getEquiMaps(path, maxWidth, headerMap, onProgress);
-    }
-
-    async getEquiMaps(path: string, maxWidth: number): Promise<MemoryImageTypes[]>;
-    async getEquiMaps(path: string, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    async getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    async getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    async getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        return await this._getEquiMaps(path, maxWidth, headerMap, onProgress);
     }
 }

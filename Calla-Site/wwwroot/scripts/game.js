@@ -48,8 +48,8 @@
     function isHTMLElement(obj) {
         return obj instanceof HTMLElement;
     }
-    function assertNever(x) {
-        throw new Error("Unexpected object: " + x);
+    function assertNever(x, msg) {
+        throw new Error((msg || "Unexpected object: ") + x);
     }
     /**
      * Check a value to see if it is of a number type
@@ -64,6 +64,9 @@
             || obj === undefined;
     }
 
+    function defaultKeySelector(obj) {
+        return obj;
+    }
     /**
      * Performs a binary search on a list to find where the item should be inserted.
      *
@@ -72,19 +75,22 @@
      * If the item is not found, the returned insertion index will be 0.5 greater than
      * the index at which it should be inserted.
      */
-    function arrayBinarySearch(arr, item) {
+    function arrayBinarySearchByKey(arr, itemKey, keySelector) {
         let left = 0;
         let right = arr.length;
         let idx = Math.floor((left + right) / 2);
         let found = false;
         while (left < right && idx < arr.length) {
             const compareTo = arr[idx];
-            if (!isNullOrUndefined(compareTo)
-                && item < compareTo) {
+            const compareToKey = isNullOrUndefined(compareTo)
+                ? null
+                : keySelector(compareTo);
+            if (!isNullOrUndefined(compareToKey)
+                && itemKey < compareToKey) {
                 right = idx;
             }
             else {
-                if (item === compareTo) {
+                if (itemKey === compareToKey) {
                     found = true;
                 }
                 left = idx + 1;
@@ -96,18 +102,46 @@
         }
         return idx;
     }
+    /**
+     * Performs a binary search on a list to find where the item should be inserted.
+     *
+     * If the item is found, the returned index will be an exact integer.
+     *
+     * If the item is not found, the returned insertion index will be 0.5 greater than
+     * the index at which it should be inserted.
+     */
+    function arrayBinarySearch(arr, item, keySelector) {
+        keySelector = keySelector || defaultKeySelector;
+        const itemKey = keySelector(item);
+        return arrayBinarySearchByKey(arr, itemKey, keySelector);
+    }
 
     /**
-     * Performs an insert operation that maintains the sort
-     * order of the array, returning the index at which the
-     * item was inserted.
+     * Inserts an item at the given index into an array.
+     * @param arr
+     * @param item
+     * @param idx
      */
-    function arraySortedInsert(arr, item, allowDuplicates = true) {
-        let idx = arrayBinarySearch(arr, item);
+    function arrayInsertAt(arr, item, idx) {
+        arr.splice(idx, 0, item);
+    }
+
+    function arraySortedInsert(arr, item, keySelector, allowDuplicates) {
+        let ks;
+        if (isFunction(keySelector)) {
+            ks = keySelector;
+        }
+        else if (isBoolean(keySelector)) {
+            allowDuplicates = keySelector;
+        }
+        if (isNullOrUndefined(allowDuplicates)) {
+            allowDuplicates = true;
+        }
+        let idx = arrayBinarySearch(arr, item, ks);
         const found = (idx % 1) === 0;
         idx = idx | 0;
         if (!found || allowDuplicates) {
-            arr.splice(idx, 0, item);
+            arrayInsertAt(arr, item, idx);
         }
         return idx;
     }
@@ -187,6 +221,48 @@
                 super.removeEventListener(type, mappedCallback);
             }
         }
+    }
+
+    function add(a, b) {
+        return async (v) => {
+            await a(v);
+            await b(v);
+        };
+    }
+
+    function once(target, resolveEvt, rejectEvt, timeout) {
+        if (timeout == null
+            && isGoodNumber(rejectEvt)) {
+            timeout = rejectEvt;
+            rejectEvt = undefined;
+        }
+        const hasTimeout = timeout != null;
+        return new Promise((resolve, reject) => {
+            const remove = () => {
+                target.removeEventListener(resolveEvt, resolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+            if (isString(rejectEvt)) {
+                const rejectEvt2 = rejectEvt;
+                const remove = () => {
+                    target.removeEventListener(rejectEvt2, reject);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasTimeout) {
+                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
+                resolve = add(cancel, resolve);
+                reject = add(cancel, reject);
+            }
+            target.addEventListener(resolveEvt, resolve);
+            if (isString(rejectEvt)) {
+                target.addEventListener(rejectEvt, () => {
+                    reject("Rejection event found");
+                });
+            }
+        });
     }
 
     const gestures = [
@@ -420,29 +496,12 @@
     }
     function backgroundColor(v) { return new Attr("backgroundColor", v); }
     function display(v) { return new Attr("display", v); }
-    function fontFamily(v) { return new Attr("fontFamily", v); }
     function gridArea(v) { return new Attr("gridArea", v); }
     function gridRow(v) { return new Attr("gridRow", v); }
     function gridTemplateColumns(v) { return new Attr("gridTemplateColumns", v); }
     function margin(v) { return new Attr("margin", v); }
     function textAlign(v) { return new Attr("textAlign", v); }
     function zIndex(v) { return new Attr("zIndex", v); }
-    /**
-     * A selection of fonts for preferred monospace rendering.
-     **/
-    const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-    /**
-     * A selection of fonts for preferred monospace rendering.
-     **/
-    const monospaceFamily = fontFamily(monospaceFonts);
-    /**
-     * A selection of fonts that should match whatever the user's operating system normally uses.
-     **/
-    const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-    /**
-     * A selection of fonts that should match whatever the user's operating system normally uses.
-     **/
-    const systemFamily = fontFamily(systemFonts);
 
     function hasNode(obj) {
         return !isNullOrUndefined(obj)
@@ -550,251 +609,9 @@
         return Div(styles(margin("auto")), ...rest);
     }
 
-    function add(a, b) {
-        return async (v) => {
-            await a(v);
-            await b(v);
-        };
-    }
-
-    function once(target, resolveEvt, rejectEvt, timeout) {
-        if (timeout == null
-            && isGoodNumber(rejectEvt)) {
-            timeout = rejectEvt;
-            rejectEvt = undefined;
-        }
-        const hasResolveEvt = isString(resolveEvt);
-        const hasRejectEvt = isString(rejectEvt);
-        const hasTimeout = timeout != null;
-        return new Promise((resolve, reject) => {
-            if (hasResolveEvt) {
-                const remove = () => {
-                    target.removeEventListener(resolveEvt, resolve);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasRejectEvt) {
-                const remove = () => {
-                    target.removeEventListener(rejectEvt, reject);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasTimeout) {
-                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
-            }
-            if (hasResolveEvt) {
-                target.addEventListener(resolveEvt, resolve);
-            }
-            if (hasRejectEvt) {
-                target.addEventListener(rejectEvt, () => {
-                    reject("Rejection event found");
-                });
-            }
-        });
-    }
-
-    const windows = [];
-    if ("window" in globalThis) {
-        // Closes all the windows.
-        window.addEventListener("unload", () => {
-            for (const w of windows) {
-                w.close();
-            }
-        });
-    }
-    /**
-     * Opens a window that will be closed when the window that opened it is closed.
-     * @param href - the location to load in the window
-     * @param x - the screen position horizontal component
-     * @param y - the screen position vertical component
-     * @param width - the screen size horizontal component
-     * @param height - the screen size vertical component
-     */
-    function openWindow(href, x, y, width, height) {
-        if ("window" in globalThis) {
-            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-            if (w) {
-                windows.push(w);
-            }
-        }
-        else {
-            throw new Error("Cannot open a window from a Worker.");
-        }
-    }
-
-    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
-    const hasImageBitmap = "createImageBitmap" in globalThis;
-    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
-        try {
-            const canv = new OffscreenCanvas(1, 1);
-            const g = canv.getContext("2d");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
-        try {
-            const canv = hasOffscreenCanvas
-                ? new OffscreenCanvas(1, 1)
-                : Canvas();
-            const g = canv.getContext("bitmaprenderer");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    function drawImageBitmapToCanvas2D(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function copyImageBitmapToCanvas(canv, img) {
-        const g = canv.getContext("bitmaprenderer");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create bitmaprenderer context for canvas");
-        }
-        g.transferFromImageBitmap(img);
-    }
-    const drawImageBitmapToCanvas = hasImageBitmapRenderingContext
-        ? copyImageBitmapToCanvas
-        : drawImageBitmapToCanvas2D;
-    function createOffscreenCanvas(width, height) {
-        return new OffscreenCanvas(width, height);
-    }
-    function createCanvas(w, h) {
-        return Canvas(width(w), height(h));
-    }
-    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvas
-        : createCanvas;
-    function createOffscreenCanvasFromImageBitmap(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImageBitmap(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImageBitmap = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImageBitmap
-        : createCanvasFromImageBitmap;
-    function drawImageToCanvas(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function createOffscreenCanvasFromImage(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImage(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImage
-        : createCanvasFromImage;
-    /**
-     * Resizes a canvas element
-     * @param canv
-     * @param w - the new width of the canvas
-     * @param h - the new height of the canvas
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function setCanvasSize(canv, w, h, superscale = 1) {
-        w = Math.floor(w * superscale);
-        h = Math.floor(h * superscale);
-        if (canv.width != w
-            || canv.height != h) {
-            canv.width = w;
-            canv.height = h;
-            return true;
-        }
-        return false;
-    }
-    function isCanvasRenderingContext2D(ctx) {
-        return ctx.textBaseline != null;
-    }
-    function isOffscreenCanvasRenderingContext2D(ctx) {
-        return ctx.textBaseline != null;
-    }
-    function is2DRenderingContext(ctx) {
-        return isCanvasRenderingContext2D(ctx)
-            || isOffscreenCanvasRenderingContext2D(ctx);
-    }
-    function setCanvas2DContextSize(ctx, w, h, superscale = 1) {
-        const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled, oldTextBaseline = ctx.textBaseline, oldTextAlign = ctx.textAlign, oldFont = ctx.font, resized = setCanvasSize(ctx.canvas, w, h, superscale);
-        if (resized) {
-            ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-            ctx.textBaseline = oldTextBaseline;
-            ctx.textAlign = oldTextAlign;
-            ctx.font = oldFont;
-        }
-        return resized;
-    }
-    /**
-     * Resizes the canvas element of a given rendering context.
-     *
-     * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font
-     * properties of the context will be restored after the context is resized,
-     * as these values are usually reset to their default values when a canvas
-     * is resized.
-     * @param ctx
-     * @param w - the new width of the canvas
-     * @param h - the new height of the canvas
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function setContextSize(ctx, w, h, superscale = 1) {
-        if (is2DRenderingContext(ctx)) {
-            return setCanvas2DContextSize(ctx, w, h, superscale);
-        }
-        else {
-            return setCanvasSize(ctx.canvas, w, h, superscale);
-        }
-    }
-    /**
-     * Resizes a canvas element to match the proportions of the size of the element in the DOM.
-     * @param canv
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function resizeCanvas(canv, superscale = 1) {
-        return setCanvasSize(canv, canv.clientWidth, canv.clientHeight, superscale);
-    }
-    if ("HTMLCanvasElement" in globalThis) {
-        HTMLCanvasElement.prototype.view = function () {
-            const url = this.toDataURL();
-            openWindow(url, 0, 0, this.width + 10, this.height + 100);
-        };
-    }
-    if (hasOffscreenCanvas) {
-        OffscreenCanvas.prototype.view = async function () {
-            const blob = await this.convertToBlob();
-            const url = URL.createObjectURL(blob);
-            openWindow(url, 0, 0, this.width + 10, this.height + 100);
-        };
-    }
-
-    const Tau = 2 * Math.PI;
-    function angleClamp(v) {
-        return ((v % Tau) + Tau) % Tau;
+    function createScript(file) {
+        const script = Script(src(file));
+        document.body.appendChild(script);
     }
 
     function splitProgress(onProgress, weights) {
@@ -835,405 +652,62 @@
         return subProgressCallbacks;
     }
 
-    async function arrayProgress(onProgress, items, callback) {
-        const progs = splitProgress(onProgress, items.length);
-        const tasks = items.map((item, i) => callback(item, progs[i]));
-        return await Promise.all(tasks);
-    }
-
-    /**
-     * Force a value onto a range
-     */
-    function clamp(v, min, max) {
-        return Math.min(max, Math.max(min, v));
-    }
-
-    // performs a discrete convolution with a provided kernel
-    function kernelResample(read, write, filterSize, kernel) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        const twoFilterSize = 2 * filterSize;
-        const xMax = width - 1;
-        const yMax = height - 1;
-        const xKernel = new Array(4);
-        const yKernel = new Array(4);
-        return (xFrom, yFrom, to) => {
-            const xl = Math.floor(xFrom);
-            const yl = Math.floor(yFrom);
-            const xStart = xl - filterSize + 1;
-            const yStart = yl - filterSize + 1;
-            for (let i = 0; i < twoFilterSize; i++) {
-                xKernel[i] = kernel(xFrom - (xStart + i));
-                yKernel[i] = kernel(yFrom - (yStart + i));
-            }
-            for (let channel = 0; channel < 3; channel++) {
-                let q = 0;
-                for (let i = 0; i < twoFilterSize; i++) {
-                    const y = yStart + i;
-                    const yClamped = clamp(y, 0, yMax);
-                    let p = 0;
-                    for (let j = 0; j < twoFilterSize; j++) {
-                        const x = xStart + j;
-                        const index = readIndex(clamp(x, 0, xMax), yClamped);
-                        p += data[index + channel] * xKernel[j];
-                    }
-                    q += p * yKernel[i];
-                }
-                write.data[to + channel] = Math.round(q);
-            }
-        };
-    }
-
-    function copyPixelBicubic(read, write) {
-        const b = -0.5;
-        const kernel = (x) => {
-            x = Math.abs(x);
-            const x2 = x * x;
-            const x3 = x * x * x;
-            return x <= 1 ?
-                (b + 2) * x3 - (b + 3) * x2 + 1 :
-                b * x3 - 5 * b * x2 + 8 * b * x - 4 * b;
-        };
-        return kernelResample(read, write, 2, kernel);
-    }
-
-    function copyPixelBilinear(read, write) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        return (xFrom, yFrom, to) => {
-            const xl = clamp(Math.floor(xFrom), 0, width - 1);
-            const xr = clamp(Math.ceil(xFrom), 0, width - 1);
-            const xf = xFrom - xl;
-            const yl = clamp(Math.floor(yFrom), 0, height - 1);
-            const yr = clamp(Math.ceil(yFrom), 0, height - 1);
-            const yf = yFrom - yl;
-            const p00 = readIndex(xl, yl);
-            const p10 = readIndex(xr, yl);
-            const p01 = readIndex(xl, yr);
-            const p11 = readIndex(xr, yr);
-            for (let channel = 0; channel < 3; channel++) {
-                const p0 = data[p00 + channel] * (1 - xf) + data[p10 + channel] * xf;
-                const p1 = data[p01 + channel] * (1 - xf) + data[p11 + channel] * xf;
-                write.data[to + channel] = Math.ceil(p0 * (1 - yf) + p1 * yf);
-            }
-        };
-    }
-
-    function copyPixelLanczos(read, write) {
-        const filterSize = 5;
-        const kernel = (x) => {
-            if (x === 0) {
-                return 1;
-            }
-            else {
-                const xp = Math.PI * x;
-                return filterSize * Math.sin(xp) * Math.sin(xp / filterSize) / (xp * xp);
-            }
-        };
-        return kernelResample(read, write, filterSize, kernel);
-    }
-
-    function copyPixelNearest(read, write) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        return (xFrom, yFrom, to) => {
-            const nearest = readIndex(clamp(Math.round(xFrom), 0, width - 1), clamp(Math.round(yFrom), 0, height - 1));
-            for (let channel = 0; channel < 3; channel++) {
-                write.data[to + channel] = data[nearest + channel];
-            }
-        };
-    }
-
-    var CubeMapFace;
-    (function (CubeMapFace) {
-        CubeMapFace["PositiveZ"] = "pz";
-        CubeMapFace["NegativeZ"] = "nz";
-        CubeMapFace["PositiveX"] = "px";
-        CubeMapFace["NegativeX"] = "nx";
-        CubeMapFace["PositiveY"] = "py";
-        CubeMapFace["NegativeY"] = "ny";
-    })(CubeMapFace || (CubeMapFace = {}));
-    const CubeMapFaceNames = [
-        CubeMapFace.PositiveZ,
-        CubeMapFace.NegativeZ,
-        CubeMapFace.PositiveY,
-        CubeMapFace.NegativeY,
-        CubeMapFace.NegativeX,
-        CubeMapFace.PositiveX
-    ];
-
-    var InterpolationType;
-    (function (InterpolationType) {
-        InterpolationType["Bilinear"] = "bilinear";
-        InterpolationType["Bicubic"] = "bicubic";
-        InterpolationType["Lanczos"] = "lanczos";
-        InterpolationType["Nearest"] = "nearest";
-    })(InterpolationType || (InterpolationType = {}));
-
-    const rotations = new Map();
-    rotations.set(CubeMapFace.PositiveY, 3);
-    rotations.set(CubeMapFace.NegativeY, 1);
-    const faceOrienters = new Map([
-        [CubeMapFace.PositiveZ, (x, y) => {
-                return {
-                    x: -1,
-                    y: -x,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.NegativeZ, (x, y) => {
-                return {
-                    x: 1,
-                    y: x,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.PositiveX, (x, y) => {
-                return {
-                    x: x,
-                    y: -1,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.NegativeX, (x, y) => {
-                return {
-                    x: -x,
-                    y: 1,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.PositiveY, (x, y) => {
-                return {
-                    x: -y,
-                    y: -x,
-                    z: 1
-                };
-            }],
-        [CubeMapFace.NegativeY, (x, y) => {
-                return {
-                    x: y,
-                    y: -x,
-                    z: -1
-                };
-            }]
-    ]);
-    const pixelCopiers = new Map([
-        [InterpolationType.Bilinear, copyPixelBilinear],
-        [InterpolationType.Bicubic, copyPixelBicubic],
-        [InterpolationType.Lanczos, copyPixelLanczos],
-        [InterpolationType.Nearest, copyPixelNearest]
-    ]);
-    async function renderCanvasFace(readData, faceName, interpolation, maxWidth, onProgress) {
-        const faceOrienter = faceOrienters.get(faceName);
-        if (!faceOrienter) {
-            throw new Error("Invalid face name: " + faceName);
-        }
-        const pixelCopier = pixelCopiers.get(interpolation);
-        if (!pixelCopier) {
-            throw new Error("Invalid interpolation type: " + interpolation);
-        }
-        const faceWidth = Math.min(maxWidth || Number.MAX_VALUE, readData.width / 2);
-        const faceHeight = faceWidth;
-        const writeData = new ImageData(faceWidth, faceHeight);
-        if (!pixelCopiers.has(interpolation)) {
-            interpolation = InterpolationType.Nearest;
-        }
-        const copyPixels = pixelCopier(readData, writeData);
-        for (let y = 0; y < faceHeight; y++) {
-            if (isFunction(onProgress)) {
-                onProgress(y, faceHeight, faceName);
-            }
-            for (let x = 0; x < faceWidth; x++) {
-                const to = 4 * (y * faceWidth + x);
-                // fill alpha channel
-                writeData.data[to + 3] = 255;
-                // get position on cube face
-                // cube is centered at the origin with a side length of 2
-                const cube = faceOrienter((2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
-                // project cube face onto unit sphere by converting cartesian to spherical coordinates
-                const r = Math.sqrt(cube.x * cube.x + cube.y * cube.y + cube.z * cube.z);
-                const lon = angleClamp(Math.atan2(cube.y, cube.x));
-                const lat = Math.acos(cube.z / r);
-                copyPixels(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
-            }
-        }
-        const canv = createUtilityCanvas(faceWidth, faceHeight);
-        const g = canv.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a 2D canvas context");
-        }
-        g.putImageData(writeData, 0, 0);
-        if (rotations.has(faceName)) {
-            const rotation = rotations.get(faceName);
-            const halfW = faceWidth / 2;
-            const halfH = faceHeight / 2;
-            g.translate(halfW, halfH);
-            g.rotate(rotation * Math.PI / 2);
-            g.translate(-halfW, -halfH);
-            g.drawImage(canv, 0, 0);
-        }
-        if (isFunction(onProgress)) {
-            onProgress(faceHeight, faceHeight, faceName);
-        }
-        return canv;
-    }
-    async function renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
-        const canv = await renderCanvasFace(readData, faceName, interpolation, maxWidth, onProgress);
-        return await createImageBitmap(canv);
-    }
-    async function renderCanvasFaces(renderFace, imgData, interpolation, maxWidth, onProgress) {
-        return await arrayProgress(onProgress, CubeMapFaceNames, (faceName, onProg) => renderFace(imgData, faceName, interpolation, maxWidth, onProg));
-    }
-    async function renderImageBitmapFaces(renderFace, imgData, interpolation, maxWidth, onProgress) {
-        return await arrayProgress(onProgress, CubeMapFaceNames, (faceName, onProg) => renderFace(imgData, faceName, interpolation, maxWidth, onProg));
-    }
-
-    function nextPowerOf2(v) {
-        return Math.pow(2, Math.ceil(Math.log2(v)));
-    }
-
-    function sliceImage(img, x, y, w1, h1, w2, h2, rotation) {
-        const canv = createUtilityCanvas(w2, h2);
-        const g = canv.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a 2D canvas context");
-        }
-        const halfW = w2 / 2;
-        const halfH = h2 / 2;
-        if (rotation > 0) {
-            if ((rotation % 2) === 0) {
-                g.translate(halfW, halfH);
-            }
-            else {
-                g.translate(halfH, halfW);
-            }
-            g.rotate(rotation * Math.PI / 2);
-            g.translate(-halfW, -halfH);
-        }
-        g.drawImage(img, x, y, w1, h1, 0, 0, w2, h2);
-        return canv;
-    }
-
-    var CubeMapFaceIndex;
-    (function (CubeMapFaceIndex) {
-        CubeMapFaceIndex[CubeMapFaceIndex["None"] = -1] = "None";
-        CubeMapFaceIndex[CubeMapFaceIndex["Left"] = 0] = "Left";
-        CubeMapFaceIndex[CubeMapFaceIndex["Right"] = 1] = "Right";
-        CubeMapFaceIndex[CubeMapFaceIndex["Up"] = 2] = "Up";
-        CubeMapFaceIndex[CubeMapFaceIndex["Down"] = 3] = "Down";
-        CubeMapFaceIndex[CubeMapFaceIndex["Back"] = 4] = "Back";
-        CubeMapFaceIndex[CubeMapFaceIndex["Front"] = 5] = "Front";
-    })(CubeMapFaceIndex || (CubeMapFaceIndex = {}));
-    const cubemapPattern = {
-        rows: 3,
-        columns: 4,
-        indices: [
-            [CubeMapFaceIndex.None, CubeMapFaceIndex.Up, CubeMapFaceIndex.None, CubeMapFaceIndex.None],
-            [CubeMapFaceIndex.Left, CubeMapFaceIndex.Front, CubeMapFaceIndex.Right, CubeMapFaceIndex.Back],
-            [CubeMapFaceIndex.None, CubeMapFaceIndex.Down, CubeMapFaceIndex.None, CubeMapFaceIndex.None]
-        ],
-        rotations: [
-            [0, 2, 0, 0],
-            [0, 0, 0, 0],
-            [0, 2, 0, 0]
-        ]
-    };
-    function sliceCubeMap(img) {
-        const w1 = img.width / cubemapPattern.columns;
-        const h1 = img.height / cubemapPattern.rows;
-        const w2 = nextPowerOf2(w1);
-        const h2 = nextPowerOf2(h1);
-        const images = new Array(6);
-        for (let r = 0; r < cubemapPattern.rows; ++r) {
-            const indices = cubemapPattern.indices[r];
-            const rotations = cubemapPattern.rotations[r];
-            for (let c = 0; c < cubemapPattern.columns; ++c) {
-                const index = indices[c];
-                if (index > -1) {
-                    images[index] = sliceImage(img, c * w1, r * h1, w1, h1, w2, h2, rotations[c]);
-                }
-            }
-        }
-        return images;
-    }
-
-    function createScript(file) {
-        const script = Script(src(file));
-        document.body.appendChild(script);
-    }
-
-    function isDisposable(obj) {
-        return isObject(obj)
-            && "dispose" in obj
-            && isFunction(obj.dispose);
-    }
-    function isClosable(obj) {
-        return isObject(obj)
-            && "close" in obj
-            && isFunction(obj.close);
-    }
-    function dispose(val) {
-        if (isDisposable(val)) {
-            val.dispose();
-        }
-        else if (isClosable(val)) {
-            val.close();
-        }
-    }
-    function using(val, thunk) {
-        try {
-            return thunk(val);
-        }
-        finally {
-            dispose(val);
-        }
-    }
-
     class Fetcher {
-        constructor() {
-            this._getCanvas = hasImageBitmap
-                ? this.getCanvasViaImageBitmap
-                : this.getCanvasViaImage;
-            this._getImageData = hasImageBitmap
-                ? this.getImageDataViaImageBitmap
-                : this.getImageDataViaImage;
-            this._getCubes = hasImageBitmap
-                ? this.getCubesViaImageBitmaps
-                : this.getCubesViaImage;
-            this._getEquiMaps = hasImageBitmap
-                ? this.getEquiMapViaImageBitmaps
-                : this.getEquiMapViaImage;
+        normalizeOnProgress(headerMap, onProgress) {
+            if (isNullOrUndefined(onProgress)
+                && headerMap instanceof Function) {
+                onProgress = headerMap;
+            }
+            return onProgress;
         }
-        async getCanvas(path, onProgress) {
-            return await this._getCanvas(path, onProgress);
+        normalizeHeaderMap(headerMap) {
+            if (headerMap instanceof Map) {
+                return headerMap;
+            }
+            return undefined;
         }
-        async getImageData(path, onProgress) {
-            return await this._getImageData(path, onProgress);
+        async getResponse(path, headerMap) {
+            const headers = {};
+            if (headerMap) {
+                for (const pair of headerMap.entries()) {
+                    headers[pair[0]] = pair[1];
+                }
+            }
+            return await this.readRequestResponse(path, fetch(path, {
+                headers
+            }));
         }
-        async getCubes(path, onProgress) {
-            return await this._getCubes(path, onProgress);
-        }
-        async getEquiMaps(path, interpolation, maxWidth, onProgress) {
-            return await this._getEquiMaps(path, interpolation, maxWidth, onProgress);
+        async postObjectForResponse(path, obj, headerMap) {
+            const headers = {};
+            if (!(obj instanceof FormData)) {
+                headers["Content-Type"] = "application/json";
+            }
+            if (headerMap) {
+                for (const pair of headerMap.entries()) {
+                    headers[pair[0]] = pair[1];
+                }
+            }
+            const body = obj instanceof FormData
+                ? obj
+                : JSON.stringify(obj);
+            return await this.readRequestResponse(path, fetch(path, {
+                method: "POST",
+                headers,
+                body
+            }));
         }
         async readRequestResponse(path, request) {
             const response = await request;
             if (!response.ok) {
-                throw new Error(`[${response.status}] - ${response.statusText}. Path ${path}`);
+                let message = response.statusText;
+                if (response.body) {
+                    message += " ";
+                    message += await response.text();
+                    message = message.trim();
+                }
+                throw new Error(`[${response.status}] - ${message} . Path ${path}`);
             }
             return response;
-        }
-        async getResponse(path) {
-            return await this.readRequestResponse(path, fetch(path));
-        }
-        async postObjectForResponse(path, obj) {
-            return await this.readRequestResponse(path, fetch(path, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(obj)
-            }));
         }
         async readResponseBuffer(path, response, onProgress) {
             const contentType = response.headers.get("Content-Type");
@@ -1287,135 +761,193 @@
             }
             return { buffer, contentType };
         }
-        async getBuffer(path, onProgress) {
-            const response = await this.getResponse(path);
+        async _getBuffer(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const response = await this.getResponse(path, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
-        async postObjectForBuffer(path, obj, onProgress) {
-            const response = await this.postObjectForResponse(path, obj);
+        async getBuffer(path, headerMap, onProgress) {
+            return await this._getBuffer(path, headerMap, onProgress);
+        }
+        async _postObjectForBuffer(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const response = await this.postObjectForResponse(path, obj, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
-        async getBlob(path, onProgress) {
-            const { buffer, contentType } = await this.getBuffer(path, onProgress);
+        async postObjectForBuffer(path, obj, headerMap, onProgress) {
+            return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
+        }
+        async _getBlob(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
-        async postObjectForBlob(path, obj, onProgress) {
-            const { buffer, contentType } = await this.postObjectForBuffer(path, obj, onProgress);
+        async getBlob(path, headerMap, onProgress) {
+            return this._getBlob(path, headerMap, onProgress);
+        }
+        async _postObjectForBlob(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
-        async getFile(path, onProgress) {
-            const blob = await this.getBlob(path, onProgress);
+        async postObjectForBlob(path, obj, headerMap, onProgress) {
+            return this._postObjectForBlob(path, obj, headerMap, onProgress);
+        }
+        async _getFile(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const blob = await this._getBlob(path, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
-        async postObjectForFile(path, obj, onProgress) {
-            const blob = await this.postObjectForBlob(path, obj, onProgress);
+        async getFile(path, headerMap, onProgress) {
+            return await this._getFile(path, headerMap, onProgress);
+        }
+        async _postObjectForFile(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
-        async readFileImage(file) {
-            const img = new Image();
-            img.src = file;
-            if (!img.complete) {
-                await once(img, "load", "error");
-            }
-            return img;
-        }
-        async getImageBitmap(path, onProgress) {
-            const blob = await this.getBlob(path, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async getImage(path, onProgress) {
-            const file = await this.getFile(path, onProgress);
-            return await this.readFileImage(file);
-        }
-        async postObjectForImageBitmap(path, obj, onProgress) {
-            const blob = await this.postObjectForBlob(path, obj, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async postObjectForImage(path, obj, onProgress) {
-            const file = await this.postObjectForFile(path, obj, onProgress);
-            return await this.readFileImage(file);
-        }
-        async getCanvasViaImageBitmap(path, onProgress) {
-            return using(await this.getImageBitmap(path, onProgress), (img) => {
-                return createUtilityCanvasFromImageBitmap(img);
-            });
-        }
-        async getCanvasViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return createUtilityCanvasFromImage(img);
-        }
-        readImageData(img) {
-            const canv = createUtilityCanvas(img.width, img.height);
-            const g = canv.getContext("2d");
-            if (!g) {
-                throw new Error("Couldn't create a 2D canvas context");
-            }
-            g.drawImage(img, 0, 0);
-            return g.getImageData(0, 0, canv.width, canv.height);
-        }
-        async getImageDataViaImageBitmap(path, onProgress) {
-            return using(await this.getImageBitmap(path, onProgress), (img) => {
-                return this.readImageData(img);
-            });
-        }
-        async getImageDataViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return this.readImageData(img);
-        }
-        async getCubesViaImageBitmaps(path, onProgress) {
-            const img = await this.getImageBitmap(path, onProgress);
-            const canvs = sliceCubeMap(img);
-            return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
-        }
-        async getCubesViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return sliceCubeMap(img);
-        }
-        async getEquiMapViaImageBitmaps(path, interpolation, maxWidth, onProgress) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageDataViaImageBitmap(path, splits.shift());
-            return await renderImageBitmapFaces(renderImageBitmapFace, imgData, interpolation, maxWidth, splits.shift());
-        }
-        async getEquiMapViaImage(path, interpolation, maxWidth, onProgress) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageDataViaImage(path, splits.shift());
-            return await renderCanvasFaces(renderCanvasFace, imgData, interpolation, maxWidth, splits.shift());
+        async postObjectForFile(path, obj, headerMap, onProgress) {
+            return await this._postObjectForFile(path, obj, headerMap, onProgress);
         }
         readBufferText(buffer) {
             const decoder = new TextDecoder("utf-8");
             const text = decoder.decode(buffer);
             return text;
         }
-        async getText(path, onProgress) {
-            const { buffer } = await this.getBuffer(path, onProgress);
+        async _getText(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const { buffer } = await this._getBuffer(path, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
-        async postObjectForText(path, obj, onProgress) {
-            const { buffer } = await this.postObjectForBuffer(path, obj, onProgress);
+        async getText(path, headerMap, onProgress) {
+            return await this._getText(path, headerMap, onProgress);
+        }
+        async _postObjectForText(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
-        async getObject(path, onProgress) {
-            const text = await this.getText(path, onProgress);
+        async postObjectForText(path, obj, headerMap, onProgress) {
+            return await this._postObjectForText(path, obj, headerMap, onProgress);
+        }
+        setDefaultAcceptType(headerMap, type) {
+            if (!headerMap) {
+                headerMap = new Map();
+            }
+            if (!headerMap.has("Accept")) {
+                headerMap.set("Accept", type);
+            }
+            return headerMap;
+        }
+        async _getObject(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
+            const text = await this._getText(path, headerMap, onProgress);
             return JSON.parse(text);
         }
-        async postObjectForObject(path, obj, onProgress) {
-            const text = await this.postObjectForText(path, obj, onProgress);
+        async getObject(path, headerMap, onProgress) {
+            return await this._getObject(path, headerMap, onProgress);
+        }
+        async _postObjectForObject(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
+            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return JSON.parse(text);
         }
-        async postObject(path, obj) {
-            await this.postObjectForResponse(path, obj);
+        async postObjectForObject(path, obj, headerMap, onProgress) {
+            return await this._postObjectForObject(path, obj, headerMap, onProgress);
+        }
+        async postObject(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            if (onProgress instanceof Function) {
+                const [upProg, downProg] = splitProgress(onProgress, 2);
+                let headers = headerMap;
+                const xhr = new XMLHttpRequest();
+                function makeTask(name, target, onProgress, skipLoading, prevTask) {
+                    return new Promise((resolve, reject) => {
+                        let done = false;
+                        let loaded = skipLoading;
+                        function maybeResolve() {
+                            if (loaded && done) {
+                                resolve();
+                            }
+                        }
+                        async function onError() {
+                            await prevTask;
+                            reject(xhr.status);
+                        }
+                        target.addEventListener("loadstart", async () => {
+                            await prevTask;
+                            onProgress(0, 1, name);
+                        });
+                        target.addEventListener("progress", async (ev) => {
+                            const evt = ev;
+                            await prevTask;
+                            onProgress(evt.loaded, evt.total, name);
+                            if (evt.loaded === evt.total) {
+                                loaded = true;
+                                maybeResolve();
+                            }
+                        });
+                        target.addEventListener("load", async () => {
+                            await prevTask;
+                            onProgress(1, 1, name);
+                            done = true;
+                            maybeResolve();
+                        });
+                        target.addEventListener("error", onError);
+                        target.addEventListener("abort", onError);
+                    });
+                }
+                const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
+                const download = makeTask("saving", xhr, downProg, true, upload);
+                xhr.open("POST", path);
+                if (headers) {
+                    for (const [key, value] of headers) {
+                        xhr.setRequestHeader(key, value);
+                    }
+                }
+                if (obj instanceof FormData) {
+                    xhr.send(obj);
+                }
+                else {
+                    const json = JSON.stringify(obj);
+                    xhr.send(json);
+                }
+                await upload;
+                await download;
+            }
+            else {
+                await this.postObjectForResponse(path, obj, headerMap);
+            }
         }
         readTextXml(text) {
             const parser = new DOMParser();
             const xml = parser.parseFromString(text, "text/xml");
             return xml.documentElement;
         }
-        async getXml(path, onProgress) {
-            const text = await this.getText(path, onProgress);
+        async _getXml(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const text = await this._getText(path, headerMap, onProgress);
             return this.readTextXml(text);
         }
-        async postObjectForXml(path, obj, onProgress) {
-            const text = await this.postObjectForText(path, obj, onProgress);
+        async getXml(path, headerMap, onProgress) {
+            return await this._getXml(path, headerMap, onProgress);
+        }
+        async postObjectForXml(path, obj, headerMap, onProgress) {
+            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return this.readTextXml(text);
         }
         async loadScript(path, test, onProgress) {
@@ -1429,9 +961,550 @@
                 onProgress(1, 1, "skip");
             }
         }
-        async renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
-            return await renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress);
+        async getWASM(path, imports, onProgress) {
+            const wasmBuffer = await this.getBuffer(path, onProgress);
+            if (wasmBuffer.contentType !== "application/wasm") {
+                throw new Error("Server did not respond with WASM file. Was: " + wasmBuffer.contentType);
+            }
+            const wasmModule = await WebAssembly.instantiate(wasmBuffer.buffer, imports);
+            return wasmModule.instance.exports;
         }
+    }
+
+    function isDisposable(obj) {
+        return isObject(obj)
+            && "dispose" in obj
+            && isFunction(obj.dispose);
+    }
+    function isClosable(obj) {
+        return isObject(obj)
+            && "close" in obj
+            && isFunction(obj.close);
+    }
+    function dispose(val) {
+        if (isDisposable(val)) {
+            val.dispose();
+        }
+        else if (isClosable(val)) {
+            val.close();
+        }
+    }
+    function using(val, thunk) {
+        try {
+            return thunk(val);
+        }
+        finally {
+            dispose(val);
+        }
+    }
+
+    /**
+     * Scans through a series of filters to find an item that matches
+     * any of the filters. The first item of the first filter that matches
+     * will be returned.
+     */
+    function arrayScan(arr, ...tests) {
+        for (const test of tests) {
+            for (const item of arr) {
+                if (test(item)) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Indicates whether or not the current browser can change the destination device for audio output.
+     **/
+    const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
+
+    /**
+     * Unicode-standardized pictograms.
+     **/
+    class Emoji {
+        /**
+         * Creates a new Unicode-standardized pictograms.
+         * @param value - a Unicode sequence.
+         * @param desc - an English text description of the pictogram.
+         * @param props - an optional set of properties to store with the emoji.
+         */
+        constructor(value, desc, props = null) {
+            this.value = value;
+            this.desc = desc;
+            this.value = value;
+            this.desc = desc;
+            this.props = props || {};
+        }
+        /**
+         * Determines of the provided Emoji or EmojiGroup is a subset of
+         * this emoji.
+         */
+        contains(e) {
+            if (e instanceof Emoji) {
+                return this.contains(e.value);
+            }
+            else {
+                return this.value.indexOf(e) >= 0;
+            }
+        }
+    }
+
+    class CallaEvent extends Event {
+        constructor(eventType) {
+            super(eventType);
+            this.eventType = eventType;
+        }
+    }
+    class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
+        constructor() {
+            super("serverConnected");
+        }
+    }
+    class CallaTeleconferenceServerDisconnectedEvent extends CallaEvent {
+        constructor() {
+            super("serverDisconnected");
+        }
+    }
+    class CallaTeleconferenceServerFailedEvent extends CallaEvent {
+        constructor() {
+            super("serverFailed");
+        }
+    }
+    class CallaUserEvent extends CallaEvent {
+        constructor(type, id) {
+            super(type);
+            this.id = id;
+        }
+    }
+    class CallaParticipantEvent extends CallaUserEvent {
+        constructor(type, id, displayName) {
+            super(type, id);
+            this.displayName = displayName;
+        }
+    }
+    class CallaConferenceJoinedEvent extends CallaUserEvent {
+        constructor(id, pose) {
+            super("conferenceJoined", id);
+            this.pose = pose;
+        }
+    }
+    class CallaConferenceLeftEvent extends CallaUserEvent {
+        constructor(id) {
+            super("conferenceLeft", id);
+        }
+    }
+    class CallaConferenceFailedEvent extends CallaEvent {
+        constructor() {
+            super("conferenceFailed");
+        }
+    }
+    class CallaParticipantJoinedEvent extends CallaParticipantEvent {
+        constructor(id, displayName, source) {
+            super("participantJoined", id, displayName);
+            this.source = source;
+        }
+    }
+    class CallaParticipantLeftEvent extends CallaUserEvent {
+        constructor(id) {
+            super("participantLeft", id);
+        }
+    }
+    class CallaParticipantNameChangeEvent extends CallaParticipantEvent {
+        constructor(id, displayName) {
+            super("userNameChanged", id, displayName);
+        }
+    }
+    class CallaUserMutedEvent extends CallaUserEvent {
+        constructor(type, id, muted) {
+            super(type, id);
+            this.muted = muted;
+        }
+    }
+    class CallaUserAudioMutedEvent extends CallaUserMutedEvent {
+        constructor(id, muted) {
+            super("audioMuteStatusChanged", id, muted);
+        }
+    }
+    class CallaUserVideoMutedEvent extends CallaUserMutedEvent {
+        constructor(id, muted) {
+            super("videoMuteStatusChanged", id, muted);
+        }
+    }
+    var StreamType;
+    (function (StreamType) {
+        StreamType["Audio"] = "audio";
+        StreamType["Video"] = "video";
+    })(StreamType || (StreamType = {}));
+    var StreamOpType;
+    (function (StreamOpType) {
+        StreamOpType["Added"] = "added";
+        StreamOpType["Removed"] = "removed";
+        StreamOpType["Changed"] = "changed";
+    })(StreamOpType || (StreamOpType = {}));
+    class CallaStreamEvent extends CallaUserEvent {
+        constructor(type, kind, op, id, stream) {
+            super(type, id);
+            this.kind = kind;
+            this.op = op;
+            this.stream = stream;
+        }
+    }
+    class CallaStreamAddedEvent extends CallaStreamEvent {
+        constructor(type, kind, id, stream) {
+            super(type, kind, StreamOpType.Added, id, stream);
+        }
+    }
+    class CallaStreamRemovedEvent extends CallaStreamEvent {
+        constructor(type, kind, id, stream) {
+            super(type, kind, StreamOpType.Removed, id, stream);
+        }
+    }
+    class CallaAudioStreamAddedEvent extends CallaStreamAddedEvent {
+        constructor(id, stream) {
+            super("audioAdded", StreamType.Audio, id, stream);
+        }
+    }
+    class CallaAudioStreamRemovedEvent extends CallaStreamRemovedEvent {
+        constructor(id, stream) {
+            super("audioRemoved", StreamType.Audio, id, stream);
+        }
+    }
+    class CallaVideoStreamAddedEvent extends CallaStreamAddedEvent {
+        constructor(id, stream) {
+            super("videoAdded", StreamType.Video, id, stream);
+        }
+    }
+    class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent {
+        constructor(id, stream) {
+            super("videoRemoved", StreamType.Video, id, stream);
+        }
+    }
+    class CallaPoseEvent extends CallaUserEvent {
+        constructor(type, id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super(type, id);
+            this.px = px;
+            this.py = py;
+            this.pz = pz;
+            this.fx = fx;
+            this.fy = fy;
+            this.fz = fz;
+            this.ux = ux;
+            this.uy = uy;
+            this.uz = uz;
+        }
+        set(px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.px = px;
+            this.py = py;
+            this.pz = pz;
+            this.fx = fx;
+            this.fy = fy;
+            this.fz = fz;
+            this.ux = ux;
+            this.uy = uy;
+            this.uz = uz;
+        }
+    }
+    class CallaUserPosedEvent extends CallaPoseEvent {
+        constructor(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super("userPosed", id, px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+    }
+    class CallaUserPointerEvent extends CallaPoseEvent {
+        constructor(id, name, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super("userPointer", id, px, py, pz, fx, fy, fz, ux, uy, uz);
+            this.name = name;
+        }
+    }
+    class CallaEmojiEvent extends CallaUserEvent {
+        constructor(type, id, emoji) {
+            super(type, id);
+            if (emoji instanceof Emoji) {
+                this.emoji = emoji.value;
+            }
+            else {
+                this.emoji = emoji;
+            }
+        }
+    }
+    class CallaEmoteEvent extends CallaEmojiEvent {
+        constructor(id, emoji) {
+            super("emote", id, emoji);
+        }
+    }
+    class CallaEmojiAvatarEvent extends CallaEmojiEvent {
+        constructor(id, emoji) {
+            super("setAvatarEmoji", id, emoji);
+        }
+    }
+    class CallaAvatarChangedEvent extends CallaUserEvent {
+        constructor(id, url) {
+            super("avatarChanged", id);
+            this.url = url;
+        }
+    }
+    class CallaChatEvent extends CallaUserEvent {
+        constructor(id, text) {
+            super("chat", id);
+            this.text = text;
+        }
+    }
+
+    var ConnectionState;
+    (function (ConnectionState) {
+        ConnectionState["Disconnected"] = "Disconnected";
+        ConnectionState["Connecting"] = "Connecting";
+        ConnectionState["Connected"] = "Connected";
+        ConnectionState["Disconnecting"] = "Disconnecting";
+    })(ConnectionState || (ConnectionState = {}));
+
+    function addLogger(obj, evtName) {
+        obj.addEventListener(evtName, (...rest) => {
+            if (loggingEnabled) {
+                console.log(">== CALLA ==<", evtName, ...rest);
+            }
+        });
+    }
+    function filterDeviceDuplicates(devices) {
+        const filtered = [];
+        for (let i = 0; i < devices.length; ++i) {
+            const a = devices[i];
+            let found = false;
+            for (let j = 0; j < filtered.length && !found; ++j) {
+                const b = filtered[j];
+                found = a.kind === b.kind && b.label.indexOf(a.label) > 0;
+            }
+            if (!found) {
+                filtered.push(a);
+            }
+        }
+        return filtered;
+    }
+    const PREFERRED_AUDIO_OUTPUT_ID_KEY = "calla:preferredAudioOutputID";
+    const PREFERRED_AUDIO_INPUT_ID_KEY = "calla:preferredAudioInputID";
+    const PREFERRED_VIDEO_INPUT_ID_KEY = "calla:preferredVideoInputID";
+    const DEFAULT_LOCAL_USER_ID = "local-user";
+    let loggingEnabled = window.location.hostname === "localhost"
+        || /\bdebug\b/.test(window.location.search);
+    class BaseTeleconferenceClient extends TypedEventBase {
+        constructor(fetcher, audio, needsAudioDevice = true, needsVideoDevice = false) {
+            super();
+            this.needsAudioDevice = needsAudioDevice;
+            this.needsVideoDevice = needsVideoDevice;
+            this.localUserID = null;
+            this.localUserName = null;
+            this.roomName = null;
+            this._connectionState = ConnectionState.Disconnected;
+            this._conferenceState = ConnectionState.Disconnected;
+            this.hasAudioPermission = false;
+            this.hasVideoPermission = false;
+            this.fetcher = fetcher;
+            this.audio = audio;
+            this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
+            this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+            this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+            this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
+            this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+            this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
+            this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        }
+        toggleLogging() {
+            loggingEnabled = !loggingEnabled;
+        }
+        get connectionState() {
+            return this._connectionState;
+        }
+        setConnectionState(state) {
+            this._connectionState = state;
+        }
+        get conferenceState() {
+            return this._conferenceState;
+        }
+        setConferenceState(state) {
+            this._conferenceState = state;
+        }
+        dispatchEvent(evt) {
+            if (evt instanceof CallaUserEvent
+                && (evt.id == null
+                    || evt.id === "local")) {
+                if (this.localUserID === DEFAULT_LOCAL_USER_ID) {
+                    evt.id = null;
+                }
+                else {
+                    evt.id = this.localUserID;
+                }
+            }
+            return super.dispatchEvent(evt);
+        }
+        async getNext(evtName, userID) {
+            return new Promise((resolve) => {
+                const getter = (evt) => {
+                    if (evt instanceof CallaUserEvent
+                        && evt.id === userID) {
+                        this.removeEventListener(evtName, getter);
+                        resolve(evt);
+                    }
+                };
+                this.addEventListener(evtName, getter);
+            });
+        }
+        get preferredAudioInputID() {
+            return localStorage.getItem(PREFERRED_AUDIO_INPUT_ID_KEY);
+        }
+        set preferredAudioInputID(v) {
+            localStorage.setItem(PREFERRED_AUDIO_INPUT_ID_KEY, v);
+        }
+        get preferredVideoInputID() {
+            return localStorage.getItem(PREFERRED_VIDEO_INPUT_ID_KEY);
+        }
+        set preferredVideoInputID(v) {
+            localStorage.setItem(PREFERRED_VIDEO_INPUT_ID_KEY, v);
+        }
+        async setPreferredDevices() {
+            await this.setPreferredAudioInput(true);
+            await this.setPreferredVideoInput(false);
+            await this.setPreferredAudioOutput(true);
+        }
+        async getPreferredAudioInput(allowAny) {
+            const devices = await this.getAudioInputDevices();
+            const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
+            return device;
+        }
+        async setPreferredAudioInput(allowAny) {
+            const device = await this.getPreferredAudioInput(allowAny);
+            if (device) {
+                await this.setAudioInputDevice(device);
+            }
+        }
+        async getPreferredVideoInput(allowAny) {
+            const devices = await this.getVideoInputDevices();
+            const device = arrayScan(devices, (d) => d.deviceId === this.preferredVideoInputID, (d) => allowAny && d && /front/i.test(d.label), (d) => allowAny && d.deviceId.length > 0);
+            return device;
+        }
+        async setPreferredVideoInput(allowAny) {
+            const device = await this.getPreferredVideoInput(allowAny);
+            if (device) {
+                await this.setVideoInputDevice(device);
+            }
+        }
+        async getDevices() {
+            let devices = null;
+            for (let i = 0; i < 3; ++i) {
+                devices = await navigator.mediaDevices.enumerateDevices();
+                for (const device of devices) {
+                    if (device.deviceId.length > 0) {
+                        this.hasAudioPermission = this.hasAudioPermission || device.kind === "audioinput" && device.label.length > 0;
+                        this.hasVideoPermission = this.hasVideoPermission || device.kind === "videoinput" && device.label.length > 0;
+                    }
+                }
+                if (this.hasAudioPermission) {
+                    break;
+                }
+                try {
+                    await navigator.mediaDevices.getUserMedia({
+                        audio: this.needsAudioDevice && !this.hasAudioPermission,
+                        video: this.needsVideoDevice && !this.hasVideoPermission
+                    });
+                }
+                catch (exp) {
+                    console.warn(exp);
+                }
+            }
+            return devices || [];
+        }
+        async getMediaPermissions() {
+            await this.getDevices();
+            return {
+                audio: this.hasAudioPermission,
+                video: this.hasVideoPermission
+            };
+        }
+        async getAvailableDevices(filterDuplicates = false) {
+            let devices = await this.getDevices();
+            if (filterDuplicates) {
+                devices = filterDeviceDuplicates(devices);
+            }
+            return {
+                audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
+                audioInput: devices.filter(d => d.kind === "audioinput"),
+                videoInput: devices.filter(d => d.kind === "videoinput")
+            };
+        }
+        async getAudioInputDevices(filterDuplicates = false) {
+            const devices = await this.getAvailableDevices(filterDuplicates);
+            return devices && devices.audioInput || [];
+        }
+        async getVideoInputDevices(filterDuplicates = false) {
+            const devices = await this.getAvailableDevices(filterDuplicates);
+            return devices && devices.videoInput || [];
+        }
+        async setAudioOutputDevice(device) {
+            if (canChangeAudioOutput) {
+                this.preferredAudioOutputID = device && device.deviceId || null;
+            }
+        }
+        async getAudioOutputDevices(filterDuplicates = false) {
+            if (!canChangeAudioOutput) {
+                return [];
+            }
+            const devices = await this.getAvailableDevices(filterDuplicates);
+            return devices && devices.audioOutput || [];
+        }
+        async getCurrentAudioOutputDevice() {
+            if (!canChangeAudioOutput) {
+                return null;
+            }
+            const curId = this.audio.getAudioOutputDeviceID(), devices = await this.getAudioOutputDevices(), device = devices.filter((d) => curId != null && d.deviceId === curId
+                || curId == null && d.deviceId === this.preferredAudioOutputID);
+            if (device.length === 0) {
+                return null;
+            }
+            else {
+                return device[0];
+            }
+        }
+        get preferredAudioOutputID() {
+            return localStorage.getItem(PREFERRED_AUDIO_OUTPUT_ID_KEY);
+        }
+        set preferredAudioOutputID(v) {
+            localStorage.setItem(PREFERRED_AUDIO_OUTPUT_ID_KEY, v);
+        }
+        async getPreferredAudioOutput(allowAny) {
+            const devices = await this.getAudioOutputDevices();
+            const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
+            return device;
+        }
+        async setPreferredAudioOutput(allowAny) {
+            const device = await this.getPreferredAudioOutput(allowAny);
+            if (device) {
+                await this.setAudioOutputDevice(device);
+            }
+        }
+        async setAudioInputDevice(device) {
+            this.preferredAudioInputID = device && device.deviceId || null;
+        }
+        async setVideoInputDevice(device) {
+            this.preferredVideoInputID = device && device.deviceId || null;
+        }
+        async connect() {
+            this.setConnectionState(ConnectionState.Connecting);
+        }
+        async join(_roomName, _password) {
+            this.setConferenceState(ConnectionState.Connecting);
+        }
+        async leave() {
+            this.setConferenceState(ConnectionState.Disconnecting);
+        }
+        async disconnect() {
+            this.setConnectionState(ConnectionState.Disconnecting);
+        }
+    }
+
+    /**
+     * Force a value onto a range
+     */
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
     }
 
     /**
@@ -1456,123 +1529,128 @@
         }
     }
 
-    /**
-     * Empties out an array, returning the items that were in the array.
-     */
-    function arrayClear(arr) {
-        return arr.splice(0);
+    const graph = new Map();
+    const children = new Map();
+    function add$1(a, b) {
+        if (isAudioNode(b)) {
+            children.set(b, (children.get(b) || 0) + 1);
+        }
+        if (!graph.has(a)) {
+            graph.set(a, new Set());
+        }
+        const g = graph.get(a);
+        if (g.has(b)) {
+            return false;
+        }
+        g.add(b);
+        return true;
     }
-
-    /**
-     * Base class providing functionality for spatializers.
-     */
-    class BaseSpatializer {
-        constructor(audioContext) {
-            this.audioContext = audioContext;
-            this.gain = null;
-            this.minDistance = 1;
-            this.maxDistance = 10;
-            this.rolloff = 1;
-            this.algorithm = "logarithmic";
-            this.transitionTime = 0.1;
-            this.gain = audioContext.createGain();
+    function rem(a, b) {
+        if (!graph.has(a)) {
+            return false;
         }
-        /**
-         * Sets parameters that alter spatialization.
-         **/
-        setAudioProperties(minDistance, maxDistance, rolloff, algorithm, transitionTime) {
-            this.minDistance = minDistance;
-            this.maxDistance = maxDistance;
-            this.rolloff = rolloff;
-            this.algorithm = algorithm;
-            this.transitionTime = transitionTime;
+        const g = graph.get(a);
+        let removed = false;
+        if (isNullOrUndefined(b)) {
+            removed = g.size > 0;
+            g.clear();
         }
-        /**
-         * Discard values and make this instance useless.
-         */
-        dispose() {
-            if (this.gain) {
-                this.gain.disconnect();
-                this.gain = null;
+        else if (g.has(b)) {
+            removed = true;
+            g.delete(b);
+        }
+        if (g.size === 0) {
+            graph.delete(a);
+        }
+        if (isAudioNode(b)
+            && children.has(b)) {
+            const newCount = children.get(b) - 1;
+            children.set(b, newCount);
+            if (newCount === 0) {
+                children.delete(b);
             }
         }
-        get volume() {
-            return this.gain.gain.value;
+        return removed;
+    }
+    function isAudioNode(a) {
+        return !isNullOrUndefined(a)
+            && !isNullOrUndefined(a.context);
+    }
+    function isAudioParam(a) {
+        return !isAudioNode(a);
+    }
+    function connect(a, b, c, d) {
+        if (isAudioNode(b)) {
+            a.connect(b, c, d);
+            return add$1(a, b);
         }
-        set volume(v) {
-            this.gain.gain.value = v;
-        }
-        play() {
-            return Promise.resolve();
-        }
-        stop() {
+        else {
+            a.connect(b, c);
+            return add$1(a, b);
         }
     }
-
-    /**
-     * Base class providing functionality for audio sources.
-     **/
-    class BaseNode extends BaseSpatializer {
-        /**
-         * Creates a spatializer that keeps track of the relative position
-         * of an audio element to the listener destination.
-         * @param id
-         * @param stream
-         * @param audioContext - the output WebAudio context
-         * @param node - this node out to which to pipe the stream
-         */
-        constructor(id, source, audioContext) {
-            super(audioContext);
-            this.id = id;
-            this.source = source;
-            if (this.source instanceof AudioBufferSourceNode) {
-                this.playingSources = new Array();
-            }
-            else {
-                this.source.connect(this.gain);
-            }
+    function disconnect(a, b, c, d) {
+        if (isNullOrUndefined(b)) {
+            a.disconnect();
+            return rem(a);
         }
-        /**
-         * Discard values and make this instance useless.
-         */
-        dispose() {
-            if (this.source) {
-                this.source.disconnect();
-                this.source = null;
-            }
-            super.dispose();
+        else if (isNumber(b)) {
+            a.disconnect(b);
+            return rem(a);
         }
-        get isPlaying() {
-            return this.playingSources.length > 0;
+        else if (isAudioNode(b)
+            && isNumber(c)
+            && isNumber(d)) {
+            a.disconnect(b, c, d);
+            return rem(a, b);
         }
-        async play() {
-            if (this.source instanceof AudioBufferSourceNode) {
-                const newSource = this.source.context.createBufferSource();
-                this.playingSources.push(newSource);
-                newSource.buffer = this.source.buffer;
-                newSource.loop = this.source.loop;
-                newSource.connect(this.gain);
-                newSource.start();
-                if (!this.source.loop) {
-                    await once(newSource, "ended");
-                    if (this.playingSources.indexOf(newSource) >= 0) {
-                        newSource.stop();
-                        newSource.disconnect(this.gain);
-                        arrayRemove(this.playingSources, newSource);
+        else if (isAudioNode(b)
+            && isNumber(c)) {
+            a.disconnect(b, c);
+            return rem(a, b);
+        }
+        else if (isAudioNode(b)) {
+            a.disconnect(b);
+            return rem(a, b);
+        }
+        else if (isAudioParam(b)
+            && isNumber(c)) {
+            a.disconnect(b);
+            return rem(a, b);
+        }
+        else if (isAudioParam(b)) {
+            a.disconnect(b);
+            return rem(a, b);
+        }
+        return false;
+    }
+    function print() {
+        for (const node of graph.keys()) {
+            if (!children.has(node)) {
+                const stack = new Array();
+                stack.push({
+                    pre: "",
+                    node
+                });
+                while (stack.length > 0) {
+                    const { pre, node } = stack.pop();
+                    console.log(pre, node);
+                    if (isAudioNode(node)) {
+                        const set = graph.get(node);
+                        if (set) {
+                            for (const child of set) {
+                                stack.push({
+                                    pre: pre + "  ",
+                                    node: child
+                                });
+                            }
+                        }
                     }
                 }
             }
         }
-        stop() {
-            if (this.source instanceof AudioBufferSourceNode) {
-                for (const source of this.playingSources) {
-                    source.stop();
-                    source.disconnect(this.gain);
-                }
-                arrayClear(this.playingSources);
-            }
-        }
     }
+    window.printGraph = print;
 
     const audioActivityEvt = new AudioActivityEvent();
     const activityCounterMin = 0;
@@ -1594,6 +1672,7 @@
     class ActivityAnalyser extends TypedEventBase {
         constructor(source, audioContext, bufferSize) {
             super();
+            this.source = source;
             this.wasActive = false;
             this.analyser = null;
             if (!isGoodNumber(bufferSize)
@@ -1606,12 +1685,12 @@
             this.wasActive = false;
             this.activityCounter = 0;
             const checkSource = () => {
-                if (source.spatializer instanceof BaseNode
-                    && source.spatializer.source) {
+                if (source.spatializer
+                    && source.source) {
                     this.analyser = audioContext.createAnalyser();
                     this.analyser.fftSize = 2 * this.bufferSize;
                     this.analyser.smoothingTimeConstant = 0.2;
-                    source.spatializer.source.connect(this.analyser);
+                    connect(source.source, this.analyser);
                 }
                 else {
                     setTimeout(checkSource, 0);
@@ -1621,7 +1700,7 @@
         }
         dispose() {
             if (this.analyser) {
-                this.analyser.disconnect();
+                disconnect(this.source.source, this.analyser);
                 this.analyser = null;
             }
             this.buffer = null;
@@ -1891,7 +1970,7 @@
      * @returns {vec3} out
      */
 
-    function add$1(out, a, b) {
+    function add$2(out, a, b) {
       out[0] = a[0] + b[0];
       out[1] = a[1] + b[1];
       out[2] = a[2] + b[2];
@@ -2153,17 +2232,17 @@
         setOffset(ox, oy, oz) {
             set$2(delta, ox, oy, oz);
             sub(delta, delta, this.offset);
-            add$1(this.start.p, this.start.p, delta);
-            add$1(this.current.p, this.current.p, delta);
-            add$1(this.end.p, this.end.p, delta);
+            add$2(this.start.p, this.start.p, delta);
+            add$2(this.current.p, this.current.p, delta);
+            add$2(this.end.p, this.end.p, delta);
             scale(this.start.f, this.start.f, k);
-            add$1(this.start.f, this.start.f, delta);
+            add$2(this.start.f, this.start.f, delta);
             normalize(this.start.f, this.start.f);
             scale(this.current.f, this.current.f, k);
-            add$1(this.current.f, this.current.f, delta);
+            add$2(this.current.f, this.current.f, delta);
             normalize(this.current.f, this.current.f);
             scale(this.end.f, this.end.f, k);
-            add$1(this.end.f, this.end.f, delta);
+            add$2(this.end.f, this.end.f, delta);
             normalize(this.end.f, this.end.f);
             set$2(this.offset, ox, oy, oz);
         }
@@ -2231,12 +2310,21 @@
         }
     }
 
-    class AudioSource {
-        constructor(id) {
-            this.id = id;
+    class BaseAudioElement {
+        constructor(audioContext) {
+            this.audioContext = audioContext;
             this.pose = new InterpolatedPose();
-            this.streams = new Map();
             this._spatializer = null;
+            this.volumeControl = audioContext.createGain();
+        }
+        dispose() {
+            this.spatializer = null;
+        }
+        get volume() {
+            return this.volumeControl.gain.value;
+        }
+        set volume(v) {
+            this.volumeControl.gain.value = v;
         }
         get spatializer() {
             return this._spatializer;
@@ -2244,13 +2332,14 @@
         set spatializer(v) {
             if (this.spatializer !== v) {
                 if (this._spatializer) {
+                    this.disconnectSpatializer();
                     this._spatializer.dispose();
                 }
                 this._spatializer = v;
+                if (this._spatializer) {
+                    this.connectSpatializer();
+                }
             }
-        }
-        dispose() {
-            this.spatializer = null;
         }
         /**
          * Update the user.
@@ -2265,9 +2354,163 @@
     }
 
     /**
-     * Indicates whether or not the current browser can change the destination device for audio output.
+     * Base class providing functionality for spatializers.
+     */
+    class BaseSpatializer {
+        constructor(audioContext) {
+            this.audioContext = audioContext;
+            this.minDistance = 1;
+            this.maxDistance = 10;
+            this.rolloff = 1;
+            this.algorithm = "logarithmic";
+            this.transitionTime = 0.1;
+        }
+        dispose() {
+            // nothing to do in the base case
+        }
+        /**
+         * Sets parameters that alter spatialization.
+         **/
+        setAudioProperties(minDistance, maxDistance, rolloff, algorithm, transitionTime) {
+            this.minDistance = minDistance;
+            this.maxDistance = maxDistance;
+            this.rolloff = rolloff;
+            this.algorithm = algorithm;
+            this.transitionTime = transitionTime;
+        }
+    }
+
+    /**
+     * Base class providing functionality for audio listeners.
      **/
-    const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
+    class BaseEmitter extends BaseSpatializer {
+        /**
+         * Creates a spatializer that keeps track of position
+         */
+        constructor(audioContext, input, output, destination) {
+            super(audioContext);
+            this.input = input;
+            this.output = output;
+            this.destination = destination;
+            if (this.output !== this.destination) {
+                connect(this.output, this.destination);
+            }
+        }
+        dispose() {
+            if (this.output !== this.destination) {
+                disconnect(this.output, this.destination);
+            }
+        }
+        copyAudioProperties(from) {
+            this.setAudioProperties(from.minDistance, from.maxDistance, from.rolloff, from.algorithm, from.transitionTime);
+        }
+        clone() {
+            const emitter = this.createNew();
+            emitter.copyAudioProperties(this);
+            return emitter;
+        }
+    }
+
+    class NoSpatializationNode extends BaseEmitter {
+        /**
+         * Creates a new "spatializer" that performs no panning. An anti-spatializer.
+         */
+        constructor(audioContext, destination) {
+            super(audioContext, destination, destination, destination);
+            Object.seal(this);
+        }
+        createNew() {
+            return new NoSpatializationNode(this.audioContext, this.destination);
+        }
+        update(_loc, _t) {
+            // do nothing
+        }
+    }
+
+    /**
+     * Base class providing functionality for audio listeners.
+     **/
+    class BaseListener extends BaseSpatializer {
+        /**
+         * Creates a spatializer that keeps track of position
+         */
+        constructor(audioContext, input, output) {
+            super(audioContext);
+            this.input = input;
+            this.output = output;
+        }
+        /**
+         * Creates a spatialzer for an audio source.
+         */
+        createSpatializer(spatialize, audioContext, destination) {
+            if (spatialize) {
+                throw new Error("Can't spatialize with the base listener.");
+            }
+            return new NoSpatializationNode(audioContext, destination.nonSpatializedInput);
+        }
+    }
+
+    class NoSpatializationListener extends BaseListener {
+        constructor(audioContext) {
+            const gain = audioContext.createGain();
+            gain.gain.value = 0.1;
+            super(audioContext, gain, gain);
+        }
+        /**
+         * Do nothing
+         */
+        update(_loc, _t) {
+        }
+        /**
+         * Creates a spatialzer for an audio source.
+         */
+        createSpatializer(_spatialize, audioContext, destination) {
+            return new NoSpatializationNode(audioContext, destination.nonSpatializedInput);
+        }
+    }
+
+    class AudioDestination extends BaseAudioElement {
+        constructor(audioContext, destination) {
+            super(audioContext);
+            this._spatializedInput = audioContext.createGain();
+            this._nonSpatializedInput = audioContext.createGain();
+            connect(this._nonSpatializedInput, this.volumeControl);
+            this.setDestination(destination);
+        }
+        dispose() {
+            this.setDestination(null);
+            disconnect(this._nonSpatializedInput, this.volumeControl);
+            super.dispose();
+        }
+        get spatialized() {
+            return !(this.spatializer instanceof NoSpatializationListener);
+        }
+        get spatializedInput() {
+            return this._spatializedInput;
+        }
+        get nonSpatializedInput() {
+            return this._nonSpatializedInput;
+        }
+        setDestination(v) {
+            if (v !== this._trueDestination) {
+                if (this._trueDestination) {
+                    disconnect(this.volumeControl, this._trueDestination);
+                }
+                this._trueDestination = v;
+                if (this._trueDestination) {
+                    connect(this.volumeControl, this._trueDestination);
+                }
+            }
+        }
+        disconnectSpatializer() {
+            disconnect(this.spatializer.output, this.volumeControl);
+            disconnect(this._spatializedInput, this.spatializer.input);
+        }
+        connectSpatializer() {
+            connect(this._spatializedInput, this.spatializer.input);
+            connect(this.spatializer.output, this.volumeControl);
+        }
+    }
 
     /**
      * Rendering mode ENUM.
@@ -2281,6 +2524,16 @@
         /** Disable audio output. */
         RenderingMode["None"] = "off";
     })(RenderingMode || (RenderingMode = {}));
+
+    var Direction;
+    (function (Direction) {
+        Direction["Left"] = "left";
+        Direction["Right"] = "right";
+        Direction["Front"] = "front";
+        Direction["Back"] = "back";
+        Direction["Down"] = "down";
+        Direction["Up"] = "up";
+    })(Direction || (Direction = {}));
 
     /**
      * Copyright 2017 Google Inc. All Rights Reserved.
@@ -3429,16 +3682,6 @@
         Dimension["Depth"] = "depth";
     })(Dimension || (Dimension = {}));
 
-    var Direction;
-    (function (Direction) {
-        Direction["Left"] = "left";
-        Direction["Right"] = "right";
-        Direction["Front"] = "front";
-        Direction["Back"] = "back";
-        Direction["Down"] = "down";
-        Direction["Up"] = "up";
-    })(Direction || (Direction = {}));
-
     /**
      * @license
      * Copyright 2017 Google Inc. All Rights Reserved.
@@ -3811,30 +4054,27 @@
          */
         setAmbisonicOrder(ambisonicOrder) {
             this.ambisonicOrder = Encoder.validateAmbisonicOrder(ambisonicOrder);
-            this.input.disconnect();
-            for (let i = 0; i < this.channelGain.length; i++) {
-                this.channelGain[i].disconnect();
-            }
-            if (this.merger != null) {
-                this.merger.disconnect();
-            }
+            this.dispose();
             // Create audio graph.
             let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
             this.merger = this.context.createChannelMerger(numChannels);
             this.channelGain = new Array(numChannels);
             for (let i = 0; i < numChannels; i++) {
                 this.channelGain[i] = this.context.createGain();
-                this.input.connect(this.channelGain[i]);
-                this.channelGain[i].connect(this.merger, 0, i);
+                connect(this.input, this.channelGain[i]);
+                connect(this.channelGain[i], this.merger, 0, i);
             }
-            this.merger.connect(this.output);
+            connect(this.merger, this.output);
         }
         dispose() {
-            this.merger.disconnect(this.output);
-            let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
-            for (let i = 0; i < numChannels; ++i) {
-                this.channelGain[i].disconnect(this.merger, 0, i);
-                this.input.disconnect(this.channelGain[i]);
+            for (let i = 0; i < this.channelGain.length; i++) {
+                disconnect(this.input, this.channelGain[i]);
+                if (this.merger) {
+                    disconnect(this.channelGain[i], this.merger, 0, i);
+                }
+            }
+            if (this.merger) {
+                disconnect(this.merger, this.output);
             }
         }
         /**
@@ -4057,7 +4297,7 @@
     class FOAConvolver {
         /**
          * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
-         * @param context The associated AudioContext.
+         * @param context The associated BaseAudioContext.
          * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
          */
         constructor(context, hrirBufferList) {
@@ -4085,24 +4325,24 @@
             this._mergerBinaural = this._context.createChannelMerger(2);
             this._summingBus = this._context.createGain();
             // Group W and Y, then Z and X.
-            this._splitterWYZX.connect(this._mergerWY, 0, 0);
-            this._splitterWYZX.connect(this._mergerWY, 1, 1);
-            this._splitterWYZX.connect(this._mergerZX, 2, 0);
-            this._splitterWYZX.connect(this._mergerZX, 3, 1);
+            connect(this._splitterWYZX, this._mergerWY, 0, 0);
+            connect(this._splitterWYZX, this._mergerWY, 1, 1);
+            connect(this._splitterWYZX, this._mergerZX, 2, 0);
+            connect(this._splitterWYZX, this._mergerZX, 3, 1);
             // Create a network of convolvers using splitter/merger.
-            this._mergerWY.connect(this._convolverWY);
-            this._mergerZX.connect(this._convolverZX);
-            this._convolverWY.connect(this._splitterWY);
-            this._convolverZX.connect(this._splitterZX);
-            this._splitterWY.connect(this._mergerBinaural, 0, 0);
-            this._splitterWY.connect(this._mergerBinaural, 0, 1);
-            this._splitterWY.connect(this._mergerBinaural, 1, 0);
-            this._splitterWY.connect(this._inverter, 1, 0);
-            this._inverter.connect(this._mergerBinaural, 0, 1);
-            this._splitterZX.connect(this._mergerBinaural, 0, 0);
-            this._splitterZX.connect(this._mergerBinaural, 0, 1);
-            this._splitterZX.connect(this._mergerBinaural, 1, 0);
-            this._splitterZX.connect(this._mergerBinaural, 1, 1);
+            connect(this._mergerWY, this._convolverWY);
+            connect(this._mergerZX, this._convolverZX);
+            connect(this._convolverWY, this._splitterWY);
+            connect(this._convolverZX, this._splitterZX);
+            connect(this._splitterWY, this._mergerBinaural, 0, 0);
+            connect(this._splitterWY, this._mergerBinaural, 0, 1);
+            connect(this._splitterWY, this._mergerBinaural, 1, 0);
+            connect(this._splitterWY, this._inverter, 1, 0);
+            connect(this._inverter, this._mergerBinaural, 0, 1);
+            connect(this._splitterZX, this._mergerBinaural, 0, 0);
+            connect(this._splitterZX, this._mergerBinaural, 0, 1);
+            connect(this._splitterZX, this._mergerBinaural, 1, 0);
+            connect(this._splitterZX, this._mergerBinaural, 1, 1);
             // By default, WebAudio's convolver does the normalization based on IR's
             // energy. For the precise convolution, it must be disabled before the buffer
             // assignment.
@@ -4119,24 +4359,24 @@
                 this.disable();
             }
             // Group W and Y, then Z and X.
-            this._splitterWYZX.disconnect(this._mergerWY, 0, 0);
-            this._splitterWYZX.disconnect(this._mergerWY, 1, 1);
-            this._splitterWYZX.disconnect(this._mergerZX, 2, 0);
-            this._splitterWYZX.disconnect(this._mergerZX, 3, 1);
+            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
             // Create a network of convolvers using splitter/merger.
-            this._mergerWY.disconnect(this._convolverWY);
-            this._mergerZX.disconnect(this._convolverZX);
-            this._convolverWY.disconnect(this._splitterWY);
-            this._convolverZX.disconnect(this._splitterZX);
-            this._splitterWY.disconnect(this._mergerBinaural, 0, 0);
-            this._splitterWY.disconnect(this._mergerBinaural, 0, 1);
-            this._splitterWY.disconnect(this._mergerBinaural, 1, 0);
-            this._splitterWY.disconnect(this._inverter, 1, 0);
-            this._inverter.disconnect(this._mergerBinaural, 0, 1);
-            this._splitterZX.disconnect(this._mergerBinaural, 0, 0);
-            this._splitterZX.disconnect(this._mergerBinaural, 0, 1);
-            this._splitterZX.disconnect(this._mergerBinaural, 1, 0);
-            this._splitterZX.disconnect(this._mergerBinaural, 1, 1);
+            disconnect(this._mergerWY, this._convolverWY);
+            disconnect(this._mergerZX, this._convolverZX);
+            disconnect(this._convolverWY, this._splitterWY);
+            disconnect(this._convolverZX, this._splitterZX);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterWY, this._inverter, 1, 0);
+            disconnect(this._inverter, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
         }
         /**
          * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
@@ -4163,7 +4403,7 @@
          * the WebAudio engine. (i.e. consume CPU cycle)
          */
         enable() {
-            this._mergerBinaural.connect(this._summingBus);
+            connect(this._mergerBinaural, this._summingBus);
             this._active = true;
         }
         /**
@@ -4171,7 +4411,7 @@
          * audio destination, thus no CPU cycle will be consumed.
          */
         disable() {
-            this._mergerBinaural.disconnect();
+            disconnect(this._mergerBinaural, this._summingBus);
             this._active = false;
         }
     }
@@ -4200,7 +4440,7 @@
     class FOARotator {
         /**
          * First-order-ambisonic decoder based on gain node network.
-         * @param context - Associated AudioContext.
+         * @param context - Associated BaseAudioContext.
          */
         constructor(context) {
             this._context = context;
@@ -4223,11 +4463,11 @@
             this._merger = this._context.createChannelMerger(4);
             // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
             // X (from channel 1)
-            this._splitter.connect(this._inX, 1);
+            connect(this._splitter, this._inX, 1);
             // Y (from channel 2)
-            this._splitter.connect(this._inY, 2);
+            connect(this._splitter, this._inY, 2);
             // Z (from channel 3)
-            this._splitter.connect(this._inZ, 3);
+            connect(this._splitter, this._inZ, 3);
             this._inX.gain.value = -1;
             this._inY.gain.value = -1;
             this._inZ.gain.value = -1;
@@ -4235,33 +4475,33 @@
             // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
             // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
             // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            this._inX.connect(this._m0);
-            this._inX.connect(this._m1);
-            this._inX.connect(this._m2);
-            this._inY.connect(this._m3);
-            this._inY.connect(this._m4);
-            this._inY.connect(this._m5);
-            this._inZ.connect(this._m6);
-            this._inZ.connect(this._m7);
-            this._inZ.connect(this._m8);
-            this._m0.connect(this._outX);
-            this._m1.connect(this._outY);
-            this._m2.connect(this._outZ);
-            this._m3.connect(this._outX);
-            this._m4.connect(this._outY);
-            this._m5.connect(this._outZ);
-            this._m6.connect(this._outX);
-            this._m7.connect(this._outY);
-            this._m8.connect(this._outZ);
+            connect(this._inX, this._m0);
+            connect(this._inX, this._m1);
+            connect(this._inX, this._m2);
+            connect(this._inY, this._m3);
+            connect(this._inY, this._m4);
+            connect(this._inY, this._m5);
+            connect(this._inZ, this._m6);
+            connect(this._inZ, this._m7);
+            connect(this._inZ, this._m8);
+            connect(this._m0, this._outX);
+            connect(this._m1, this._outY);
+            connect(this._m2, this._outZ);
+            connect(this._m3, this._outX);
+            connect(this._m4, this._outY);
+            connect(this._m5, this._outZ);
+            connect(this._m6, this._outX);
+            connect(this._m7, this._outY);
+            connect(this._m8, this._outZ);
             // Transform 3: world space to audio space.
             // W -> W (to channel 0)
-            this._splitter.connect(this._merger, 0, 0);
+            connect(this._splitter, this._merger, 0, 0);
             // X (to channel 1)
-            this._outX.connect(this._merger, 0, 1);
+            connect(this._outX, this._merger, 0, 1);
             // Y (to channel 2)
-            this._outY.connect(this._merger, 0, 2);
+            connect(this._outY, this._merger, 0, 2);
             // Z (to channel 3)
-            this._outZ.connect(this._merger, 0, 3);
+            connect(this._outZ, this._merger, 0, 3);
             this._outX.gain.value = -1;
             this._outY.gain.value = -1;
             this._outZ.gain.value = -1;
@@ -4273,42 +4513,42 @@
         dispose() {
             // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
             // X (from channel 1)
-            this._splitter.disconnect(this._inX, 1);
+            disconnect(this._splitter, this._inX, 1);
             // Y (from channel 2)
-            this._splitter.disconnect(this._inY, 2);
+            disconnect(this._splitter, this._inY, 2);
             // Z (from channel 3)
-            this._splitter.disconnect(this._inZ, 3);
+            disconnect(this._splitter, this._inZ, 3);
             // Apply the rotation in the world space.
             // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
             // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
             // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            this._inX.disconnect(this._m0);
-            this._inX.disconnect(this._m1);
-            this._inX.disconnect(this._m2);
-            this._inY.disconnect(this._m3);
-            this._inY.disconnect(this._m4);
-            this._inY.disconnect(this._m5);
-            this._inZ.disconnect(this._m6);
-            this._inZ.disconnect(this._m7);
-            this._inZ.disconnect(this._m8);
-            this._m0.disconnect(this._outX);
-            this._m1.disconnect(this._outY);
-            this._m2.disconnect(this._outZ);
-            this._m3.disconnect(this._outX);
-            this._m4.disconnect(this._outY);
-            this._m5.disconnect(this._outZ);
-            this._m6.disconnect(this._outX);
-            this._m7.disconnect(this._outY);
-            this._m8.disconnect(this._outZ);
+            disconnect(this._inX, this._m0);
+            disconnect(this._inX, this._m1);
+            disconnect(this._inX, this._m2);
+            disconnect(this._inY, this._m3);
+            disconnect(this._inY, this._m4);
+            disconnect(this._inY, this._m5);
+            disconnect(this._inZ, this._m6);
+            disconnect(this._inZ, this._m7);
+            disconnect(this._inZ, this._m8);
+            disconnect(this._m0, this._outX);
+            disconnect(this._m1, this._outY);
+            disconnect(this._m2, this._outZ);
+            disconnect(this._m3, this._outX);
+            disconnect(this._m4, this._outY);
+            disconnect(this._m5, this._outZ);
+            disconnect(this._m6, this._outX);
+            disconnect(this._m7, this._outY);
+            disconnect(this._m8, this._outZ);
             // Transform 3: world space to audio space.
             // W -> W (to channel 0)
-            this._splitter.disconnect(this._merger, 0, 0);
+            disconnect(this._splitter, this._merger, 0, 0);
             // X (to channel 1)
-            this._outX.disconnect(this._merger, 0, 1);
+            disconnect(this._outX, this._merger, 0, 1);
             // Y (to channel 2)
-            this._outY.disconnect(this._merger, 0, 2);
+            disconnect(this._outY, this._merger, 0, 2);
             // Z (to channel 3)
-            this._outZ.disconnect(this._merger, 0, 3);
+            disconnect(this._outZ, this._merger, 0, 3);
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -4402,7 +4642,7 @@
     class FOARouter {
         /**
          * Channel router for FOA stream.
-         * @param context - Associated AudioContext.
+         * @param context - Associated BaseAudioContext.
          * @param channelMap - Routing destination array.
          */
         constructor(context, channelMap) {
@@ -4425,17 +4665,16 @@
             else {
                 this._channelMap = ChannelMaps[channelMap];
             }
-            this._splitter.disconnect();
-            this._splitter.connect(this._merger, 0, this._channelMap[0]);
-            this._splitter.connect(this._merger, 1, this._channelMap[1]);
-            this._splitter.connect(this._merger, 2, this._channelMap[2]);
-            this._splitter.connect(this._merger, 3, this._channelMap[3]);
+            connect(this._splitter, this._merger, 0, this._channelMap[0]);
+            connect(this._splitter, this._merger, 1, this._channelMap[1]);
+            connect(this._splitter, this._merger, 2, this._channelMap[2]);
+            connect(this._splitter, this._merger, 3, this._channelMap[3]);
         }
         dispose() {
-            this._splitter.disconnect(this._merger, 0, this._channelMap[0]);
-            this._splitter.disconnect(this._merger, 1, this._channelMap[1]);
-            this._splitter.disconnect(this._merger, 2, this._channelMap[2]);
-            this._splitter.disconnect(this._merger, 3, this._channelMap[3]);
+            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
         }
     }
 
@@ -4493,24 +4732,24 @@
             this.router = new FOARouter(this.context, this.config.channelMap);
             this.rotator = new FOARotator(this.context);
             this.convolver = new FOAConvolver(this.context);
-            this.input.connect(this.router.input);
-            this.input.connect(this.bypass);
-            this.router.output.connect(this.rotator.input);
-            this.rotator.output.connect(this.convolver.input);
-            this.convolver.output.connect(this.output);
+            connect(this.input, this.router.input);
+            connect(this.input, this.bypass);
+            connect(this.router.output, this.rotator.input);
+            connect(this.rotator.output, this.convolver.input);
+            connect(this.convolver.output, this.output);
             this.input.channelCount = 4;
             this.input.channelCountMode = 'explicit';
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
             if (this.getRenderingMode() === RenderingMode.Bypass) {
-                this.bypass.connect(this.output);
+                disconnect(this.bypass, this.output);
             }
-            this.input.disconnect(this.router.input);
-            this.input.disconnect(this.bypass);
-            this.router.output.disconnect(this.rotator.input);
-            this.rotator.output.disconnect(this.convolver.input);
-            this.convolver.output.disconnect(this.output);
+            disconnect(this.input, this.router.input);
+            disconnect(this.input, this.bypass);
+            disconnect(this.router.output, this.rotator.input);
+            disconnect(this.rotator.output, this.convolver.input);
+            disconnect(this.convolver.output, this.output);
             this.convolver.dispose();
             this.rotator.dispose();
             this.router.dispose();
@@ -4578,20 +4817,17 @@
             if (mode === this.config.renderingMode) {
                 return;
             }
-            switch (mode) {
-                case RenderingMode.Ambisonic:
-                    this.convolver.enable();
-                    this.bypass.disconnect();
-                    break;
-                case RenderingMode.Bypass:
-                    this.convolver.disable();
-                    this.bypass.connect(this.output);
-                    break;
-                case RenderingMode.None:
-                    this.convolver.disable();
-                    this.bypass.disconnect();
-                    break;
-                default: assertNever(mode);
+            if (mode === RenderingMode.Ambisonic) {
+                this.convolver.enable;
+            }
+            else {
+                this.convolver.disable();
+            }
+            if (mode === RenderingMode.Bypass) {
+                connect(this.bypass, this.output);
+            }
+            else {
+                disconnect(this.bypass, this.output);
             }
             this.config.renderingMode = mode;
         }
@@ -4622,7 +4858,7 @@
     class HOAConvolver {
         /**
          * A convolver network for N-channel HOA stream.
-          * @param context - Associated AudioContext.
+          * @param context - Associated BaseAudioContext.
          * @param ambisonicOrder - Ambisonic order. (2 or 3)
          * @param [hrirBufferList] - An ordered-list of stereo
          * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
@@ -4674,27 +4910,27 @@
                     const stereoIndex = Math.floor(acnIndex / 2);
                     // Split channels from input into array of stereo convolvers.
                     // Then create a network of mergers that produces the stereo output.
-                    this._inputSplitter.connect(this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                    this._stereoMergers[stereoIndex].connect(this._convolvers[stereoIndex]);
-                    this._convolvers[stereoIndex].connect(this._stereoSplitters[stereoIndex]);
+                    connect(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+                    connect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
+                    connect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
                     // Positive index (m >= 0) spherical harmonics are symmetrical around the
                     // front axis, while negative index (m < 0) spherical harmonics are
                     // anti-symmetrical around the front axis. We will exploit this symmetry
                     // to reduce the number of convolutions required when rendering to a
                     // symmetrical binaural renderer.
                     if (m >= 0) {
-                        this._stereoSplitters[stereoIndex].connect(this._positiveIndexSphericalHarmonics, acnIndex % 2);
+                        connect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
                     }
                     else {
-                        this._stereoSplitters[stereoIndex].connect(this._negativeIndexSphericalHarmonics, acnIndex % 2);
+                        connect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
                     }
                 }
             }
-            this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
-            this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
-            this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
-            this._negativeIndexSphericalHarmonics.connect(this._inverter);
-            this._inverter.connect(this._binauralMerger, 0, 1);
+            connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
+            connect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            connect(this._negativeIndexSphericalHarmonics, this._inverter);
+            connect(this._inverter, this._binauralMerger, 0, 1);
             // For asymmetric index.
             this._inverter.gain.value = -1;
             // Input/Output proxy.
@@ -4713,27 +4949,27 @@
                     const stereoIndex = Math.floor(acnIndex / 2);
                     // Split channels from input into array of stereo convolvers.
                     // Then create a network of mergers that produces the stereo output.
-                    this._inputSplitter.disconnect(this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                    this._stereoMergers[stereoIndex].disconnect(this._convolvers[stereoIndex]);
-                    this._convolvers[stereoIndex].disconnect(this._stereoSplitters[stereoIndex]);
+                    disconnect(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+                    disconnect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
+                    disconnect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
                     // Positive index (m >= 0) spherical harmonics are symmetrical around the
                     // front axis, while negative index (m < 0) spherical harmonics are
                     // anti-symmetrical around the front axis. We will exploit this symmetry
                     // to reduce the number of convolutions required when rendering to a
                     // symmetrical binaural renderer.
                     if (m >= 0) {
-                        this._stereoSplitters[stereoIndex].disconnect(this._positiveIndexSphericalHarmonics, acnIndex % 2);
+                        disconnect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
                     }
                     else {
-                        this._stereoSplitters[stereoIndex].disconnect(this._negativeIndexSphericalHarmonics, acnIndex % 2);
+                        disconnect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
                     }
                 }
             }
-            this._positiveIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 0);
-            this._positiveIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 1);
-            this._negativeIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 0);
-            this._negativeIndexSphericalHarmonics.disconnect(this._inverter);
-            this._inverter.disconnect(this._binauralMerger, 0, 1);
+            disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
+            disconnect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            disconnect(this._negativeIndexSphericalHarmonics, this._inverter);
+            disconnect(this._inverter, this._binauralMerger, 0, 1);
         }
         /**
          * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
@@ -4761,7 +4997,7 @@
          * the WebAudio engine. (i.e. consume CPU cycle)
          */
         enable() {
-            this._binauralMerger.connect(this._outputGain);
+            connect(this._binauralMerger, this._outputGain);
             this._active = true;
         }
         /**
@@ -4769,7 +5005,7 @@
          * audio destination, thus no CPU cycle will be consumed.
          */
         disable() {
-            this._binauralMerger.disconnect();
+            disconnect(this._binauralMerger, this._outputGain);
             this._active = false;
         }
     }
@@ -5015,7 +5251,7 @@
          *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
          *  [2b] Corrections to initial publication:
          *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-         * @param context - Associated AudioContext.
+         * @param context - Associated BaseAudioContext.
          * @param ambisonicOrder - Ambisonic order.
          */
         constructor(context, ambisonicOrder) {
@@ -5046,13 +5282,13 @@
                         const outputIndex = orderOffset + k;
                         const matrixIndex = j * rows + k;
                         this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
-                        this._splitter.connect(this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        this._gainNodeMatrix[i - 1][matrixIndex].connect(this._merger, 0, outputIndex);
+                        connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                        connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                     }
                 }
             }
             // W-channel is not involved in rotation, skip straight to ouput.
-            this._splitter.connect(this._merger, 0, 0);
+            connect(this._splitter, this._merger, 0, 0);
             // Default Identity matrix.
             this.setRotationMatrix3(identity(create()));
             // Input/Output proxy.
@@ -5075,13 +5311,13 @@
                     for (let k = 0; k < rows; k++) {
                         const outputIndex = orderOffset + k;
                         const matrixIndex = j * rows + k;
-                        this._splitter.disconnect(this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        this._gainNodeMatrix[i - 1][matrixIndex].disconnect(this._merger, 0, outputIndex);
+                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                     }
                 }
             }
             // W-channel is not involved in rotation, skip straight to ouput.
-            this._splitter.disconnect(this._merger, 0, 0);
+            disconnect(this._splitter, this._merger, 0, 0);
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -5216,22 +5452,22 @@
             this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
             this.convolver =
                 new HOAConvolver(this.context, this.config.ambisonicOrder);
-            this.input.connect(this.rotator.input);
-            this.input.connect(this.bypass);
-            this.rotator.output.connect(this.convolver.input);
-            this.convolver.output.connect(this.output);
+            connect(this.input, this.rotator.input);
+            connect(this.input, this.bypass);
+            connect(this.rotator.output, this.convolver.input);
+            connect(this.convolver.output, this.output);
             this.input.channelCount = this.config.numberOfChannels;
             this.input.channelCountMode = 'explicit';
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
             if (this.getRenderingMode() === RenderingMode.Bypass) {
-                this.bypass.connect(this.output);
+                disconnect(this.bypass, this.output);
             }
-            this.input.disconnect(this.rotator.input);
-            this.input.disconnect(this.bypass);
-            this.rotator.output.disconnect(this.convolver.input);
-            this.convolver.output.disconnect(this.output);
+            disconnect(this.input, this.rotator.input);
+            disconnect(this.input, this.bypass);
+            disconnect(this.rotator.output, this.convolver.input);
+            disconnect(this.convolver.output, this.output);
             this.rotator.dispose();
             this.convolver.dispose();
         }
@@ -5288,20 +5524,17 @@
             if (mode === this.config.renderingMode) {
                 return;
             }
-            switch (mode) {
-                case RenderingMode.Ambisonic:
-                    this.convolver.enable();
-                    this.bypass.disconnect();
-                    break;
-                case RenderingMode.Bypass:
-                    this.convolver.disable();
-                    this.bypass.connect(this.output);
-                    break;
-                case RenderingMode.None:
-                    this.convolver.disable();
-                    this.bypass.disconnect();
-                    break;
-                default: assertNever(mode);
+            if (mode === RenderingMode.Ambisonic) {
+                this.convolver.enable;
+            }
+            else {
+                this.convolver.disable();
+            }
+            if (mode === RenderingMode.Bypass) {
+                connect(this.bypass, this.output);
+            }
+            else {
+                disconnect(this.bypass, this.output);
             }
             this.config.renderingMode = mode;
         }
@@ -5395,29 +5628,29 @@
             // Initialize Omnitone (async) and connect to audio graph when complete.
             this.renderer.initialize().then(() => {
                 // Connect pre-rotated soundfield to renderer.
-                this.input.connect(this.renderer.input);
+                connect(this.input, this.renderer.input);
                 // Connect rotated soundfield to ambisonic output.
-                this.renderer.rotator.output.connect(this.ambisonicOutput);
+                connect(this.renderer.rotator.output, this.ambisonicOutput);
                 // Connect binaurally-rendered soundfield to binaural output.
-                this.renderer.output.connect(this.output);
+                connect(this.renderer.output, this.output);
             });
             // Set orientation and update rotation matrix accordingly.
             this.setOrientation(options.forward, options.up);
+        }
+        dispose() {
+            // Connect pre-rotated soundfield to renderer.
+            disconnect(this.input, this.renderer.input);
+            // Connect rotated soundfield to ambisonic output.
+            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+            // Connect binaurally-rendered soundfield to binaural output.
+            disconnect(this.renderer.output, this.output);
+            this.renderer.dispose();
         }
         getRenderingMode() {
             return this.renderer.getRenderingMode();
         }
         setRenderingMode(mode) {
             this.renderer.setRenderingMode(mode);
-        }
-        dispose() {
-            // Connect pre-rotated soundfield to renderer.
-            this.input.disconnect(this.renderer.input);
-            // Connect rotated soundfield to ambisonic output.
-            this.renderer.rotator.output.disconnect(this.ambisonicOutput);
-            // Connect binaurally-rendered soundfield to binaural output.
-            this.renderer.output.disconnect(this.output);
-            this.renderer.dispose();
         }
         /**
          * Set the source's orientation using forward and up vectors.
@@ -5473,10 +5706,10 @@
                 depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
             };
             if (options) {
-                if (isGoodNumber(options?.speedOfSound)) {
+                if (isGoodNumber(options.speedOfSound)) {
                     this.speedOfSound = options.speedOfSound;
                 }
-                if (isArray(options?.listenerPosition)
+                if (isArray(options.listenerPosition)
                     && options.listenerPosition.length === 3
                     && isGoodNumber(options.listenerPosition[0])
                     && isGoodNumber(options.listenerPosition[1])
@@ -5520,9 +5753,9 @@
                 gain.gain.value = 0;
                 this.delays[direction] = delay;
                 this.gains[direction] = gain;
-                this.lowpass.connect(delay);
-                delay.connect(gain);
-                gain.connect(this.merger, 0, 0);
+                connect(this.lowpass, delay);
+                connect(delay, gain);
+                connect(gain, this.merger, 0, 0);
                 // Initialize inverters for opposite walls ('right', 'down', 'back' only).
                 if (direction === Direction.Right
                     || direction == Direction.Back
@@ -5530,7 +5763,7 @@
                     this.inverters[direction].gain.value = -1;
                 }
             }
-            this.input.connect(this.lowpass);
+            connect(this.input, this.lowpass);
             // Initialize lowpass filter.
             this.lowpass.type = 'lowpass';
             this.lowpass.frequency.value = DEFAULT_REFLECTION_CUTOFF_FREQUENCY;
@@ -5543,18 +5776,46 @@
             // Down: [1 0 -1 0]
             // Front: [1 0 0 1]
             // Back: [1 0 0 -1]
-            this.gains.left.connect(this.merger, 0, 1);
-            this.gains.right.connect(this.inverters.right);
-            this.inverters.right.connect(this.merger, 0, 1);
-            this.gains.up.connect(this.merger, 0, 2);
-            this.gains.down.connect(this.inverters.down);
-            this.inverters.down.connect(this.merger, 0, 2);
-            this.gains.front.connect(this.merger, 0, 3);
-            this.gains.back.connect(this.inverters.back);
-            this.inverters.back.connect(this.merger, 0, 3);
-            this.merger.connect(this.output);
+            connect(this.gains.left, this.merger, 0, 1);
+            connect(this.gains.right, this.inverters.right);
+            connect(this.inverters.right, this.merger, 0, 1);
+            connect(this.gains.up, this.merger, 0, 2);
+            connect(this.gains.down, this.inverters.down);
+            connect(this.inverters.down, this.merger, 0, 2);
+            connect(this.gains.front, this.merger, 0, 3);
+            connect(this.gains.back, this.inverters.back);
+            connect(this.inverters.back, this.merger, 0, 3);
+            connect(this.merger, this.output);
             // Initialize.
-            this.setRoomProperties(options?.dimensions, options?.coefficients);
+            this.setRoomProperties(options && options.dimensions, options && options.coefficients);
+        }
+        dispose() {
+            // Connect nodes.
+            disconnect(this.input, this.lowpass);
+            for (const property of Object.values(Direction)) {
+                const delay = this.delays[property];
+                const gain = this.gains[property];
+                disconnect(this.lowpass, delay);
+                disconnect(delay, gain);
+                disconnect(gain, this.merger, 0, 0);
+            }
+            // Connect gains to ambisonic channel output.
+            // Left: [1 1 0 0]
+            // Right: [1 -1 0 0]
+            // Up: [1 0 1 0]
+            // Down: [1 0 -1 0]
+            // Front: [1 0 0 1]
+            // Back: [1 0 0 -1]
+            disconnect(this.gains.left, this.merger, 0, 1);
+            disconnect(this.gains.right, this.inverters.right);
+            disconnect(this.inverters.right, this.merger, 0, 1);
+            disconnect(this.gains.up, this.merger, 0, 2);
+            disconnect(this.gains.down, this.inverters.down);
+            disconnect(this.inverters.down, this.merger, 0, 2);
+            disconnect(this.gains.front, this.merger, 0, 3);
+            disconnect(this.gains.back, this.inverters.back);
+            disconnect(this.inverters.back, this.merger, 0, 3);
+            disconnect(this.merger, this.output);
         }
         /**
          * Set the room's properties which determines the characteristics of
@@ -5568,7 +5829,7 @@
          * DEFAULT_REFLECTION_COEFFICIENTS}.
          */
         setRoomProperties(dimensions, coefficients) {
-            if (dimensions == undefined) {
+            if (!dimensions) {
                 dimensions = {
                     width: DEFAULT_ROOM_DIMENSIONS.width,
                     height: DEFAULT_ROOM_DIMENSIONS.height,
@@ -5582,7 +5843,7 @@
                 this.halfDimensions.height = 0.5 * dimensions.height;
                 this.halfDimensions.depth = 0.5 * dimensions.depth;
             }
-            if (coefficients == undefined) {
+            if (!coefficients) {
                 coefficients = {
                     left: DEFAULT_REFLECTION_COEFFICIENTS.left,
                     right: DEFAULT_REFLECTION_COEFFICIENTS.right,
@@ -5607,34 +5868,6 @@
             }
             // Update listener position with new room properties.
             this.setListenerPosition(this.listenerPosition);
-        }
-        dispose() {
-            // Connect nodes.
-            this.input.disconnect(this.lowpass);
-            for (const property of Object.values(Direction)) {
-                const delay = this.delays[property];
-                const gain = this.gains[property];
-                this.lowpass.disconnect(delay);
-                delay.disconnect(gain);
-                gain.disconnect(this.merger, 0, 0);
-            }
-            // Connect gains to ambisonic channel output.
-            // Left: [1 1 0 0]
-            // Right: [1 -1 0 0]
-            // Up: [1 0 1 0]
-            // Down: [1 0 -1 0]
-            // Front: [1 0 0 1]
-            // Back: [1 0 0 -1]
-            this.gains.left.disconnect(this.merger, 0, 1);
-            this.gains.right.disconnect(this.inverters.right);
-            this.inverters.right.disconnect(this.merger, 0, 1);
-            this.gains.up.disconnect(this.merger, 0, 2);
-            this.gains.down.disconnect(this.inverters.down);
-            this.inverters.down.disconnect(this.merger, 0, 2);
-            this.gains.front.disconnect(this.merger, 0, 3);
-            this.gains.back.disconnect(this.inverters.back);
-            this.inverters.back.disconnect(this.merger, 0, 3);
-            this.merger.disconnect(this.output);
         }
         /**
          * Set the listener's position (in meters),
@@ -5705,16 +5938,16 @@
             // Disable normalization.
             this.convolver.normalize = false;
             // Connect nodes.
-            this.input.connect(this.predelay);
-            this.predelay.connect(this.convolver);
-            this.convolver.connect(this.output);
+            connect(this.input, this.predelay);
+            connect(this.predelay, this.convolver);
+            connect(this.convolver, this.output);
             // Compute IR using RT60 values.
             this.setDurations(options.durations);
         }
         dispose() {
-            this.input.disconnect(this.predelay);
-            this.predelay.disconnect(this.convolver);
-            this.convolver.disconnect(this.output);
+            disconnect(this.input, this.predelay);
+            disconnect(this.predelay, this.convolver);
+            disconnect(this.convolver, this.output);
         }
         /**
          * Re-compute a new impulse response by providing Multiband RT60 durations.
@@ -6000,15 +6233,15 @@
             this.speedOfSound = options.speedOfSound;
             // Construct auxillary audio nodes.
             this.output = context.createGain();
-            this.early.output.connect(this.output);
+            connect(this.early.output, this.output);
             this._merger = context.createChannelMerger(4);
-            this.late.output.connect(this._merger, 0, 0);
-            this._merger.connect(this.output);
+            connect(this.late.output, this._merger, 0, 0);
+            connect(this._merger, this.output);
         }
         dispose() {
-            this.early.output.disconnect(this.output);
-            this.late.output.disconnect(this._merger, 0, 0);
-            this._merger.disconnect(this.output);
+            disconnect(this.early.output, this.output);
+            disconnect(this.late.output, this._merger, 0, 0);
+            disconnect(this._merger, this.output);
         }
         /**
          * Set the room's dimensions and wall materials.
@@ -6311,27 +6544,28 @@
                 sourceWidth: options.sourceWidth,
             });
             // Connect nodes.
-            this.input.connect(this.toLate);
-            this.toLate.connect(scene.room.late.input);
-            this.input.connect(this.attenuation.input);
-            this.attenuation.output.connect(this.toEarly);
-            this.toEarly.connect(scene.room.early.input);
-            this.attenuation.output.connect(this.directivity.input);
-            this.directivity.output.connect(this.encoder.input);
-            this.encoder.output.connect(scene.listener.input);
+            connect(this.input, this.toLate);
+            connect(this.toLate, scene.room.late.input);
+            connect(this.input, this.attenuation.input);
+            connect(this.attenuation.output, this.toEarly);
+            connect(this.toEarly, scene.room.early.input);
+            connect(this.attenuation.output, this.directivity.input);
+            connect(this.directivity.output, this.encoder.input);
             // Assign initial conditions.
             this.setPosition(options.position);
             this.input.gain.value = options.gain;
         }
+        get output() {
+            return this.encoder.output;
+        }
         dispose() {
-            this.encoder.output.disconnect(this.scene.listener.input);
-            this.directivity.output.disconnect(this.encoder.input);
-            this.attenuation.output.disconnect(this.directivity.input);
-            this.toEarly.disconnect(this.scene.room.early.input);
-            this.attenuation.output.disconnect(this.toEarly);
-            this.input.disconnect(this.attenuation.input);
-            this.toLate.disconnect(this.scene.room.late.input);
-            this.input.disconnect(this.toLate);
+            disconnect(this.directivity.output, this.encoder.input);
+            disconnect(this.attenuation.output, this.directivity.input);
+            disconnect(this.toEarly, this.scene.room.early.input);
+            disconnect(this.attenuation.output, this.toEarly);
+            disconnect(this.input, this.attenuation.input);
+            disconnect(this.toLate, this.scene.room.late.input);
+            disconnect(this.input, this.toLate);
             this.encoder.dispose();
         }
         // Update the source when changing the listener's position.
@@ -6479,9 +6713,9 @@
             this.ambisonicOutput = context.createGain();
             this.ambisonicInput = this.listener.input;
             // Connect audio graph.
-            this.room.output.connect(this.listener.input);
-            this.listener.output.connect(this.output);
-            this.listener.ambisonicOutput.connect(this.ambisonicOutput);
+            connect(this.room.output, this.listener.input);
+            connect(this.listener.output, this.output);
+            connect(this.listener.ambisonicOutput, this.ambisonicOutput);
         }
         getRenderingMode() {
             return this.listener.getRenderingMode();
@@ -6490,9 +6724,9 @@
             this.listener.setRenderingMode(mode);
         }
         dispose() {
-            this.room.output.disconnect(this.listener.input);
-            this.listener.output.disconnect(this.output);
-            this.listener.ambisonicOutput.disconnect(this.ambisonicOutput);
+            disconnect(this.room.output, this.listener.input);
+            disconnect(this.listener.output, this.output);
+            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
         }
         /**
          * Create a new source for the scene.
@@ -6514,7 +6748,7 @@
         removeSource(source) {
             const sourceIdx = this._sources.findIndex((s) => s === source);
             if (sourceIdx > -1) {
-                this._sources.splice(sourceIdx, 1);
+                arrayRemoveAt(this._sources, sourceIdx);
                 source.dispose();
             }
         }
@@ -6560,45 +6794,22 @@
         }
     }
 
-    class BaseWebAudioNode extends BaseNode {
-        /**
-         * Creates a spatializer that keeps track of the relative position
-         * of an audio element to the listener destination.
-         * @param id
-         * @param stream
-         * @param audioContext - the output WebAudio context
-         * @param node - this node out to which to pipe the stream
-         */
-        constructor(id, source, audioContext, node) {
-            super(id, source, audioContext);
-            this.node = node;
-            this.gain.connect(this.node);
-        }
-        /**
-         * Discard values and make this instance useless.
-         */
-        dispose() {
-            if (this.node) {
-                this.node.disconnect();
-                this.node = null;
-            }
-            super.dispose();
-        }
-    }
-
     /**
      * A spatializer that uses Google's Resonance Audio library.
      **/
-    class ResonanceAudioNode extends BaseWebAudioNode {
+    class ResonanceAudioNode extends BaseEmitter {
         /**
          * Creates a new spatializer that uses Google's Resonance Audio library.
          */
-        constructor(id, source, audioContext, res) {
+        constructor(audioContext, destination, res) {
             const resNode = res.createSource(undefined);
-            super(id, source, audioContext, resNode.input);
+            super(audioContext, resNode.input, resNode.output, destination);
             this.resScene = res;
             this.resNode = resNode;
             Object.seal(this);
+        }
+        createNew() {
+            return new ResonanceAudioNode(this.audioContext, this.destination, this.resScene);
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
@@ -6628,42 +6839,6 @@
         }
     }
 
-    class NoSpatializationNode extends BaseNode {
-        /**
-         * Creates a new "spatializer" that performs no panning. An anti-spatializer.
-         */
-        constructor(id, source, audioContext, destination) {
-            super(id, source, audioContext);
-            this.gain.connect(destination);
-            Object.seal(this);
-        }
-        update(_loc, _t) {
-            // do nothing
-        }
-    }
-
-    /**
-     * Base class providing functionality for audio listeners.
-     **/
-    class BaseListener extends BaseSpatializer {
-        /**
-         * Creates a spatializer that keeps track of position
-         */
-        constructor(audioContext, destination) {
-            super(audioContext);
-            this.gain.connect(destination);
-        }
-        /**
-         * Creates a spatialzer for an audio source.
-         */
-        createSpatializer(id, source, spatialize, audioContext) {
-            if (spatialize) {
-                throw new Error("Can't spatialize with the base listener.");
-            }
-            return new NoSpatializationNode(id, source, audioContext, this.gain);
-        }
-    }
-
     /**
      * An audio positioner that uses Google's Resonance Audio library
      **/
@@ -6671,14 +6846,12 @@
         /**
          * Creates a new audio positioner that uses Google's Resonance Audio library
          */
-        constructor(audioContext, destination) {
-            super(audioContext, destination);
-            this.scene = new ResonanceAudio(audioContext, {
+        constructor(audioContext) {
+            const scene = new ResonanceAudio(audioContext, {
                 ambisonicOrder: 1,
                 renderingMode: RenderingMode.Bypass
             });
-            this.scene.output.connect(this.gain);
-            this.scene.setRoomProperties({
+            scene.setRoomProperties({
                 width: 10,
                 height: 5,
                 depth: 10,
@@ -6690,7 +6863,16 @@
                 [Direction.Down]: Material.Grass,
                 [Direction.Up]: Material.Transparent,
             });
+            super(audioContext, scene.listener.input, scene.output);
+            this.scene = scene;
             Object.seal(this);
+        }
+        dispose() {
+            if (this.scene) {
+                this.scene.dispose();
+                this.scene = null;
+            }
+            super.dispose();
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
@@ -6703,26 +6885,30 @@
         /**
          * Creates a spatialzer for an audio source.
          */
-        createSpatializer(id, source, spatialize, audioContext) {
+        createSpatializer(spatialize, audioContext, destination) {
             if (spatialize) {
-                return new ResonanceAudioNode(id, source, audioContext, this.scene);
+                return new ResonanceAudioNode(audioContext, destination.spatializedInput, this.scene);
             }
             else {
-                return super.createSpatializer(id, source, spatialize, audioContext);
+                return super.createSpatializer(spatialize, audioContext, destination);
             }
         }
     }
 
     const delta$1 = create$2();
-    class VolumeScalingNode extends BaseNode {
+    class VolumeScalingNode extends BaseEmitter {
         /**
          * Creates a new spatializer that performs no panning, only distance-based volume scaling
          */
-        constructor(id, source, audioContext, destination, listener) {
-            super(id, source, audioContext);
+        constructor(audioContext, destination, listener) {
+            const gain = audioContext.createGain();
+            super(audioContext, gain, gain, destination);
+            this.gain = gain;
             this.listener = listener;
-            this.gain.connect(destination);
             Object.seal(this);
+        }
+        createNew() {
+            return new VolumeScalingNode(this.audioContext, this.destination, this.listener);
         }
         update(loc, t) {
             const p = this.listener.pose.p;
@@ -6744,27 +6930,26 @@
         /**
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
-        constructor(audioContext, destination) {
-            super(audioContext, destination);
-            this.pose = null;
-            this.gain.gain.value = 0.25;
-            Object.seal(this);
+        constructor(audioContext) {
+            const gain = audioContext.createGain();
+            super(audioContext, gain, gain);
+            this.pose = new Pose();
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
          */
         update(loc, _t) {
-            this.pose = loc;
+            this.pose.copy(loc);
         }
         /**
          * Creates a spatialzer for an audio source.
          */
-        createSpatializer(id, source, spatialize, audioContext) {
+        createSpatializer(spatialize, audioContext, destination) {
             if (spatialize) {
-                return new VolumeScalingNode(id, source, audioContext, this.gain, this);
+                return new VolumeScalingNode(audioContext, destination.spatializedInput, this);
             }
             else {
-                return super.createSpatializer(id, source, spatialize, audioContext);
+                return super.createSpatializer(spatialize, audioContext, destination);
             }
         }
     }
@@ -6772,34 +6957,40 @@
     /**
      * Base class for spatializers that uses WebAudio's PannerNode
      **/
-    class BaseWebAudioPanner extends BaseWebAudioNode {
+    class BaseWebAudioPanner extends BaseEmitter {
         /**
          * Creates a new spatializer that uses WebAudio's PannerNode.
-         * @param id
-         * @param stream
          * @param audioContext - the output WebAudio context
          */
-        constructor(id, source, audioContext, destination) {
+        constructor(audioContext, destination) {
             const panner = audioContext.createPanner();
-            super(id, source, audioContext, panner);
-            this.node.panningModel = "HRTF";
-            this.node.distanceModel = "inverse";
-            this.node.coneInnerAngle = 360;
-            this.node.coneOuterAngle = 0;
-            this.node.coneOuterGain = 0;
-            this.node.connect(destination);
+            super(audioContext, panner, panner, destination);
+            this.panner = panner;
+            this.panner.panningModel = "HRTF";
+            this.panner.distanceModel = "inverse";
+            this.panner.coneInnerAngle = 360;
+            this.panner.coneOuterAngle = 0;
+            this.panner.coneOuterGain = 0;
+        }
+        copyAudioProperties(from) {
+            super.copyAudioProperties(from);
+            this.panner.panningModel = from.panner.panningModel;
+            this.panner.distanceModel = from.panner.distanceModel;
+            this.panner.coneInnerAngle = from.panner.coneInnerAngle;
+            this.panner.coneOuterAngle = from.panner.coneOuterAngle;
+            this.panner.coneOuterGain = from.panner.coneOuterGain;
         }
         /**
          * Sets parameters that alter spatialization.
          **/
         setAudioProperties(minDistance, maxDistance, rolloff, algorithm, transitionTime) {
             super.setAudioProperties(minDistance, maxDistance, rolloff, algorithm, transitionTime);
-            this.node.refDistance = this.minDistance;
+            this.panner.refDistance = this.minDistance;
             if (this.algorithm === "logarithmic") {
                 algorithm = "inverse";
             }
-            this.node.distanceModel = algorithm;
-            this.node.rolloffFactor = this.rolloff;
+            this.panner.distanceModel = algorithm;
+            this.panner.rolloffFactor = this.rolloff;
         }
     }
 
@@ -6810,21 +7001,24 @@
         /**
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
-        constructor(id, source, audioContext, destination) {
-            super(id, source, audioContext, destination);
+        constructor(audioContext, destination) {
+            super(audioContext, destination);
             Object.seal(this);
+        }
+        createNew() {
+            return new WebAudioPannerNew(this.audioContext, this.destination);
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
          */
         update(loc, t) {
             const { p, f } = loc;
-            this.node.positionX.setValueAtTime(p[0], t);
-            this.node.positionY.setValueAtTime(p[1], t);
-            this.node.positionZ.setValueAtTime(p[2], t);
-            this.node.orientationX.setValueAtTime(-f[0], t);
-            this.node.orientationY.setValueAtTime(-f[1], t);
-            this.node.orientationZ.setValueAtTime(-f[2], t);
+            this.panner.positionX.setValueAtTime(p[0], t);
+            this.panner.positionY.setValueAtTime(p[1], t);
+            this.panner.positionZ.setValueAtTime(p[2], t);
+            this.panner.orientationX.setValueAtTime(-f[0], t);
+            this.panner.orientationY.setValueAtTime(-f[1], t);
+            this.panner.orientationZ.setValueAtTime(-f[2], t);
         }
     }
 
@@ -6835,13 +7029,14 @@
         /**
          * Creates a new spatializer that uses WebAudio's PannerNode.
          */
-        constructor(audioContext, destination) {
-            super(audioContext, destination);
-            this.node = audioContext.listener;
-            this.volume = 0.75;
+        constructor(audioContext) {
+            const gain = audioContext.createGain();
+            gain.gain.value = 0.75;
+            super(audioContext, gain, gain);
+            this.listener = audioContext.listener;
         }
         dispose() {
-            this.node = null;
+            this.listener = null;
             super.dispose();
         }
     }
@@ -6853,8 +7048,8 @@
         /**
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
-        constructor(audioContext, destination) {
-            super(audioContext, destination);
+        constructor(audioContext) {
+            super(audioContext);
             Object.seal(this);
         }
         /**
@@ -6862,25 +7057,25 @@
          */
         update(loc, t) {
             const { p, f, u } = loc;
-            this.node.positionX.setValueAtTime(p[0], t);
-            this.node.positionY.setValueAtTime(p[1], t);
-            this.node.positionZ.setValueAtTime(p[2], t);
-            this.node.forwardX.setValueAtTime(f[0], t);
-            this.node.forwardY.setValueAtTime(f[1], t);
-            this.node.forwardZ.setValueAtTime(f[2], t);
-            this.node.upX.setValueAtTime(u[0], t);
-            this.node.upY.setValueAtTime(u[1], t);
-            this.node.upZ.setValueAtTime(u[2], t);
+            this.listener.positionX.setValueAtTime(p[0], t);
+            this.listener.positionY.setValueAtTime(p[1], t);
+            this.listener.positionZ.setValueAtTime(p[2], t);
+            this.listener.forwardX.setValueAtTime(f[0], t);
+            this.listener.forwardY.setValueAtTime(f[1], t);
+            this.listener.forwardZ.setValueAtTime(f[2], t);
+            this.listener.upX.setValueAtTime(u[0], t);
+            this.listener.upY.setValueAtTime(u[1], t);
+            this.listener.upZ.setValueAtTime(u[2], t);
         }
         /**
          * Creates a spatialzer for an audio source.
          */
-        createSpatializer(id, source, spatialize, audioContext) {
+        createSpatializer(spatialize, audioContext, destination) {
             if (spatialize) {
-                return new WebAudioPannerNew(id, source, audioContext, this.gain);
+                return new WebAudioPannerNew(audioContext, destination.spatializedInput);
             }
             else {
-                return super.createSpatializer(id, source, spatialize, audioContext);
+                return super.createSpatializer(spatialize, audioContext, destination);
             }
         }
     }
@@ -6892,17 +7087,20 @@
         /**
          * Creates a new positioner that uses the WebAudio API's old setPosition method.
          */
-        constructor(id, source, audioContext, destination) {
-            super(id, source, audioContext, destination);
+        constructor(audioContext, destination) {
+            super(audioContext, destination);
             Object.seal(this);
+        }
+        createNew() {
+            return new WebAudioPannerOld(this.audioContext, this.destination);
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
          */
         update(loc, _t) {
             const { p, f } = loc;
-            this.node.setPosition(p[0], p[1], p[2]);
-            this.node.setOrientation(f[0], f[1], f[2]);
+            this.panner.setPosition(p[0], p[1], p[2]);
+            this.panner.setOrientation(f[0], f[1], f[2]);
         }
     }
 
@@ -6913,8 +7111,8 @@
         /**
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
-        constructor(audioContext, destination) {
-            super(audioContext, destination);
+        constructor(audioContext) {
+            super(audioContext);
             Object.seal(this);
         }
         /**
@@ -6922,22 +7120,179 @@
          */
         update(loc, _t) {
             const { p, f, u } = loc;
-            this.node.setPosition(p[0], p[1], p[2]);
-            this.node.setOrientation(f[0], f[1], f[2], u[0], u[1], u[2]);
+            this.listener.setPosition(p[0], p[1], p[2]);
+            this.listener.setOrientation(f[0], f[1], f[2], u[0], u[1], u[2]);
         }
         /**
          * Creates a spatialzer for an audio source.
          */
-        createSpatializer(id, source, spatialize, audioContext) {
+        createSpatializer(spatialize, audioContext, destination) {
             if (spatialize) {
-                return new WebAudioPannerOld(id, source, audioContext, this.gain);
+                return new WebAudioPannerOld(audioContext, destination.spatializedInput);
             }
             else {
-                return super.createSpatializer(id, source, spatialize, audioContext);
+                return super.createSpatializer(spatialize, audioContext, destination);
             }
         }
     }
 
+    /**
+     * Empties out an array, returning the items that were in the array.
+     */
+    function arrayClear(arr) {
+        return arr.splice(0);
+    }
+
+    class BaseAudioSource extends BaseAudioElement {
+        constructor(id, audioContext) {
+            super(audioContext);
+            this.id = id;
+        }
+        dispose() {
+            this.source = null;
+            super.dispose();
+        }
+        get spatialized() {
+            return !(this.spatializer instanceof NoSpatializationNode);
+        }
+        get source() {
+            return this._source;
+        }
+        set source(v) {
+            if (v !== this.source) {
+                if (this._source) {
+                    disconnect(this._source, this.volumeControl);
+                }
+                this._source = v;
+                if (this._source) {
+                    connect(this._source, this.volumeControl);
+                }
+            }
+        }
+        disconnectSpatializer() {
+            disconnect(this.volumeControl, this.spatializer.input);
+        }
+        connectSpatializer() {
+            connect(this.volumeControl, this.spatializer.input);
+        }
+    }
+
+    class BaseAudioBufferSource extends BaseAudioSource {
+        constructor(id, audioContext, source, spatializer) {
+            super(id, audioContext);
+            this.source = source;
+            this.spatializer = spatializer;
+        }
+    }
+
+    class AudioBufferSource extends BaseAudioBufferSource {
+        constructor(id, audioContext, source, spatializer) {
+            super(id, audioContext, source, spatializer);
+            this.isPlaying = false;
+        }
+        async play() {
+            this.source.start();
+            await once(this.source, "ended");
+            this.isPlaying = false;
+        }
+        stop() {
+            this.source.stop();
+        }
+        dispose() {
+            this.stop();
+            super.dispose();
+        }
+    }
+
+    class AudioBufferSpawningSource extends BaseAudioBufferSource {
+        constructor(id, audioContext, source, spatializer) {
+            super(id, audioContext, source, spatializer);
+            this.counter = 0;
+            this.playingSources = new Array();
+        }
+        connectSpatializer() {
+            // do nothing, this node doesn't play on its own
+        }
+        disconnectSpatializer() {
+            // do nothing, this node doesn't play on its own
+        }
+        get isPlaying() {
+            for (const source of this.playingSources) {
+                if (source.isPlaying) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        async play() {
+            const newBuffer = this.source.context.createBufferSource();
+            newBuffer.buffer = this.source.buffer;
+            newBuffer.loop = this.source.loop;
+            const newSpatializer = this.spatializer.clone();
+            const newSource = new AudioBufferSource(`${this.id}-${this.counter++}`, this.audioContext, newBuffer, newSpatializer);
+            newSource.spatializer = newSpatializer;
+            this.playingSources.push(newSource);
+            newSource.play();
+            if (!this.source.loop) {
+                await once(newBuffer, "ended");
+                if (this.playingSources.indexOf(newSource) >= 0) {
+                    newSource.dispose();
+                    arrayRemove(this.playingSources, newSource);
+                }
+            }
+        }
+        stop() {
+            for (const source of this.playingSources) {
+                source.dispose();
+            }
+            arrayClear(this.playingSources);
+        }
+        dispose() {
+            this.stop();
+            super.dispose();
+        }
+    }
+
+    class AudioElementSource extends BaseAudioSource {
+        constructor(id, audioContext, source, spatializer) {
+            super(id, audioContext);
+            this.isPlaying = false;
+            this.source = source;
+            this.spatializer = spatializer;
+        }
+        async play() {
+            this.isPlaying = true;
+            await this.source.mediaElement.play();
+            if (!this.source.mediaElement.loop) {
+                await once(this.source.mediaElement, "ended");
+                this.isPlaying = false;
+            }
+        }
+        stop() {
+            this.source.mediaElement.pause();
+            this.source.mediaElement.currentTime = 0;
+            this.isPlaying = false;
+        }
+        dispose() {
+            if (this.source.mediaElement.parentElement) {
+                this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+            }
+            super.dispose();
+        }
+    }
+
+    class AudioStreamSource extends BaseAudioSource {
+        constructor(id, audioContext) {
+            super(id, audioContext);
+            this.streams = new Map();
+        }
+    }
+
+    function BackgroundAudio(autoplay, mute, ...rest) {
+        const elem = Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
+        //document.body.appendChild(elem);
+        return elem;
+    }
     if (!("AudioContext" in globalThis) && "webkitAudioContext" in globalThis) {
         globalThis.AudioContext = globalThis.webkitAudioContext;
     }
@@ -6949,7 +7304,7 @@
     const audioReadyEvt = new TypedEvent("audioReady");
     const testAudio = Audio();
     const useTrackSource = "createMediaStreamTrackSource" in AudioContext.prototype;
-    const useElementSource = !useTrackSource && !("createMediaStreamSource" in AudioContext.prototype);
+    const useElementSourceForUsers = !useTrackSource && !("createMediaStreamSource" in AudioContext.prototype);
     const audioTypes = new Map([
         ["wav", ["audio/wav", "audio/vnd.wave", "audio/wave", "audio/x-wav"]],
         ["mp3", ["audio/mpeg"]],
@@ -6986,9 +7341,10 @@
     let attemptResonanceAPI = hasAudioListener;
     var SpatializerType;
     (function (SpatializerType) {
-        SpatializerType["Low"] = "volumescale";
-        SpatializerType["Medium"] = "webaudiopanner";
-        SpatializerType["High"] = "resonance";
+        SpatializerType["None"] = "none";
+        SpatializerType["Low"] = "low";
+        SpatializerType["Medium"] = "medium";
+        SpatializerType["High"] = "high";
     })(SpatializerType || (SpatializerType = {}));
     /**
      * A manager of audio sources, destinations, and their spatialization.
@@ -6997,8 +7353,9 @@
         /**
          * Creates a new manager of audio sources, destinations, and their spatialization.
          **/
-        constructor(fetcher, type) {
+        constructor(fetcher, type, analyzeAudio = false) {
             super();
+            this.analyzeAudio = analyzeAudio;
             this.minDistance = 1;
             this.maxDistance = 10;
             this.rolloff = 1;
@@ -7008,21 +7365,41 @@
             this.clips = new Map();
             this.users = new Map();
             this.analysers = new Map();
-            this.sortedUserIDs = new Array();
             this.localUserID = null;
+            this.sortedUserIDs = new Array();
+            this.localUser = null;
             this.listener = null;
             this.audioContext = null;
             this.element = null;
             this.destination = null;
             this._audioOutputDeviceID = null;
             this.fetcher = fetcher || new Fetcher();
+            this.setLocalUserID(DEFAULT_LOCAL_USER_ID);
+            this.audioContext = new AudioContext();
+            if (canChangeAudioOutput) {
+                this.destination = this.audioContext.createMediaStreamDestination();
+                this.element = Audio(playsInline, autoPlay, srcObject(this.destination.stream), styles(display("none")));
+                document.body.appendChild(this.element);
+            }
+            else {
+                this.destination = this.audioContext.destination;
+            }
+            this.localUser = new AudioDestination(this.audioContext, this.destination);
+            if (this.ready) {
+                this.start();
+            }
+            else {
+                onUserGesture(() => this.dispatchEvent(audioReadyEvt), async () => {
+                    await this.start();
+                    return this.ready;
+                });
+            }
             this.type = type || SpatializerType.Medium;
             this.onAudioActivity = (evt) => {
                 audioActivityEvt$1.id = evt.id;
                 audioActivityEvt$1.isActive = evt.isActive;
                 this.dispatchEvent(audioActivityEvt$1);
             };
-            this.createContext();
             Object.seal(this);
         }
         get offsetRadius() {
@@ -7058,104 +7435,99 @@
             }
         }
         update() {
-            if (this.audioContext) {
-                const t = this.currentTime;
-                for (const clip of this.clips.values()) {
-                    clip.update(t);
-                }
-                for (const user of this.users.values()) {
-                    user.update(t);
-                }
-                for (const analyser of this.analysers.values()) {
-                    analyser.update();
-                }
+            const t = this.currentTime;
+            this.localUser.update(t);
+            for (const clip of this.clips.values()) {
+                clip.update(t);
+            }
+            for (const user of this.users.values()) {
+                user.update(t);
+            }
+            for (const analyser of this.analysers.values()) {
+                analyser.update();
             }
         }
-        /**
-         * If no audio context is currently available, creates one, and initializes the
-         * spatialization of its listener.
-         *
-         * If WebAudio isn't available, a mock audio context is created that provides
-         * ersatz playback timing.
-         **/
-        createContext() {
-            if (!this.audioContext) {
-                this.audioContext = new AudioContext();
-                if (canChangeAudioOutput) {
-                    this.destination = this.audioContext.createMediaStreamDestination();
-                    this.element = Audio(playsInline, autoPlay, srcObject(this.destination.stream), styles(display("none")));
-                    document.body.appendChild(this.element);
+        get type() {
+            return this._type;
+        }
+        set type(type) {
+            const inputType = type;
+            if (type !== SpatializerType.High
+                && type !== SpatializerType.Medium
+                && type !== SpatializerType.Low
+                && type !== SpatializerType.None) {
+                assertNever(type, "Invalid spatialization type: ");
+            }
+            // These checks are done in an arcane way because it makes the fallback logic
+            // for each step self-contained. It's easier to look at a single step and determine
+            // wether or not it is correct, without having to look at previous blocks of code.
+            if (type === SpatializerType.High) {
+                if (hasAudioContext && hasAudioListener && attemptResonanceAPI) {
+                    try {
+                        this.listener = new ResonanceAudioListener(this.audioContext);
+                    }
+                    catch (exp) {
+                        attemptResonanceAPI = false;
+                        type = SpatializerType.Medium;
+                        console.warn("Resonance Audio API not available!", exp);
+                    }
                 }
                 else {
-                    this.destination = this.audioContext.destination;
+                    type = SpatializerType.Medium;
                 }
-                // These checks are done in an arcane way because it makes the fallback logic
-                // for each step self-contained. It's easier to look at a single step and determine
-                // wether or not it is correct, without having to look at previous blocks of code.
-                if (this.type === SpatializerType.High) {
-                    if (hasAudioContext && hasAudioListener && attemptResonanceAPI) {
+            }
+            if (type === SpatializerType.Medium) {
+                if (hasAudioContext && hasAudioListener) {
+                    if (hasNewAudioListener) {
                         try {
-                            this.listener = new ResonanceAudioListener(this.audioContext, this.destination);
+                            this.listener = new WebAudioListenerNew(this.audioContext);
                         }
                         catch (exp) {
-                            attemptResonanceAPI = false;
-                            this.type = SpatializerType.Medium;
-                            console.warn("Resonance Audio API not available!", exp);
+                            hasNewAudioListener = false;
+                            console.warn("No AudioListener.positionX property!", exp);
                         }
                     }
-                    else {
-                        this.type = SpatializerType.Medium;
-                    }
-                }
-                if (this.type === SpatializerType.Medium) {
-                    if (hasAudioContext && hasAudioListener) {
-                        if (hasNewAudioListener) {
-                            try {
-                                this.listener = new WebAudioListenerNew(this.audioContext, this.destination);
-                            }
-                            catch (exp) {
-                                hasNewAudioListener = false;
-                                console.warn("No AudioListener.positionX property!", exp);
-                            }
+                    if (!hasNewAudioListener && hasOldAudioListener) {
+                        try {
+                            this.listener = new WebAudioListenerOld(this.audioContext);
                         }
-                        if (!hasNewAudioListener && hasOldAudioListener) {
-                            try {
-                                this.listener = new WebAudioListenerOld(this.audioContext, this.destination);
-                            }
-                            catch (exp) {
-                                hasOldAudioListener = false;
-                                console.warn("No WebAudio API!", exp);
-                            }
-                        }
-                        if (!hasNewAudioListener && !hasOldAudioListener) {
-                            this.type = SpatializerType.Low;
-                            hasAudioListener = false;
+                        catch (exp) {
+                            hasOldAudioListener = false;
+                            console.warn("No WebAudio API!", exp);
                         }
                     }
-                    else {
-                        this.type = SpatializerType.Low;
+                    if (!hasNewAudioListener && !hasOldAudioListener) {
+                        type = SpatializerType.Low;
+                        hasAudioListener = false;
                     }
-                }
-                if (this.type === SpatializerType.Low) {
-                    this.listener = new VolumeScalingListener(this.audioContext, this.destination);
-                }
-                if (this.listener === null) {
-                    throw new Error("Calla requires a functioning WebAudio system.");
-                }
-                if (this.ready) {
-                    this.start();
-                    this.dispatchEvent(audioReadyEvt);
                 }
                 else {
-                    onUserGesture(() => this.dispatchEvent(audioReadyEvt), async () => {
-                        await this.start();
-                        return this.ready;
-                    });
+                    type = SpatializerType.Low;
                 }
+            }
+            if (type === SpatializerType.Low) {
+                this.listener = new VolumeScalingListener(this.audioContext);
+            }
+            else if (type === SpatializerType.None) {
+                this.listener = new NoSpatializationListener(this.audioContext);
+            }
+            if (!this.listener) {
+                throw new Error("Calla requires a functioning WebAudio system. Could not create one for type: " + inputType);
+            }
+            else if (type !== inputType) {
+                console.warn(`Wasn't able to create the listener type ${inputType}. Fell back to ${type} instead.`);
+            }
+            this._type = type;
+            this.localUser.spatializer = this.listener;
+            for (const clip of this.clips.values()) {
+                clip.spatializer = this.createSpatializer(clip.spatialized);
+            }
+            for (const user of this.users.values()) {
+                user.spatializer = this.createSpatializer(user.spatialized);
             }
         }
         getAudioOutputDeviceID() {
-            return this.element?.sinkId;
+            return this.element && this.element.sinkId;
         }
         async setAudioOutputDeviceID(deviceID) {
             this._audioOutputDeviceID = deviceID || "";
@@ -7166,15 +7538,11 @@
         }
         /**
          * Creates a spatialzer for an audio source.
-         * @param id
          * @param source - the audio element that is being spatialized.
          * @param spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
          */
-        createSpatializer(id, source, spatialize) {
-            if (!this.listener) {
-                throw new Error("Audio context isn't ready");
-            }
-            return this.listener.createSpatializer(id, source, spatialize, this.audioContext);
+        createSpatializer(spatialize) {
+            return this.listener.createSpatializer(spatialize, this.audioContext, this.localUser);
         }
         /**
          * Gets the current playback time.
@@ -7188,7 +7556,7 @@
         createUser(id) {
             let user = this.users.get(id);
             if (!user) {
-                user = new AudioSource(id);
+                user = new AudioStreamSource(id, this.audioContext);
                 this.users.set(id, user);
                 arraySortedInsert(this.sortedUserIDs, id);
                 this.updateUserOffsets();
@@ -7198,28 +7566,14 @@
         /**
          * Create a new user for the audio listener.
          */
-        createLocalUser(id) {
-            this.localUserID = id;
-            let oldID = null;
-            let user = null;
-            for (const entry of this.users.entries()) {
-                if (entry[1].spatializer === this.listener) {
-                    [oldID, user] = entry;
-                    break;
-                }
-            }
-            if (user) {
-                this.users.delete(oldID);
-                arrayRemove(this.sortedUserIDs, oldID);
-                this.users.set(id, user);
-                arraySortedInsert(this.sortedUserIDs, id);
+        setLocalUserID(id) {
+            if (this.localUser) {
+                arrayRemove(this.sortedUserIDs, this.localUserID);
+                this.localUserID = id;
+                arraySortedInsert(this.sortedUserIDs, this.localUserID);
                 this.updateUserOffsets();
             }
-            else {
-                user = this.createUser(id);
-                user.spatializer = this.listener;
-            }
-            return user;
+            return this.localUser;
         }
         /**
          * Creates a new sound effect from a series of fallback paths
@@ -7236,6 +7590,28 @@
             if (path == null || path.length === 0) {
                 throw new Error("No clip source path provided");
             }
+            const clip =  await this.createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress)
+                ;
+            clip.volume = vol;
+            this.clips.set(name, clip);
+            return clip;
+        }
+        async createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+            if (onProgress) {
+                onProgress(0, 1);
+            }
+            const elem = BackgroundAudio(autoPlaying, false);
+            const task = once(elem, "canplaythrough");
+            elem.loop = looping;
+            elem.src = await this.fetcher.getFile(path, onProgress);
+            await task;
+            const source = this.audioContext.createMediaElementSource(elem);
+            if (onProgress) {
+                onProgress(1, 1);
+            }
+            return new AudioElementSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+        }
+        async createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress) {
             let goodBlob = null;
             if (!shouldTry(path)) {
                 if (onProgress) {
@@ -7256,13 +7632,10 @@
             const source = this.audioContext.createBufferSource();
             source.buffer = data;
             source.loop = looping;
-            const clip = new AudioSource("audio-clip-" + name);
-            clip.spatializer = this.createSpatializer(name, source, spatialize);
-            clip.spatializer.volume = vol;
+            const clip = new AudioBufferSpawningSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
             if (autoPlaying) {
-                clip.spatializer.play();
+                clip.play();
             }
-            this.clips.set(name, clip);
             return clip;
         }
         hasClip(name) {
@@ -7275,34 +7648,26 @@
         async playClip(name) {
             if (this.ready && this.hasClip(name)) {
                 const clip = this.clips.get(name);
-                await clip.spatializer.play();
+                await clip.play();
             }
         }
         stopClip(name) {
             if (this.ready && this.hasClip(name)) {
                 const clip = this.clips.get(name);
-                clip.spatializer.stop();
+                clip.stop();
             }
-        }
-        /**
-         * Get an audio source.
-         * @param sources - the collection of audio sources from which to retrieve.
-         * @param id - the id of the audio source to get
-         **/
-        getSource(sources, id) {
-            return sources.get(id) || null;
         }
         /**
          * Get an existing user.
          */
         getUser(id) {
-            return this.getSource(this.users, id);
+            return this.users.get(id);
         }
         /**
          * Get an existing audio clip.
          */
         getClip(id) {
-            return this.getSource(this.clips, id);
+            return this.clips.get(id);
         }
         /**
          * Remove an audio source from audio processing.
@@ -7310,13 +7675,10 @@
          * @param id - the id of the audio source to remove
          **/
         removeSource(sources, id) {
-            if (sources.has(id)) {
-                using(sources.get(id), (source) => {
-                    if (source.spatializer) {
-                        source.spatializer.stop();
-                    }
-                    sources.delete(id);
-                });
+            const source = sources.get(id);
+            if (source) {
+                sources.delete(id);
+                source.dispose();
             }
         }
         /**
@@ -7346,19 +7708,20 @@
                 else {
                     const merger = this.audioContext.createChannelMerger(tracks.length);
                     for (const track of tracks) {
-                        track.connect(merger);
+                        connect(track, merger);
                     }
                     return merger;
                 }
             }
             else {
-                const elem = Audio(playsInline(true), autoPlay(true), muted(!useElementSource), controls(false), styles(display("none")), srcObject(stream));
-                document.body.appendChild(elem);
+                const elem = BackgroundAudio(true, !useElementSourceForUsers);
+                elem.srcObject = stream;
                 elem.play();
-                if (useElementSource) {
+                if (useElementSourceForUsers) {
                     return this.audioContext.createMediaElementSource(elem);
                 }
                 else {
+                    elem.muted = true;
                     return this.audioContext.createMediaStreamSource(stream);
                 }
             }
@@ -7375,12 +7738,14 @@
                 user.spatializer = null;
                 if (stream) {
                     await waitFor(() => stream.active);
-                    const source = this.createSourceFromStream(stream);
-                    user.spatializer = this.createSpatializer(id, source, true);
+                    user.source = this.createSourceFromStream(stream);
+                    user.spatializer = this.createSpatializer(true);
                     user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);
-                    const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
-                    analyser.addEventListener("audioActivity", this.onAudioActivity);
-                    this.analysers.set(id, analyser);
+                    if (this.analyzeAudio) {
+                        const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
+                        analyser.addEventListener("audioActivity", this.onAudioActivity);
+                        this.analysers.set(id, analyser);
+                    }
                 }
             }
         }
@@ -7423,15 +7788,21 @@
          * @param poseCallback
          */
         withPose(sources, id, dt, poseCallback) {
-            if (sources.has(id)) {
-                const source = sources.get(id);
-                const pose = source.pose;
-                if (dt == null) {
-                    dt = this.transitionTime;
-                }
-                return poseCallback(pose, dt);
+            const source = sources.get(id);
+            let pose = null;
+            if (source) {
+                pose = source.pose;
             }
-            return null;
+            else if (id === this.localUserID) {
+                pose = this.localUser.pose;
+            }
+            if (!pose) {
+                return null;
+            }
+            if (dt == null) {
+                dt = this.transitionTime;
+            }
+            return poseCallback(pose, dt);
         }
         /**
          * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
@@ -7538,245 +7909,6 @@
             this.withClip(id, dt, (pose, dt) => {
                 pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
             });
-        }
-    }
-
-    var ConnectionState;
-    (function (ConnectionState) {
-        ConnectionState["Disconnected"] = "Disconnected";
-        ConnectionState["Connecting"] = "Connecting";
-        ConnectionState["Connected"] = "Connected";
-        ConnectionState["Disconnecting"] = "Disconnecting";
-    })(ConnectionState || (ConnectionState = {}));
-
-    /**
-     * Unicode-standardized pictograms.
-     **/
-    class Emoji {
-        /**
-         * Creates a new Unicode-standardized pictograms.
-         * @param value - a Unicode sequence.
-         * @param desc - an English text description of the pictogram.
-         * @param props - an optional set of properties to store with the emoji.
-         */
-        constructor(value, desc, props = null) {
-            this.value = value;
-            this.desc = desc;
-            this.value = value;
-            this.desc = desc;
-            this.props = props || {};
-        }
-        /**
-         * Determines of the provided Emoji or EmojiGroup is a subset of
-         * this emoji.
-         */
-        contains(e) {
-            if (e instanceof Emoji) {
-                return this.contains(e.value);
-            }
-            else {
-                return this.value.indexOf(e) >= 0;
-            }
-        }
-    }
-
-    class CallaEvent extends Event {
-        constructor(eventType) {
-            super(eventType);
-            this.eventType = eventType;
-        }
-    }
-    class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
-        constructor() {
-            super("serverConnected");
-        }
-    }
-    class CallaTeleconferenceServerDisconnectedEvent extends CallaEvent {
-        constructor() {
-            super("serverDisconnected");
-        }
-    }
-    class CallaTeleconferenceServerFailedEvent extends CallaEvent {
-        constructor() {
-            super("serverFailed");
-        }
-    }
-    class CallaUserEvent extends CallaEvent {
-        constructor(type, id) {
-            super(type);
-            this.id = id;
-        }
-    }
-    class CallaParticipantEvent extends CallaUserEvent {
-        constructor(type, id, displayName) {
-            super(type, id);
-            this.displayName = displayName;
-        }
-    }
-    class CallaConferenceJoinedEvent extends CallaUserEvent {
-        constructor(id, pose) {
-            super("conferenceJoined", id);
-            this.pose = pose;
-        }
-    }
-    class CallaConferenceLeftEvent extends CallaUserEvent {
-        constructor(id) {
-            super("conferenceLeft", id);
-        }
-    }
-    class CallaConferenceFailedEvent extends CallaEvent {
-        constructor() {
-            super("conferenceFailed");
-        }
-    }
-    class CallaParticipantJoinedEvent extends CallaParticipantEvent {
-        constructor(id, displayName, source) {
-            super("participantJoined", id, displayName);
-            this.source = source;
-        }
-    }
-    class CallaParticipantLeftEvent extends CallaUserEvent {
-        constructor(id) {
-            super("participantLeft", id);
-        }
-    }
-    class CallaParticipantNameChangeEvent extends CallaParticipantEvent {
-        constructor(id, displayName) {
-            super("userNameChanged", id, displayName);
-        }
-    }
-    class CallaUserMutedEvent extends CallaUserEvent {
-        constructor(type, id, muted) {
-            super(type, id);
-            this.muted = muted;
-        }
-    }
-    class CallaUserAudioMutedEvent extends CallaUserMutedEvent {
-        constructor(id, muted) {
-            super("audioMuteStatusChanged", id, muted);
-        }
-    }
-    class CallaUserVideoMutedEvent extends CallaUserMutedEvent {
-        constructor(id, muted) {
-            super("videoMuteStatusChanged", id, muted);
-        }
-    }
-    var StreamType;
-    (function (StreamType) {
-        StreamType["Audio"] = "audio";
-        StreamType["Video"] = "video";
-    })(StreamType || (StreamType = {}));
-    var StreamOpType;
-    (function (StreamOpType) {
-        StreamOpType["Added"] = "added";
-        StreamOpType["Removed"] = "removed";
-        StreamOpType["Changed"] = "changed";
-    })(StreamOpType || (StreamOpType = {}));
-    class CallaStreamEvent extends CallaUserEvent {
-        constructor(type, kind, op, id, stream) {
-            super(type, id);
-            this.kind = kind;
-            this.op = op;
-            this.stream = stream;
-        }
-    }
-    class CallaStreamAddedEvent extends CallaStreamEvent {
-        constructor(type, kind, id, stream) {
-            super(type, kind, StreamOpType.Added, id, stream);
-        }
-    }
-    class CallaStreamRemovedEvent extends CallaStreamEvent {
-        constructor(type, kind, id, stream) {
-            super(type, kind, StreamOpType.Removed, id, stream);
-        }
-    }
-    class CallaAudioStreamAddedEvent extends CallaStreamAddedEvent {
-        constructor(id, stream) {
-            super("audioAdded", StreamType.Audio, id, stream);
-        }
-    }
-    class CallaAudioStreamRemovedEvent extends CallaStreamRemovedEvent {
-        constructor(id, stream) {
-            super("audioRemoved", StreamType.Audio, id, stream);
-        }
-    }
-    class CallaVideoStreamAddedEvent extends CallaStreamAddedEvent {
-        constructor(id, stream) {
-            super("videoAdded", StreamType.Video, id, stream);
-        }
-    }
-    class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent {
-        constructor(id, stream) {
-            super("videoRemoved", StreamType.Video, id, stream);
-        }
-    }
-    class CallaPoseEvent extends CallaUserEvent {
-        constructor(type, id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super(type, id);
-            this.px = px;
-            this.py = py;
-            this.pz = pz;
-            this.fx = fx;
-            this.fy = fy;
-            this.fz = fz;
-            this.ux = ux;
-            this.uy = uy;
-            this.uz = uz;
-        }
-        set(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.px = px;
-            this.py = py;
-            this.pz = pz;
-            this.fx = fx;
-            this.fy = fy;
-            this.fz = fz;
-            this.ux = ux;
-            this.uy = uy;
-            this.uz = uz;
-        }
-    }
-    class CallaUserPosedEvent extends CallaPoseEvent {
-        constructor(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super("userPosed", id, px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-    }
-    class CallaUserPointerEvent extends CallaPoseEvent {
-        constructor(id, name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super("userPointer", id, px, py, pz, fx, fy, fz, ux, uy, uz);
-            this.name = name;
-        }
-    }
-    class CallaEmojiEvent extends CallaUserEvent {
-        constructor(type, id, emoji) {
-            super(type, id);
-            if (emoji instanceof Emoji) {
-                this.emoji = emoji.value;
-            }
-            else {
-                this.emoji = emoji;
-            }
-        }
-    }
-    class CallaEmoteEvent extends CallaEmojiEvent {
-        constructor(id, emoji) {
-            super("emote", id, emoji);
-        }
-    }
-    class CallaEmojiAvatarEvent extends CallaEmojiEvent {
-        constructor(id, emoji) {
-            super("setAvatarEmoji", id, emoji);
-        }
-    }
-    class CallaAvatarChangedEvent extends CallaUserEvent {
-        constructor(id, url) {
-            super("avatarChanged", id);
-            this.url = url;
-        }
-    }
-    class CallaChatEvent extends CallaUserEvent {
-        constructor(id, text) {
-            super("chat", id);
-            this.text = text;
         }
     }
 
@@ -7931,278 +8063,6 @@
         }
     }
 
-    /**
-     * Scans through a series of filters to find an item that matches
-     * any of the filters. The first item of the first filter that matches
-     * will be returned.
-     */
-    function arrayScan(arr, ...tests) {
-        for (const test of tests) {
-            for (const item of arr) {
-                if (test(item)) {
-                    return item;
-                }
-            }
-        }
-        return null;
-    }
-
-    const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
-    const isFirefox = "InstallTrigger" in globalThis;
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isOpera = /Opera/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
-        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
-        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
-    const isBlackberry = /BlackBerry/.test(navigator.userAgent);
-    const isUCBrowser = /(UC Browser |UCWEB)/.test(navigator.userAgent);
-    const isMobileVR = /Mobile VR/.test(navigator.userAgent);
-    const isOculus = /oculus/.test(navigator.userAgent);
-    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
-    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
-
-    function addLogger(obj, evtName) {
-        obj.addEventListener(evtName, (...rest) => {
-            if (loggingEnabled) {
-                console.log(">== CALLA ==<", evtName, ...rest);
-            }
-        });
-    }
-    function filterDeviceDuplicates(devices) {
-        const filtered = [];
-        for (let i = 0; i < devices.length; ++i) {
-            const a = devices[i];
-            let found = false;
-            for (let j = 0; j < filtered.length && !found; ++j) {
-                const b = filtered[j];
-                found = a.kind === b.kind && b.label.indexOf(a.label) > 0;
-            }
-            if (!found) {
-                filtered.push(a);
-            }
-        }
-        return filtered;
-    }
-    const PREFERRED_AUDIO_OUTPUT_ID_KEY = "calla:preferredAudioOutputID";
-    const PREFERRED_AUDIO_INPUT_ID_KEY = "calla:preferredAudioInputID";
-    const PREFERRED_VIDEO_INPUT_ID_KEY = "calla:preferredVideoInputID";
-    const DEFAULT_LOCAL_USER_ID = "local-user";
-    let loggingEnabled = window.location.hostname === "localhost"
-        || /\bdebug\b/.test(window.location.search);
-    class BaseTeleconferenceClient extends TypedEventBase {
-        constructor(fetcher, audio) {
-            super();
-            this.localUserID = null;
-            this.localUserName = null;
-            this.roomName = null;
-            this._prepared = false;
-            this._connectionState = ConnectionState.Disconnected;
-            this._conferenceState = ConnectionState.Disconnected;
-            this.hasAudioPermission = false;
-            this.hasVideoPermission = false;
-            this.fetcher = fetcher || new Fetcher();
-            this.audio = audio || new AudioManager(fetcher, isOculusQuest
-                ? SpatializerType.High
-                : SpatializerType.Medium);
-            this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
-            this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-            this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-            this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
-            this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-            this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
-            this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        }
-        toggleLogging() {
-            loggingEnabled = !loggingEnabled;
-        }
-        get connectionState() {
-            return this._connectionState;
-        }
-        setConnectionState(state) {
-            this._connectionState = state;
-        }
-        get conferenceState() {
-            return this._conferenceState;
-        }
-        setConferenceState(state) {
-            this._conferenceState = state;
-        }
-        dispatchEvent(evt) {
-            if (evt instanceof CallaUserEvent
-                && (evt.id == null
-                    || evt.id === "local")) {
-                if (this.localUserID === DEFAULT_LOCAL_USER_ID) {
-                    evt.id = null;
-                }
-                else {
-                    evt.id = this.localUserID;
-                }
-            }
-            return super.dispatchEvent(evt);
-        }
-        async getNext(evtName, userID) {
-            return new Promise((resolve) => {
-                const getter = (evt) => {
-                    if (evt instanceof CallaUserEvent
-                        && evt.id === userID) {
-                        this.removeEventListener(evtName, getter);
-                        resolve(evt);
-                    }
-                };
-                this.addEventListener(evtName, getter);
-            });
-        }
-        get preferredAudioInputID() {
-            return localStorage.getItem(PREFERRED_AUDIO_INPUT_ID_KEY);
-        }
-        set preferredAudioInputID(v) {
-            localStorage.setItem(PREFERRED_AUDIO_INPUT_ID_KEY, v);
-        }
-        get preferredVideoInputID() {
-            return localStorage.getItem(PREFERRED_VIDEO_INPUT_ID_KEY);
-        }
-        set preferredVideoInputID(v) {
-            localStorage.setItem(PREFERRED_VIDEO_INPUT_ID_KEY, v);
-        }
-        async setPreferredDevices() {
-            await this.setPreferredAudioInput(true);
-            await this.setPreferredVideoInput(false);
-            await this.setPreferredAudioOutput(true);
-        }
-        async getPreferredAudioInput(allowAny) {
-            const devices = await this.getAudioInputDevices();
-            const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
-            return device;
-        }
-        async setPreferredAudioInput(allowAny) {
-            const device = await this.getPreferredAudioInput(allowAny);
-            if (device) {
-                await this.setAudioInputDevice(device);
-            }
-        }
-        async getPreferredVideoInput(allowAny) {
-            const devices = await this.getVideoInputDevices();
-            const device = arrayScan(devices, (d) => d.deviceId === this.preferredVideoInputID, (d) => allowAny && d && /front/i.test(d.label), (d) => allowAny && d.deviceId.length > 0);
-            return device;
-        }
-        async setPreferredVideoInput(allowAny) {
-            const device = await this.getPreferredVideoInput(allowAny);
-            if (device) {
-                await this.setVideoInputDevice(device);
-            }
-        }
-        async getDevices() {
-            let devices = null;
-            for (let i = 0; i < 3; ++i) {
-                devices = await navigator.mediaDevices.enumerateDevices();
-                for (const device of devices) {
-                    if (device.deviceId.length > 0) {
-                        this.hasAudioPermission = this.hasAudioPermission || device.kind === "audioinput" && device.label.length > 0;
-                        this.hasVideoPermission = this.hasVideoPermission || device.kind === "videoinput" && device.label.length > 0;
-                    }
-                }
-                if (this.hasAudioPermission) {
-                    break;
-                }
-                try {
-                    await navigator.mediaDevices.getUserMedia({ audio: !this.hasAudioPermission, video: !this.hasVideoPermission });
-                }
-                catch (exp) {
-                    console.warn(exp);
-                }
-            }
-            return devices || [];
-        }
-        async getMediaPermissions() {
-            await this.getDevices();
-            return {
-                audio: this.hasAudioPermission,
-                video: this.hasVideoPermission
-            };
-        }
-        async getAvailableDevices(filterDuplicates = false) {
-            let devices = await this.getDevices();
-            if (filterDuplicates) {
-                devices = filterDeviceDuplicates(devices);
-            }
-            return {
-                audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
-                audioInput: devices.filter(d => d.kind === "audioinput"),
-                videoInput: devices.filter(d => d.kind === "videoinput")
-            };
-        }
-        async getAudioInputDevices(filterDuplicates = false) {
-            const devices = await this.getAvailableDevices(filterDuplicates);
-            return devices && devices.audioInput || [];
-        }
-        async getVideoInputDevices(filterDuplicates = false) {
-            const devices = await this.getAvailableDevices(filterDuplicates);
-            return devices && devices.videoInput || [];
-        }
-        async setAudioOutputDevice(device) {
-            if (canChangeAudioOutput) {
-                this.preferredAudioOutputID = device && device.deviceId || null;
-            }
-        }
-        async getAudioOutputDevices(filterDuplicates = false) {
-            if (!canChangeAudioOutput) {
-                return [];
-            }
-            const devices = await this.getAvailableDevices(filterDuplicates);
-            return devices && devices.audioOutput || [];
-        }
-        async getCurrentAudioOutputDevice() {
-            if (!canChangeAudioOutput) {
-                return null;
-            }
-            const curId = this.audio.getAudioOutputDeviceID(), devices = await this.getAudioOutputDevices(), device = devices.filter((d) => curId != null && d.deviceId === curId
-                || curId == null && d.deviceId === this.preferredAudioOutputID);
-            if (device.length === 0) {
-                return null;
-            }
-            else {
-                return device[0];
-            }
-        }
-        get preferredAudioOutputID() {
-            return localStorage.getItem(PREFERRED_AUDIO_OUTPUT_ID_KEY);
-        }
-        set preferredAudioOutputID(v) {
-            localStorage.setItem(PREFERRED_AUDIO_OUTPUT_ID_KEY, v);
-        }
-        async getPreferredAudioOutput(allowAny) {
-            const devices = await this.getAudioOutputDevices();
-            const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
-            return device;
-        }
-        async setPreferredAudioOutput(allowAny) {
-            const device = await this.getPreferredAudioOutput(allowAny);
-            if (device) {
-                await this.setAudioOutputDevice(device);
-            }
-        }
-        async setAudioInputDevice(device) {
-            this.preferredAudioInputID = device && device.deviceId || null;
-        }
-        async setVideoInputDevice(device) {
-            this.preferredVideoInputID = device && device.deviceId || null;
-        }
-        async connect() {
-            this.setConnectionState(ConnectionState.Connecting);
-        }
-        async join(_roomName, _password) {
-            this.setConferenceState(ConnectionState.Connecting);
-        }
-        async leave() {
-            this.setConferenceState(ConnectionState.Disconnecting);
-        }
-        async disconnect() {
-            this.setConnectionState(ConnectionState.Disconnecting);
-        }
-    }
-
-    const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
     function encodeUserName(v) {
         try {
             return encodeURIComponent(v);
@@ -8220,12 +8080,12 @@
         }
     }
     class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-        constructor(fetcher, audio) {
+        constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
             super(fetcher, audio);
+            this.host = host;
+            this.bridgeHost = bridgeHost;
+            this.bridgeMUC = bridgeMUC;
             this.usingDefaultMetadataClient = false;
-            this.host = null;
-            this.bridgeHost = null;
-            this.bridgeMUC = null;
             this.connection = null;
             this.conference = null;
             this.tracks = new Map();
@@ -8259,22 +8119,6 @@
         getDefaultMetadataClient() {
             this.usingDefaultMetadataClient = true;
             return new JitsiMetadataClient(this);
-        }
-        async prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress) {
-            if (!this._prepared) {
-                this.host = JITSI_HOST;
-                this.bridgeHost = JVB_HOST;
-                this.bridgeMUC = JVB_MUC;
-                console.info("Connecting to:", this.host);
-                const progs = splitProgress(onProgress, 2);
-                await this.fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-                await this.fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
-                {
-                    JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-                }
-                JitsiMeetJS.init();
-                this._prepared = true;
-            }
         }
         async connect() {
             await super.connect();
@@ -8628,50 +8472,43 @@
     })(ClientState || (ClientState = {}));
     const audioActivityEvt$2 = new AudioActivityEvent();
     class Calla extends TypedEventBase {
-        constructor(fetcher, audio, TeleClientType, MetaClientType) {
+        constructor(_fetcher, _tele, _meta) {
             super();
+            this._fetcher = _fetcher;
+            this._tele = _tele;
+            this._meta = _meta;
             this.isAudioMuted = null;
             this.isVideoMuted = null;
-            if (isNullOrUndefined(TeleClientType)) {
-                TeleClientType = JitsiTeleconferenceClient;
-            }
-            this.tele = new TeleClientType(fetcher, audio);
-            if (isNullOrUndefined(MetaClientType)) {
-                this.meta = this.tele.getDefaultMetadataClient();
-            }
-            else {
-                this.meta = new MetaClientType(this.tele);
-            }
             const fwd = this.dispatchEvent.bind(this);
-            this.tele.addEventListener("serverConnected", fwd);
-            this.tele.addEventListener("serverDisconnected", fwd);
-            this.tele.addEventListener("serverFailed", fwd);
-            this.tele.addEventListener("conferenceFailed", fwd);
-            this.tele.addEventListener("conferenceRestored", fwd);
-            this.tele.addEventListener("audioMuteStatusChanged", fwd);
-            this.tele.addEventListener("videoMuteStatusChanged", fwd);
-            this.tele.addEventListener("conferenceJoined", async (evt) => {
-                const user = this.audio.createLocalUser(evt.id);
+            this._tele.addEventListener("serverConnected", fwd);
+            this._tele.addEventListener("serverDisconnected", fwd);
+            this._tele.addEventListener("serverFailed", fwd);
+            this._tele.addEventListener("conferenceFailed", fwd);
+            this._tele.addEventListener("conferenceRestored", fwd);
+            this._tele.addEventListener("audioMuteStatusChanged", fwd);
+            this._tele.addEventListener("videoMuteStatusChanged", fwd);
+            this._tele.addEventListener("conferenceJoined", async (evt) => {
+                const user = this.audio.setLocalUserID(evt.id);
                 evt.pose = user.pose;
                 this.dispatchEvent(evt);
                 await this.setPreferredDevices();
             });
-            this.tele.addEventListener("conferenceLeft", (evt) => {
-                this.audio.createLocalUser(evt.id);
+            this._tele.addEventListener("conferenceLeft", (evt) => {
+                this.audio.setLocalUserID(evt.id);
                 this.dispatchEvent(evt);
             });
-            this.tele.addEventListener("participantJoined", async (joinEvt) => {
+            this._tele.addEventListener("participantJoined", async (joinEvt) => {
                 joinEvt.source = this.audio.createUser(joinEvt.id);
                 this.dispatchEvent(joinEvt);
             });
-            this.tele.addEventListener("participantLeft", (evt) => {
+            this._tele.addEventListener("participantLeft", (evt) => {
                 this.dispatchEvent(evt);
                 this.audio.removeUser(evt.id);
             });
-            this.tele.addEventListener("userNameChanged", fwd);
-            this.tele.addEventListener("videoAdded", fwd);
-            this.tele.addEventListener("videoRemoved", fwd);
-            this.tele.addEventListener("audioAdded", (evt) => {
+            this._tele.addEventListener("userNameChanged", fwd);
+            this._tele.addEventListener("videoAdded", fwd);
+            this._tele.addEventListener("videoRemoved", fwd);
+            this._tele.addEventListener("audioAdded", (evt) => {
                 const user = this.audio.getUser(evt.id);
                 if (user) {
                     let stream = user.streams.get(evt.kind);
@@ -8680,26 +8517,26 @@
                     }
                     stream = evt.stream;
                     user.streams.set(evt.kind, stream);
-                    if (evt.id !== this.tele.localUserID) {
+                    if (evt.id !== this._tele.localUserID) {
                         this.audio.setUserStream(evt.id, stream);
                     }
                     this.dispatchEvent(evt);
                 }
             });
-            this.tele.addEventListener("audioRemoved", (evt) => {
+            this._tele.addEventListener("audioRemoved", (evt) => {
                 const user = this.audio.getUser(evt.id);
                 if (user && user.streams.has(evt.kind)) {
                     user.streams.delete(evt.kind);
                 }
-                if (evt.id !== this.tele.localUserID) {
+                if (evt.id !== this._tele.localUserID) {
                     this.audio.setUserStream(evt.id, null);
                 }
                 this.dispatchEvent(evt);
             });
-            this.meta.addEventListener("avatarChanged", fwd);
-            this.meta.addEventListener("chat", fwd);
-            this.meta.addEventListener("emote", fwd);
-            this.meta.addEventListener("setAvatarEmoji", fwd);
+            this._meta.addEventListener("avatarChanged", fwd);
+            this._meta.addEventListener("chat", fwd);
+            this._meta.addEventListener("emote", fwd);
+            this._meta.addEventListener("setAvatarEmoji", fwd);
             const offsetEvt = (poseEvt) => {
                 const O = this.audio.getUserOffset(poseEvt.id);
                 if (O) {
@@ -8709,8 +8546,8 @@
                 }
                 this.dispatchEvent(poseEvt);
             };
-            this.meta.addEventListener("userPointer", offsetEvt);
-            this.meta.addEventListener("userPosed", (evt) => {
+            this._meta.addEventListener("userPointer", offsetEvt);
+            this._meta.addEventListener("userPosed", (evt) => {
                 this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
                 offsetEvt(evt);
             });
@@ -8726,46 +8563,55 @@
             Object.seal(this);
         }
         get connectionState() {
-            return this.tele.connectionState;
+            return this._tele.connectionState;
         }
         get conferenceState() {
-            return this.tele.conferenceState;
+            return this._tele.conferenceState;
+        }
+        get fetcher() {
+            return this._fetcher;
+        }
+        get tele() {
+            return this._tele;
+        }
+        get meta() {
+            return this._meta;
         }
         get audio() {
-            return this.tele.audio;
+            return this._tele.audio;
         }
         get preferredAudioOutputID() {
-            return this.tele.preferredAudioOutputID;
+            return this._tele.preferredAudioOutputID;
         }
         set preferredAudioOutputID(v) {
-            this.tele.preferredAudioOutputID = v;
+            this._tele.preferredAudioOutputID = v;
         }
         get preferredAudioInputID() {
-            return this.tele.preferredAudioInputID;
+            return this._tele.preferredAudioInputID;
         }
         set preferredAudioInputID(v) {
-            this.tele.preferredAudioInputID = v;
+            this._tele.preferredAudioInputID = v;
         }
         get preferredVideoInputID() {
-            return this.tele.preferredVideoInputID;
+            return this._tele.preferredVideoInputID;
         }
         set preferredVideoInputID(v) {
-            this.tele.preferredVideoInputID = v;
+            this._tele.preferredVideoInputID = v;
         }
         async getCurrentAudioOutputDevice() {
-            return await this.tele.getCurrentAudioOutputDevice();
+            return await this._tele.getCurrentAudioOutputDevice();
         }
         async getMediaPermissions() {
-            return await this.tele.getMediaPermissions();
+            return await this._tele.getMediaPermissions();
         }
         async getAudioOutputDevices(filterDuplicates) {
-            return await this.tele.getAudioOutputDevices(filterDuplicates);
+            return await this._tele.getAudioOutputDevices(filterDuplicates);
         }
         async getAudioInputDevices(filterDuplicates) {
-            return await this.tele.getAudioInputDevices(filterDuplicates);
+            return await this._tele.getAudioInputDevices(filterDuplicates);
         }
         async getVideoInputDevices(filterDuplicates) {
-            return await this.tele.getVideoInputDevices(filterDuplicates);
+            return await this._tele.getVideoInputDevices(filterDuplicates);
         }
         dispose() {
             this.leave();
@@ -8779,106 +8625,103 @@
         }
         setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
             this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
-            this.meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
+            this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
             this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
-            this.meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
+            this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
+            this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setAvatarEmoji(emoji) {
-            this.meta.setAvatarEmoji(emoji);
+            this._meta.setAvatarEmoji(emoji);
         }
         setAvatarURL(url) {
-            this.meta.setAvatarURL(url);
+            this._meta.setAvatarURL(url);
         }
         emote(emoji) {
-            this.meta.emote(emoji);
+            this._meta.emote(emoji);
         }
         chat(text) {
-            this.meta.chat(text);
+            this._meta.chat(text);
         }
         async setPreferredDevices() {
-            await this.tele.setPreferredDevices();
+            await this._tele.setPreferredDevices();
         }
         async setAudioInputDevice(device) {
-            await this.tele.setAudioInputDevice(device);
+            await this._tele.setAudioInputDevice(device);
         }
         async setVideoInputDevice(device) {
-            await this.tele.setVideoInputDevice(device);
+            await this._tele.setVideoInputDevice(device);
         }
         async getCurrentAudioInputDevice() {
-            return await this.tele.getCurrentAudioInputDevice();
+            return await this._tele.getCurrentAudioInputDevice();
         }
         async getCurrentVideoInputDevice() {
-            return await this.tele.getCurrentVideoInputDevice();
+            return await this._tele.getCurrentVideoInputDevice();
         }
         async toggleAudioMuted() {
-            return await this.tele.toggleAudioMuted();
+            return await this._tele.toggleAudioMuted();
         }
         async toggleVideoMuted() {
-            return await this.tele.toggleVideoMuted();
+            return await this._tele.toggleVideoMuted();
         }
         async getAudioMuted() {
-            return await this.tele.getAudioMuted();
+            return await this._tele.getAudioMuted();
         }
         async getVideoMuted() {
-            return await this.tele.getVideoMuted();
+            return await this._tele.getVideoMuted();
         }
         get metadataState() {
-            return this.meta.metadataState;
+            return this._meta.metadataState;
         }
         get localUserID() {
-            return this.tele.localUserID;
+            return this._tele.localUserID;
         }
         get localUserName() {
-            return this.tele.localUserName;
+            return this._tele.localUserName;
         }
         get roomName() {
-            return this.tele.roomName;
+            return this._tele.roomName;
         }
         userExists(id) {
-            return this.tele.userExists(id);
+            return this._tele.userExists(id);
         }
         getUserNames() {
-            return this.tele.getUserNames();
-        }
-        async prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress) {
-            await this.tele.prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress);
+            return this._tele.getUserNames();
         }
         async connect() {
-            await this.tele.connect();
-            if (this.tele.connectionState === ConnectionState.Connected) {
-                await this.meta.connect();
+            await this._tele.connect();
+            if (this._tele.connectionState === ConnectionState.Connected) {
+                await this._meta.connect();
             }
         }
         async join(roomName) {
-            await this.tele.join(roomName);
-            if (this.tele.conferenceState === ConnectionState.Connected) {
-                await this.meta.join(roomName);
+            await this._tele.join(roomName);
+            if (this._tele.conferenceState === ConnectionState.Connected) {
+                await this._meta.join(roomName);
             }
         }
         async identify(userName) {
-            await this.tele.identify(userName);
-            await this.meta.identify(this.localUserID);
+            await this._tele.identify(userName);
+            await this._meta.identify(this.localUserID);
         }
         async leave() {
-            await this.meta.leave();
-            await this.tele.leave();
+            await this._meta.leave();
+            await this._tele.leave();
         }
         async disconnect() {
-            await this.meta.disconnect();
-            await this.tele.disconnect();
+            await this._meta.disconnect();
+            await this._tele.disconnect();
         }
         update() {
             this.audio.update();
         }
         async setAudioOutputDevice(device) {
-            this.tele.setAudioOutputDevice(device);
+            this._tele.setAudioOutputDevice(device);
             if (canChangeAudioOutput) {
-                await this.audio.setAudioOutputDeviceID(this.tele.preferredAudioOutputID);
+                await this.audio.setAudioOutputDeviceID(this._tele.preferredAudioOutputID);
             }
         }
         async setAudioMuted(muted) {
@@ -8897,6 +8740,98 @@
         }
     }
 
+    class BaseClientLoader {
+        async load(fetcher, audio, onProgress) {
+            let f = null;
+            let a = null;
+            let p = null;
+            if (!isNullOrUndefined(fetcher)
+                && !(fetcher instanceof AudioManager)
+                && !isFunction(fetcher)) {
+                f = fetcher;
+            }
+            else {
+                f = new Fetcher();
+            }
+            if (fetcher instanceof AudioManager) {
+                a = fetcher;
+            }
+            else if (!isNullOrUndefined(audio)
+                && !isFunction(audio)) {
+                a = audio;
+            }
+            else {
+                a = new AudioManager(f);
+            }
+            if (isFunction(fetcher)) {
+                p = fetcher;
+            }
+            else if (isFunction(audio)) {
+                p = audio;
+            }
+            else if (isFunction(onProgress)) {
+                p = onProgress;
+            }
+            await this._load(f, p);
+            const t = this.createTeleconferenceClient(f, a);
+            const m = this.createMetadataClient(f, a, t);
+            return Promise.resolve(new Calla(f, t, m));
+        }
+    }
+
+    const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
+    class BaseJitsiClientLoader extends BaseClientLoader {
+        constructor(host, bridgeHost, bridgeMUC) {
+            super();
+            this.host = host;
+            this.bridgeHost = bridgeHost;
+            this.bridgeMUC = bridgeMUC;
+            this.loaded = false;
+        }
+        async _load(fetcher, onProgress) {
+            if (!this.loaded) {
+                console.info("Connecting to:", this.host);
+                const progs = splitProgress(onProgress, 2);
+                await fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
+                await fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
+                {
+                    JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
+                }
+                JitsiMeetJS.init();
+                this.loaded = true;
+            }
+        }
+        createTeleconferenceClient(fetcher, audio) {
+            if (!this.loaded) {
+                throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
+            }
+            return new JitsiTeleconferenceClient(fetcher, audio, this.host, this.bridgeHost, this.bridgeMUC);
+        }
+    }
+
+    class JitsiOnlyClientLoader extends BaseJitsiClientLoader {
+        constructor(host, bridgeHost, bridgeMUC) {
+            super(host, bridgeHost, bridgeMUC);
+        }
+        createMetadataClient(_fetcher, _audio, tele) {
+            if (!this.loaded) {
+                throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
+            }
+            return new JitsiMetadataClient(tele);
+        }
+    }
+
+    /**
+     * A shorthand for `new EmojiGroup` that allows for setting optional properties
+     * on the EmojiGroup object.
+     */
+    function G(v, d, o, ...r) {
+        const emojis = Object.values(o)
+            .filter(oo => oo instanceof Emoji)
+            .map(oo => oo)
+            .concat(...r);
+        return Object.assign(new EmojiGroup(v, d, ...emojis), o);
+    }
     class EmojiGroup extends Emoji {
         /**
          * Groupings of Unicode-standardized pictograms.
@@ -8940,1268 +8875,4885 @@
         }
     }
 
-    function isSurfer(e) {
-        return surfers.contains(e)
-            || rowers.contains(e)
-            || swimmers.contains(e)
-            || merpeople.contains(e);
-    }
-    /**
-     * Shorthand for `new Emoji`, which saves significantly on bundle size.
-     * @param v - a Unicode sequence.
-     * @param d - an English text description of the pictogram.
-     * @param [o] - an optional set of properties to set on the Emoji object.
-     */
-    function e(v, d, o = null) {
-        return new Emoji(v, d, o);
-    }
-    /**
-     * Shorthand for `new Emoji`, which saves significantly on bundle size.
-     * @param v - a Unicode sequence.
-     * @param d - an English text description of the pictogram.
-     * @param [o] - an optional set of properties to set on the Emoji object.
-     */
-    function E(v, d, o = null) {
-        return new Emoji(v + emojiStyle.value, d, o);
-    }
-    /**
-     * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
-     * @param v - a Unicode sequence.
-     * @param d - an English text description of the pictogram.
-     * @param r - the emoji that are contained in this group.
-     */
-    function g(v, d, ...r) {
-        return new EmojiGroup(v, d, ...r);
-    }
-    /**
-     * A shorthand for `new EmojiGroup` that allows for setting optional properties
-     * on the EmojiGroup object.
-     */
-    function gg(v, d, o, ...r) {
-        const emojis = Object.values(o)
-            .filter(oo => oo instanceof Emoji)
-            .map(oo => oo)
-            .concat(...r);
-        return Object.assign(g(v, d, ...emojis), o);
-    }
-    function combo(a, b, altDesc = null) {
-        if (a instanceof Array) {
-            return a.map(c => combo(c, b));
-        }
-        else if (a instanceof EmojiGroup) {
-            const { value, desc } = combo(e(a.value, a.desc), b);
-            return g(value, desc, ...combo(a.alts, b));
-        }
-        else if (b instanceof Array) {
-            return b.map(c => combo(a, c));
-        }
-        else {
-            return e(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
-        }
-    }
-    function join(a, b, altDesc = null) {
-        if (a instanceof Array) {
-            return a.map(c => join(c, b));
-        }
-        else if (a instanceof EmojiGroup) {
-            const { value, desc } = join(e(a.value, a.desc), b);
-            return g(value, desc, ...join(a.alts, b));
-        }
-        else if (b instanceof Array) {
-            return b.map(c => join(a, c));
-        }
-        else {
-            return e(a.value + zeroWidthJoiner.value + b.value, altDesc || (a.desc + ": " + b.desc));
-        }
-    }
-    function skin(v, d, ...rest) {
-        const person = e(v, d), light = combo(person, skinL), mediumLight = combo(person, skinML), medium = combo(person, skinM), mediumDark = combo(person, skinMD), dark = combo(person, skinD);
-        return gg(person.value, person.desc, {
-            default: person,
-            light,
-            mediumLight,
-            medium,
-            mediumDark,
-            dark
-        }, ...rest);
-    }
-    function sex(person) {
-        const man = join(person, male), woman = join(person, female);
-        return gg(person.value, person.desc, {
-            default: person,
-            man,
-            woman
-        });
-    }
-    function skinAndSex(v, d) {
-        return sex(skin(v, d));
-    }
-    function skinAndHair(v, d, ...rest) {
-        const people = skin(v, d), red = join(people, hairRed), curly = join(people, hairCurly), white = join(people, hairWhite), bald = join(people, hairBald);
-        return gg(people.value, people.desc, {
-            default: people,
-            red,
-            curly,
-            white,
-            bald
-        }, ...rest);
-    }
-    function sym(symbol, name) {
-        const j = e(symbol.value, name), men = join(man.default, j), women = join(woman.default, j);
-        return gg(symbol.value, symbol.desc, {
-            symbol,
-            men,
-            women
-        });
-    }
-    const textStyle = e("\uFE0E", "Variation Selector-15: text style");
-    const emojiStyle = e("\uFE0F", "Variation Selector-16: emoji style");
-    const zeroWidthJoiner = e("\u200D", "Zero Width Joiner");
-    const combiningEnclosingKeycap = e("\u20E3", "Combining Enclosing Keycap");
-    const female = E("\u2640", "Female");
-    const male = E("\u2642", "Male");
-    const transgender = E("\u26A7", "Transgender Symbol");
-    const skinL = e("\u{1F3FB}", "Light Skin Tone");
-    const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
-    const skinM = e("\u{1F3FD}", "Medium Skin Tone");
-    const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
-    const skinD = e("\u{1F3FF}", "Dark Skin Tone");
-    const hairRed = e("\u{1F9B0}", "Red Hair");
-    const hairCurly = e("\u{1F9B1}", "Curly Hair");
-    const hairWhite = e("\u{1F9B3}", "White Hair");
-    const hairBald = e("\u{1F9B2}", "Bald");
-    const frowners = skinAndSex("\u{1F64D}", "Frowning");
-    const pouters = skinAndSex("\u{1F64E}", "Pouting");
-    const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
-    const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
-    const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
-    const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
-    const bowing = skinAndSex("\u{1F647}", "Bowing");
-    const facePalming = skinAndSex("\u{1F926}", "Facepalming");
-    const shrugging = skinAndSex("\u{1F937}", "Shrugging");
-    const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
-    const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
-    const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
-    const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
-    const guards = skinAndSex("\u{1F482}", "Guard");
-    const spies = skinAndSex("\u{1F575}", "Spy");
-    const police = skinAndSex("\u{1F46E}", "Police");
-    const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
-    const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
-    const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
-    const mages = skinAndSex("\u{1F9D9}", "Mage");
-    const fairies = skinAndSex("\u{1F9DA}", "Fairy");
-    const vampires = skinAndSex("\u{1F9DB}", "Vampire");
-    const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
-    const elves = skinAndSex("\u{1F9DD}", "Elf");
-    const walking = skinAndSex("\u{1F6B6}", "Walking");
-    const standing = skinAndSex("\u{1F9CD}", "Standing");
-    const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
-    const runners = skinAndSex("\u{1F3C3}", "Running");
-    const gestures$1 = g("Gestures", "Gestures", frowners, pouters, gesturingNo, gesturingOK, tippingHand, raisingHand, bowing, facePalming, shrugging, cantHear, gettingMassage, gettingHaircut);
-    const baby = skin("\u{1F476}", "Baby");
-    const child = skin("\u{1F9D2}", "Child");
-    const boy = skin("\u{1F466}", "Boy");
-    const girl = skin("\u{1F467}", "Girl");
-    const children = gg(child.value, child.desc, {
-        default: child,
-        male: boy,
-        female: girl
-    });
-    const blondes = skinAndSex("\u{1F471}", "Blond Person");
-    const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
-    const beardedMan = skin("\u{1F9D4}", "Bearded Man");
-    const manInSuitLevitating = E("\u{1F574}", "Man in Suit, Levitating");
-    const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
-    const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
-    const man = skinAndHair("\u{1F468}", "Man", blondes.man, beardedMan, manInSuitLevitating, manWithChineseCap, wearingTurban.man, manInTuxedo);
-    const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
-    const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
-    const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
-    const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
-    const woman = skinAndHair("\u{1F469}", "Woman", blondes.woman, pregnantWoman, breastFeeding, womanWithHeadscarf, wearingTurban.woman, brideWithVeil);
-    const adults = gg(person.value, "Adult", {
-        default: person,
-        male: man,
-        female: woman
-    });
-    const olderPerson = skin("\u{1F9D3}", "Older Person");
-    const oldMan = skin("\u{1F474}", "Old Man");
-    const oldWoman = skin("\u{1F475}", "Old Woman");
-    const elderly = gg(olderPerson.value, olderPerson.desc, {
-        default: olderPerson,
-        male: oldMan,
-        female: oldWoman
-    });
-    const medical = E("\u2695", "Medical");
-    const healthCareWorkers = sym(medical, "Health Care");
-    const graduationCap = e("\u{1F393}", "Graduation Cap");
-    const students = sym(graduationCap, "Student");
-    const school = e("\u{1F3EB}", "School");
-    const teachers = sym(school, "Teacher");
-    const balanceScale = E("\u2696", "Balance Scale");
-    const judges = sym(balanceScale, "Judge");
-    const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
-    const farmers = sym(sheafOfRice, "Farmer");
-    const cooking = e("\u{1F373}", "Cooking");
-    const cooks = sym(cooking, "Cook");
-    const wrench = e("\u{1F527}", "Wrench");
-    const mechanics = sym(wrench, "Mechanic");
-    const factory = e("\u{1F3ED}", "Factory");
-    const factoryWorkers = sym(factory, "Factory Worker");
-    const briefcase = e("\u{1F4BC}", "Briefcase");
-    const officeWorkers = sym(briefcase, "Office Worker");
-    const fireEngine = e("\u{1F692}", "Fire Engine");
-    const fireFighters = sym(fireEngine, "Fire Fighter");
-    const rocket = e("\u{1F680}", "Rocket");
-    const astronauts = sym(rocket, "Astronaut");
-    const airplane = E("\u2708", "Airplane");
-    const pilots = sym(airplane, "Pilot");
-    const artistPalette = e("\u{1F3A8}", "Artist Palette");
-    const artists = sym(artistPalette, "Artist");
-    const microphone = e("\u{1F3A4}", "Microphone");
-    const singers = sym(microphone, "Singer");
-    const laptop = e("\u{1F4BB}", "Laptop");
-    const technologists = sym(laptop, "Technologist");
-    const microscope = e("\u{1F52C}", "Microscope");
-    const scientists = sym(microscope, "Scientist");
-    const crown = e("\u{1F451}", "Crown");
-    const prince = skin("\u{1F934}", "Prince");
-    const princess = skin("\u{1F478}", "Princess");
-    const royalty = gg(crown.value, crown.desc, {
-        symbol: crown,
-        male: prince,
-        female: princess
-    });
-    const roles = gg("Roles", "Depictions of people working", {
-        healthCareWorkers,
-        students,
-        teachers,
-        judges,
-        farmers,
-        cooks,
-        mechanics,
-        factoryWorkers,
-        officeWorkers,
-        scientists,
-        technologists,
-        singers,
-        artists,
-        pilots,
-        astronauts,
-        fireFighters,
-        spies,
-        guards,
-        constructionWorkers,
-        royalty
-    });
-    const cherub = skin("\u{1F47C}", "Cherub");
-    const santaClaus = skin("\u{1F385}", "Santa Claus");
-    const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
-    const genies = sex(e("\u{1F9DE}", "Genie"));
-    const zombies = sex(e("\u{1F9DF}", "Zombie"));
-    const fantasy = gg("Fantasy", "Depictions of fantasy characters", {
-        cherub,
-        santaClaus,
-        mrsClaus,
-        superheroes,
-        supervillains,
-        mages,
-        fairies,
-        vampires,
-        merpeople,
-        elves,
-        genies,
-        zombies
-    });
-    const safetyVest = e("\u{1F9BA}", "Safety Vest");
-    const whiteCane = e("\u{1F9AF}", "Probing Cane");
-    const withProbingCane = sym(whiteCane, "Probing");
-    const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
-    const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
-    const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
-    const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
-    const manDancing = skin("\u{1F57A}", "Man Dancing");
-    const womanDancing = skin("\u{1F483}", "Woman Dancing");
-    const dancers = gg(manDancing.value, "Dancing", {
-        male: manDancing,
-        female: womanDancing
-    });
-    const jugglers = skinAndSex("\u{1F939}", "Juggler");
-    const climbers = skinAndSex("\u{1F9D7}", "Climber");
-    const fencer = e("\u{1F93A}", "Fencer");
-    const jockeys = skin("\u{1F3C7}", "Jockey");
-    const skier = E("\u26F7", "Skier");
-    const snowboarders = skin("\u{1F3C2}", "Snowboarder");
-    const golfers = skinAndSex("\u{1F3CC}" + emojiStyle.value, "Golfer");
-    const surfers = skinAndSex("\u{1F3C4}", "Surfing");
-    const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
-    const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
-    const basketballers = skinAndSex("\u26F9" + emojiStyle.value, "Basket Baller");
-    const weightLifters = skinAndSex("\u{1F3CB}" + emojiStyle.value, "Weight Lifter");
-    const bikers = skinAndSex("\u{1F6B4}", "Biker");
-    const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
-    const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
-    const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
-    const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
-    const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
-    const inMotion = gg("In Motion", "Depictions of people in motion", {
+    const textStyle = new Emoji("\uFE0E", "Variation Selector-15: text style");
+    const emojiStyle = new Emoji("\uFE0F", "Variation Selector-16: emoji style");
+    const female = new Emoji("\u2640\uFE0F", "Female");
+    const male = new Emoji("\u2642\uFE0F", "Male");
+    const transgenderSymbol = new Emoji("\u26A7\uFE0F", "Transgender Symbol");
+    const frowning = new Emoji("\u{1F64D}", "Frowning");
+    const frowningLightSkinTone = new Emoji("\u{1F64D}\u{1F3FB}", "Frowning: Light Skin Tone");
+    const frowningMediumLightSkinTone = new Emoji("\u{1F64D}\u{1F3FC}", "Frowning: Medium-Light Skin Tone");
+    const frowningMediumSkinTone = new Emoji("\u{1F64D}\u{1F3FD}", "Frowning: Medium Skin Tone");
+    const frowningMediumDarkSkinTone = new Emoji("\u{1F64D}\u{1F3FE}", "Frowning: Medium-Dark Skin Tone");
+    const frowningDarkSkinTone = new Emoji("\u{1F64D}\u{1F3FF}", "Frowning: Dark Skin Tone");
+    const frowningMale = new Emoji("\u{1F64D}\u200D\u2642\uFE0F", "Frowning: Male");
+    const frowningLightSkinToneMale = new Emoji("\u{1F64D}\u{1F3FB}\u200D\u2642\uFE0F", "Frowning: Light Skin Tone: Male");
+    const frowningMediumLightSkinToneMale = new Emoji("\u{1F64D}\u{1F3FC}\u200D\u2642\uFE0F", "Frowning: Medium-Light Skin Tone: Male");
+    const frowningMediumSkinToneMale = new Emoji("\u{1F64D}\u{1F3FD}\u200D\u2642\uFE0F", "Frowning: Medium Skin Tone: Male");
+    const frowningMediumDarkSkinToneMale = new Emoji("\u{1F64D}\u{1F3FE}\u200D\u2642\uFE0F", "Frowning: Medium-Dark Skin Tone: Male");
+    const frowningDarkSkinToneMale = new Emoji("\u{1F64D}\u{1F3FF}\u200D\u2642\uFE0F", "Frowning: Dark Skin Tone: Male");
+    const frowningFemale = new Emoji("\u{1F64D}\u200D\u2640\uFE0F", "Frowning: Female");
+    const frowningLightSkinToneFemale = new Emoji("\u{1F64D}\u{1F3FB}\u200D\u2640\uFE0F", "Frowning: Light Skin Tone: Female");
+    const frowningMediumLightSkinToneFemale = new Emoji("\u{1F64D}\u{1F3FC}\u200D\u2640\uFE0F", "Frowning: Medium-Light Skin Tone: Female");
+    const frowningMediumSkinToneFemale = new Emoji("\u{1F64D}\u{1F3FD}\u200D\u2640\uFE0F", "Frowning: Medium Skin Tone: Female");
+    const frowningMediumDarkSkinToneFemale = new Emoji("\u{1F64D}\u{1F3FE}\u200D\u2640\uFE0F", "Frowning: Medium-Dark Skin Tone: Female");
+    const frowningDarkSkinToneFemale = new Emoji("\u{1F64D}\u{1F3FF}\u200D\u2640\uFE0F", "Frowning: Dark Skin Tone: Female");
+    const pouting = new Emoji("\u{1F64E}", "Pouting");
+    const poutingLightSkinTone = new Emoji("\u{1F64E}\u{1F3FB}", "Pouting: Light Skin Tone");
+    const poutingMediumLightSkinTone = new Emoji("\u{1F64E}\u{1F3FC}", "Pouting: Medium-Light Skin Tone");
+    const poutingMediumSkinTone = new Emoji("\u{1F64E}\u{1F3FD}", "Pouting: Medium Skin Tone");
+    const poutingMediumDarkSkinTone = new Emoji("\u{1F64E}\u{1F3FE}", "Pouting: Medium-Dark Skin Tone");
+    const poutingDarkSkinTone = new Emoji("\u{1F64E}\u{1F3FF}", "Pouting: Dark Skin Tone");
+    const poutingMale = new Emoji("\u{1F64E}\u200D\u2642\uFE0F", "Pouting: Male");
+    const poutingLightSkinToneMale = new Emoji("\u{1F64E}\u{1F3FB}\u200D\u2642\uFE0F", "Pouting: Light Skin Tone: Male");
+    const poutingMediumLightSkinToneMale = new Emoji("\u{1F64E}\u{1F3FC}\u200D\u2642\uFE0F", "Pouting: Medium-Light Skin Tone: Male");
+    const poutingMediumSkinToneMale = new Emoji("\u{1F64E}\u{1F3FD}\u200D\u2642\uFE0F", "Pouting: Medium Skin Tone: Male");
+    const poutingMediumDarkSkinToneMale = new Emoji("\u{1F64E}\u{1F3FE}\u200D\u2642\uFE0F", "Pouting: Medium-Dark Skin Tone: Male");
+    const poutingDarkSkinToneMale = new Emoji("\u{1F64E}\u{1F3FF}\u200D\u2642\uFE0F", "Pouting: Dark Skin Tone: Male");
+    const poutingFemale = new Emoji("\u{1F64E}\u200D\u2640\uFE0F", "Pouting: Female");
+    const poutingLightSkinToneFemale = new Emoji("\u{1F64E}\u{1F3FB}\u200D\u2640\uFE0F", "Pouting: Light Skin Tone: Female");
+    const poutingMediumLightSkinToneFemale = new Emoji("\u{1F64E}\u{1F3FC}\u200D\u2640\uFE0F", "Pouting: Medium-Light Skin Tone: Female");
+    const poutingMediumSkinToneFemale = new Emoji("\u{1F64E}\u{1F3FD}\u200D\u2640\uFE0F", "Pouting: Medium Skin Tone: Female");
+    const poutingMediumDarkSkinToneFemale = new Emoji("\u{1F64E}\u{1F3FE}\u200D\u2640\uFE0F", "Pouting: Medium-Dark Skin Tone: Female");
+    const poutingDarkSkinToneFemale = new Emoji("\u{1F64E}\u{1F3FF}\u200D\u2640\uFE0F", "Pouting: Dark Skin Tone: Female");
+    const gesturingNO = new Emoji("\u{1F645}", "Gesturing NO");
+    const gesturingNOLightSkinTone = new Emoji("\u{1F645}\u{1F3FB}", "Gesturing NO: Light Skin Tone");
+    const gesturingNOMediumLightSkinTone = new Emoji("\u{1F645}\u{1F3FC}", "Gesturing NO: Medium-Light Skin Tone");
+    const gesturingNOMediumSkinTone = new Emoji("\u{1F645}\u{1F3FD}", "Gesturing NO: Medium Skin Tone");
+    const gesturingNOMediumDarkSkinTone = new Emoji("\u{1F645}\u{1F3FE}", "Gesturing NO: Medium-Dark Skin Tone");
+    const gesturingNODarkSkinTone = new Emoji("\u{1F645}\u{1F3FF}", "Gesturing NO: Dark Skin Tone");
+    const gesturingNOMale = new Emoji("\u{1F645}\u200D\u2642\uFE0F", "Gesturing NO: Male");
+    const gesturingNOLightSkinToneMale = new Emoji("\u{1F645}\u{1F3FB}\u200D\u2642\uFE0F", "Gesturing NO: Light Skin Tone: Male");
+    const gesturingNOMediumLightSkinToneMale = new Emoji("\u{1F645}\u{1F3FC}\u200D\u2642\uFE0F", "Gesturing NO: Medium-Light Skin Tone: Male");
+    const gesturingNOMediumSkinToneMale = new Emoji("\u{1F645}\u{1F3FD}\u200D\u2642\uFE0F", "Gesturing NO: Medium Skin Tone: Male");
+    const gesturingNOMediumDarkSkinToneMale = new Emoji("\u{1F645}\u{1F3FE}\u200D\u2642\uFE0F", "Gesturing NO: Medium-Dark Skin Tone: Male");
+    const gesturingNODarkSkinToneMale = new Emoji("\u{1F645}\u{1F3FF}\u200D\u2642\uFE0F", "Gesturing NO: Dark Skin Tone: Male");
+    const gesturingNOFemale = new Emoji("\u{1F645}\u200D\u2640\uFE0F", "Gesturing NO: Female");
+    const gesturingNOLightSkinToneFemale = new Emoji("\u{1F645}\u{1F3FB}\u200D\u2640\uFE0F", "Gesturing NO: Light Skin Tone: Female");
+    const gesturingNOMediumLightSkinToneFemale = new Emoji("\u{1F645}\u{1F3FC}\u200D\u2640\uFE0F", "Gesturing NO: Medium-Light Skin Tone: Female");
+    const gesturingNOMediumSkinToneFemale = new Emoji("\u{1F645}\u{1F3FD}\u200D\u2640\uFE0F", "Gesturing NO: Medium Skin Tone: Female");
+    const gesturingNOMediumDarkSkinToneFemale = new Emoji("\u{1F645}\u{1F3FE}\u200D\u2640\uFE0F", "Gesturing NO: Medium-Dark Skin Tone: Female");
+    const gesturingNODarkSkinToneFemale = new Emoji("\u{1F645}\u{1F3FF}\u200D\u2640\uFE0F", "Gesturing NO: Dark Skin Tone: Female");
+    const gesturingOK = new Emoji("\u{1F646}", "Gesturing OK");
+    const gesturingOKLightSkinTone = new Emoji("\u{1F646}\u{1F3FB}", "Gesturing OK: Light Skin Tone");
+    const gesturingOKMediumLightSkinTone = new Emoji("\u{1F646}\u{1F3FC}", "Gesturing OK: Medium-Light Skin Tone");
+    const gesturingOKMediumSkinTone = new Emoji("\u{1F646}\u{1F3FD}", "Gesturing OK: Medium Skin Tone");
+    const gesturingOKMediumDarkSkinTone = new Emoji("\u{1F646}\u{1F3FE}", "Gesturing OK: Medium-Dark Skin Tone");
+    const gesturingOKDarkSkinTone = new Emoji("\u{1F646}\u{1F3FF}", "Gesturing OK: Dark Skin Tone");
+    const gesturingOKMale = new Emoji("\u{1F646}\u200D\u2642\uFE0F", "Gesturing OK: Male");
+    const gesturingOKLightSkinToneMale = new Emoji("\u{1F646}\u{1F3FB}\u200D\u2642\uFE0F", "Gesturing OK: Light Skin Tone: Male");
+    const gesturingOKMediumLightSkinToneMale = new Emoji("\u{1F646}\u{1F3FC}\u200D\u2642\uFE0F", "Gesturing OK: Medium-Light Skin Tone: Male");
+    const gesturingOKMediumSkinToneMale = new Emoji("\u{1F646}\u{1F3FD}\u200D\u2642\uFE0F", "Gesturing OK: Medium Skin Tone: Male");
+    const gesturingOKMediumDarkSkinToneMale = new Emoji("\u{1F646}\u{1F3FE}\u200D\u2642\uFE0F", "Gesturing OK: Medium-Dark Skin Tone: Male");
+    const gesturingOKDarkSkinToneMale = new Emoji("\u{1F646}\u{1F3FF}\u200D\u2642\uFE0F", "Gesturing OK: Dark Skin Tone: Male");
+    const gesturingOKFemale = new Emoji("\u{1F646}\u200D\u2640\uFE0F", "Gesturing OK: Female");
+    const gesturingOKLightSkinToneFemale = new Emoji("\u{1F646}\u{1F3FB}\u200D\u2640\uFE0F", "Gesturing OK: Light Skin Tone: Female");
+    const gesturingOKMediumLightSkinToneFemale = new Emoji("\u{1F646}\u{1F3FC}\u200D\u2640\uFE0F", "Gesturing OK: Medium-Light Skin Tone: Female");
+    const gesturingOKMediumSkinToneFemale = new Emoji("\u{1F646}\u{1F3FD}\u200D\u2640\uFE0F", "Gesturing OK: Medium Skin Tone: Female");
+    const gesturingOKMediumDarkSkinToneFemale = new Emoji("\u{1F646}\u{1F3FE}\u200D\u2640\uFE0F", "Gesturing OK: Medium-Dark Skin Tone: Female");
+    const gesturingOKDarkSkinToneFemale = new Emoji("\u{1F646}\u{1F3FF}\u200D\u2640\uFE0F", "Gesturing OK: Dark Skin Tone: Female");
+    const tippingHand = new Emoji("\u{1F481}", "Tipping Hand");
+    const tippingHandLightSkinTone = new Emoji("\u{1F481}\u{1F3FB}", "Tipping Hand: Light Skin Tone");
+    const tippingHandMediumLightSkinTone = new Emoji("\u{1F481}\u{1F3FC}", "Tipping Hand: Medium-Light Skin Tone");
+    const tippingHandMediumSkinTone = new Emoji("\u{1F481}\u{1F3FD}", "Tipping Hand: Medium Skin Tone");
+    const tippingHandMediumDarkSkinTone = new Emoji("\u{1F481}\u{1F3FE}", "Tipping Hand: Medium-Dark Skin Tone");
+    const tippingHandDarkSkinTone = new Emoji("\u{1F481}\u{1F3FF}", "Tipping Hand: Dark Skin Tone");
+    const tippingHandMale = new Emoji("\u{1F481}\u200D\u2642\uFE0F", "Tipping Hand: Male");
+    const tippingHandLightSkinToneMale = new Emoji("\u{1F481}\u{1F3FB}\u200D\u2642\uFE0F", "Tipping Hand: Light Skin Tone: Male");
+    const tippingHandMediumLightSkinToneMale = new Emoji("\u{1F481}\u{1F3FC}\u200D\u2642\uFE0F", "Tipping Hand: Medium-Light Skin Tone: Male");
+    const tippingHandMediumSkinToneMale = new Emoji("\u{1F481}\u{1F3FD}\u200D\u2642\uFE0F", "Tipping Hand: Medium Skin Tone: Male");
+    const tippingHandMediumDarkSkinToneMale = new Emoji("\u{1F481}\u{1F3FE}\u200D\u2642\uFE0F", "Tipping Hand: Medium-Dark Skin Tone: Male");
+    const tippingHandDarkSkinToneMale = new Emoji("\u{1F481}\u{1F3FF}\u200D\u2642\uFE0F", "Tipping Hand: Dark Skin Tone: Male");
+    const tippingHandFemale = new Emoji("\u{1F481}\u200D\u2640\uFE0F", "Tipping Hand: Female");
+    const tippingHandLightSkinToneFemale = new Emoji("\u{1F481}\u{1F3FB}\u200D\u2640\uFE0F", "Tipping Hand: Light Skin Tone: Female");
+    const tippingHandMediumLightSkinToneFemale = new Emoji("\u{1F481}\u{1F3FC}\u200D\u2640\uFE0F", "Tipping Hand: Medium-Light Skin Tone: Female");
+    const tippingHandMediumSkinToneFemale = new Emoji("\u{1F481}\u{1F3FD}\u200D\u2640\uFE0F", "Tipping Hand: Medium Skin Tone: Female");
+    const tippingHandMediumDarkSkinToneFemale = new Emoji("\u{1F481}\u{1F3FE}\u200D\u2640\uFE0F", "Tipping Hand: Medium-Dark Skin Tone: Female");
+    const tippingHandDarkSkinToneFemale = new Emoji("\u{1F481}\u{1F3FF}\u200D\u2640\uFE0F", "Tipping Hand: Dark Skin Tone: Female");
+    const raisingHand = new Emoji("\u{1F64B}", "Raising Hand");
+    const raisingHandLightSkinTone = new Emoji("\u{1F64B}\u{1F3FB}", "Raising Hand: Light Skin Tone");
+    const raisingHandMediumLightSkinTone = new Emoji("\u{1F64B}\u{1F3FC}", "Raising Hand: Medium-Light Skin Tone");
+    const raisingHandMediumSkinTone = new Emoji("\u{1F64B}\u{1F3FD}", "Raising Hand: Medium Skin Tone");
+    const raisingHandMediumDarkSkinTone = new Emoji("\u{1F64B}\u{1F3FE}", "Raising Hand: Medium-Dark Skin Tone");
+    const raisingHandDarkSkinTone = new Emoji("\u{1F64B}\u{1F3FF}", "Raising Hand: Dark Skin Tone");
+    const raisingHandMale = new Emoji("\u{1F64B}\u200D\u2642\uFE0F", "Raising Hand: Male");
+    const raisingHandLightSkinToneMale = new Emoji("\u{1F64B}\u{1F3FB}\u200D\u2642\uFE0F", "Raising Hand: Light Skin Tone: Male");
+    const raisingHandMediumLightSkinToneMale = new Emoji("\u{1F64B}\u{1F3FC}\u200D\u2642\uFE0F", "Raising Hand: Medium-Light Skin Tone: Male");
+    const raisingHandMediumSkinToneMale = new Emoji("\u{1F64B}\u{1F3FD}\u200D\u2642\uFE0F", "Raising Hand: Medium Skin Tone: Male");
+    const raisingHandMediumDarkSkinToneMale = new Emoji("\u{1F64B}\u{1F3FE}\u200D\u2642\uFE0F", "Raising Hand: Medium-Dark Skin Tone: Male");
+    const raisingHandDarkSkinToneMale = new Emoji("\u{1F64B}\u{1F3FF}\u200D\u2642\uFE0F", "Raising Hand: Dark Skin Tone: Male");
+    const raisingHandFemale = new Emoji("\u{1F64B}\u200D\u2640\uFE0F", "Raising Hand: Female");
+    const raisingHandLightSkinToneFemale = new Emoji("\u{1F64B}\u{1F3FB}\u200D\u2640\uFE0F", "Raising Hand: Light Skin Tone: Female");
+    const raisingHandMediumLightSkinToneFemale = new Emoji("\u{1F64B}\u{1F3FC}\u200D\u2640\uFE0F", "Raising Hand: Medium-Light Skin Tone: Female");
+    const raisingHandMediumSkinToneFemale = new Emoji("\u{1F64B}\u{1F3FD}\u200D\u2640\uFE0F", "Raising Hand: Medium Skin Tone: Female");
+    const raisingHandMediumDarkSkinToneFemale = new Emoji("\u{1F64B}\u{1F3FE}\u200D\u2640\uFE0F", "Raising Hand: Medium-Dark Skin Tone: Female");
+    const raisingHandDarkSkinToneFemale = new Emoji("\u{1F64B}\u{1F3FF}\u200D\u2640\uFE0F", "Raising Hand: Dark Skin Tone: Female");
+    const bowing = new Emoji("\u{1F647}", "Bowing");
+    const bowingLightSkinTone = new Emoji("\u{1F647}\u{1F3FB}", "Bowing: Light Skin Tone");
+    const bowingMediumLightSkinTone = new Emoji("\u{1F647}\u{1F3FC}", "Bowing: Medium-Light Skin Tone");
+    const bowingMediumSkinTone = new Emoji("\u{1F647}\u{1F3FD}", "Bowing: Medium Skin Tone");
+    const bowingMediumDarkSkinTone = new Emoji("\u{1F647}\u{1F3FE}", "Bowing: Medium-Dark Skin Tone");
+    const bowingDarkSkinTone = new Emoji("\u{1F647}\u{1F3FF}", "Bowing: Dark Skin Tone");
+    const bowingMale = new Emoji("\u{1F647}\u200D\u2642\uFE0F", "Bowing: Male");
+    const bowingLightSkinToneMale = new Emoji("\u{1F647}\u{1F3FB}\u200D\u2642\uFE0F", "Bowing: Light Skin Tone: Male");
+    const bowingMediumLightSkinToneMale = new Emoji("\u{1F647}\u{1F3FC}\u200D\u2642\uFE0F", "Bowing: Medium-Light Skin Tone: Male");
+    const bowingMediumSkinToneMale = new Emoji("\u{1F647}\u{1F3FD}\u200D\u2642\uFE0F", "Bowing: Medium Skin Tone: Male");
+    const bowingMediumDarkSkinToneMale = new Emoji("\u{1F647}\u{1F3FE}\u200D\u2642\uFE0F", "Bowing: Medium-Dark Skin Tone: Male");
+    const bowingDarkSkinToneMale = new Emoji("\u{1F647}\u{1F3FF}\u200D\u2642\uFE0F", "Bowing: Dark Skin Tone: Male");
+    const bowingFemale = new Emoji("\u{1F647}\u200D\u2640\uFE0F", "Bowing: Female");
+    const bowingLightSkinToneFemale = new Emoji("\u{1F647}\u{1F3FB}\u200D\u2640\uFE0F", "Bowing: Light Skin Tone: Female");
+    const bowingMediumLightSkinToneFemale = new Emoji("\u{1F647}\u{1F3FC}\u200D\u2640\uFE0F", "Bowing: Medium-Light Skin Tone: Female");
+    const bowingMediumSkinToneFemale = new Emoji("\u{1F647}\u{1F3FD}\u200D\u2640\uFE0F", "Bowing: Medium Skin Tone: Female");
+    const bowingMediumDarkSkinToneFemale = new Emoji("\u{1F647}\u{1F3FE}\u200D\u2640\uFE0F", "Bowing: Medium-Dark Skin Tone: Female");
+    const bowingDarkSkinToneFemale = new Emoji("\u{1F647}\u{1F3FF}\u200D\u2640\uFE0F", "Bowing: Dark Skin Tone: Female");
+    const facepalming = new Emoji("\u{1F926}", "Facepalming");
+    const facepalmingLightSkinTone = new Emoji("\u{1F926}\u{1F3FB}", "Facepalming: Light Skin Tone");
+    const facepalmingMediumLightSkinTone = new Emoji("\u{1F926}\u{1F3FC}", "Facepalming: Medium-Light Skin Tone");
+    const facepalmingMediumSkinTone = new Emoji("\u{1F926}\u{1F3FD}", "Facepalming: Medium Skin Tone");
+    const facepalmingMediumDarkSkinTone = new Emoji("\u{1F926}\u{1F3FE}", "Facepalming: Medium-Dark Skin Tone");
+    const facepalmingDarkSkinTone = new Emoji("\u{1F926}\u{1F3FF}", "Facepalming: Dark Skin Tone");
+    const facepalmingMale = new Emoji("\u{1F926}\u200D\u2642\uFE0F", "Facepalming: Male");
+    const facepalmingLightSkinToneMale = new Emoji("\u{1F926}\u{1F3FB}\u200D\u2642\uFE0F", "Facepalming: Light Skin Tone: Male");
+    const facepalmingMediumLightSkinToneMale = new Emoji("\u{1F926}\u{1F3FC}\u200D\u2642\uFE0F", "Facepalming: Medium-Light Skin Tone: Male");
+    const facepalmingMediumSkinToneMale = new Emoji("\u{1F926}\u{1F3FD}\u200D\u2642\uFE0F", "Facepalming: Medium Skin Tone: Male");
+    const facepalmingMediumDarkSkinToneMale = new Emoji("\u{1F926}\u{1F3FE}\u200D\u2642\uFE0F", "Facepalming: Medium-Dark Skin Tone: Male");
+    const facepalmingDarkSkinToneMale = new Emoji("\u{1F926}\u{1F3FF}\u200D\u2642\uFE0F", "Facepalming: Dark Skin Tone: Male");
+    const facepalmingFemale = new Emoji("\u{1F926}\u200D\u2640\uFE0F", "Facepalming: Female");
+    const facepalmingLightSkinToneFemale = new Emoji("\u{1F926}\u{1F3FB}\u200D\u2640\uFE0F", "Facepalming: Light Skin Tone: Female");
+    const facepalmingMediumLightSkinToneFemale = new Emoji("\u{1F926}\u{1F3FC}\u200D\u2640\uFE0F", "Facepalming: Medium-Light Skin Tone: Female");
+    const facepalmingMediumSkinToneFemale = new Emoji("\u{1F926}\u{1F3FD}\u200D\u2640\uFE0F", "Facepalming: Medium Skin Tone: Female");
+    const facepalmingMediumDarkSkinToneFemale = new Emoji("\u{1F926}\u{1F3FE}\u200D\u2640\uFE0F", "Facepalming: Medium-Dark Skin Tone: Female");
+    const facepalmingDarkSkinToneFemale = new Emoji("\u{1F926}\u{1F3FF}\u200D\u2640\uFE0F", "Facepalming: Dark Skin Tone: Female");
+    const shrugging = new Emoji("\u{1F937}", "Shrugging");
+    const shruggingLightSkinTone = new Emoji("\u{1F937}\u{1F3FB}", "Shrugging: Light Skin Tone");
+    const shruggingMediumLightSkinTone = new Emoji("\u{1F937}\u{1F3FC}", "Shrugging: Medium-Light Skin Tone");
+    const shruggingMediumSkinTone = new Emoji("\u{1F937}\u{1F3FD}", "Shrugging: Medium Skin Tone");
+    const shruggingMediumDarkSkinTone = new Emoji("\u{1F937}\u{1F3FE}", "Shrugging: Medium-Dark Skin Tone");
+    const shruggingDarkSkinTone = new Emoji("\u{1F937}\u{1F3FF}", "Shrugging: Dark Skin Tone");
+    const shruggingMale = new Emoji("\u{1F937}\u200D\u2642\uFE0F", "Shrugging: Male");
+    const shruggingLightSkinToneMale = new Emoji("\u{1F937}\u{1F3FB}\u200D\u2642\uFE0F", "Shrugging: Light Skin Tone: Male");
+    const shruggingMediumLightSkinToneMale = new Emoji("\u{1F937}\u{1F3FC}\u200D\u2642\uFE0F", "Shrugging: Medium-Light Skin Tone: Male");
+    const shruggingMediumSkinToneMale = new Emoji("\u{1F937}\u{1F3FD}\u200D\u2642\uFE0F", "Shrugging: Medium Skin Tone: Male");
+    const shruggingMediumDarkSkinToneMale = new Emoji("\u{1F937}\u{1F3FE}\u200D\u2642\uFE0F", "Shrugging: Medium-Dark Skin Tone: Male");
+    const shruggingDarkSkinToneMale = new Emoji("\u{1F937}\u{1F3FF}\u200D\u2642\uFE0F", "Shrugging: Dark Skin Tone: Male");
+    const shruggingFemale = new Emoji("\u{1F937}\u200D\u2640\uFE0F", "Shrugging: Female");
+    const shruggingLightSkinToneFemale = new Emoji("\u{1F937}\u{1F3FB}\u200D\u2640\uFE0F", "Shrugging: Light Skin Tone: Female");
+    const shruggingMediumLightSkinToneFemale = new Emoji("\u{1F937}\u{1F3FC}\u200D\u2640\uFE0F", "Shrugging: Medium-Light Skin Tone: Female");
+    const shruggingMediumSkinToneFemale = new Emoji("\u{1F937}\u{1F3FD}\u200D\u2640\uFE0F", "Shrugging: Medium Skin Tone: Female");
+    const shruggingMediumDarkSkinToneFemale = new Emoji("\u{1F937}\u{1F3FE}\u200D\u2640\uFE0F", "Shrugging: Medium-Dark Skin Tone: Female");
+    const shruggingDarkSkinToneFemale = new Emoji("\u{1F937}\u{1F3FF}\u200D\u2640\uFE0F", "Shrugging: Dark Skin Tone: Female");
+    const cantHear = new Emoji("\u{1F9CF}", "Can't Hear");
+    const cantHearLightSkinTone = new Emoji("\u{1F9CF}\u{1F3FB}", "Can't Hear: Light Skin Tone");
+    const cantHearMediumLightSkinTone = new Emoji("\u{1F9CF}\u{1F3FC}", "Can't Hear: Medium-Light Skin Tone");
+    const cantHearMediumSkinTone = new Emoji("\u{1F9CF}\u{1F3FD}", "Can't Hear: Medium Skin Tone");
+    const cantHearMediumDarkSkinTone = new Emoji("\u{1F9CF}\u{1F3FE}", "Can't Hear: Medium-Dark Skin Tone");
+    const cantHearDarkSkinTone = new Emoji("\u{1F9CF}\u{1F3FF}", "Can't Hear: Dark Skin Tone");
+    const cantHearMale = new Emoji("\u{1F9CF}\u200D\u2642\uFE0F", "Can't Hear: Male");
+    const cantHearLightSkinToneMale = new Emoji("\u{1F9CF}\u{1F3FB}\u200D\u2642\uFE0F", "Can't Hear: Light Skin Tone: Male");
+    const cantHearMediumLightSkinToneMale = new Emoji("\u{1F9CF}\u{1F3FC}\u200D\u2642\uFE0F", "Can't Hear: Medium-Light Skin Tone: Male");
+    const cantHearMediumSkinToneMale = new Emoji("\u{1F9CF}\u{1F3FD}\u200D\u2642\uFE0F", "Can't Hear: Medium Skin Tone: Male");
+    const cantHearMediumDarkSkinToneMale = new Emoji("\u{1F9CF}\u{1F3FE}\u200D\u2642\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Male");
+    const cantHearDarkSkinToneMale = new Emoji("\u{1F9CF}\u{1F3FF}\u200D\u2642\uFE0F", "Can't Hear: Dark Skin Tone: Male");
+    const cantHearFemale = new Emoji("\u{1F9CF}\u200D\u2640\uFE0F", "Can't Hear: Female");
+    const cantHearLightSkinToneFemale = new Emoji("\u{1F9CF}\u{1F3FB}\u200D\u2640\uFE0F", "Can't Hear: Light Skin Tone: Female");
+    const cantHearMediumLightSkinToneFemale = new Emoji("\u{1F9CF}\u{1F3FC}\u200D\u2640\uFE0F", "Can't Hear: Medium-Light Skin Tone: Female");
+    const cantHearMediumSkinToneFemale = new Emoji("\u{1F9CF}\u{1F3FD}\u200D\u2640\uFE0F", "Can't Hear: Medium Skin Tone: Female");
+    const cantHearMediumDarkSkinToneFemale = new Emoji("\u{1F9CF}\u{1F3FE}\u200D\u2640\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Female");
+    const cantHearDarkSkinToneFemale = new Emoji("\u{1F9CF}\u{1F3FF}\u200D\u2640\uFE0F", "Can't Hear: Dark Skin Tone: Female");
+    const gettingMassage = new Emoji("\u{1F486}", "Getting Massage");
+    const gettingMassageLightSkinTone = new Emoji("\u{1F486}\u{1F3FB}", "Getting Massage: Light Skin Tone");
+    const gettingMassageMediumLightSkinTone = new Emoji("\u{1F486}\u{1F3FC}", "Getting Massage: Medium-Light Skin Tone");
+    const gettingMassageMediumSkinTone = new Emoji("\u{1F486}\u{1F3FD}", "Getting Massage: Medium Skin Tone");
+    const gettingMassageMediumDarkSkinTone = new Emoji("\u{1F486}\u{1F3FE}", "Getting Massage: Medium-Dark Skin Tone");
+    const gettingMassageDarkSkinTone = new Emoji("\u{1F486}\u{1F3FF}", "Getting Massage: Dark Skin Tone");
+    const gettingMassageMale = new Emoji("\u{1F486}\u200D\u2642\uFE0F", "Getting Massage: Male");
+    const gettingMassageLightSkinToneMale = new Emoji("\u{1F486}\u{1F3FB}\u200D\u2642\uFE0F", "Getting Massage: Light Skin Tone: Male");
+    const gettingMassageMediumLightSkinToneMale = new Emoji("\u{1F486}\u{1F3FC}\u200D\u2642\uFE0F", "Getting Massage: Medium-Light Skin Tone: Male");
+    const gettingMassageMediumSkinToneMale = new Emoji("\u{1F486}\u{1F3FD}\u200D\u2642\uFE0F", "Getting Massage: Medium Skin Tone: Male");
+    const gettingMassageMediumDarkSkinToneMale = new Emoji("\u{1F486}\u{1F3FE}\u200D\u2642\uFE0F", "Getting Massage: Medium-Dark Skin Tone: Male");
+    const gettingMassageDarkSkinToneMale = new Emoji("\u{1F486}\u{1F3FF}\u200D\u2642\uFE0F", "Getting Massage: Dark Skin Tone: Male");
+    const gettingMassageFemale = new Emoji("\u{1F486}\u200D\u2640\uFE0F", "Getting Massage: Female");
+    const gettingMassageLightSkinToneFemale = new Emoji("\u{1F486}\u{1F3FB}\u200D\u2640\uFE0F", "Getting Massage: Light Skin Tone: Female");
+    const gettingMassageMediumLightSkinToneFemale = new Emoji("\u{1F486}\u{1F3FC}\u200D\u2640\uFE0F", "Getting Massage: Medium-Light Skin Tone: Female");
+    const gettingMassageMediumSkinToneFemale = new Emoji("\u{1F486}\u{1F3FD}\u200D\u2640\uFE0F", "Getting Massage: Medium Skin Tone: Female");
+    const gettingMassageMediumDarkSkinToneFemale = new Emoji("\u{1F486}\u{1F3FE}\u200D\u2640\uFE0F", "Getting Massage: Medium-Dark Skin Tone: Female");
+    const gettingMassageDarkSkinToneFemale = new Emoji("\u{1F486}\u{1F3FF}\u200D\u2640\uFE0F", "Getting Massage: Dark Skin Tone: Female");
+    const gettingHaircut = new Emoji("\u{1F487}", "Getting Haircut");
+    const gettingHaircutLightSkinTone = new Emoji("\u{1F487}\u{1F3FB}", "Getting Haircut: Light Skin Tone");
+    const gettingHaircutMediumLightSkinTone = new Emoji("\u{1F487}\u{1F3FC}", "Getting Haircut: Medium-Light Skin Tone");
+    const gettingHaircutMediumSkinTone = new Emoji("\u{1F487}\u{1F3FD}", "Getting Haircut: Medium Skin Tone");
+    const gettingHaircutMediumDarkSkinTone = new Emoji("\u{1F487}\u{1F3FE}", "Getting Haircut: Medium-Dark Skin Tone");
+    const gettingHaircutDarkSkinTone = new Emoji("\u{1F487}\u{1F3FF}", "Getting Haircut: Dark Skin Tone");
+    const gettingHaircutMale = new Emoji("\u{1F487}\u200D\u2642\uFE0F", "Getting Haircut: Male");
+    const gettingHaircutLightSkinToneMale = new Emoji("\u{1F487}\u{1F3FB}\u200D\u2642\uFE0F", "Getting Haircut: Light Skin Tone: Male");
+    const gettingHaircutMediumLightSkinToneMale = new Emoji("\u{1F487}\u{1F3FC}\u200D\u2642\uFE0F", "Getting Haircut: Medium-Light Skin Tone: Male");
+    const gettingHaircutMediumSkinToneMale = new Emoji("\u{1F487}\u{1F3FD}\u200D\u2642\uFE0F", "Getting Haircut: Medium Skin Tone: Male");
+    const gettingHaircutMediumDarkSkinToneMale = new Emoji("\u{1F487}\u{1F3FE}\u200D\u2642\uFE0F", "Getting Haircut: Medium-Dark Skin Tone: Male");
+    const gettingHaircutDarkSkinToneMale = new Emoji("\u{1F487}\u{1F3FF}\u200D\u2642\uFE0F", "Getting Haircut: Dark Skin Tone: Male");
+    const gettingHaircutFemale = new Emoji("\u{1F487}\u200D\u2640\uFE0F", "Getting Haircut: Female");
+    const gettingHaircutLightSkinToneFemale = new Emoji("\u{1F487}\u{1F3FB}\u200D\u2640\uFE0F", "Getting Haircut: Light Skin Tone: Female");
+    const gettingHaircutMediumLightSkinToneFemale = new Emoji("\u{1F487}\u{1F3FC}\u200D\u2640\uFE0F", "Getting Haircut: Medium-Light Skin Tone: Female");
+    const gettingHaircutMediumSkinToneFemale = new Emoji("\u{1F487}\u{1F3FD}\u200D\u2640\uFE0F", "Getting Haircut: Medium Skin Tone: Female");
+    const gettingHaircutMediumDarkSkinToneFemale = new Emoji("\u{1F487}\u{1F3FE}\u200D\u2640\uFE0F", "Getting Haircut: Medium-Dark Skin Tone: Female");
+    const gettingHaircutDarkSkinToneFemale = new Emoji("\u{1F487}\u{1F3FF}\u200D\u2640\uFE0F", "Getting Haircut: Dark Skin Tone: Female");
+    const constructionWorker = new Emoji("\u{1F477}", "Construction Worker");
+    const constructionWorkerLightSkinTone = new Emoji("\u{1F477}\u{1F3FB}", "Construction Worker: Light Skin Tone");
+    const constructionWorkerMediumLightSkinTone = new Emoji("\u{1F477}\u{1F3FC}", "Construction Worker: Medium-Light Skin Tone");
+    const constructionWorkerMediumSkinTone = new Emoji("\u{1F477}\u{1F3FD}", "Construction Worker: Medium Skin Tone");
+    const constructionWorkerMediumDarkSkinTone = new Emoji("\u{1F477}\u{1F3FE}", "Construction Worker: Medium-Dark Skin Tone");
+    const constructionWorkerDarkSkinTone = new Emoji("\u{1F477}\u{1F3FF}", "Construction Worker: Dark Skin Tone");
+    const constructionWorkerMale = new Emoji("\u{1F477}\u200D\u2642\uFE0F", "Construction Worker: Male");
+    const constructionWorkerLightSkinToneMale = new Emoji("\u{1F477}\u{1F3FB}\u200D\u2642\uFE0F", "Construction Worker: Light Skin Tone: Male");
+    const constructionWorkerMediumLightSkinToneMale = new Emoji("\u{1F477}\u{1F3FC}\u200D\u2642\uFE0F", "Construction Worker: Medium-Light Skin Tone: Male");
+    const constructionWorkerMediumSkinToneMale = new Emoji("\u{1F477}\u{1F3FD}\u200D\u2642\uFE0F", "Construction Worker: Medium Skin Tone: Male");
+    const constructionWorkerMediumDarkSkinToneMale = new Emoji("\u{1F477}\u{1F3FE}\u200D\u2642\uFE0F", "Construction Worker: Medium-Dark Skin Tone: Male");
+    const constructionWorkerDarkSkinToneMale = new Emoji("\u{1F477}\u{1F3FF}\u200D\u2642\uFE0F", "Construction Worker: Dark Skin Tone: Male");
+    const constructionWorkerFemale = new Emoji("\u{1F477}\u200D\u2640\uFE0F", "Construction Worker: Female");
+    const constructionWorkerLightSkinToneFemale = new Emoji("\u{1F477}\u{1F3FB}\u200D\u2640\uFE0F", "Construction Worker: Light Skin Tone: Female");
+    const constructionWorkerMediumLightSkinToneFemale = new Emoji("\u{1F477}\u{1F3FC}\u200D\u2640\uFE0F", "Construction Worker: Medium-Light Skin Tone: Female");
+    const constructionWorkerMediumSkinToneFemale = new Emoji("\u{1F477}\u{1F3FD}\u200D\u2640\uFE0F", "Construction Worker: Medium Skin Tone: Female");
+    const constructionWorkerMediumDarkSkinToneFemale = new Emoji("\u{1F477}\u{1F3FE}\u200D\u2640\uFE0F", "Construction Worker: Medium-Dark Skin Tone: Female");
+    const constructionWorkerDarkSkinToneFemale = new Emoji("\u{1F477}\u{1F3FF}\u200D\u2640\uFE0F", "Construction Worker: Dark Skin Tone: Female");
+    const guard = new Emoji("\u{1F482}", "Guard");
+    const guardLightSkinTone = new Emoji("\u{1F482}\u{1F3FB}", "Guard: Light Skin Tone");
+    const guardMediumLightSkinTone = new Emoji("\u{1F482}\u{1F3FC}", "Guard: Medium-Light Skin Tone");
+    const guardMediumSkinTone = new Emoji("\u{1F482}\u{1F3FD}", "Guard: Medium Skin Tone");
+    const guardMediumDarkSkinTone = new Emoji("\u{1F482}\u{1F3FE}", "Guard: Medium-Dark Skin Tone");
+    const guardDarkSkinTone = new Emoji("\u{1F482}\u{1F3FF}", "Guard: Dark Skin Tone");
+    const guardMale = new Emoji("\u{1F482}\u200D\u2642\uFE0F", "Guard: Male");
+    const guardLightSkinToneMale = new Emoji("\u{1F482}\u{1F3FB}\u200D\u2642\uFE0F", "Guard: Light Skin Tone: Male");
+    const guardMediumLightSkinToneMale = new Emoji("\u{1F482}\u{1F3FC}\u200D\u2642\uFE0F", "Guard: Medium-Light Skin Tone: Male");
+    const guardMediumSkinToneMale = new Emoji("\u{1F482}\u{1F3FD}\u200D\u2642\uFE0F", "Guard: Medium Skin Tone: Male");
+    const guardMediumDarkSkinToneMale = new Emoji("\u{1F482}\u{1F3FE}\u200D\u2642\uFE0F", "Guard: Medium-Dark Skin Tone: Male");
+    const guardDarkSkinToneMale = new Emoji("\u{1F482}\u{1F3FF}\u200D\u2642\uFE0F", "Guard: Dark Skin Tone: Male");
+    const guardFemale = new Emoji("\u{1F482}\u200D\u2640\uFE0F", "Guard: Female");
+    const guardLightSkinToneFemale = new Emoji("\u{1F482}\u{1F3FB}\u200D\u2640\uFE0F", "Guard: Light Skin Tone: Female");
+    const guardMediumLightSkinToneFemale = new Emoji("\u{1F482}\u{1F3FC}\u200D\u2640\uFE0F", "Guard: Medium-Light Skin Tone: Female");
+    const guardMediumSkinToneFemale = new Emoji("\u{1F482}\u{1F3FD}\u200D\u2640\uFE0F", "Guard: Medium Skin Tone: Female");
+    const guardMediumDarkSkinToneFemale = new Emoji("\u{1F482}\u{1F3FE}\u200D\u2640\uFE0F", "Guard: Medium-Dark Skin Tone: Female");
+    const guardDarkSkinToneFemale = new Emoji("\u{1F482}\u{1F3FF}\u200D\u2640\uFE0F", "Guard: Dark Skin Tone: Female");
+    const spy = new Emoji("\u{1F575}", "Spy");
+    const spyLightSkinTone = new Emoji("\u{1F575}\u{1F3FB}", "Spy: Light Skin Tone");
+    const spyMediumLightSkinTone = new Emoji("\u{1F575}\u{1F3FC}", "Spy: Medium-Light Skin Tone");
+    const spyMediumSkinTone = new Emoji("\u{1F575}\u{1F3FD}", "Spy: Medium Skin Tone");
+    const spyMediumDarkSkinTone = new Emoji("\u{1F575}\u{1F3FE}", "Spy: Medium-Dark Skin Tone");
+    const spyDarkSkinTone = new Emoji("\u{1F575}\u{1F3FF}", "Spy: Dark Skin Tone");
+    const spyMale = new Emoji("\u{1F575}\u200D\u2642\uFE0F", "Spy: Male");
+    const spyLightSkinToneMale = new Emoji("\u{1F575}\u{1F3FB}\u200D\u2642\uFE0F", "Spy: Light Skin Tone: Male");
+    const spyMediumLightSkinToneMale = new Emoji("\u{1F575}\u{1F3FC}\u200D\u2642\uFE0F", "Spy: Medium-Light Skin Tone: Male");
+    const spyMediumSkinToneMale = new Emoji("\u{1F575}\u{1F3FD}\u200D\u2642\uFE0F", "Spy: Medium Skin Tone: Male");
+    const spyMediumDarkSkinToneMale = new Emoji("\u{1F575}\u{1F3FE}\u200D\u2642\uFE0F", "Spy: Medium-Dark Skin Tone: Male");
+    const spyDarkSkinToneMale = new Emoji("\u{1F575}\u{1F3FF}\u200D\u2642\uFE0F", "Spy: Dark Skin Tone: Male");
+    const spyFemale = new Emoji("\u{1F575}\u200D\u2640\uFE0F", "Spy: Female");
+    const spyLightSkinToneFemale = new Emoji("\u{1F575}\u{1F3FB}\u200D\u2640\uFE0F", "Spy: Light Skin Tone: Female");
+    const spyMediumLightSkinToneFemale = new Emoji("\u{1F575}\u{1F3FC}\u200D\u2640\uFE0F", "Spy: Medium-Light Skin Tone: Female");
+    const spyMediumSkinToneFemale = new Emoji("\u{1F575}\u{1F3FD}\u200D\u2640\uFE0F", "Spy: Medium Skin Tone: Female");
+    const spyMediumDarkSkinToneFemale = new Emoji("\u{1F575}\u{1F3FE}\u200D\u2640\uFE0F", "Spy: Medium-Dark Skin Tone: Female");
+    const spyDarkSkinToneFemale = new Emoji("\u{1F575}\u{1F3FF}\u200D\u2640\uFE0F", "Spy: Dark Skin Tone: Female");
+    const police = new Emoji("\u{1F46E}", "Police");
+    const policeLightSkinTone = new Emoji("\u{1F46E}\u{1F3FB}", "Police: Light Skin Tone");
+    const policeMediumLightSkinTone = new Emoji("\u{1F46E}\u{1F3FC}", "Police: Medium-Light Skin Tone");
+    const policeMediumSkinTone = new Emoji("\u{1F46E}\u{1F3FD}", "Police: Medium Skin Tone");
+    const policeMediumDarkSkinTone = new Emoji("\u{1F46E}\u{1F3FE}", "Police: Medium-Dark Skin Tone");
+    const policeDarkSkinTone = new Emoji("\u{1F46E}\u{1F3FF}", "Police: Dark Skin Tone");
+    const policeMale = new Emoji("\u{1F46E}\u200D\u2642\uFE0F", "Police: Male");
+    const policeLightSkinToneMale = new Emoji("\u{1F46E}\u{1F3FB}\u200D\u2642\uFE0F", "Police: Light Skin Tone: Male");
+    const policeMediumLightSkinToneMale = new Emoji("\u{1F46E}\u{1F3FC}\u200D\u2642\uFE0F", "Police: Medium-Light Skin Tone: Male");
+    const policeMediumSkinToneMale = new Emoji("\u{1F46E}\u{1F3FD}\u200D\u2642\uFE0F", "Police: Medium Skin Tone: Male");
+    const policeMediumDarkSkinToneMale = new Emoji("\u{1F46E}\u{1F3FE}\u200D\u2642\uFE0F", "Police: Medium-Dark Skin Tone: Male");
+    const policeDarkSkinToneMale = new Emoji("\u{1F46E}\u{1F3FF}\u200D\u2642\uFE0F", "Police: Dark Skin Tone: Male");
+    const policeFemale = new Emoji("\u{1F46E}\u200D\u2640\uFE0F", "Police: Female");
+    const policeLightSkinToneFemale = new Emoji("\u{1F46E}\u{1F3FB}\u200D\u2640\uFE0F", "Police: Light Skin Tone: Female");
+    const policeMediumLightSkinToneFemale = new Emoji("\u{1F46E}\u{1F3FC}\u200D\u2640\uFE0F", "Police: Medium-Light Skin Tone: Female");
+    const policeMediumSkinToneFemale = new Emoji("\u{1F46E}\u{1F3FD}\u200D\u2640\uFE0F", "Police: Medium Skin Tone: Female");
+    const policeMediumDarkSkinToneFemale = new Emoji("\u{1F46E}\u{1F3FE}\u200D\u2640\uFE0F", "Police: Medium-Dark Skin Tone: Female");
+    const policeDarkSkinToneFemale = new Emoji("\u{1F46E}\u{1F3FF}\u200D\u2640\uFE0F", "Police: Dark Skin Tone: Female");
+    const wearingTurban = new Emoji("\u{1F473}", "Wearing Turban");
+    const wearingTurbanLightSkinTone = new Emoji("\u{1F473}\u{1F3FB}", "Wearing Turban: Light Skin Tone");
+    const wearingTurbanMediumLightSkinTone = new Emoji("\u{1F473}\u{1F3FC}", "Wearing Turban: Medium-Light Skin Tone");
+    const wearingTurbanMediumSkinTone = new Emoji("\u{1F473}\u{1F3FD}", "Wearing Turban: Medium Skin Tone");
+    const wearingTurbanMediumDarkSkinTone = new Emoji("\u{1F473}\u{1F3FE}", "Wearing Turban: Medium-Dark Skin Tone");
+    const wearingTurbanDarkSkinTone = new Emoji("\u{1F473}\u{1F3FF}", "Wearing Turban: Dark Skin Tone");
+    const wearingTurbanMale = new Emoji("\u{1F473}\u200D\u2642\uFE0F", "Wearing Turban: Male");
+    const wearingTurbanLightSkinToneMale = new Emoji("\u{1F473}\u{1F3FB}\u200D\u2642\uFE0F", "Wearing Turban: Light Skin Tone: Male");
+    const wearingTurbanMediumLightSkinToneMale = new Emoji("\u{1F473}\u{1F3FC}\u200D\u2642\uFE0F", "Wearing Turban: Medium-Light Skin Tone: Male");
+    const wearingTurbanMediumSkinToneMale = new Emoji("\u{1F473}\u{1F3FD}\u200D\u2642\uFE0F", "Wearing Turban: Medium Skin Tone: Male");
+    const wearingTurbanMediumDarkSkinToneMale = new Emoji("\u{1F473}\u{1F3FE}\u200D\u2642\uFE0F", "Wearing Turban: Medium-Dark Skin Tone: Male");
+    const wearingTurbanDarkSkinToneMale = new Emoji("\u{1F473}\u{1F3FF}\u200D\u2642\uFE0F", "Wearing Turban: Dark Skin Tone: Male");
+    const wearingTurbanFemale = new Emoji("\u{1F473}\u200D\u2640\uFE0F", "Wearing Turban: Female");
+    const wearingTurbanLightSkinToneFemale = new Emoji("\u{1F473}\u{1F3FB}\u200D\u2640\uFE0F", "Wearing Turban: Light Skin Tone: Female");
+    const wearingTurbanMediumLightSkinToneFemale = new Emoji("\u{1F473}\u{1F3FC}\u200D\u2640\uFE0F", "Wearing Turban: Medium-Light Skin Tone: Female");
+    const wearingTurbanMediumSkinToneFemale = new Emoji("\u{1F473}\u{1F3FD}\u200D\u2640\uFE0F", "Wearing Turban: Medium Skin Tone: Female");
+    const wearingTurbanMediumDarkSkinToneFemale = new Emoji("\u{1F473}\u{1F3FE}\u200D\u2640\uFE0F", "Wearing Turban: Medium-Dark Skin Tone: Female");
+    const wearingTurbanDarkSkinToneFemale = new Emoji("\u{1F473}\u{1F3FF}\u200D\u2640\uFE0F", "Wearing Turban: Dark Skin Tone: Female");
+    const superhero = new Emoji("\u{1F9B8}", "Superhero");
+    const superheroLightSkinTone = new Emoji("\u{1F9B8}\u{1F3FB}", "Superhero: Light Skin Tone");
+    const superheroMediumLightSkinTone = new Emoji("\u{1F9B8}\u{1F3FC}", "Superhero: Medium-Light Skin Tone");
+    const superheroMediumSkinTone = new Emoji("\u{1F9B8}\u{1F3FD}", "Superhero: Medium Skin Tone");
+    const superheroMediumDarkSkinTone = new Emoji("\u{1F9B8}\u{1F3FE}", "Superhero: Medium-Dark Skin Tone");
+    const superheroDarkSkinTone = new Emoji("\u{1F9B8}\u{1F3FF}", "Superhero: Dark Skin Tone");
+    const superheroMale = new Emoji("\u{1F9B8}\u200D\u2642\uFE0F", "Superhero: Male");
+    const superheroLightSkinToneMale = new Emoji("\u{1F9B8}\u{1F3FB}\u200D\u2642\uFE0F", "Superhero: Light Skin Tone: Male");
+    const superheroMediumLightSkinToneMale = new Emoji("\u{1F9B8}\u{1F3FC}\u200D\u2642\uFE0F", "Superhero: Medium-Light Skin Tone: Male");
+    const superheroMediumSkinToneMale = new Emoji("\u{1F9B8}\u{1F3FD}\u200D\u2642\uFE0F", "Superhero: Medium Skin Tone: Male");
+    const superheroMediumDarkSkinToneMale = new Emoji("\u{1F9B8}\u{1F3FE}\u200D\u2642\uFE0F", "Superhero: Medium-Dark Skin Tone: Male");
+    const superheroDarkSkinToneMale = new Emoji("\u{1F9B8}\u{1F3FF}\u200D\u2642\uFE0F", "Superhero: Dark Skin Tone: Male");
+    const superheroFemale = new Emoji("\u{1F9B8}\u200D\u2640\uFE0F", "Superhero: Female");
+    const superheroLightSkinToneFemale = new Emoji("\u{1F9B8}\u{1F3FB}\u200D\u2640\uFE0F", "Superhero: Light Skin Tone: Female");
+    const superheroMediumLightSkinToneFemale = new Emoji("\u{1F9B8}\u{1F3FC}\u200D\u2640\uFE0F", "Superhero: Medium-Light Skin Tone: Female");
+    const superheroMediumSkinToneFemale = new Emoji("\u{1F9B8}\u{1F3FD}\u200D\u2640\uFE0F", "Superhero: Medium Skin Tone: Female");
+    const superheroMediumDarkSkinToneFemale = new Emoji("\u{1F9B8}\u{1F3FE}\u200D\u2640\uFE0F", "Superhero: Medium-Dark Skin Tone: Female");
+    const superheroDarkSkinToneFemale = new Emoji("\u{1F9B8}\u{1F3FF}\u200D\u2640\uFE0F", "Superhero: Dark Skin Tone: Female");
+    const supervillain = new Emoji("\u{1F9B9}", "Supervillain");
+    const supervillainLightSkinTone = new Emoji("\u{1F9B9}\u{1F3FB}", "Supervillain: Light Skin Tone");
+    const supervillainMediumLightSkinTone = new Emoji("\u{1F9B9}\u{1F3FC}", "Supervillain: Medium-Light Skin Tone");
+    const supervillainMediumSkinTone = new Emoji("\u{1F9B9}\u{1F3FD}", "Supervillain: Medium Skin Tone");
+    const supervillainMediumDarkSkinTone = new Emoji("\u{1F9B9}\u{1F3FE}", "Supervillain: Medium-Dark Skin Tone");
+    const supervillainDarkSkinTone = new Emoji("\u{1F9B9}\u{1F3FF}", "Supervillain: Dark Skin Tone");
+    const supervillainMale = new Emoji("\u{1F9B9}\u200D\u2642\uFE0F", "Supervillain: Male");
+    const supervillainLightSkinToneMale = new Emoji("\u{1F9B9}\u{1F3FB}\u200D\u2642\uFE0F", "Supervillain: Light Skin Tone: Male");
+    const supervillainMediumLightSkinToneMale = new Emoji("\u{1F9B9}\u{1F3FC}\u200D\u2642\uFE0F", "Supervillain: Medium-Light Skin Tone: Male");
+    const supervillainMediumSkinToneMale = new Emoji("\u{1F9B9}\u{1F3FD}\u200D\u2642\uFE0F", "Supervillain: Medium Skin Tone: Male");
+    const supervillainMediumDarkSkinToneMale = new Emoji("\u{1F9B9}\u{1F3FE}\u200D\u2642\uFE0F", "Supervillain: Medium-Dark Skin Tone: Male");
+    const supervillainDarkSkinToneMale = new Emoji("\u{1F9B9}\u{1F3FF}\u200D\u2642\uFE0F", "Supervillain: Dark Skin Tone: Male");
+    const supervillainFemale = new Emoji("\u{1F9B9}\u200D\u2640\uFE0F", "Supervillain: Female");
+    const supervillainLightSkinToneFemale = new Emoji("\u{1F9B9}\u{1F3FB}\u200D\u2640\uFE0F", "Supervillain: Light Skin Tone: Female");
+    const supervillainMediumLightSkinToneFemale = new Emoji("\u{1F9B9}\u{1F3FC}\u200D\u2640\uFE0F", "Supervillain: Medium-Light Skin Tone: Female");
+    const supervillainMediumSkinToneFemale = new Emoji("\u{1F9B9}\u{1F3FD}\u200D\u2640\uFE0F", "Supervillain: Medium Skin Tone: Female");
+    const supervillainMediumDarkSkinToneFemale = new Emoji("\u{1F9B9}\u{1F3FE}\u200D\u2640\uFE0F", "Supervillain: Medium-Dark Skin Tone: Female");
+    const supervillainDarkSkinToneFemale = new Emoji("\u{1F9B9}\u{1F3FF}\u200D\u2640\uFE0F", "Supervillain: Dark Skin Tone: Female");
+    const mage = new Emoji("\u{1F9D9}", "Mage");
+    const mageLightSkinTone = new Emoji("\u{1F9D9}\u{1F3FB}", "Mage: Light Skin Tone");
+    const mageMediumLightSkinTone = new Emoji("\u{1F9D9}\u{1F3FC}", "Mage: Medium-Light Skin Tone");
+    const mageMediumSkinTone = new Emoji("\u{1F9D9}\u{1F3FD}", "Mage: Medium Skin Tone");
+    const mageMediumDarkSkinTone = new Emoji("\u{1F9D9}\u{1F3FE}", "Mage: Medium-Dark Skin Tone");
+    const mageDarkSkinTone = new Emoji("\u{1F9D9}\u{1F3FF}", "Mage: Dark Skin Tone");
+    const mageMale = new Emoji("\u{1F9D9}\u200D\u2642\uFE0F", "Mage: Male");
+    const mageLightSkinToneMale = new Emoji("\u{1F9D9}\u{1F3FB}\u200D\u2642\uFE0F", "Mage: Light Skin Tone: Male");
+    const mageMediumLightSkinToneMale = new Emoji("\u{1F9D9}\u{1F3FC}\u200D\u2642\uFE0F", "Mage: Medium-Light Skin Tone: Male");
+    const mageMediumSkinToneMale = new Emoji("\u{1F9D9}\u{1F3FD}\u200D\u2642\uFE0F", "Mage: Medium Skin Tone: Male");
+    const mageMediumDarkSkinToneMale = new Emoji("\u{1F9D9}\u{1F3FE}\u200D\u2642\uFE0F", "Mage: Medium-Dark Skin Tone: Male");
+    const mageDarkSkinToneMale = new Emoji("\u{1F9D9}\u{1F3FF}\u200D\u2642\uFE0F", "Mage: Dark Skin Tone: Male");
+    const mageFemale = new Emoji("\u{1F9D9}\u200D\u2640\uFE0F", "Mage: Female");
+    const mageLightSkinToneFemale = new Emoji("\u{1F9D9}\u{1F3FB}\u200D\u2640\uFE0F", "Mage: Light Skin Tone: Female");
+    const mageMediumLightSkinToneFemale = new Emoji("\u{1F9D9}\u{1F3FC}\u200D\u2640\uFE0F", "Mage: Medium-Light Skin Tone: Female");
+    const mageMediumSkinToneFemale = new Emoji("\u{1F9D9}\u{1F3FD}\u200D\u2640\uFE0F", "Mage: Medium Skin Tone: Female");
+    const mageMediumDarkSkinToneFemale = new Emoji("\u{1F9D9}\u{1F3FE}\u200D\u2640\uFE0F", "Mage: Medium-Dark Skin Tone: Female");
+    const mageDarkSkinToneFemale = new Emoji("\u{1F9D9}\u{1F3FF}\u200D\u2640\uFE0F", "Mage: Dark Skin Tone: Female");
+    const fairy = new Emoji("\u{1F9DA}", "Fairy");
+    const fairyLightSkinTone = new Emoji("\u{1F9DA}\u{1F3FB}", "Fairy: Light Skin Tone");
+    const fairyMediumLightSkinTone = new Emoji("\u{1F9DA}\u{1F3FC}", "Fairy: Medium-Light Skin Tone");
+    const fairyMediumSkinTone = new Emoji("\u{1F9DA}\u{1F3FD}", "Fairy: Medium Skin Tone");
+    const fairyMediumDarkSkinTone = new Emoji("\u{1F9DA}\u{1F3FE}", "Fairy: Medium-Dark Skin Tone");
+    const fairyDarkSkinTone = new Emoji("\u{1F9DA}\u{1F3FF}", "Fairy: Dark Skin Tone");
+    const fairyMale = new Emoji("\u{1F9DA}\u200D\u2642\uFE0F", "Fairy: Male");
+    const fairyLightSkinToneMale = new Emoji("\u{1F9DA}\u{1F3FB}\u200D\u2642\uFE0F", "Fairy: Light Skin Tone: Male");
+    const fairyMediumLightSkinToneMale = new Emoji("\u{1F9DA}\u{1F3FC}\u200D\u2642\uFE0F", "Fairy: Medium-Light Skin Tone: Male");
+    const fairyMediumSkinToneMale = new Emoji("\u{1F9DA}\u{1F3FD}\u200D\u2642\uFE0F", "Fairy: Medium Skin Tone: Male");
+    const fairyMediumDarkSkinToneMale = new Emoji("\u{1F9DA}\u{1F3FE}\u200D\u2642\uFE0F", "Fairy: Medium-Dark Skin Tone: Male");
+    const fairyDarkSkinToneMale = new Emoji("\u{1F9DA}\u{1F3FF}\u200D\u2642\uFE0F", "Fairy: Dark Skin Tone: Male");
+    const fairyFemale = new Emoji("\u{1F9DA}\u200D\u2640\uFE0F", "Fairy: Female");
+    const fairyLightSkinToneFemale = new Emoji("\u{1F9DA}\u{1F3FB}\u200D\u2640\uFE0F", "Fairy: Light Skin Tone: Female");
+    const fairyMediumLightSkinToneFemale = new Emoji("\u{1F9DA}\u{1F3FC}\u200D\u2640\uFE0F", "Fairy: Medium-Light Skin Tone: Female");
+    const fairyMediumSkinToneFemale = new Emoji("\u{1F9DA}\u{1F3FD}\u200D\u2640\uFE0F", "Fairy: Medium Skin Tone: Female");
+    const fairyMediumDarkSkinToneFemale = new Emoji("\u{1F9DA}\u{1F3FE}\u200D\u2640\uFE0F", "Fairy: Medium-Dark Skin Tone: Female");
+    const fairyDarkSkinToneFemale = new Emoji("\u{1F9DA}\u{1F3FF}\u200D\u2640\uFE0F", "Fairy: Dark Skin Tone: Female");
+    const vampire = new Emoji("\u{1F9DB}", "Vampire");
+    const vampireLightSkinTone = new Emoji("\u{1F9DB}\u{1F3FB}", "Vampire: Light Skin Tone");
+    const vampireMediumLightSkinTone = new Emoji("\u{1F9DB}\u{1F3FC}", "Vampire: Medium-Light Skin Tone");
+    const vampireMediumSkinTone = new Emoji("\u{1F9DB}\u{1F3FD}", "Vampire: Medium Skin Tone");
+    const vampireMediumDarkSkinTone = new Emoji("\u{1F9DB}\u{1F3FE}", "Vampire: Medium-Dark Skin Tone");
+    const vampireDarkSkinTone = new Emoji("\u{1F9DB}\u{1F3FF}", "Vampire: Dark Skin Tone");
+    const vampireMale = new Emoji("\u{1F9DB}\u200D\u2642\uFE0F", "Vampire: Male");
+    const vampireLightSkinToneMale = new Emoji("\u{1F9DB}\u{1F3FB}\u200D\u2642\uFE0F", "Vampire: Light Skin Tone: Male");
+    const vampireMediumLightSkinToneMale = new Emoji("\u{1F9DB}\u{1F3FC}\u200D\u2642\uFE0F", "Vampire: Medium-Light Skin Tone: Male");
+    const vampireMediumSkinToneMale = new Emoji("\u{1F9DB}\u{1F3FD}\u200D\u2642\uFE0F", "Vampire: Medium Skin Tone: Male");
+    const vampireMediumDarkSkinToneMale = new Emoji("\u{1F9DB}\u{1F3FE}\u200D\u2642\uFE0F", "Vampire: Medium-Dark Skin Tone: Male");
+    const vampireDarkSkinToneMale = new Emoji("\u{1F9DB}\u{1F3FF}\u200D\u2642\uFE0F", "Vampire: Dark Skin Tone: Male");
+    const vampireFemale = new Emoji("\u{1F9DB}\u200D\u2640\uFE0F", "Vampire: Female");
+    const vampireLightSkinToneFemale = new Emoji("\u{1F9DB}\u{1F3FB}\u200D\u2640\uFE0F", "Vampire: Light Skin Tone: Female");
+    const vampireMediumLightSkinToneFemale = new Emoji("\u{1F9DB}\u{1F3FC}\u200D\u2640\uFE0F", "Vampire: Medium-Light Skin Tone: Female");
+    const vampireMediumSkinToneFemale = new Emoji("\u{1F9DB}\u{1F3FD}\u200D\u2640\uFE0F", "Vampire: Medium Skin Tone: Female");
+    const vampireMediumDarkSkinToneFemale = new Emoji("\u{1F9DB}\u{1F3FE}\u200D\u2640\uFE0F", "Vampire: Medium-Dark Skin Tone: Female");
+    const vampireDarkSkinToneFemale = new Emoji("\u{1F9DB}\u{1F3FF}\u200D\u2640\uFE0F", "Vampire: Dark Skin Tone: Female");
+    const merperson = new Emoji("\u{1F9DC}", "Merperson");
+    const merpersonLightSkinTone = new Emoji("\u{1F9DC}\u{1F3FB}", "Merperson: Light Skin Tone");
+    const merpersonMediumLightSkinTone = new Emoji("\u{1F9DC}\u{1F3FC}", "Merperson: Medium-Light Skin Tone");
+    const merpersonMediumSkinTone = new Emoji("\u{1F9DC}\u{1F3FD}", "Merperson: Medium Skin Tone");
+    const merpersonMediumDarkSkinTone = new Emoji("\u{1F9DC}\u{1F3FE}", "Merperson: Medium-Dark Skin Tone");
+    const merpersonDarkSkinTone = new Emoji("\u{1F9DC}\u{1F3FF}", "Merperson: Dark Skin Tone");
+    const merpersonMale = new Emoji("\u{1F9DC}\u200D\u2642\uFE0F", "Merperson: Male");
+    const merpersonLightSkinToneMale = new Emoji("\u{1F9DC}\u{1F3FB}\u200D\u2642\uFE0F", "Merperson: Light Skin Tone: Male");
+    const merpersonMediumLightSkinToneMale = new Emoji("\u{1F9DC}\u{1F3FC}\u200D\u2642\uFE0F", "Merperson: Medium-Light Skin Tone: Male");
+    const merpersonMediumSkinToneMale = new Emoji("\u{1F9DC}\u{1F3FD}\u200D\u2642\uFE0F", "Merperson: Medium Skin Tone: Male");
+    const merpersonMediumDarkSkinToneMale = new Emoji("\u{1F9DC}\u{1F3FE}\u200D\u2642\uFE0F", "Merperson: Medium-Dark Skin Tone: Male");
+    const merpersonDarkSkinToneMale = new Emoji("\u{1F9DC}\u{1F3FF}\u200D\u2642\uFE0F", "Merperson: Dark Skin Tone: Male");
+    const merpersonFemale = new Emoji("\u{1F9DC}\u200D\u2640\uFE0F", "Merperson: Female");
+    const merpersonLightSkinToneFemale = new Emoji("\u{1F9DC}\u{1F3FB}\u200D\u2640\uFE0F", "Merperson: Light Skin Tone: Female");
+    const merpersonMediumLightSkinToneFemale = new Emoji("\u{1F9DC}\u{1F3FC}\u200D\u2640\uFE0F", "Merperson: Medium-Light Skin Tone: Female");
+    const merpersonMediumSkinToneFemale = new Emoji("\u{1F9DC}\u{1F3FD}\u200D\u2640\uFE0F", "Merperson: Medium Skin Tone: Female");
+    const merpersonMediumDarkSkinToneFemale = new Emoji("\u{1F9DC}\u{1F3FE}\u200D\u2640\uFE0F", "Merperson: Medium-Dark Skin Tone: Female");
+    const merpersonDarkSkinToneFemale = new Emoji("\u{1F9DC}\u{1F3FF}\u200D\u2640\uFE0F", "Merperson: Dark Skin Tone: Female");
+    const elf = new Emoji("\u{1F9DD}", "Elf");
+    const elfLightSkinTone = new Emoji("\u{1F9DD}\u{1F3FB}", "Elf: Light Skin Tone");
+    const elfMediumLightSkinTone = new Emoji("\u{1F9DD}\u{1F3FC}", "Elf: Medium-Light Skin Tone");
+    const elfMediumSkinTone = new Emoji("\u{1F9DD}\u{1F3FD}", "Elf: Medium Skin Tone");
+    const elfMediumDarkSkinTone = new Emoji("\u{1F9DD}\u{1F3FE}", "Elf: Medium-Dark Skin Tone");
+    const elfDarkSkinTone = new Emoji("\u{1F9DD}\u{1F3FF}", "Elf: Dark Skin Tone");
+    const elfMale = new Emoji("\u{1F9DD}\u200D\u2642\uFE0F", "Elf: Male");
+    const elfLightSkinToneMale = new Emoji("\u{1F9DD}\u{1F3FB}\u200D\u2642\uFE0F", "Elf: Light Skin Tone: Male");
+    const elfMediumLightSkinToneMale = new Emoji("\u{1F9DD}\u{1F3FC}\u200D\u2642\uFE0F", "Elf: Medium-Light Skin Tone: Male");
+    const elfMediumSkinToneMale = new Emoji("\u{1F9DD}\u{1F3FD}\u200D\u2642\uFE0F", "Elf: Medium Skin Tone: Male");
+    const elfMediumDarkSkinToneMale = new Emoji("\u{1F9DD}\u{1F3FE}\u200D\u2642\uFE0F", "Elf: Medium-Dark Skin Tone: Male");
+    const elfDarkSkinToneMale = new Emoji("\u{1F9DD}\u{1F3FF}\u200D\u2642\uFE0F", "Elf: Dark Skin Tone: Male");
+    const elfFemale = new Emoji("\u{1F9DD}\u200D\u2640\uFE0F", "Elf: Female");
+    const elfLightSkinToneFemale = new Emoji("\u{1F9DD}\u{1F3FB}\u200D\u2640\uFE0F", "Elf: Light Skin Tone: Female");
+    const elfMediumLightSkinToneFemale = new Emoji("\u{1F9DD}\u{1F3FC}\u200D\u2640\uFE0F", "Elf: Medium-Light Skin Tone: Female");
+    const elfMediumSkinToneFemale = new Emoji("\u{1F9DD}\u{1F3FD}\u200D\u2640\uFE0F", "Elf: Medium Skin Tone: Female");
+    const elfMediumDarkSkinToneFemale = new Emoji("\u{1F9DD}\u{1F3FE}\u200D\u2640\uFE0F", "Elf: Medium-Dark Skin Tone: Female");
+    const elfDarkSkinToneFemale = new Emoji("\u{1F9DD}\u{1F3FF}\u200D\u2640\uFE0F", "Elf: Dark Skin Tone: Female");
+    const walking = new Emoji("\u{1F6B6}", "Walking");
+    const walkingLightSkinTone = new Emoji("\u{1F6B6}\u{1F3FB}", "Walking: Light Skin Tone");
+    const walkingMediumLightSkinTone = new Emoji("\u{1F6B6}\u{1F3FC}", "Walking: Medium-Light Skin Tone");
+    const walkingMediumSkinTone = new Emoji("\u{1F6B6}\u{1F3FD}", "Walking: Medium Skin Tone");
+    const walkingMediumDarkSkinTone = new Emoji("\u{1F6B6}\u{1F3FE}", "Walking: Medium-Dark Skin Tone");
+    const walkingDarkSkinTone = new Emoji("\u{1F6B6}\u{1F3FF}", "Walking: Dark Skin Tone");
+    const walkingMale = new Emoji("\u{1F6B6}\u200D\u2642\uFE0F", "Walking: Male");
+    const walkingLightSkinToneMale = new Emoji("\u{1F6B6}\u{1F3FB}\u200D\u2642\uFE0F", "Walking: Light Skin Tone: Male");
+    const walkingMediumLightSkinToneMale = new Emoji("\u{1F6B6}\u{1F3FC}\u200D\u2642\uFE0F", "Walking: Medium-Light Skin Tone: Male");
+    const walkingMediumSkinToneMale = new Emoji("\u{1F6B6}\u{1F3FD}\u200D\u2642\uFE0F", "Walking: Medium Skin Tone: Male");
+    const walkingMediumDarkSkinToneMale = new Emoji("\u{1F6B6}\u{1F3FE}\u200D\u2642\uFE0F", "Walking: Medium-Dark Skin Tone: Male");
+    const walkingDarkSkinToneMale = new Emoji("\u{1F6B6}\u{1F3FF}\u200D\u2642\uFE0F", "Walking: Dark Skin Tone: Male");
+    const walkingFemale = new Emoji("\u{1F6B6}\u200D\u2640\uFE0F", "Walking: Female");
+    const walkingLightSkinToneFemale = new Emoji("\u{1F6B6}\u{1F3FB}\u200D\u2640\uFE0F", "Walking: Light Skin Tone: Female");
+    const walkingMediumLightSkinToneFemale = new Emoji("\u{1F6B6}\u{1F3FC}\u200D\u2640\uFE0F", "Walking: Medium-Light Skin Tone: Female");
+    const walkingMediumSkinToneFemale = new Emoji("\u{1F6B6}\u{1F3FD}\u200D\u2640\uFE0F", "Walking: Medium Skin Tone: Female");
+    const walkingMediumDarkSkinToneFemale = new Emoji("\u{1F6B6}\u{1F3FE}\u200D\u2640\uFE0F", "Walking: Medium-Dark Skin Tone: Female");
+    const walkingDarkSkinToneFemale = new Emoji("\u{1F6B6}\u{1F3FF}\u200D\u2640\uFE0F", "Walking: Dark Skin Tone: Female");
+    const standing = new Emoji("\u{1F9CD}", "Standing");
+    const standingLightSkinTone = new Emoji("\u{1F9CD}\u{1F3FB}", "Standing: Light Skin Tone");
+    const standingMediumLightSkinTone = new Emoji("\u{1F9CD}\u{1F3FC}", "Standing: Medium-Light Skin Tone");
+    const standingMediumSkinTone = new Emoji("\u{1F9CD}\u{1F3FD}", "Standing: Medium Skin Tone");
+    const standingMediumDarkSkinTone = new Emoji("\u{1F9CD}\u{1F3FE}", "Standing: Medium-Dark Skin Tone");
+    const standingDarkSkinTone = new Emoji("\u{1F9CD}\u{1F3FF}", "Standing: Dark Skin Tone");
+    const standingMale = new Emoji("\u{1F9CD}\u200D\u2642\uFE0F", "Standing: Male");
+    const standingLightSkinToneMale = new Emoji("\u{1F9CD}\u{1F3FB}\u200D\u2642\uFE0F", "Standing: Light Skin Tone: Male");
+    const standingMediumLightSkinToneMale = new Emoji("\u{1F9CD}\u{1F3FC}\u200D\u2642\uFE0F", "Standing: Medium-Light Skin Tone: Male");
+    const standingMediumSkinToneMale = new Emoji("\u{1F9CD}\u{1F3FD}\u200D\u2642\uFE0F", "Standing: Medium Skin Tone: Male");
+    const standingMediumDarkSkinToneMale = new Emoji("\u{1F9CD}\u{1F3FE}\u200D\u2642\uFE0F", "Standing: Medium-Dark Skin Tone: Male");
+    const standingDarkSkinToneMale = new Emoji("\u{1F9CD}\u{1F3FF}\u200D\u2642\uFE0F", "Standing: Dark Skin Tone: Male");
+    const standingFemale = new Emoji("\u{1F9CD}\u200D\u2640\uFE0F", "Standing: Female");
+    const standingLightSkinToneFemale = new Emoji("\u{1F9CD}\u{1F3FB}\u200D\u2640\uFE0F", "Standing: Light Skin Tone: Female");
+    const standingMediumLightSkinToneFemale = new Emoji("\u{1F9CD}\u{1F3FC}\u200D\u2640\uFE0F", "Standing: Medium-Light Skin Tone: Female");
+    const standingMediumSkinToneFemale = new Emoji("\u{1F9CD}\u{1F3FD}\u200D\u2640\uFE0F", "Standing: Medium Skin Tone: Female");
+    const standingMediumDarkSkinToneFemale = new Emoji("\u{1F9CD}\u{1F3FE}\u200D\u2640\uFE0F", "Standing: Medium-Dark Skin Tone: Female");
+    const standingDarkSkinToneFemale = new Emoji("\u{1F9CD}\u{1F3FF}\u200D\u2640\uFE0F", "Standing: Dark Skin Tone: Female");
+    const kneeling = new Emoji("\u{1F9CE}", "Kneeling");
+    const kneelingLightSkinTone = new Emoji("\u{1F9CE}\u{1F3FB}", "Kneeling: Light Skin Tone");
+    const kneelingMediumLightSkinTone = new Emoji("\u{1F9CE}\u{1F3FC}", "Kneeling: Medium-Light Skin Tone");
+    const kneelingMediumSkinTone = new Emoji("\u{1F9CE}\u{1F3FD}", "Kneeling: Medium Skin Tone");
+    const kneelingMediumDarkSkinTone = new Emoji("\u{1F9CE}\u{1F3FE}", "Kneeling: Medium-Dark Skin Tone");
+    const kneelingDarkSkinTone = new Emoji("\u{1F9CE}\u{1F3FF}", "Kneeling: Dark Skin Tone");
+    const kneelingMale = new Emoji("\u{1F9CE}\u200D\u2642\uFE0F", "Kneeling: Male");
+    const kneelingLightSkinToneMale = new Emoji("\u{1F9CE}\u{1F3FB}\u200D\u2642\uFE0F", "Kneeling: Light Skin Tone: Male");
+    const kneelingMediumLightSkinToneMale = new Emoji("\u{1F9CE}\u{1F3FC}\u200D\u2642\uFE0F", "Kneeling: Medium-Light Skin Tone: Male");
+    const kneelingMediumSkinToneMale = new Emoji("\u{1F9CE}\u{1F3FD}\u200D\u2642\uFE0F", "Kneeling: Medium Skin Tone: Male");
+    const kneelingMediumDarkSkinToneMale = new Emoji("\u{1F9CE}\u{1F3FE}\u200D\u2642\uFE0F", "Kneeling: Medium-Dark Skin Tone: Male");
+    const kneelingDarkSkinToneMale = new Emoji("\u{1F9CE}\u{1F3FF}\u200D\u2642\uFE0F", "Kneeling: Dark Skin Tone: Male");
+    const kneelingFemale = new Emoji("\u{1F9CE}\u200D\u2640\uFE0F", "Kneeling: Female");
+    const kneelingLightSkinToneFemale = new Emoji("\u{1F9CE}\u{1F3FB}\u200D\u2640\uFE0F", "Kneeling: Light Skin Tone: Female");
+    const kneelingMediumLightSkinToneFemale = new Emoji("\u{1F9CE}\u{1F3FC}\u200D\u2640\uFE0F", "Kneeling: Medium-Light Skin Tone: Female");
+    const kneelingMediumSkinToneFemale = new Emoji("\u{1F9CE}\u{1F3FD}\u200D\u2640\uFE0F", "Kneeling: Medium Skin Tone: Female");
+    const kneelingMediumDarkSkinToneFemale = new Emoji("\u{1F9CE}\u{1F3FE}\u200D\u2640\uFE0F", "Kneeling: Medium-Dark Skin Tone: Female");
+    const kneelingDarkSkinToneFemale = new Emoji("\u{1F9CE}\u{1F3FF}\u200D\u2640\uFE0F", "Kneeling: Dark Skin Tone: Female");
+    const running = new Emoji("\u{1F3C3}", "Running");
+    const runningLightSkinTone = new Emoji("\u{1F3C3}\u{1F3FB}", "Running: Light Skin Tone");
+    const runningMediumLightSkinTone = new Emoji("\u{1F3C3}\u{1F3FC}", "Running: Medium-Light Skin Tone");
+    const runningMediumSkinTone = new Emoji("\u{1F3C3}\u{1F3FD}", "Running: Medium Skin Tone");
+    const runningMediumDarkSkinTone = new Emoji("\u{1F3C3}\u{1F3FE}", "Running: Medium-Dark Skin Tone");
+    const runningDarkSkinTone = new Emoji("\u{1F3C3}\u{1F3FF}", "Running: Dark Skin Tone");
+    const runningMale = new Emoji("\u{1F3C3}\u200D\u2642\uFE0F", "Running: Male");
+    const runningLightSkinToneMale = new Emoji("\u{1F3C3}\u{1F3FB}\u200D\u2642\uFE0F", "Running: Light Skin Tone: Male");
+    const runningMediumLightSkinToneMale = new Emoji("\u{1F3C3}\u{1F3FC}\u200D\u2642\uFE0F", "Running: Medium-Light Skin Tone: Male");
+    const runningMediumSkinToneMale = new Emoji("\u{1F3C3}\u{1F3FD}\u200D\u2642\uFE0F", "Running: Medium Skin Tone: Male");
+    const runningMediumDarkSkinToneMale = new Emoji("\u{1F3C3}\u{1F3FE}\u200D\u2642\uFE0F", "Running: Medium-Dark Skin Tone: Male");
+    const runningDarkSkinToneMale = new Emoji("\u{1F3C3}\u{1F3FF}\u200D\u2642\uFE0F", "Running: Dark Skin Tone: Male");
+    const runningFemale = new Emoji("\u{1F3C3}\u200D\u2640\uFE0F", "Running: Female");
+    const runningLightSkinToneFemale = new Emoji("\u{1F3C3}\u{1F3FB}\u200D\u2640\uFE0F", "Running: Light Skin Tone: Female");
+    const runningMediumLightSkinToneFemale = new Emoji("\u{1F3C3}\u{1F3FC}\u200D\u2640\uFE0F", "Running: Medium-Light Skin Tone: Female");
+    const runningMediumSkinToneFemale = new Emoji("\u{1F3C3}\u{1F3FD}\u200D\u2640\uFE0F", "Running: Medium Skin Tone: Female");
+    const runningMediumDarkSkinToneFemale = new Emoji("\u{1F3C3}\u{1F3FE}\u200D\u2640\uFE0F", "Running: Medium-Dark Skin Tone: Female");
+    const runningDarkSkinToneFemale = new Emoji("\u{1F3C3}\u{1F3FF}\u200D\u2640\uFE0F", "Running: Dark Skin Tone: Female");
+    const baby = new Emoji("\u{1F476}", "Baby");
+    const babyLightSkinTone = new Emoji("\u{1F476}\u{1F3FB}", "Baby: Light Skin Tone");
+    const babyMediumLightSkinTone = new Emoji("\u{1F476}\u{1F3FC}", "Baby: Medium-Light Skin Tone");
+    const babyMediumSkinTone = new Emoji("\u{1F476}\u{1F3FD}", "Baby: Medium Skin Tone");
+    const babyMediumDarkSkinTone = new Emoji("\u{1F476}\u{1F3FE}", "Baby: Medium-Dark Skin Tone");
+    const babyDarkSkinTone = new Emoji("\u{1F476}\u{1F3FF}", "Baby: Dark Skin Tone");
+    const child = new Emoji("\u{1F9D2}", "Child");
+    const childLightSkinTone = new Emoji("\u{1F9D2}\u{1F3FB}", "Child: Light Skin Tone");
+    const childMediumLightSkinTone = new Emoji("\u{1F9D2}\u{1F3FC}", "Child: Medium-Light Skin Tone");
+    const childMediumSkinTone = new Emoji("\u{1F9D2}\u{1F3FD}", "Child: Medium Skin Tone");
+    const childMediumDarkSkinTone = new Emoji("\u{1F9D2}\u{1F3FE}", "Child: Medium-Dark Skin Tone");
+    const childDarkSkinTone = new Emoji("\u{1F9D2}\u{1F3FF}", "Child: Dark Skin Tone");
+    const boy = new Emoji("\u{1F466}", "Boy");
+    const boyLightSkinTone = new Emoji("\u{1F466}\u{1F3FB}", "Boy: Light Skin Tone");
+    const boyMediumLightSkinTone = new Emoji("\u{1F466}\u{1F3FC}", "Boy: Medium-Light Skin Tone");
+    const boyMediumSkinTone = new Emoji("\u{1F466}\u{1F3FD}", "Boy: Medium Skin Tone");
+    const boyMediumDarkSkinTone = new Emoji("\u{1F466}\u{1F3FE}", "Boy: Medium-Dark Skin Tone");
+    const boyDarkSkinTone = new Emoji("\u{1F466}\u{1F3FF}", "Boy: Dark Skin Tone");
+    const girl = new Emoji("\u{1F467}", "Girl");
+    const girlLightSkinTone = new Emoji("\u{1F467}\u{1F3FB}", "Girl: Light Skin Tone");
+    const girlMediumLightSkinTone = new Emoji("\u{1F467}\u{1F3FC}", "Girl: Medium-Light Skin Tone");
+    const girlMediumSkinTone = new Emoji("\u{1F467}\u{1F3FD}", "Girl: Medium Skin Tone");
+    const girlMediumDarkSkinTone = new Emoji("\u{1F467}\u{1F3FE}", "Girl: Medium-Dark Skin Tone");
+    const girlDarkSkinTone = new Emoji("\u{1F467}\u{1F3FF}", "Girl: Dark Skin Tone");
+    const blondPerson = new Emoji("\u{1F471}", "Blond Person");
+    const blondPersonLightSkinTone = new Emoji("\u{1F471}\u{1F3FB}", "Blond Person: Light Skin Tone");
+    const blondPersonMediumLightSkinTone = new Emoji("\u{1F471}\u{1F3FC}", "Blond Person: Medium-Light Skin Tone");
+    const blondPersonMediumSkinTone = new Emoji("\u{1F471}\u{1F3FD}", "Blond Person: Medium Skin Tone");
+    const blondPersonMediumDarkSkinTone = new Emoji("\u{1F471}\u{1F3FE}", "Blond Person: Medium-Dark Skin Tone");
+    const blondPersonDarkSkinTone = new Emoji("\u{1F471}\u{1F3FF}", "Blond Person: Dark Skin Tone");
+    const blondPersonMale = new Emoji("\u{1F471}\u200D\u2642\uFE0F", "Blond Person: Male");
+    const blondPersonLightSkinToneMale = new Emoji("\u{1F471}\u{1F3FB}\u200D\u2642\uFE0F", "Blond Person: Light Skin Tone: Male");
+    const blondPersonMediumLightSkinToneMale = new Emoji("\u{1F471}\u{1F3FC}\u200D\u2642\uFE0F", "Blond Person: Medium-Light Skin Tone: Male");
+    const blondPersonMediumSkinToneMale = new Emoji("\u{1F471}\u{1F3FD}\u200D\u2642\uFE0F", "Blond Person: Medium Skin Tone: Male");
+    const blondPersonMediumDarkSkinToneMale = new Emoji("\u{1F471}\u{1F3FE}\u200D\u2642\uFE0F", "Blond Person: Medium-Dark Skin Tone: Male");
+    const blondPersonDarkSkinToneMale = new Emoji("\u{1F471}\u{1F3FF}\u200D\u2642\uFE0F", "Blond Person: Dark Skin Tone: Male");
+    const blondPersonFemale = new Emoji("\u{1F471}\u200D\u2640\uFE0F", "Blond Person: Female");
+    const blondPersonLightSkinToneFemale = new Emoji("\u{1F471}\u{1F3FB}\u200D\u2640\uFE0F", "Blond Person: Light Skin Tone: Female");
+    const blondPersonMediumLightSkinToneFemale = new Emoji("\u{1F471}\u{1F3FC}\u200D\u2640\uFE0F", "Blond Person: Medium-Light Skin Tone: Female");
+    const blondPersonMediumSkinToneFemale = new Emoji("\u{1F471}\u{1F3FD}\u200D\u2640\uFE0F", "Blond Person: Medium Skin Tone: Female");
+    const blondPersonMediumDarkSkinToneFemale = new Emoji("\u{1F471}\u{1F3FE}\u200D\u2640\uFE0F", "Blond Person: Medium-Dark Skin Tone: Female");
+    const blondPersonDarkSkinToneFemale = new Emoji("\u{1F471}\u{1F3FF}\u200D\u2640\uFE0F", "Blond Person: Dark Skin Tone: Female");
+    const person = new Emoji("\u{1F9D1}", "Person");
+    const personLightSkinTone = new Emoji("\u{1F9D1}\u{1F3FB}", "Person: Light Skin Tone");
+    const personMediumLightSkinTone = new Emoji("\u{1F9D1}\u{1F3FC}", "Person: Medium-Light Skin Tone");
+    const personMediumSkinTone = new Emoji("\u{1F9D1}\u{1F3FD}", "Person: Medium Skin Tone");
+    const personMediumDarkSkinTone = new Emoji("\u{1F9D1}\u{1F3FE}", "Person: Medium-Dark Skin Tone");
+    const personDarkSkinTone = new Emoji("\u{1F9D1}\u{1F3FF}", "Person: Dark Skin Tone");
+    const beardedMan = new Emoji("\u{1F9D4}", "Bearded Man");
+    const beardedManLightSkinTone = new Emoji("\u{1F9D4}\u{1F3FB}", "Bearded Man: Light Skin Tone");
+    const beardedManMediumLightSkinTone = new Emoji("\u{1F9D4}\u{1F3FC}", "Bearded Man: Medium-Light Skin Tone");
+    const beardedManMediumSkinTone = new Emoji("\u{1F9D4}\u{1F3FD}", "Bearded Man: Medium Skin Tone");
+    const beardedManMediumDarkSkinTone = new Emoji("\u{1F9D4}\u{1F3FE}", "Bearded Man: Medium-Dark Skin Tone");
+    const beardedManDarkSkinTone = new Emoji("\u{1F9D4}\u{1F3FF}", "Bearded Man: Dark Skin Tone");
+    const manInSuitLevitating = new Emoji("\u{1F574}\uFE0F", "Man in Suit, Levitating");
+    const manWithChineseCap = new Emoji("\u{1F472}", "Man With Chinese Cap");
+    const manWithChineseCapLightSkinTone = new Emoji("\u{1F472}\u{1F3FB}", "Man With Chinese Cap: Light Skin Tone");
+    const manWithChineseCapMediumLightSkinTone = new Emoji("\u{1F472}\u{1F3FC}", "Man With Chinese Cap: Medium-Light Skin Tone");
+    const manWithChineseCapMediumSkinTone = new Emoji("\u{1F472}\u{1F3FD}", "Man With Chinese Cap: Medium Skin Tone");
+    const manWithChineseCapMediumDarkSkinTone = new Emoji("\u{1F472}\u{1F3FE}", "Man With Chinese Cap: Medium-Dark Skin Tone");
+    const manWithChineseCapDarkSkinTone = new Emoji("\u{1F472}\u{1F3FF}", "Man With Chinese Cap: Dark Skin Tone");
+    const manInTuxedo = new Emoji("\u{1F935}", "Man in Tuxedo");
+    const manInTuxedoLightSkinTone = new Emoji("\u{1F935}\u{1F3FB}", "Man in Tuxedo: Light Skin Tone");
+    const manInTuxedoMediumLightSkinTone = new Emoji("\u{1F935}\u{1F3FC}", "Man in Tuxedo: Medium-Light Skin Tone");
+    const manInTuxedoMediumSkinTone = new Emoji("\u{1F935}\u{1F3FD}", "Man in Tuxedo: Medium Skin Tone");
+    const manInTuxedoMediumDarkSkinTone = new Emoji("\u{1F935}\u{1F3FE}", "Man in Tuxedo: Medium-Dark Skin Tone");
+    const manInTuxedoDarkSkinTone = new Emoji("\u{1F935}\u{1F3FF}", "Man in Tuxedo: Dark Skin Tone");
+    const man = new Emoji("\u{1F468}", "Man");
+    const manLightSkinTone = new Emoji("\u{1F468}\u{1F3FB}", "Man: Light Skin Tone");
+    const manMediumLightSkinTone = new Emoji("\u{1F468}\u{1F3FC}", "Man: Medium-Light Skin Tone");
+    const manMediumSkinTone = new Emoji("\u{1F468}\u{1F3FD}", "Man: Medium Skin Tone");
+    const manMediumDarkSkinTone = new Emoji("\u{1F468}\u{1F3FE}", "Man: Medium-Dark Skin Tone");
+    const manDarkSkinTone = new Emoji("\u{1F468}\u{1F3FF}", "Man: Dark Skin Tone");
+    const manRedHair = new Emoji("\u{1F468}\u200D\u{1F9B0}", "Man: Red Hair");
+    const manLightSkinToneRedHair = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9B0}", "Man: Light Skin Tone: Red Hair");
+    const manMediumLightSkinToneRedHair = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9B0}", "Man: Medium-Light Skin Tone: Red Hair");
+    const manMediumSkinToneRedHair = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9B0}", "Man: Medium Skin Tone: Red Hair");
+    const manMediumDarkSkinToneRedHair = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9B0}", "Man: Medium-Dark Skin Tone: Red Hair");
+    const manDarkSkinToneRedHair = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9B0}", "Man: Dark Skin Tone: Red Hair");
+    const manCurlyHair = new Emoji("\u{1F468}\u200D\u{1F9B1}", "Man: Curly Hair");
+    const manLightSkinToneCurlyHair = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9B1}", "Man: Light Skin Tone: Curly Hair");
+    const manMediumLightSkinToneCurlyHair = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9B1}", "Man: Medium-Light Skin Tone: Curly Hair");
+    const manMediumSkinToneCurlyHair = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9B1}", "Man: Medium Skin Tone: Curly Hair");
+    const manMediumDarkSkinToneCurlyHair = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9B1}", "Man: Medium-Dark Skin Tone: Curly Hair");
+    const manDarkSkinToneCurlyHair = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9B1}", "Man: Dark Skin Tone: Curly Hair");
+    const manWhiteHair = new Emoji("\u{1F468}\u200D\u{1F9B3}", "Man: White Hair");
+    const manLightSkinToneWhiteHair = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9B3}", "Man: Light Skin Tone: White Hair");
+    const manMediumLightSkinToneWhiteHair = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9B3}", "Man: Medium-Light Skin Tone: White Hair");
+    const manMediumSkinToneWhiteHair = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9B3}", "Man: Medium Skin Tone: White Hair");
+    const manMediumDarkSkinToneWhiteHair = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9B3}", "Man: Medium-Dark Skin Tone: White Hair");
+    const manDarkSkinToneWhiteHair = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9B3}", "Man: Dark Skin Tone: White Hair");
+    const manBald = new Emoji("\u{1F468}\u200D\u{1F9B2}", "Man: Bald");
+    const manLightSkinToneBald = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9B2}", "Man: Light Skin Tone: Bald");
+    const manMediumLightSkinToneBald = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9B2}", "Man: Medium-Light Skin Tone: Bald");
+    const manMediumSkinToneBald = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9B2}", "Man: Medium Skin Tone: Bald");
+    const manMediumDarkSkinToneBald = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9B2}", "Man: Medium-Dark Skin Tone: Bald");
+    const manDarkSkinToneBald = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9B2}", "Man: Dark Skin Tone: Bald");
+    const pregnantWoman = new Emoji("\u{1F930}", "Pregnant Woman");
+    const pregnantWomanLightSkinTone = new Emoji("\u{1F930}\u{1F3FB}", "Pregnant Woman: Light Skin Tone");
+    const pregnantWomanMediumLightSkinTone = new Emoji("\u{1F930}\u{1F3FC}", "Pregnant Woman: Medium-Light Skin Tone");
+    const pregnantWomanMediumSkinTone = new Emoji("\u{1F930}\u{1F3FD}", "Pregnant Woman: Medium Skin Tone");
+    const pregnantWomanMediumDarkSkinTone = new Emoji("\u{1F930}\u{1F3FE}", "Pregnant Woman: Medium-Dark Skin Tone");
+    const pregnantWomanDarkSkinTone = new Emoji("\u{1F930}\u{1F3FF}", "Pregnant Woman: Dark Skin Tone");
+    const breastFeeding = new Emoji("\u{1F931}", "Breast-Feeding");
+    const breastFeedingLightSkinTone = new Emoji("\u{1F931}\u{1F3FB}", "Breast-Feeding: Light Skin Tone");
+    const breastFeedingMediumLightSkinTone = new Emoji("\u{1F931}\u{1F3FC}", "Breast-Feeding: Medium-Light Skin Tone");
+    const breastFeedingMediumSkinTone = new Emoji("\u{1F931}\u{1F3FD}", "Breast-Feeding: Medium Skin Tone");
+    const breastFeedingMediumDarkSkinTone = new Emoji("\u{1F931}\u{1F3FE}", "Breast-Feeding: Medium-Dark Skin Tone");
+    const breastFeedingDarkSkinTone = new Emoji("\u{1F931}\u{1F3FF}", "Breast-Feeding: Dark Skin Tone");
+    const womanWithHeadscarf = new Emoji("\u{1F9D5}", "Woman With Headscarf");
+    const womanWithHeadscarfLightSkinTone = new Emoji("\u{1F9D5}\u{1F3FB}", "Woman With Headscarf: Light Skin Tone");
+    const womanWithHeadscarfMediumLightSkinTone = new Emoji("\u{1F9D5}\u{1F3FC}", "Woman With Headscarf: Medium-Light Skin Tone");
+    const womanWithHeadscarfMediumSkinTone = new Emoji("\u{1F9D5}\u{1F3FD}", "Woman With Headscarf: Medium Skin Tone");
+    const womanWithHeadscarfMediumDarkSkinTone = new Emoji("\u{1F9D5}\u{1F3FE}", "Woman With Headscarf: Medium-Dark Skin Tone");
+    const womanWithHeadscarfDarkSkinTone = new Emoji("\u{1F9D5}\u{1F3FF}", "Woman With Headscarf: Dark Skin Tone");
+    const brideWithVeil = new Emoji("\u{1F470}", "Bride With Veil");
+    const brideWithVeilLightSkinTone = new Emoji("\u{1F470}\u{1F3FB}", "Bride With Veil: Light Skin Tone");
+    const brideWithVeilMediumLightSkinTone = new Emoji("\u{1F470}\u{1F3FC}", "Bride With Veil: Medium-Light Skin Tone");
+    const brideWithVeilMediumSkinTone = new Emoji("\u{1F470}\u{1F3FD}", "Bride With Veil: Medium Skin Tone");
+    const brideWithVeilMediumDarkSkinTone = new Emoji("\u{1F470}\u{1F3FE}", "Bride With Veil: Medium-Dark Skin Tone");
+    const brideWithVeilDarkSkinTone = new Emoji("\u{1F470}\u{1F3FF}", "Bride With Veil: Dark Skin Tone");
+    const woman = new Emoji("\u{1F469}", "Woman");
+    const womanLightSkinTone = new Emoji("\u{1F469}\u{1F3FB}", "Woman: Light Skin Tone");
+    const womanMediumLightSkinTone = new Emoji("\u{1F469}\u{1F3FC}", "Woman: Medium-Light Skin Tone");
+    const womanMediumSkinTone = new Emoji("\u{1F469}\u{1F3FD}", "Woman: Medium Skin Tone");
+    const womanMediumDarkSkinTone = new Emoji("\u{1F469}\u{1F3FE}", "Woman: Medium-Dark Skin Tone");
+    const womanDarkSkinTone = new Emoji("\u{1F469}\u{1F3FF}", "Woman: Dark Skin Tone");
+    const womanRedHair = new Emoji("\u{1F469}\u200D\u{1F9B0}", "Woman: Red Hair");
+    const womanLightSkinToneRedHair = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9B0}", "Woman: Light Skin Tone: Red Hair");
+    const womanMediumLightSkinToneRedHair = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9B0}", "Woman: Medium-Light Skin Tone: Red Hair");
+    const womanMediumSkinToneRedHair = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9B0}", "Woman: Medium Skin Tone: Red Hair");
+    const womanMediumDarkSkinToneRedHair = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9B0}", "Woman: Medium-Dark Skin Tone: Red Hair");
+    const womanDarkSkinToneRedHair = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9B0}", "Woman: Dark Skin Tone: Red Hair");
+    const womanCurlyHair = new Emoji("\u{1F469}\u200D\u{1F9B1}", "Woman: Curly Hair");
+    const womanLightSkinToneCurlyHair = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9B1}", "Woman: Light Skin Tone: Curly Hair");
+    const womanMediumLightSkinToneCurlyHair = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9B1}", "Woman: Medium-Light Skin Tone: Curly Hair");
+    const womanMediumSkinToneCurlyHair = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9B1}", "Woman: Medium Skin Tone: Curly Hair");
+    const womanMediumDarkSkinToneCurlyHair = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9B1}", "Woman: Medium-Dark Skin Tone: Curly Hair");
+    const womanDarkSkinToneCurlyHair = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9B1}", "Woman: Dark Skin Tone: Curly Hair");
+    const womanWhiteHair = new Emoji("\u{1F469}\u200D\u{1F9B3}", "Woman: White Hair");
+    const womanLightSkinToneWhiteHair = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9B3}", "Woman: Light Skin Tone: White Hair");
+    const womanMediumLightSkinToneWhiteHair = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9B3}", "Woman: Medium-Light Skin Tone: White Hair");
+    const womanMediumSkinToneWhiteHair = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9B3}", "Woman: Medium Skin Tone: White Hair");
+    const womanMediumDarkSkinToneWhiteHair = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9B3}", "Woman: Medium-Dark Skin Tone: White Hair");
+    const womanDarkSkinToneWhiteHair = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9B3}", "Woman: Dark Skin Tone: White Hair");
+    const womanBald = new Emoji("\u{1F469}\u200D\u{1F9B2}", "Woman: Bald");
+    const womanLightSkinToneBald = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9B2}", "Woman: Light Skin Tone: Bald");
+    const womanMediumLightSkinToneBald = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9B2}", "Woman: Medium-Light Skin Tone: Bald");
+    const womanMediumSkinToneBald = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9B2}", "Woman: Medium Skin Tone: Bald");
+    const womanMediumDarkSkinToneBald = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9B2}", "Woman: Medium-Dark Skin Tone: Bald");
+    const womanDarkSkinToneBald = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9B2}", "Woman: Dark Skin Tone: Bald");
+    const olderPerson = new Emoji("\u{1F9D3}", "Older Person");
+    const olderPersonLightSkinTone = new Emoji("\u{1F9D3}\u{1F3FB}", "Older Person: Light Skin Tone");
+    const olderPersonMediumLightSkinTone = new Emoji("\u{1F9D3}\u{1F3FC}", "Older Person: Medium-Light Skin Tone");
+    const olderPersonMediumSkinTone = new Emoji("\u{1F9D3}\u{1F3FD}", "Older Person: Medium Skin Tone");
+    const olderPersonMediumDarkSkinTone = new Emoji("\u{1F9D3}\u{1F3FE}", "Older Person: Medium-Dark Skin Tone");
+    const olderPersonDarkSkinTone = new Emoji("\u{1F9D3}\u{1F3FF}", "Older Person: Dark Skin Tone");
+    const oldMan = new Emoji("\u{1F474}", "Old Man");
+    const oldManLightSkinTone = new Emoji("\u{1F474}\u{1F3FB}", "Old Man: Light Skin Tone");
+    const oldManMediumLightSkinTone = new Emoji("\u{1F474}\u{1F3FC}", "Old Man: Medium-Light Skin Tone");
+    const oldManMediumSkinTone = new Emoji("\u{1F474}\u{1F3FD}", "Old Man: Medium Skin Tone");
+    const oldManMediumDarkSkinTone = new Emoji("\u{1F474}\u{1F3FE}", "Old Man: Medium-Dark Skin Tone");
+    const oldManDarkSkinTone = new Emoji("\u{1F474}\u{1F3FF}", "Old Man: Dark Skin Tone");
+    const oldWoman = new Emoji("\u{1F475}", "Old Woman");
+    const oldWomanLightSkinTone = new Emoji("\u{1F475}\u{1F3FB}", "Old Woman: Light Skin Tone");
+    const oldWomanMediumLightSkinTone = new Emoji("\u{1F475}\u{1F3FC}", "Old Woman: Medium-Light Skin Tone");
+    const oldWomanMediumSkinTone = new Emoji("\u{1F475}\u{1F3FD}", "Old Woman: Medium Skin Tone");
+    const oldWomanMediumDarkSkinTone = new Emoji("\u{1F475}\u{1F3FE}", "Old Woman: Medium-Dark Skin Tone");
+    const oldWomanDarkSkinTone = new Emoji("\u{1F475}\u{1F3FF}", "Old Woman: Dark Skin Tone");
+    const medical = new Emoji("\u2695\uFE0F", "Medical");
+    const manHealthCare = new Emoji("\u{1F468}\u200D\u2695\uFE0F", "Man: Health Care");
+    const manLightSkinToneHealthCare = new Emoji("\u{1F468}\u{1F3FB}\u200D\u2695\uFE0F", "Man: Light Skin Tone: Health Care");
+    const manMediumLightSkinToneHealthCare = new Emoji("\u{1F468}\u{1F3FC}\u200D\u2695\uFE0F", "Man: Medium-Light Skin Tone: Health Care");
+    const manMediumSkinToneHealthCare = new Emoji("\u{1F468}\u{1F3FD}\u200D\u2695\uFE0F", "Man: Medium Skin Tone: Health Care");
+    const manMediumDarkSkinToneHealthCare = new Emoji("\u{1F468}\u{1F3FE}\u200D\u2695\uFE0F", "Man: Medium-Dark Skin Tone: Health Care");
+    const manDarkSkinToneHealthCare = new Emoji("\u{1F468}\u{1F3FF}\u200D\u2695\uFE0F", "Man: Dark Skin Tone: Health Care");
+    const womanHealthCare = new Emoji("\u{1F469}\u200D\u2695\uFE0F", "Woman: Health Care");
+    const womanLightSkinToneHealthCare = new Emoji("\u{1F469}\u{1F3FB}\u200D\u2695\uFE0F", "Woman: Light Skin Tone: Health Care");
+    const womanMediumLightSkinToneHealthCare = new Emoji("\u{1F469}\u{1F3FC}\u200D\u2695\uFE0F", "Woman: Medium-Light Skin Tone: Health Care");
+    const womanMediumSkinToneHealthCare = new Emoji("\u{1F469}\u{1F3FD}\u200D\u2695\uFE0F", "Woman: Medium Skin Tone: Health Care");
+    const womanMediumDarkSkinToneHealthCare = new Emoji("\u{1F469}\u{1F3FE}\u200D\u2695\uFE0F", "Woman: Medium-Dark Skin Tone: Health Care");
+    const womanDarkSkinToneHealthCare = new Emoji("\u{1F469}\u{1F3FF}\u200D\u2695\uFE0F", "Woman: Dark Skin Tone: Health Care");
+    const graduationCap = new Emoji("\u{1F393}", "Graduation Cap");
+    const manStudent = new Emoji("\u{1F468}\u200D\u{1F393}", "Man: Student");
+    const manLightSkinToneStudent = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F393}", "Man: Light Skin Tone: Student");
+    const manMediumLightSkinToneStudent = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F393}", "Man: Medium-Light Skin Tone: Student");
+    const manMediumSkinToneStudent = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F393}", "Man: Medium Skin Tone: Student");
+    const manMediumDarkSkinToneStudent = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F393}", "Man: Medium-Dark Skin Tone: Student");
+    const manDarkSkinToneStudent = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F393}", "Man: Dark Skin Tone: Student");
+    const womanStudent = new Emoji("\u{1F469}\u200D\u{1F393}", "Woman: Student");
+    const womanLightSkinToneStudent = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F393}", "Woman: Light Skin Tone: Student");
+    const womanMediumLightSkinToneStudent = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F393}", "Woman: Medium-Light Skin Tone: Student");
+    const womanMediumSkinToneStudent = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F393}", "Woman: Medium Skin Tone: Student");
+    const womanMediumDarkSkinToneStudent = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F393}", "Woman: Medium-Dark Skin Tone: Student");
+    const womanDarkSkinToneStudent = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F393}", "Woman: Dark Skin Tone: Student");
+    const school = new Emoji("\u{1F3EB}", "School");
+    const manTeacher = new Emoji("\u{1F468}\u200D\u{1F3EB}", "Man: Teacher");
+    const manLightSkinToneTeacher = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F3EB}", "Man: Light Skin Tone: Teacher");
+    const manMediumLightSkinToneTeacher = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F3EB}", "Man: Medium-Light Skin Tone: Teacher");
+    const manMediumSkinToneTeacher = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F3EB}", "Man: Medium Skin Tone: Teacher");
+    const manMediumDarkSkinToneTeacher = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F3EB}", "Man: Medium-Dark Skin Tone: Teacher");
+    const manDarkSkinToneTeacher = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F3EB}", "Man: Dark Skin Tone: Teacher");
+    const womanTeacher = new Emoji("\u{1F469}\u200D\u{1F3EB}", "Woman: Teacher");
+    const womanLightSkinToneTeacher = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F3EB}", "Woman: Light Skin Tone: Teacher");
+    const womanMediumLightSkinToneTeacher = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F3EB}", "Woman: Medium-Light Skin Tone: Teacher");
+    const womanMediumSkinToneTeacher = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F3EB}", "Woman: Medium Skin Tone: Teacher");
+    const womanMediumDarkSkinToneTeacher = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F3EB}", "Woman: Medium-Dark Skin Tone: Teacher");
+    const womanDarkSkinToneTeacher = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F3EB}", "Woman: Dark Skin Tone: Teacher");
+    const balanceScale = new Emoji("\u2696\uFE0F", "Balance Scale");
+    const manJudge = new Emoji("\u{1F468}\u200D\u2696\uFE0F", "Man: Judge");
+    const manLightSkinToneJudge = new Emoji("\u{1F468}\u{1F3FB}\u200D\u2696\uFE0F", "Man: Light Skin Tone: Judge");
+    const manMediumLightSkinToneJudge = new Emoji("\u{1F468}\u{1F3FC}\u200D\u2696\uFE0F", "Man: Medium-Light Skin Tone: Judge");
+    const manMediumSkinToneJudge = new Emoji("\u{1F468}\u{1F3FD}\u200D\u2696\uFE0F", "Man: Medium Skin Tone: Judge");
+    const manMediumDarkSkinToneJudge = new Emoji("\u{1F468}\u{1F3FE}\u200D\u2696\uFE0F", "Man: Medium-Dark Skin Tone: Judge");
+    const manDarkSkinToneJudge = new Emoji("\u{1F468}\u{1F3FF}\u200D\u2696\uFE0F", "Man: Dark Skin Tone: Judge");
+    const womanJudge = new Emoji("\u{1F469}\u200D\u2696\uFE0F", "Woman: Judge");
+    const womanLightSkinToneJudge = new Emoji("\u{1F469}\u{1F3FB}\u200D\u2696\uFE0F", "Woman: Light Skin Tone: Judge");
+    const womanMediumLightSkinToneJudge = new Emoji("\u{1F469}\u{1F3FC}\u200D\u2696\uFE0F", "Woman: Medium-Light Skin Tone: Judge");
+    const womanMediumSkinToneJudge = new Emoji("\u{1F469}\u{1F3FD}\u200D\u2696\uFE0F", "Woman: Medium Skin Tone: Judge");
+    const womanMediumDarkSkinToneJudge = new Emoji("\u{1F469}\u{1F3FE}\u200D\u2696\uFE0F", "Woman: Medium-Dark Skin Tone: Judge");
+    const womanDarkSkinToneJudge = new Emoji("\u{1F469}\u{1F3FF}\u200D\u2696\uFE0F", "Woman: Dark Skin Tone: Judge");
+    const sheafOfRice = new Emoji("\u{1F33E}", "Sheaf of Rice");
+    const manFarmer = new Emoji("\u{1F468}\u200D\u{1F33E}", "Man: Farmer");
+    const manLightSkinToneFarmer = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F33E}", "Man: Light Skin Tone: Farmer");
+    const manMediumLightSkinToneFarmer = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F33E}", "Man: Medium-Light Skin Tone: Farmer");
+    const manMediumSkinToneFarmer = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F33E}", "Man: Medium Skin Tone: Farmer");
+    const manMediumDarkSkinToneFarmer = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F33E}", "Man: Medium-Dark Skin Tone: Farmer");
+    const manDarkSkinToneFarmer = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F33E}", "Man: Dark Skin Tone: Farmer");
+    const womanFarmer = new Emoji("\u{1F469}\u200D\u{1F33E}", "Woman: Farmer");
+    const womanLightSkinToneFarmer = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F33E}", "Woman: Light Skin Tone: Farmer");
+    const womanMediumLightSkinToneFarmer = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F33E}", "Woman: Medium-Light Skin Tone: Farmer");
+    const womanMediumSkinToneFarmer = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F33E}", "Woman: Medium Skin Tone: Farmer");
+    const womanMediumDarkSkinToneFarmer = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F33E}", "Woman: Medium-Dark Skin Tone: Farmer");
+    const womanDarkSkinToneFarmer = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F33E}", "Woman: Dark Skin Tone: Farmer");
+    const cooking = new Emoji("\u{1F373}", "Cooking");
+    const manCook = new Emoji("\u{1F468}\u200D\u{1F373}", "Man: Cook");
+    const manLightSkinToneCook = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F373}", "Man: Light Skin Tone: Cook");
+    const manMediumLightSkinToneCook = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F373}", "Man: Medium-Light Skin Tone: Cook");
+    const manMediumSkinToneCook = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F373}", "Man: Medium Skin Tone: Cook");
+    const manMediumDarkSkinToneCook = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F373}", "Man: Medium-Dark Skin Tone: Cook");
+    const manDarkSkinToneCook = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F373}", "Man: Dark Skin Tone: Cook");
+    const womanCook = new Emoji("\u{1F469}\u200D\u{1F373}", "Woman: Cook");
+    const womanLightSkinToneCook = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F373}", "Woman: Light Skin Tone: Cook");
+    const womanMediumLightSkinToneCook = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F373}", "Woman: Medium-Light Skin Tone: Cook");
+    const womanMediumSkinToneCook = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F373}", "Woman: Medium Skin Tone: Cook");
+    const womanMediumDarkSkinToneCook = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F373}", "Woman: Medium-Dark Skin Tone: Cook");
+    const womanDarkSkinToneCook = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F373}", "Woman: Dark Skin Tone: Cook");
+    const wrench = new Emoji("\u{1F527}", "Wrench");
+    const manMechanic = new Emoji("\u{1F468}\u200D\u{1F527}", "Man: Mechanic");
+    const manLightSkinToneMechanic = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F527}", "Man: Light Skin Tone: Mechanic");
+    const manMediumLightSkinToneMechanic = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F527}", "Man: Medium-Light Skin Tone: Mechanic");
+    const manMediumSkinToneMechanic = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F527}", "Man: Medium Skin Tone: Mechanic");
+    const manMediumDarkSkinToneMechanic = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F527}", "Man: Medium-Dark Skin Tone: Mechanic");
+    const manDarkSkinToneMechanic = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F527}", "Man: Dark Skin Tone: Mechanic");
+    const womanMechanic = new Emoji("\u{1F469}\u200D\u{1F527}", "Woman: Mechanic");
+    const womanLightSkinToneMechanic = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F527}", "Woman: Light Skin Tone: Mechanic");
+    const womanMediumLightSkinToneMechanic = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F527}", "Woman: Medium-Light Skin Tone: Mechanic");
+    const womanMediumSkinToneMechanic = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F527}", "Woman: Medium Skin Tone: Mechanic");
+    const womanMediumDarkSkinToneMechanic = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F527}", "Woman: Medium-Dark Skin Tone: Mechanic");
+    const womanDarkSkinToneMechanic = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F527}", "Woman: Dark Skin Tone: Mechanic");
+    const factory = new Emoji("\u{1F3ED}", "Factory");
+    const manFactoryWorker = new Emoji("\u{1F468}\u200D\u{1F3ED}", "Man: Factory Worker");
+    const manLightSkinToneFactoryWorker = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F3ED}", "Man: Light Skin Tone: Factory Worker");
+    const manMediumLightSkinToneFactoryWorker = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F3ED}", "Man: Medium-Light Skin Tone: Factory Worker");
+    const manMediumSkinToneFactoryWorker = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F3ED}", "Man: Medium Skin Tone: Factory Worker");
+    const manMediumDarkSkinToneFactoryWorker = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F3ED}", "Man: Medium-Dark Skin Tone: Factory Worker");
+    const manDarkSkinToneFactoryWorker = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F3ED}", "Man: Dark Skin Tone: Factory Worker");
+    const womanFactoryWorker = new Emoji("\u{1F469}\u200D\u{1F3ED}", "Woman: Factory Worker");
+    const womanLightSkinToneFactoryWorker = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F3ED}", "Woman: Light Skin Tone: Factory Worker");
+    const womanMediumLightSkinToneFactoryWorker = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F3ED}", "Woman: Medium-Light Skin Tone: Factory Worker");
+    const womanMediumSkinToneFactoryWorker = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F3ED}", "Woman: Medium Skin Tone: Factory Worker");
+    const womanMediumDarkSkinToneFactoryWorker = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F3ED}", "Woman: Medium-Dark Skin Tone: Factory Worker");
+    const womanDarkSkinToneFactoryWorker = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F3ED}", "Woman: Dark Skin Tone: Factory Worker");
+    const briefcase = new Emoji("\u{1F4BC}", "Briefcase");
+    const manOfficeWorker = new Emoji("\u{1F468}\u200D\u{1F4BC}", "Man: Office Worker");
+    const manLightSkinToneOfficeWorker = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F4BC}", "Man: Light Skin Tone: Office Worker");
+    const manMediumLightSkinToneOfficeWorker = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F4BC}", "Man: Medium-Light Skin Tone: Office Worker");
+    const manMediumSkinToneOfficeWorker = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F4BC}", "Man: Medium Skin Tone: Office Worker");
+    const manMediumDarkSkinToneOfficeWorker = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F4BC}", "Man: Medium-Dark Skin Tone: Office Worker");
+    const manDarkSkinToneOfficeWorker = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F4BC}", "Man: Dark Skin Tone: Office Worker");
+    const womanOfficeWorker = new Emoji("\u{1F469}\u200D\u{1F4BC}", "Woman: Office Worker");
+    const womanLightSkinToneOfficeWorker = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F4BC}", "Woman: Light Skin Tone: Office Worker");
+    const womanMediumLightSkinToneOfficeWorker = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F4BC}", "Woman: Medium-Light Skin Tone: Office Worker");
+    const womanMediumSkinToneOfficeWorker = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F4BC}", "Woman: Medium Skin Tone: Office Worker");
+    const womanMediumDarkSkinToneOfficeWorker = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F4BC}", "Woman: Medium-Dark Skin Tone: Office Worker");
+    const womanDarkSkinToneOfficeWorker = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F4BC}", "Woman: Dark Skin Tone: Office Worker");
+    const fireEngine = new Emoji("\u{1F692}", "Fire Engine");
+    const manFireFighter = new Emoji("\u{1F468}\u200D\u{1F692}", "Man: Fire Fighter");
+    const manLightSkinToneFireFighter = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F692}", "Man: Light Skin Tone: Fire Fighter");
+    const manMediumLightSkinToneFireFighter = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F692}", "Man: Medium-Light Skin Tone: Fire Fighter");
+    const manMediumSkinToneFireFighter = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F692}", "Man: Medium Skin Tone: Fire Fighter");
+    const manMediumDarkSkinToneFireFighter = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F692}", "Man: Medium-Dark Skin Tone: Fire Fighter");
+    const manDarkSkinToneFireFighter = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F692}", "Man: Dark Skin Tone: Fire Fighter");
+    const womanFireFighter = new Emoji("\u{1F469}\u200D\u{1F692}", "Woman: Fire Fighter");
+    const womanLightSkinToneFireFighter = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F692}", "Woman: Light Skin Tone: Fire Fighter");
+    const womanMediumLightSkinToneFireFighter = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F692}", "Woman: Medium-Light Skin Tone: Fire Fighter");
+    const womanMediumSkinToneFireFighter = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F692}", "Woman: Medium Skin Tone: Fire Fighter");
+    const womanMediumDarkSkinToneFireFighter = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F692}", "Woman: Medium-Dark Skin Tone: Fire Fighter");
+    const womanDarkSkinToneFireFighter = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F692}", "Woman: Dark Skin Tone: Fire Fighter");
+    const rocket = new Emoji("\u{1F680}", "Rocket");
+    const manAstronaut = new Emoji("\u{1F468}\u200D\u{1F680}", "Man: Astronaut");
+    const manLightSkinToneAstronaut = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F680}", "Man: Light Skin Tone: Astronaut");
+    const manMediumLightSkinToneAstronaut = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F680}", "Man: Medium-Light Skin Tone: Astronaut");
+    const manMediumSkinToneAstronaut = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F680}", "Man: Medium Skin Tone: Astronaut");
+    const manMediumDarkSkinToneAstronaut = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F680}", "Man: Medium-Dark Skin Tone: Astronaut");
+    const manDarkSkinToneAstronaut = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F680}", "Man: Dark Skin Tone: Astronaut");
+    const womanAstronaut = new Emoji("\u{1F469}\u200D\u{1F680}", "Woman: Astronaut");
+    const womanLightSkinToneAstronaut = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F680}", "Woman: Light Skin Tone: Astronaut");
+    const womanMediumLightSkinToneAstronaut = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F680}", "Woman: Medium-Light Skin Tone: Astronaut");
+    const womanMediumSkinToneAstronaut = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F680}", "Woman: Medium Skin Tone: Astronaut");
+    const womanMediumDarkSkinToneAstronaut = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F680}", "Woman: Medium-Dark Skin Tone: Astronaut");
+    const womanDarkSkinToneAstronaut = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F680}", "Woman: Dark Skin Tone: Astronaut");
+    const airplane = new Emoji("\u2708\uFE0F", "Airplane");
+    const manPilot = new Emoji("\u{1F468}\u200D\u2708\uFE0F", "Man: Pilot");
+    const manLightSkinTonePilot = new Emoji("\u{1F468}\u{1F3FB}\u200D\u2708\uFE0F", "Man: Light Skin Tone: Pilot");
+    const manMediumLightSkinTonePilot = new Emoji("\u{1F468}\u{1F3FC}\u200D\u2708\uFE0F", "Man: Medium-Light Skin Tone: Pilot");
+    const manMediumSkinTonePilot = new Emoji("\u{1F468}\u{1F3FD}\u200D\u2708\uFE0F", "Man: Medium Skin Tone: Pilot");
+    const manMediumDarkSkinTonePilot = new Emoji("\u{1F468}\u{1F3FE}\u200D\u2708\uFE0F", "Man: Medium-Dark Skin Tone: Pilot");
+    const manDarkSkinTonePilot = new Emoji("\u{1F468}\u{1F3FF}\u200D\u2708\uFE0F", "Man: Dark Skin Tone: Pilot");
+    const womanPilot = new Emoji("\u{1F469}\u200D\u2708\uFE0F", "Woman: Pilot");
+    const womanLightSkinTonePilot = new Emoji("\u{1F469}\u{1F3FB}\u200D\u2708\uFE0F", "Woman: Light Skin Tone: Pilot");
+    const womanMediumLightSkinTonePilot = new Emoji("\u{1F469}\u{1F3FC}\u200D\u2708\uFE0F", "Woman: Medium-Light Skin Tone: Pilot");
+    const womanMediumSkinTonePilot = new Emoji("\u{1F469}\u{1F3FD}\u200D\u2708\uFE0F", "Woman: Medium Skin Tone: Pilot");
+    const womanMediumDarkSkinTonePilot = new Emoji("\u{1F469}\u{1F3FE}\u200D\u2708\uFE0F", "Woman: Medium-Dark Skin Tone: Pilot");
+    const womanDarkSkinTonePilot = new Emoji("\u{1F469}\u{1F3FF}\u200D\u2708\uFE0F", "Woman: Dark Skin Tone: Pilot");
+    const artistPalette = new Emoji("\u{1F3A8}", "Artist Palette");
+    const manArtist = new Emoji("\u{1F468}\u200D\u{1F3A8}", "Man: Artist");
+    const manLightSkinToneArtist = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F3A8}", "Man: Light Skin Tone: Artist");
+    const manMediumLightSkinToneArtist = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F3A8}", "Man: Medium-Light Skin Tone: Artist");
+    const manMediumSkinToneArtist = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F3A8}", "Man: Medium Skin Tone: Artist");
+    const manMediumDarkSkinToneArtist = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F3A8}", "Man: Medium-Dark Skin Tone: Artist");
+    const manDarkSkinToneArtist = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F3A8}", "Man: Dark Skin Tone: Artist");
+    const womanArtist = new Emoji("\u{1F469}\u200D\u{1F3A8}", "Woman: Artist");
+    const womanLightSkinToneArtist = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F3A8}", "Woman: Light Skin Tone: Artist");
+    const womanMediumLightSkinToneArtist = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F3A8}", "Woman: Medium-Light Skin Tone: Artist");
+    const womanMediumSkinToneArtist = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F3A8}", "Woman: Medium Skin Tone: Artist");
+    const womanMediumDarkSkinToneArtist = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F3A8}", "Woman: Medium-Dark Skin Tone: Artist");
+    const womanDarkSkinToneArtist = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F3A8}", "Woman: Dark Skin Tone: Artist");
+    const microphone = new Emoji("\u{1F3A4}", "Microphone");
+    const manSinger = new Emoji("\u{1F468}\u200D\u{1F3A4}", "Man: Singer");
+    const manLightSkinToneSinger = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F3A4}", "Man: Light Skin Tone: Singer");
+    const manMediumLightSkinToneSinger = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F3A4}", "Man: Medium-Light Skin Tone: Singer");
+    const manMediumSkinToneSinger = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F3A4}", "Man: Medium Skin Tone: Singer");
+    const manMediumDarkSkinToneSinger = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F3A4}", "Man: Medium-Dark Skin Tone: Singer");
+    const manDarkSkinToneSinger = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F3A4}", "Man: Dark Skin Tone: Singer");
+    const womanSinger = new Emoji("\u{1F469}\u200D\u{1F3A4}", "Woman: Singer");
+    const womanLightSkinToneSinger = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F3A4}", "Woman: Light Skin Tone: Singer");
+    const womanMediumLightSkinToneSinger = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F3A4}", "Woman: Medium-Light Skin Tone: Singer");
+    const womanMediumSkinToneSinger = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F3A4}", "Woman: Medium Skin Tone: Singer");
+    const womanMediumDarkSkinToneSinger = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F3A4}", "Woman: Medium-Dark Skin Tone: Singer");
+    const womanDarkSkinToneSinger = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F3A4}", "Woman: Dark Skin Tone: Singer");
+    const laptop = new Emoji("\u{1F4BB}", "Laptop");
+    const manTechnologist = new Emoji("\u{1F468}\u200D\u{1F4BB}", "Man: Technologist");
+    const manLightSkinToneTechnologist = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F4BB}", "Man: Light Skin Tone: Technologist");
+    const manMediumLightSkinToneTechnologist = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F4BB}", "Man: Medium-Light Skin Tone: Technologist");
+    const manMediumSkinToneTechnologist = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F4BB}", "Man: Medium Skin Tone: Technologist");
+    const manMediumDarkSkinToneTechnologist = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F4BB}", "Man: Medium-Dark Skin Tone: Technologist");
+    const manDarkSkinToneTechnologist = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F4BB}", "Man: Dark Skin Tone: Technologist");
+    const womanTechnologist = new Emoji("\u{1F469}\u200D\u{1F4BB}", "Woman: Technologist");
+    const womanLightSkinToneTechnologist = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F4BB}", "Woman: Light Skin Tone: Technologist");
+    const womanMediumLightSkinToneTechnologist = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F4BB}", "Woman: Medium-Light Skin Tone: Technologist");
+    const womanMediumSkinToneTechnologist = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F4BB}", "Woman: Medium Skin Tone: Technologist");
+    const womanMediumDarkSkinToneTechnologist = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F4BB}", "Woman: Medium-Dark Skin Tone: Technologist");
+    const womanDarkSkinToneTechnologist = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F4BB}", "Woman: Dark Skin Tone: Technologist");
+    const microscope = new Emoji("\u{1F52C}", "Microscope");
+    const manScientist = new Emoji("\u{1F468}\u200D\u{1F52C}", "Man: Scientist");
+    const manLightSkinToneScientist = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F52C}", "Man: Light Skin Tone: Scientist");
+    const manMediumLightSkinToneScientist = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F52C}", "Man: Medium-Light Skin Tone: Scientist");
+    const manMediumSkinToneScientist = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F52C}", "Man: Medium Skin Tone: Scientist");
+    const manMediumDarkSkinToneScientist = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F52C}", "Man: Medium-Dark Skin Tone: Scientist");
+    const manDarkSkinToneScientist = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F52C}", "Man: Dark Skin Tone: Scientist");
+    const womanScientist = new Emoji("\u{1F469}\u200D\u{1F52C}", "Woman: Scientist");
+    const womanLightSkinToneScientist = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F52C}", "Woman: Light Skin Tone: Scientist");
+    const womanMediumLightSkinToneScientist = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F52C}", "Woman: Medium-Light Skin Tone: Scientist");
+    const womanMediumSkinToneScientist = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F52C}", "Woman: Medium Skin Tone: Scientist");
+    const womanMediumDarkSkinToneScientist = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F52C}", "Woman: Medium-Dark Skin Tone: Scientist");
+    const womanDarkSkinToneScientist = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F52C}", "Woman: Dark Skin Tone: Scientist");
+    const crown = new Emoji("\u{1F451}", "Crown");
+    const genie = new Emoji("\u{1F9DE}", "Genie");
+    const zombie = new Emoji("\u{1F9DF}", "Zombie");
+    const safetyVest = new Emoji("\u{1F9BA}", "Safety Vest");
+    const probingCane = new Emoji("\u{1F9AF}", "Probing Cane");
+    const motorizedWheelchair = new Emoji("\u{1F9BC}", "Motorized Wheelchair");
+    const manualWheelchair = new Emoji("\u{1F9BD}", "Manual Wheelchair");
+    const fencer = new Emoji("\u{1F93A}", "Fencer");
+    const skier = new Emoji("\u26F7\uFE0F", "Skier");
+    const prince = new Emoji("\u{1F934}", "Prince");
+    const princeLightSkinTone = new Emoji("\u{1F934}\u{1F3FB}", "Prince: Light Skin Tone");
+    const princeMediumLightSkinTone = new Emoji("\u{1F934}\u{1F3FC}", "Prince: Medium-Light Skin Tone");
+    const princeMediumSkinTone = new Emoji("\u{1F934}\u{1F3FD}", "Prince: Medium Skin Tone");
+    const princeMediumDarkSkinTone = new Emoji("\u{1F934}\u{1F3FE}", "Prince: Medium-Dark Skin Tone");
+    const princeDarkSkinTone = new Emoji("\u{1F934}\u{1F3FF}", "Prince: Dark Skin Tone");
+    const princess = new Emoji("\u{1F478}", "Princess");
+    const princessLightSkinTone = new Emoji("\u{1F478}\u{1F3FB}", "Princess: Light Skin Tone");
+    const princessMediumLightSkinTone = new Emoji("\u{1F478}\u{1F3FC}", "Princess: Medium-Light Skin Tone");
+    const princessMediumSkinTone = new Emoji("\u{1F478}\u{1F3FD}", "Princess: Medium Skin Tone");
+    const princessMediumDarkSkinTone = new Emoji("\u{1F478}\u{1F3FE}", "Princess: Medium-Dark Skin Tone");
+    const princessDarkSkinTone = new Emoji("\u{1F478}\u{1F3FF}", "Princess: Dark Skin Tone");
+    const cherub = new Emoji("\u{1F47C}", "Cherub");
+    const cherubLightSkinTone = new Emoji("\u{1F47C}\u{1F3FB}", "Cherub: Light Skin Tone");
+    const cherubMediumLightSkinTone = new Emoji("\u{1F47C}\u{1F3FC}", "Cherub: Medium-Light Skin Tone");
+    const cherubMediumSkinTone = new Emoji("\u{1F47C}\u{1F3FD}", "Cherub: Medium Skin Tone");
+    const cherubMediumDarkSkinTone = new Emoji("\u{1F47C}\u{1F3FE}", "Cherub: Medium-Dark Skin Tone");
+    const cherubDarkSkinTone = new Emoji("\u{1F47C}\u{1F3FF}", "Cherub: Dark Skin Tone");
+    const santaClaus = new Emoji("\u{1F385}", "Santa Claus");
+    const santaClausLightSkinTone = new Emoji("\u{1F385}\u{1F3FB}", "Santa Claus: Light Skin Tone");
+    const santaClausMediumLightSkinTone = new Emoji("\u{1F385}\u{1F3FC}", "Santa Claus: Medium-Light Skin Tone");
+    const santaClausMediumSkinTone = new Emoji("\u{1F385}\u{1F3FD}", "Santa Claus: Medium Skin Tone");
+    const santaClausMediumDarkSkinTone = new Emoji("\u{1F385}\u{1F3FE}", "Santa Claus: Medium-Dark Skin Tone");
+    const santaClausDarkSkinTone = new Emoji("\u{1F385}\u{1F3FF}", "Santa Claus: Dark Skin Tone");
+    const mrsClaus = new Emoji("\u{1F936}", "Mrs. Claus");
+    const mrsClausLightSkinTone = new Emoji("\u{1F936}\u{1F3FB}", "Mrs. Claus: Light Skin Tone");
+    const mrsClausMediumLightSkinTone = new Emoji("\u{1F936}\u{1F3FC}", "Mrs. Claus: Medium-Light Skin Tone");
+    const mrsClausMediumSkinTone = new Emoji("\u{1F936}\u{1F3FD}", "Mrs. Claus: Medium Skin Tone");
+    const mrsClausMediumDarkSkinTone = new Emoji("\u{1F936}\u{1F3FE}", "Mrs. Claus: Medium-Dark Skin Tone");
+    const mrsClausDarkSkinTone = new Emoji("\u{1F936}\u{1F3FF}", "Mrs. Claus: Dark Skin Tone");
+    const genieMale = new Emoji("\u{1F9DE}\u200D\u2642\uFE0F", "Genie: Male");
+    const genieFemale = new Emoji("\u{1F9DE}\u200D\u2640\uFE0F", "Genie: Female");
+    const zombieMale = new Emoji("\u{1F9DF}\u200D\u2642\uFE0F", "Zombie: Male");
+    const zombieFemale = new Emoji("\u{1F9DF}\u200D\u2640\uFE0F", "Zombie: Female");
+    const manProbing = new Emoji("\u{1F468}\u200D\u{1F9AF}", "Man: Probing");
+    const manLightSkinToneProbing = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9AF}", "Man: Light Skin Tone: Probing");
+    const manMediumLightSkinToneProbing = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9AF}", "Man: Medium-Light Skin Tone: Probing");
+    const manMediumSkinToneProbing = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9AF}", "Man: Medium Skin Tone: Probing");
+    const manMediumDarkSkinToneProbing = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9AF}", "Man: Medium-Dark Skin Tone: Probing");
+    const manDarkSkinToneProbing = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9AF}", "Man: Dark Skin Tone: Probing");
+    const womanProbing = new Emoji("\u{1F469}\u200D\u{1F9AF}", "Woman: Probing");
+    const womanLightSkinToneProbing = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9AF}", "Woman: Light Skin Tone: Probing");
+    const womanMediumLightSkinToneProbing = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9AF}", "Woman: Medium-Light Skin Tone: Probing");
+    const womanMediumSkinToneProbing = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9AF}", "Woman: Medium Skin Tone: Probing");
+    const womanMediumDarkSkinToneProbing = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9AF}", "Woman: Medium-Dark Skin Tone: Probing");
+    const womanDarkSkinToneProbing = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9AF}", "Woman: Dark Skin Tone: Probing");
+    const manInMotorizedWheelchair = new Emoji("\u{1F468}\u200D\u{1F9BC}", "Man: In Motorized Wheelchair");
+    const manLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9BC}", "Man: Light Skin Tone: In Motorized Wheelchair");
+    const manMediumLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9BC}", "Man: Medium-Light Skin Tone: In Motorized Wheelchair");
+    const manMediumSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9BC}", "Man: Medium Skin Tone: In Motorized Wheelchair");
+    const manMediumDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9BC}", "Man: Medium-Dark Skin Tone: In Motorized Wheelchair");
+    const manDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9BC}", "Man: Dark Skin Tone: In Motorized Wheelchair");
+    const womanInMotorizedWheelchair = new Emoji("\u{1F469}\u200D\u{1F9BC}", "Woman: In Motorized Wheelchair");
+    const womanLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9BC}", "Woman: Light Skin Tone: In Motorized Wheelchair");
+    const womanMediumLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9BC}", "Woman: Medium-Light Skin Tone: In Motorized Wheelchair");
+    const womanMediumSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9BC}", "Woman: Medium Skin Tone: In Motorized Wheelchair");
+    const womanMediumDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9BC}", "Woman: Medium-Dark Skin Tone: In Motorized Wheelchair");
+    const womanDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9BC}", "Woman: Dark Skin Tone: In Motorized Wheelchair");
+    const manInManualWheelchair = new Emoji("\u{1F468}\u200D\u{1F9BD}", "Man: In Manual Wheelchair");
+    const manLightSkinToneInManualWheelchair = new Emoji("\u{1F468}\u{1F3FB}\u200D\u{1F9BD}", "Man: Light Skin Tone: In Manual Wheelchair");
+    const manMediumLightSkinToneInManualWheelchair = new Emoji("\u{1F468}\u{1F3FC}\u200D\u{1F9BD}", "Man: Medium-Light Skin Tone: In Manual Wheelchair");
+    const manMediumSkinToneInManualWheelchair = new Emoji("\u{1F468}\u{1F3FD}\u200D\u{1F9BD}", "Man: Medium Skin Tone: In Manual Wheelchair");
+    const manMediumDarkSkinToneInManualWheelchair = new Emoji("\u{1F468}\u{1F3FE}\u200D\u{1F9BD}", "Man: Medium-Dark Skin Tone: In Manual Wheelchair");
+    const manDarkSkinToneInManualWheelchair = new Emoji("\u{1F468}\u{1F3FF}\u200D\u{1F9BD}", "Man: Dark Skin Tone: In Manual Wheelchair");
+    const womanInManualWheelchair = new Emoji("\u{1F469}\u200D\u{1F9BD}", "Woman: In Manual Wheelchair");
+    const womanLightSkinToneInManualWheelchair = new Emoji("\u{1F469}\u{1F3FB}\u200D\u{1F9BD}", "Woman: Light Skin Tone: In Manual Wheelchair");
+    const womanMediumLightSkinToneInManualWheelchair = new Emoji("\u{1F469}\u{1F3FC}\u200D\u{1F9BD}", "Woman: Medium-Light Skin Tone: In Manual Wheelchair");
+    const womanMediumSkinToneInManualWheelchair = new Emoji("\u{1F469}\u{1F3FD}\u200D\u{1F9BD}", "Woman: Medium Skin Tone: In Manual Wheelchair");
+    const womanMediumDarkSkinToneInManualWheelchair = new Emoji("\u{1F469}\u{1F3FE}\u200D\u{1F9BD}", "Woman: Medium-Dark Skin Tone: In Manual Wheelchair");
+    const womanDarkSkinToneInManualWheelchair = new Emoji("\u{1F469}\u{1F3FF}\u200D\u{1F9BD}", "Woman: Dark Skin Tone: In Manual Wheelchair");
+    const manDancing = new Emoji("\u{1F57A}", "Man Dancing");
+    const manDancingLightSkinTone = new Emoji("\u{1F57A}\u{1F3FB}", "Man Dancing: Light Skin Tone");
+    const manDancingMediumLightSkinTone = new Emoji("\u{1F57A}\u{1F3FC}", "Man Dancing: Medium-Light Skin Tone");
+    const manDancingMediumSkinTone = new Emoji("\u{1F57A}\u{1F3FD}", "Man Dancing: Medium Skin Tone");
+    const manDancingMediumDarkSkinTone = new Emoji("\u{1F57A}\u{1F3FE}", "Man Dancing: Medium-Dark Skin Tone");
+    const manDancingDarkSkinTone = new Emoji("\u{1F57A}\u{1F3FF}", "Man Dancing: Dark Skin Tone");
+    const womanDancing = new Emoji("\u{1F483}", "Woman Dancing");
+    const womanDancingLightSkinTone = new Emoji("\u{1F483}\u{1F3FB}", "Woman Dancing: Light Skin Tone");
+    const womanDancingMediumLightSkinTone = new Emoji("\u{1F483}\u{1F3FC}", "Woman Dancing: Medium-Light Skin Tone");
+    const womanDancingMediumSkinTone = new Emoji("\u{1F483}\u{1F3FD}", "Woman Dancing: Medium Skin Tone");
+    const womanDancingMediumDarkSkinTone = new Emoji("\u{1F483}\u{1F3FE}", "Woman Dancing: Medium-Dark Skin Tone");
+    const womanDancingDarkSkinTone = new Emoji("\u{1F483}\u{1F3FF}", "Woman Dancing: Dark Skin Tone");
+    const juggler = new Emoji("\u{1F939}", "Juggler");
+    const jugglerLightSkinTone = new Emoji("\u{1F939}\u{1F3FB}", "Juggler: Light Skin Tone");
+    const jugglerMediumLightSkinTone = new Emoji("\u{1F939}\u{1F3FC}", "Juggler: Medium-Light Skin Tone");
+    const jugglerMediumSkinTone = new Emoji("\u{1F939}\u{1F3FD}", "Juggler: Medium Skin Tone");
+    const jugglerMediumDarkSkinTone = new Emoji("\u{1F939}\u{1F3FE}", "Juggler: Medium-Dark Skin Tone");
+    const jugglerDarkSkinTone = new Emoji("\u{1F939}\u{1F3FF}", "Juggler: Dark Skin Tone");
+    const jugglerMale = new Emoji("\u{1F939}\u200D\u2642\uFE0F", "Juggler: Male");
+    const jugglerLightSkinToneMale = new Emoji("\u{1F939}\u{1F3FB}\u200D\u2642\uFE0F", "Juggler: Light Skin Tone: Male");
+    const jugglerMediumLightSkinToneMale = new Emoji("\u{1F939}\u{1F3FC}\u200D\u2642\uFE0F", "Juggler: Medium-Light Skin Tone: Male");
+    const jugglerMediumSkinToneMale = new Emoji("\u{1F939}\u{1F3FD}\u200D\u2642\uFE0F", "Juggler: Medium Skin Tone: Male");
+    const jugglerMediumDarkSkinToneMale = new Emoji("\u{1F939}\u{1F3FE}\u200D\u2642\uFE0F", "Juggler: Medium-Dark Skin Tone: Male");
+    const jugglerDarkSkinToneMale = new Emoji("\u{1F939}\u{1F3FF}\u200D\u2642\uFE0F", "Juggler: Dark Skin Tone: Male");
+    const jugglerFemale = new Emoji("\u{1F939}\u200D\u2640\uFE0F", "Juggler: Female");
+    const jugglerLightSkinToneFemale = new Emoji("\u{1F939}\u{1F3FB}\u200D\u2640\uFE0F", "Juggler: Light Skin Tone: Female");
+    const jugglerMediumLightSkinToneFemale = new Emoji("\u{1F939}\u{1F3FC}\u200D\u2640\uFE0F", "Juggler: Medium-Light Skin Tone: Female");
+    const jugglerMediumSkinToneFemale = new Emoji("\u{1F939}\u{1F3FD}\u200D\u2640\uFE0F", "Juggler: Medium Skin Tone: Female");
+    const jugglerMediumDarkSkinToneFemale = new Emoji("\u{1F939}\u{1F3FE}\u200D\u2640\uFE0F", "Juggler: Medium-Dark Skin Tone: Female");
+    const jugglerDarkSkinToneFemale = new Emoji("\u{1F939}\u{1F3FF}\u200D\u2640\uFE0F", "Juggler: Dark Skin Tone: Female");
+    const climber = new Emoji("\u{1F9D7}", "Climber");
+    const climberLightSkinTone = new Emoji("\u{1F9D7}\u{1F3FB}", "Climber: Light Skin Tone");
+    const climberMediumLightSkinTone = new Emoji("\u{1F9D7}\u{1F3FC}", "Climber: Medium-Light Skin Tone");
+    const climberMediumSkinTone = new Emoji("\u{1F9D7}\u{1F3FD}", "Climber: Medium Skin Tone");
+    const climberMediumDarkSkinTone = new Emoji("\u{1F9D7}\u{1F3FE}", "Climber: Medium-Dark Skin Tone");
+    const climberDarkSkinTone = new Emoji("\u{1F9D7}\u{1F3FF}", "Climber: Dark Skin Tone");
+    const climberMale = new Emoji("\u{1F9D7}\u200D\u2642\uFE0F", "Climber: Male");
+    const climberLightSkinToneMale = new Emoji("\u{1F9D7}\u{1F3FB}\u200D\u2642\uFE0F", "Climber: Light Skin Tone: Male");
+    const climberMediumLightSkinToneMale = new Emoji("\u{1F9D7}\u{1F3FC}\u200D\u2642\uFE0F", "Climber: Medium-Light Skin Tone: Male");
+    const climberMediumSkinToneMale = new Emoji("\u{1F9D7}\u{1F3FD}\u200D\u2642\uFE0F", "Climber: Medium Skin Tone: Male");
+    const climberMediumDarkSkinToneMale = new Emoji("\u{1F9D7}\u{1F3FE}\u200D\u2642\uFE0F", "Climber: Medium-Dark Skin Tone: Male");
+    const climberDarkSkinToneMale = new Emoji("\u{1F9D7}\u{1F3FF}\u200D\u2642\uFE0F", "Climber: Dark Skin Tone: Male");
+    const climberFemale = new Emoji("\u{1F9D7}\u200D\u2640\uFE0F", "Climber: Female");
+    const climberLightSkinToneFemale = new Emoji("\u{1F9D7}\u{1F3FB}\u200D\u2640\uFE0F", "Climber: Light Skin Tone: Female");
+    const climberMediumLightSkinToneFemale = new Emoji("\u{1F9D7}\u{1F3FC}\u200D\u2640\uFE0F", "Climber: Medium-Light Skin Tone: Female");
+    const climberMediumSkinToneFemale = new Emoji("\u{1F9D7}\u{1F3FD}\u200D\u2640\uFE0F", "Climber: Medium Skin Tone: Female");
+    const climberMediumDarkSkinToneFemale = new Emoji("\u{1F9D7}\u{1F3FE}\u200D\u2640\uFE0F", "Climber: Medium-Dark Skin Tone: Female");
+    const climberDarkSkinToneFemale = new Emoji("\u{1F9D7}\u{1F3FF}\u200D\u2640\uFE0F", "Climber: Dark Skin Tone: Female");
+    const jockey = new Emoji("\u{1F3C7}", "Jockey");
+    const jockeyLightSkinTone = new Emoji("\u{1F3C7}\u{1F3FB}", "Jockey: Light Skin Tone");
+    const jockeyMediumLightSkinTone = new Emoji("\u{1F3C7}\u{1F3FC}", "Jockey: Medium-Light Skin Tone");
+    const jockeyMediumSkinTone = new Emoji("\u{1F3C7}\u{1F3FD}", "Jockey: Medium Skin Tone");
+    const jockeyMediumDarkSkinTone = new Emoji("\u{1F3C7}\u{1F3FE}", "Jockey: Medium-Dark Skin Tone");
+    const jockeyDarkSkinTone = new Emoji("\u{1F3C7}\u{1F3FF}", "Jockey: Dark Skin Tone");
+    const snowboarder = new Emoji("\u{1F3C2}", "Snowboarder");
+    const snowboarderLightSkinTone = new Emoji("\u{1F3C2}\u{1F3FB}", "Snowboarder: Light Skin Tone");
+    const snowboarderMediumLightSkinTone = new Emoji("\u{1F3C2}\u{1F3FC}", "Snowboarder: Medium-Light Skin Tone");
+    const snowboarderMediumSkinTone = new Emoji("\u{1F3C2}\u{1F3FD}", "Snowboarder: Medium Skin Tone");
+    const snowboarderMediumDarkSkinTone = new Emoji("\u{1F3C2}\u{1F3FE}", "Snowboarder: Medium-Dark Skin Tone");
+    const snowboarderDarkSkinTone = new Emoji("\u{1F3C2}\u{1F3FF}", "Snowboarder: Dark Skin Tone");
+    const golfer = new Emoji("\u{1F3CC}\uFE0F", "Golfer");
+    const golferLightSkinTone = new Emoji("\u{1F3CC}\uFE0F\u{1F3FB}", "Golfer: Light Skin Tone");
+    const golferMediumLightSkinTone = new Emoji("\u{1F3CC}\uFE0F\u{1F3FC}", "Golfer: Medium-Light Skin Tone");
+    const golferMediumSkinTone = new Emoji("\u{1F3CC}\uFE0F\u{1F3FD}", "Golfer: Medium Skin Tone");
+    const golferMediumDarkSkinTone = new Emoji("\u{1F3CC}\uFE0F\u{1F3FE}", "Golfer: Medium-Dark Skin Tone");
+    const golferDarkSkinTone = new Emoji("\u{1F3CC}\uFE0F\u{1F3FF}", "Golfer: Dark Skin Tone");
+    const golferMale = new Emoji("\u{1F3CC}\uFE0F\u200D\u2642\uFE0F", "Golfer: Male");
+    const golferLightSkinToneMale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FB}\u200D\u2642\uFE0F", "Golfer: Light Skin Tone: Male");
+    const golferMediumLightSkinToneMale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FC}\u200D\u2642\uFE0F", "Golfer: Medium-Light Skin Tone: Male");
+    const golferMediumSkinToneMale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FD}\u200D\u2642\uFE0F", "Golfer: Medium Skin Tone: Male");
+    const golferMediumDarkSkinToneMale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FE}\u200D\u2642\uFE0F", "Golfer: Medium-Dark Skin Tone: Male");
+    const golferDarkSkinToneMale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FF}\u200D\u2642\uFE0F", "Golfer: Dark Skin Tone: Male");
+    const golferFemale = new Emoji("\u{1F3CC}\uFE0F\u200D\u2640\uFE0F", "Golfer: Female");
+    const golferLightSkinToneFemale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FB}\u200D\u2640\uFE0F", "Golfer: Light Skin Tone: Female");
+    const golferMediumLightSkinToneFemale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FC}\u200D\u2640\uFE0F", "Golfer: Medium-Light Skin Tone: Female");
+    const golferMediumSkinToneFemale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FD}\u200D\u2640\uFE0F", "Golfer: Medium Skin Tone: Female");
+    const golferMediumDarkSkinToneFemale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FE}\u200D\u2640\uFE0F", "Golfer: Medium-Dark Skin Tone: Female");
+    const golferDarkSkinToneFemale = new Emoji("\u{1F3CC}\uFE0F\u{1F3FF}\u200D\u2640\uFE0F", "Golfer: Dark Skin Tone: Female");
+    const surfing = new Emoji("\u{1F3C4}", "Surfing");
+    const surfingLightSkinTone = new Emoji("\u{1F3C4}\u{1F3FB}", "Surfing: Light Skin Tone");
+    const surfingMediumLightSkinTone = new Emoji("\u{1F3C4}\u{1F3FC}", "Surfing: Medium-Light Skin Tone");
+    const surfingMediumSkinTone = new Emoji("\u{1F3C4}\u{1F3FD}", "Surfing: Medium Skin Tone");
+    const surfingMediumDarkSkinTone = new Emoji("\u{1F3C4}\u{1F3FE}", "Surfing: Medium-Dark Skin Tone");
+    const surfingDarkSkinTone = new Emoji("\u{1F3C4}\u{1F3FF}", "Surfing: Dark Skin Tone");
+    const surfingMale = new Emoji("\u{1F3C4}\u200D\u2642\uFE0F", "Surfing: Male");
+    const surfingLightSkinToneMale = new Emoji("\u{1F3C4}\u{1F3FB}\u200D\u2642\uFE0F", "Surfing: Light Skin Tone: Male");
+    const surfingMediumLightSkinToneMale = new Emoji("\u{1F3C4}\u{1F3FC}\u200D\u2642\uFE0F", "Surfing: Medium-Light Skin Tone: Male");
+    const surfingMediumSkinToneMale = new Emoji("\u{1F3C4}\u{1F3FD}\u200D\u2642\uFE0F", "Surfing: Medium Skin Tone: Male");
+    const surfingMediumDarkSkinToneMale = new Emoji("\u{1F3C4}\u{1F3FE}\u200D\u2642\uFE0F", "Surfing: Medium-Dark Skin Tone: Male");
+    const surfingDarkSkinToneMale = new Emoji("\u{1F3C4}\u{1F3FF}\u200D\u2642\uFE0F", "Surfing: Dark Skin Tone: Male");
+    const surfingFemale = new Emoji("\u{1F3C4}\u200D\u2640\uFE0F", "Surfing: Female");
+    const surfingLightSkinToneFemale = new Emoji("\u{1F3C4}\u{1F3FB}\u200D\u2640\uFE0F", "Surfing: Light Skin Tone: Female");
+    const surfingMediumLightSkinToneFemale = new Emoji("\u{1F3C4}\u{1F3FC}\u200D\u2640\uFE0F", "Surfing: Medium-Light Skin Tone: Female");
+    const surfingMediumSkinToneFemale = new Emoji("\u{1F3C4}\u{1F3FD}\u200D\u2640\uFE0F", "Surfing: Medium Skin Tone: Female");
+    const surfingMediumDarkSkinToneFemale = new Emoji("\u{1F3C4}\u{1F3FE}\u200D\u2640\uFE0F", "Surfing: Medium-Dark Skin Tone: Female");
+    const surfingDarkSkinToneFemale = new Emoji("\u{1F3C4}\u{1F3FF}\u200D\u2640\uFE0F", "Surfing: Dark Skin Tone: Female");
+    const rowingBoat = new Emoji("\u{1F6A3}", "Rowing Boat");
+    const rowingBoatLightSkinTone = new Emoji("\u{1F6A3}\u{1F3FB}", "Rowing Boat: Light Skin Tone");
+    const rowingBoatMediumLightSkinTone = new Emoji("\u{1F6A3}\u{1F3FC}", "Rowing Boat: Medium-Light Skin Tone");
+    const rowingBoatMediumSkinTone = new Emoji("\u{1F6A3}\u{1F3FD}", "Rowing Boat: Medium Skin Tone");
+    const rowingBoatMediumDarkSkinTone = new Emoji("\u{1F6A3}\u{1F3FE}", "Rowing Boat: Medium-Dark Skin Tone");
+    const rowingBoatDarkSkinTone = new Emoji("\u{1F6A3}\u{1F3FF}", "Rowing Boat: Dark Skin Tone");
+    const rowingBoatMale = new Emoji("\u{1F6A3}\u200D\u2642\uFE0F", "Rowing Boat: Male");
+    const rowingBoatLightSkinToneMale = new Emoji("\u{1F6A3}\u{1F3FB}\u200D\u2642\uFE0F", "Rowing Boat: Light Skin Tone: Male");
+    const rowingBoatMediumLightSkinToneMale = new Emoji("\u{1F6A3}\u{1F3FC}\u200D\u2642\uFE0F", "Rowing Boat: Medium-Light Skin Tone: Male");
+    const rowingBoatMediumSkinToneMale = new Emoji("\u{1F6A3}\u{1F3FD}\u200D\u2642\uFE0F", "Rowing Boat: Medium Skin Tone: Male");
+    const rowingBoatMediumDarkSkinToneMale = new Emoji("\u{1F6A3}\u{1F3FE}\u200D\u2642\uFE0F", "Rowing Boat: Medium-Dark Skin Tone: Male");
+    const rowingBoatDarkSkinToneMale = new Emoji("\u{1F6A3}\u{1F3FF}\u200D\u2642\uFE0F", "Rowing Boat: Dark Skin Tone: Male");
+    const rowingBoatFemale = new Emoji("\u{1F6A3}\u200D\u2640\uFE0F", "Rowing Boat: Female");
+    const rowingBoatLightSkinToneFemale = new Emoji("\u{1F6A3}\u{1F3FB}\u200D\u2640\uFE0F", "Rowing Boat: Light Skin Tone: Female");
+    const rowingBoatMediumLightSkinToneFemale = new Emoji("\u{1F6A3}\u{1F3FC}\u200D\u2640\uFE0F", "Rowing Boat: Medium-Light Skin Tone: Female");
+    const rowingBoatMediumSkinToneFemale = new Emoji("\u{1F6A3}\u{1F3FD}\u200D\u2640\uFE0F", "Rowing Boat: Medium Skin Tone: Female");
+    const rowingBoatMediumDarkSkinToneFemale = new Emoji("\u{1F6A3}\u{1F3FE}\u200D\u2640\uFE0F", "Rowing Boat: Medium-Dark Skin Tone: Female");
+    const rowingBoatDarkSkinToneFemale = new Emoji("\u{1F6A3}\u{1F3FF}\u200D\u2640\uFE0F", "Rowing Boat: Dark Skin Tone: Female");
+    const swimming = new Emoji("\u{1F3CA}", "Swimming");
+    const swimmingLightSkinTone = new Emoji("\u{1F3CA}\u{1F3FB}", "Swimming: Light Skin Tone");
+    const swimmingMediumLightSkinTone = new Emoji("\u{1F3CA}\u{1F3FC}", "Swimming: Medium-Light Skin Tone");
+    const swimmingMediumSkinTone = new Emoji("\u{1F3CA}\u{1F3FD}", "Swimming: Medium Skin Tone");
+    const swimmingMediumDarkSkinTone = new Emoji("\u{1F3CA}\u{1F3FE}", "Swimming: Medium-Dark Skin Tone");
+    const swimmingDarkSkinTone = new Emoji("\u{1F3CA}\u{1F3FF}", "Swimming: Dark Skin Tone");
+    const swimmingMale = new Emoji("\u{1F3CA}\u200D\u2642\uFE0F", "Swimming: Male");
+    const swimmingLightSkinToneMale = new Emoji("\u{1F3CA}\u{1F3FB}\u200D\u2642\uFE0F", "Swimming: Light Skin Tone: Male");
+    const swimmingMediumLightSkinToneMale = new Emoji("\u{1F3CA}\u{1F3FC}\u200D\u2642\uFE0F", "Swimming: Medium-Light Skin Tone: Male");
+    const swimmingMediumSkinToneMale = new Emoji("\u{1F3CA}\u{1F3FD}\u200D\u2642\uFE0F", "Swimming: Medium Skin Tone: Male");
+    const swimmingMediumDarkSkinToneMale = new Emoji("\u{1F3CA}\u{1F3FE}\u200D\u2642\uFE0F", "Swimming: Medium-Dark Skin Tone: Male");
+    const swimmingDarkSkinToneMale = new Emoji("\u{1F3CA}\u{1F3FF}\u200D\u2642\uFE0F", "Swimming: Dark Skin Tone: Male");
+    const swimmingFemale = new Emoji("\u{1F3CA}\u200D\u2640\uFE0F", "Swimming: Female");
+    const swimmingLightSkinToneFemale = new Emoji("\u{1F3CA}\u{1F3FB}\u200D\u2640\uFE0F", "Swimming: Light Skin Tone: Female");
+    const swimmingMediumLightSkinToneFemale = new Emoji("\u{1F3CA}\u{1F3FC}\u200D\u2640\uFE0F", "Swimming: Medium-Light Skin Tone: Female");
+    const swimmingMediumSkinToneFemale = new Emoji("\u{1F3CA}\u{1F3FD}\u200D\u2640\uFE0F", "Swimming: Medium Skin Tone: Female");
+    const swimmingMediumDarkSkinToneFemale = new Emoji("\u{1F3CA}\u{1F3FE}\u200D\u2640\uFE0F", "Swimming: Medium-Dark Skin Tone: Female");
+    const swimmingDarkSkinToneFemale = new Emoji("\u{1F3CA}\u{1F3FF}\u200D\u2640\uFE0F", "Swimming: Dark Skin Tone: Female");
+    const basketBaller = new Emoji("\u26F9\uFE0F", "Basket Baller");
+    const basketBallerLightSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FB}", "Basket Baller: Light Skin Tone");
+    const basketBallerMediumLightSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FC}", "Basket Baller: Medium-Light Skin Tone");
+    const basketBallerMediumSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FD}", "Basket Baller: Medium Skin Tone");
+    const basketBallerMediumDarkSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FE}", "Basket Baller: Medium-Dark Skin Tone");
+    const basketBallerDarkSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FF}", "Basket Baller: Dark Skin Tone");
+    const basketBallerMale = new Emoji("\u26F9\uFE0F\u200D\u2642\uFE0F", "Basket Baller: Male");
+    const basketBallerLightSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FB}\u200D\u2642\uFE0F", "Basket Baller: Light Skin Tone: Male");
+    const basketBallerMediumLightSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FC}\u200D\u2642\uFE0F", "Basket Baller: Medium-Light Skin Tone: Male");
+    const basketBallerMediumSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FD}\u200D\u2642\uFE0F", "Basket Baller: Medium Skin Tone: Male");
+    const basketBallerMediumDarkSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FE}\u200D\u2642\uFE0F", "Basket Baller: Medium-Dark Skin Tone: Male");
+    const basketBallerDarkSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FF}\u200D\u2642\uFE0F", "Basket Baller: Dark Skin Tone: Male");
+    const basketBallerFemale = new Emoji("\u26F9\uFE0F\u200D\u2640\uFE0F", "Basket Baller: Female");
+    const basketBallerLightSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FB}\u200D\u2640\uFE0F", "Basket Baller: Light Skin Tone: Female");
+    const basketBallerMediumLightSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FC}\u200D\u2640\uFE0F", "Basket Baller: Medium-Light Skin Tone: Female");
+    const basketBallerMediumSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FD}\u200D\u2640\uFE0F", "Basket Baller: Medium Skin Tone: Female");
+    const basketBallerMediumDarkSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FE}\u200D\u2640\uFE0F", "Basket Baller: Medium-Dark Skin Tone: Female");
+    const basketBallerDarkSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FF}\u200D\u2640\uFE0F", "Basket Baller: Dark Skin Tone: Female");
+    const weightLifter = new Emoji("\u{1F3CB}\uFE0F", "Weight Lifter");
+    const weightLifterLightSkinTone = new Emoji("\u{1F3CB}\uFE0F\u{1F3FB}", "Weight Lifter: Light Skin Tone");
+    const weightLifterMediumLightSkinTone = new Emoji("\u{1F3CB}\uFE0F\u{1F3FC}", "Weight Lifter: Medium-Light Skin Tone");
+    const weightLifterMediumSkinTone = new Emoji("\u{1F3CB}\uFE0F\u{1F3FD}", "Weight Lifter: Medium Skin Tone");
+    const weightLifterMediumDarkSkinTone = new Emoji("\u{1F3CB}\uFE0F\u{1F3FE}", "Weight Lifter: Medium-Dark Skin Tone");
+    const weightLifterDarkSkinTone = new Emoji("\u{1F3CB}\uFE0F\u{1F3FF}", "Weight Lifter: Dark Skin Tone");
+    const weightLifterMale = new Emoji("\u{1F3CB}\uFE0F\u200D\u2642\uFE0F", "Weight Lifter: Male");
+    const weightLifterLightSkinToneMale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FB}\u200D\u2642\uFE0F", "Weight Lifter: Light Skin Tone: Male");
+    const weightLifterMediumLightSkinToneMale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FC}\u200D\u2642\uFE0F", "Weight Lifter: Medium-Light Skin Tone: Male");
+    const weightLifterMediumSkinToneMale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FD}\u200D\u2642\uFE0F", "Weight Lifter: Medium Skin Tone: Male");
+    const weightLifterMediumDarkSkinToneMale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FE}\u200D\u2642\uFE0F", "Weight Lifter: Medium-Dark Skin Tone: Male");
+    const weightLifterDarkSkinToneMale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FF}\u200D\u2642\uFE0F", "Weight Lifter: Dark Skin Tone: Male");
+    const weightLifterFemale = new Emoji("\u{1F3CB}\uFE0F\u200D\u2640\uFE0F", "Weight Lifter: Female");
+    const weightLifterLightSkinToneFemale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FB}\u200D\u2640\uFE0F", "Weight Lifter: Light Skin Tone: Female");
+    const weightLifterMediumLightSkinToneFemale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FC}\u200D\u2640\uFE0F", "Weight Lifter: Medium-Light Skin Tone: Female");
+    const weightLifterMediumSkinToneFemale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FD}\u200D\u2640\uFE0F", "Weight Lifter: Medium Skin Tone: Female");
+    const weightLifterMediumDarkSkinToneFemale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FE}\u200D\u2640\uFE0F", "Weight Lifter: Medium-Dark Skin Tone: Female");
+    const weightLifterDarkSkinToneFemale = new Emoji("\u{1F3CB}\uFE0F\u{1F3FF}\u200D\u2640\uFE0F", "Weight Lifter: Dark Skin Tone: Female");
+    const biker = new Emoji("\u{1F6B4}", "Biker");
+    const bikerLightSkinTone = new Emoji("\u{1F6B4}\u{1F3FB}", "Biker: Light Skin Tone");
+    const bikerMediumLightSkinTone = new Emoji("\u{1F6B4}\u{1F3FC}", "Biker: Medium-Light Skin Tone");
+    const bikerMediumSkinTone = new Emoji("\u{1F6B4}\u{1F3FD}", "Biker: Medium Skin Tone");
+    const bikerMediumDarkSkinTone = new Emoji("\u{1F6B4}\u{1F3FE}", "Biker: Medium-Dark Skin Tone");
+    const bikerDarkSkinTone = new Emoji("\u{1F6B4}\u{1F3FF}", "Biker: Dark Skin Tone");
+    const bikerMale = new Emoji("\u{1F6B4}\u200D\u2642\uFE0F", "Biker: Male");
+    const bikerLightSkinToneMale = new Emoji("\u{1F6B4}\u{1F3FB}\u200D\u2642\uFE0F", "Biker: Light Skin Tone: Male");
+    const bikerMediumLightSkinToneMale = new Emoji("\u{1F6B4}\u{1F3FC}\u200D\u2642\uFE0F", "Biker: Medium-Light Skin Tone: Male");
+    const bikerMediumSkinToneMale = new Emoji("\u{1F6B4}\u{1F3FD}\u200D\u2642\uFE0F", "Biker: Medium Skin Tone: Male");
+    const bikerMediumDarkSkinToneMale = new Emoji("\u{1F6B4}\u{1F3FE}\u200D\u2642\uFE0F", "Biker: Medium-Dark Skin Tone: Male");
+    const bikerDarkSkinToneMale = new Emoji("\u{1F6B4}\u{1F3FF}\u200D\u2642\uFE0F", "Biker: Dark Skin Tone: Male");
+    const bikerFemale = new Emoji("\u{1F6B4}\u200D\u2640\uFE0F", "Biker: Female");
+    const bikerLightSkinToneFemale = new Emoji("\u{1F6B4}\u{1F3FB}\u200D\u2640\uFE0F", "Biker: Light Skin Tone: Female");
+    const bikerMediumLightSkinToneFemale = new Emoji("\u{1F6B4}\u{1F3FC}\u200D\u2640\uFE0F", "Biker: Medium-Light Skin Tone: Female");
+    const bikerMediumSkinToneFemale = new Emoji("\u{1F6B4}\u{1F3FD}\u200D\u2640\uFE0F", "Biker: Medium Skin Tone: Female");
+    const bikerMediumDarkSkinToneFemale = new Emoji("\u{1F6B4}\u{1F3FE}\u200D\u2640\uFE0F", "Biker: Medium-Dark Skin Tone: Female");
+    const bikerDarkSkinToneFemale = new Emoji("\u{1F6B4}\u{1F3FF}\u200D\u2640\uFE0F", "Biker: Dark Skin Tone: Female");
+    const mountainBiker = new Emoji("\u{1F6B5}", "Mountain Biker");
+    const mountainBikerLightSkinTone = new Emoji("\u{1F6B5}\u{1F3FB}", "Mountain Biker: Light Skin Tone");
+    const mountainBikerMediumLightSkinTone = new Emoji("\u{1F6B5}\u{1F3FC}", "Mountain Biker: Medium-Light Skin Tone");
+    const mountainBikerMediumSkinTone = new Emoji("\u{1F6B5}\u{1F3FD}", "Mountain Biker: Medium Skin Tone");
+    const mountainBikerMediumDarkSkinTone = new Emoji("\u{1F6B5}\u{1F3FE}", "Mountain Biker: Medium-Dark Skin Tone");
+    const mountainBikerDarkSkinTone = new Emoji("\u{1F6B5}\u{1F3FF}", "Mountain Biker: Dark Skin Tone");
+    const mountainBikerMale = new Emoji("\u{1F6B5}\u200D\u2642\uFE0F", "Mountain Biker: Male");
+    const mountainBikerLightSkinToneMale = new Emoji("\u{1F6B5}\u{1F3FB}\u200D\u2642\uFE0F", "Mountain Biker: Light Skin Tone: Male");
+    const mountainBikerMediumLightSkinToneMale = new Emoji("\u{1F6B5}\u{1F3FC}\u200D\u2642\uFE0F", "Mountain Biker: Medium-Light Skin Tone: Male");
+    const mountainBikerMediumSkinToneMale = new Emoji("\u{1F6B5}\u{1F3FD}\u200D\u2642\uFE0F", "Mountain Biker: Medium Skin Tone: Male");
+    const mountainBikerMediumDarkSkinToneMale = new Emoji("\u{1F6B5}\u{1F3FE}\u200D\u2642\uFE0F", "Mountain Biker: Medium-Dark Skin Tone: Male");
+    const mountainBikerDarkSkinToneMale = new Emoji("\u{1F6B5}\u{1F3FF}\u200D\u2642\uFE0F", "Mountain Biker: Dark Skin Tone: Male");
+    const mountainBikerFemale = new Emoji("\u{1F6B5}\u200D\u2640\uFE0F", "Mountain Biker: Female");
+    const mountainBikerLightSkinToneFemale = new Emoji("\u{1F6B5}\u{1F3FB}\u200D\u2640\uFE0F", "Mountain Biker: Light Skin Tone: Female");
+    const mountainBikerMediumLightSkinToneFemale = new Emoji("\u{1F6B5}\u{1F3FC}\u200D\u2640\uFE0F", "Mountain Biker: Medium-Light Skin Tone: Female");
+    const mountainBikerMediumSkinToneFemale = new Emoji("\u{1F6B5}\u{1F3FD}\u200D\u2640\uFE0F", "Mountain Biker: Medium Skin Tone: Female");
+    const mountainBikerMediumDarkSkinToneFemale = new Emoji("\u{1F6B5}\u{1F3FE}\u200D\u2640\uFE0F", "Mountain Biker: Medium-Dark Skin Tone: Female");
+    const mountainBikerDarkSkinToneFemale = new Emoji("\u{1F6B5}\u{1F3FF}\u200D\u2640\uFE0F", "Mountain Biker: Dark Skin Tone: Female");
+    const cartwheeler = new Emoji("\u{1F938}", "Cartwheeler");
+    const cartwheelerLightSkinTone = new Emoji("\u{1F938}\u{1F3FB}", "Cartwheeler: Light Skin Tone");
+    const cartwheelerMediumLightSkinTone = new Emoji("\u{1F938}\u{1F3FC}", "Cartwheeler: Medium-Light Skin Tone");
+    const cartwheelerMediumSkinTone = new Emoji("\u{1F938}\u{1F3FD}", "Cartwheeler: Medium Skin Tone");
+    const cartwheelerMediumDarkSkinTone = new Emoji("\u{1F938}\u{1F3FE}", "Cartwheeler: Medium-Dark Skin Tone");
+    const cartwheelerDarkSkinTone = new Emoji("\u{1F938}\u{1F3FF}", "Cartwheeler: Dark Skin Tone");
+    const cartwheelerMale = new Emoji("\u{1F938}\u200D\u2642\uFE0F", "Cartwheeler: Male");
+    const cartwheelerLightSkinToneMale = new Emoji("\u{1F938}\u{1F3FB}\u200D\u2642\uFE0F", "Cartwheeler: Light Skin Tone: Male");
+    const cartwheelerMediumLightSkinToneMale = new Emoji("\u{1F938}\u{1F3FC}\u200D\u2642\uFE0F", "Cartwheeler: Medium-Light Skin Tone: Male");
+    const cartwheelerMediumSkinToneMale = new Emoji("\u{1F938}\u{1F3FD}\u200D\u2642\uFE0F", "Cartwheeler: Medium Skin Tone: Male");
+    const cartwheelerMediumDarkSkinToneMale = new Emoji("\u{1F938}\u{1F3FE}\u200D\u2642\uFE0F", "Cartwheeler: Medium-Dark Skin Tone: Male");
+    const cartwheelerDarkSkinToneMale = new Emoji("\u{1F938}\u{1F3FF}\u200D\u2642\uFE0F", "Cartwheeler: Dark Skin Tone: Male");
+    const cartwheelerFemale = new Emoji("\u{1F938}\u200D\u2640\uFE0F", "Cartwheeler: Female");
+    const cartwheelerLightSkinToneFemale = new Emoji("\u{1F938}\u{1F3FB}\u200D\u2640\uFE0F", "Cartwheeler: Light Skin Tone: Female");
+    const cartwheelerMediumLightSkinToneFemale = new Emoji("\u{1F938}\u{1F3FC}\u200D\u2640\uFE0F", "Cartwheeler: Medium-Light Skin Tone: Female");
+    const cartwheelerMediumSkinToneFemale = new Emoji("\u{1F938}\u{1F3FD}\u200D\u2640\uFE0F", "Cartwheeler: Medium Skin Tone: Female");
+    const cartwheelerMediumDarkSkinToneFemale = new Emoji("\u{1F938}\u{1F3FE}\u200D\u2640\uFE0F", "Cartwheeler: Medium-Dark Skin Tone: Female");
+    const cartwheelerDarkSkinToneFemale = new Emoji("\u{1F938}\u{1F3FF}\u200D\u2640\uFE0F", "Cartwheeler: Dark Skin Tone: Female");
+    const wrestler = new Emoji("\u{1F93C}", "Wrestler");
+    const wrestlerMale = new Emoji("\u{1F93C}\u200D\u2642\uFE0F", "Wrestler: Male");
+    const wrestlerFemale = new Emoji("\u{1F93C}\u200D\u2640\uFE0F", "Wrestler: Female");
+    const waterPoloPlayer = new Emoji("\u{1F93D}", "Water Polo Player");
+    const waterPoloPlayerLightSkinTone = new Emoji("\u{1F93D}\u{1F3FB}", "Water Polo Player: Light Skin Tone");
+    const waterPoloPlayerMediumLightSkinTone = new Emoji("\u{1F93D}\u{1F3FC}", "Water Polo Player: Medium-Light Skin Tone");
+    const waterPoloPlayerMediumSkinTone = new Emoji("\u{1F93D}\u{1F3FD}", "Water Polo Player: Medium Skin Tone");
+    const waterPoloPlayerMediumDarkSkinTone = new Emoji("\u{1F93D}\u{1F3FE}", "Water Polo Player: Medium-Dark Skin Tone");
+    const waterPoloPlayerDarkSkinTone = new Emoji("\u{1F93D}\u{1F3FF}", "Water Polo Player: Dark Skin Tone");
+    const waterPoloPlayerMale = new Emoji("\u{1F93D}\u200D\u2642\uFE0F", "Water Polo Player: Male");
+    const waterPoloPlayerLightSkinToneMale = new Emoji("\u{1F93D}\u{1F3FB}\u200D\u2642\uFE0F", "Water Polo Player: Light Skin Tone: Male");
+    const waterPoloPlayerMediumLightSkinToneMale = new Emoji("\u{1F93D}\u{1F3FC}\u200D\u2642\uFE0F", "Water Polo Player: Medium-Light Skin Tone: Male");
+    const waterPoloPlayerMediumSkinToneMale = new Emoji("\u{1F93D}\u{1F3FD}\u200D\u2642\uFE0F", "Water Polo Player: Medium Skin Tone: Male");
+    const waterPoloPlayerMediumDarkSkinToneMale = new Emoji("\u{1F93D}\u{1F3FE}\u200D\u2642\uFE0F", "Water Polo Player: Medium-Dark Skin Tone: Male");
+    const waterPoloPlayerDarkSkinToneMale = new Emoji("\u{1F93D}\u{1F3FF}\u200D\u2642\uFE0F", "Water Polo Player: Dark Skin Tone: Male");
+    const waterPoloPlayerFemale = new Emoji("\u{1F93D}\u200D\u2640\uFE0F", "Water Polo Player: Female");
+    const waterPoloPlayerLightSkinToneFemale = new Emoji("\u{1F93D}\u{1F3FB}\u200D\u2640\uFE0F", "Water Polo Player: Light Skin Tone: Female");
+    const waterPoloPlayerMediumLightSkinToneFemale = new Emoji("\u{1F93D}\u{1F3FC}\u200D\u2640\uFE0F", "Water Polo Player: Medium-Light Skin Tone: Female");
+    const waterPoloPlayerMediumSkinToneFemale = new Emoji("\u{1F93D}\u{1F3FD}\u200D\u2640\uFE0F", "Water Polo Player: Medium Skin Tone: Female");
+    const waterPoloPlayerMediumDarkSkinToneFemale = new Emoji("\u{1F93D}\u{1F3FE}\u200D\u2640\uFE0F", "Water Polo Player: Medium-Dark Skin Tone: Female");
+    const waterPoloPlayerDarkSkinToneFemale = new Emoji("\u{1F93D}\u{1F3FF}\u200D\u2640\uFE0F", "Water Polo Player: Dark Skin Tone: Female");
+    const handBaller = new Emoji("\u{1F93E}", "Hand Baller");
+    const handBallerLightSkinTone = new Emoji("\u{1F93E}\u{1F3FB}", "Hand Baller: Light Skin Tone");
+    const handBallerMediumLightSkinTone = new Emoji("\u{1F93E}\u{1F3FC}", "Hand Baller: Medium-Light Skin Tone");
+    const handBallerMediumSkinTone = new Emoji("\u{1F93E}\u{1F3FD}", "Hand Baller: Medium Skin Tone");
+    const handBallerMediumDarkSkinTone = new Emoji("\u{1F93E}\u{1F3FE}", "Hand Baller: Medium-Dark Skin Tone");
+    const handBallerDarkSkinTone = new Emoji("\u{1F93E}\u{1F3FF}", "Hand Baller: Dark Skin Tone");
+    const handBallerMale = new Emoji("\u{1F93E}\u200D\u2642\uFE0F", "Hand Baller: Male");
+    const handBallerLightSkinToneMale = new Emoji("\u{1F93E}\u{1F3FB}\u200D\u2642\uFE0F", "Hand Baller: Light Skin Tone: Male");
+    const handBallerMediumLightSkinToneMale = new Emoji("\u{1F93E}\u{1F3FC}\u200D\u2642\uFE0F", "Hand Baller: Medium-Light Skin Tone: Male");
+    const handBallerMediumSkinToneMale = new Emoji("\u{1F93E}\u{1F3FD}\u200D\u2642\uFE0F", "Hand Baller: Medium Skin Tone: Male");
+    const handBallerMediumDarkSkinToneMale = new Emoji("\u{1F93E}\u{1F3FE}\u200D\u2642\uFE0F", "Hand Baller: Medium-Dark Skin Tone: Male");
+    const handBallerDarkSkinToneMale = new Emoji("\u{1F93E}\u{1F3FF}\u200D\u2642\uFE0F", "Hand Baller: Dark Skin Tone: Male");
+    const handBallerFemale = new Emoji("\u{1F93E}\u200D\u2640\uFE0F", "Hand Baller: Female");
+    const handBallerLightSkinToneFemale = new Emoji("\u{1F93E}\u{1F3FB}\u200D\u2640\uFE0F", "Hand Baller: Light Skin Tone: Female");
+    const handBallerMediumLightSkinToneFemale = new Emoji("\u{1F93E}\u{1F3FC}\u200D\u2640\uFE0F", "Hand Baller: Medium-Light Skin Tone: Female");
+    const handBallerMediumSkinToneFemale = new Emoji("\u{1F93E}\u{1F3FD}\u200D\u2640\uFE0F", "Hand Baller: Medium Skin Tone: Female");
+    const handBallerMediumDarkSkinToneFemale = new Emoji("\u{1F93E}\u{1F3FE}\u200D\u2640\uFE0F", "Hand Baller: Medium-Dark Skin Tone: Female");
+    const handBallerDarkSkinToneFemale = new Emoji("\u{1F93E}\u{1F3FF}\u200D\u2640\uFE0F", "Hand Baller: Dark Skin Tone: Female");
+    const inLotusPosition = new Emoji("\u{1F9D8}", "In Lotus Position");
+    const inLotusPositionLightSkinTone = new Emoji("\u{1F9D8}\u{1F3FB}", "In Lotus Position: Light Skin Tone");
+    const inLotusPositionMediumLightSkinTone = new Emoji("\u{1F9D8}\u{1F3FC}", "In Lotus Position: Medium-Light Skin Tone");
+    const inLotusPositionMediumSkinTone = new Emoji("\u{1F9D8}\u{1F3FD}", "In Lotus Position: Medium Skin Tone");
+    const inLotusPositionMediumDarkSkinTone = new Emoji("\u{1F9D8}\u{1F3FE}", "In Lotus Position: Medium-Dark Skin Tone");
+    const inLotusPositionDarkSkinTone = new Emoji("\u{1F9D8}\u{1F3FF}", "In Lotus Position: Dark Skin Tone");
+    const inLotusPositionMale = new Emoji("\u{1F9D8}\u200D\u2642\uFE0F", "In Lotus Position: Male");
+    const inLotusPositionLightSkinToneMale = new Emoji("\u{1F9D8}\u{1F3FB}\u200D\u2642\uFE0F", "In Lotus Position: Light Skin Tone: Male");
+    const inLotusPositionMediumLightSkinToneMale = new Emoji("\u{1F9D8}\u{1F3FC}\u200D\u2642\uFE0F", "In Lotus Position: Medium-Light Skin Tone: Male");
+    const inLotusPositionMediumSkinToneMale = new Emoji("\u{1F9D8}\u{1F3FD}\u200D\u2642\uFE0F", "In Lotus Position: Medium Skin Tone: Male");
+    const inLotusPositionMediumDarkSkinToneMale = new Emoji("\u{1F9D8}\u{1F3FE}\u200D\u2642\uFE0F", "In Lotus Position: Medium-Dark Skin Tone: Male");
+    const inLotusPositionDarkSkinToneMale = new Emoji("\u{1F9D8}\u{1F3FF}\u200D\u2642\uFE0F", "In Lotus Position: Dark Skin Tone: Male");
+    const inLotusPositionFemale = new Emoji("\u{1F9D8}\u200D\u2640\uFE0F", "In Lotus Position: Female");
+    const inLotusPositionLightSkinToneFemale = new Emoji("\u{1F9D8}\u{1F3FB}\u200D\u2640\uFE0F", "In Lotus Position: Light Skin Tone: Female");
+    const inLotusPositionMediumLightSkinToneFemale = new Emoji("\u{1F9D8}\u{1F3FC}\u200D\u2640\uFE0F", "In Lotus Position: Medium-Light Skin Tone: Female");
+    const inLotusPositionMediumSkinToneFemale = new Emoji("\u{1F9D8}\u{1F3FD}\u200D\u2640\uFE0F", "In Lotus Position: Medium Skin Tone: Female");
+    const inLotusPositionMediumDarkSkinToneFemale = new Emoji("\u{1F9D8}\u{1F3FE}\u200D\u2640\uFE0F", "In Lotus Position: Medium-Dark Skin Tone: Female");
+    const inLotusPositionDarkSkinToneFemale = new Emoji("\u{1F9D8}\u{1F3FF}\u200D\u2640\uFE0F", "In Lotus Position: Dark Skin Tone: Female");
+    const inBath = new Emoji("\u{1F6C0}", "In Bath");
+    const inBathLightSkinTone = new Emoji("\u{1F6C0}\u{1F3FB}", "In Bath: Light Skin Tone");
+    const inBathMediumLightSkinTone = new Emoji("\u{1F6C0}\u{1F3FC}", "In Bath: Medium-Light Skin Tone");
+    const inBathMediumSkinTone = new Emoji("\u{1F6C0}\u{1F3FD}", "In Bath: Medium Skin Tone");
+    const inBathMediumDarkSkinTone = new Emoji("\u{1F6C0}\u{1F3FE}", "In Bath: Medium-Dark Skin Tone");
+    const inBathDarkSkinTone = new Emoji("\u{1F6C0}\u{1F3FF}", "In Bath: Dark Skin Tone");
+    const inBed = new Emoji("\u{1F6CC}", "In Bed");
+    const inBedLightSkinTone = new Emoji("\u{1F6CC}\u{1F3FB}", "In Bed: Light Skin Tone");
+    const inBedMediumLightSkinTone = new Emoji("\u{1F6CC}\u{1F3FC}", "In Bed: Medium-Light Skin Tone");
+    const inBedMediumSkinTone = new Emoji("\u{1F6CC}\u{1F3FD}", "In Bed: Medium Skin Tone");
+    const inBedMediumDarkSkinTone = new Emoji("\u{1F6CC}\u{1F3FE}", "In Bed: Medium-Dark Skin Tone");
+    const inBedDarkSkinTone = new Emoji("\u{1F6CC}\u{1F3FF}", "In Bed: Dark Skin Tone");
+    const inSauna = new Emoji("\u{1F9D6}", "In Sauna");
+    const inSaunaLightSkinTone = new Emoji("\u{1F9D6}\u{1F3FB}", "In Sauna: Light Skin Tone");
+    const inSaunaMediumLightSkinTone = new Emoji("\u{1F9D6}\u{1F3FC}", "In Sauna: Medium-Light Skin Tone");
+    const inSaunaMediumSkinTone = new Emoji("\u{1F9D6}\u{1F3FD}", "In Sauna: Medium Skin Tone");
+    const inSaunaMediumDarkSkinTone = new Emoji("\u{1F9D6}\u{1F3FE}", "In Sauna: Medium-Dark Skin Tone");
+    const inSaunaDarkSkinTone = new Emoji("\u{1F9D6}\u{1F3FF}", "In Sauna: Dark Skin Tone");
+    const inSaunaMale = new Emoji("\u{1F9D6}\u200D\u2642\uFE0F", "In Sauna: Male");
+    const inSaunaLightSkinToneMale = new Emoji("\u{1F9D6}\u{1F3FB}\u200D\u2642\uFE0F", "In Sauna: Light Skin Tone: Male");
+    const inSaunaMediumLightSkinToneMale = new Emoji("\u{1F9D6}\u{1F3FC}\u200D\u2642\uFE0F", "In Sauna: Medium-Light Skin Tone: Male");
+    const inSaunaMediumSkinToneMale = new Emoji("\u{1F9D6}\u{1F3FD}\u200D\u2642\uFE0F", "In Sauna: Medium Skin Tone: Male");
+    const inSaunaMediumDarkSkinToneMale = new Emoji("\u{1F9D6}\u{1F3FE}\u200D\u2642\uFE0F", "In Sauna: Medium-Dark Skin Tone: Male");
+    const inSaunaDarkSkinToneMale = new Emoji("\u{1F9D6}\u{1F3FF}\u200D\u2642\uFE0F", "In Sauna: Dark Skin Tone: Male");
+    const inSaunaFemale = new Emoji("\u{1F9D6}\u200D\u2640\uFE0F", "In Sauna: Female");
+    const inSaunaLightSkinToneFemale = new Emoji("\u{1F9D6}\u{1F3FB}\u200D\u2640\uFE0F", "In Sauna: Light Skin Tone: Female");
+    const inSaunaMediumLightSkinToneFemale = new Emoji("\u{1F9D6}\u{1F3FC}\u200D\u2640\uFE0F", "In Sauna: Medium-Light Skin Tone: Female");
+    const inSaunaMediumSkinToneFemale = new Emoji("\u{1F9D6}\u{1F3FD}\u200D\u2640\uFE0F", "In Sauna: Medium Skin Tone: Female");
+    const inSaunaMediumDarkSkinToneFemale = new Emoji("\u{1F9D6}\u{1F3FE}\u200D\u2640\uFE0F", "In Sauna: Medium-Dark Skin Tone: Female");
+    const inSaunaDarkSkinToneFemale = new Emoji("\u{1F9D6}\u{1F3FF}\u200D\u2640\uFE0F", "In Sauna: Dark Skin Tone: Female");
+    const ogre = new Emoji("\u{1F479}", "Ogre");
+    const goblin = new Emoji("\u{1F47A}", "Goblin");
+    const ghost = new Emoji("\u{1F47B}", "Ghost");
+    const alien = new Emoji("\u{1F47D}", "Alien");
+    const alienMonster = new Emoji("\u{1F47E}", "Alien Monster");
+    const angryFaceWithHorns = new Emoji("\u{1F47F}", "Angry Face with Horns");
+    const skull = new Emoji("\u{1F480}", "Skull");
+    const pileOfPoo = new Emoji("\u{1F4A9}", "Pile of Poo");
+    const grinningFace = new Emoji("\u{1F600}", "Grinning Face");
+    const beamingFaceWithSmilingEyes = new Emoji("\u{1F601}", "Beaming Face with Smiling Eyes");
+    const faceWithTearsOfJoy = new Emoji("\u{1F602}", "Face with Tears of Joy");
+    const grinningFaceWithBigEyes = new Emoji("\u{1F603}", "Grinning Face with Big Eyes");
+    const grinningFaceWithSmilingEyes = new Emoji("\u{1F604}", "Grinning Face with Smiling Eyes");
+    const grinningFaceWithSweat = new Emoji("\u{1F605}", "Grinning Face with Sweat");
+    const grinningSquintingFace = new Emoji("\u{1F606}", "Grinning Squinting Face");
+    const smilingFaceWithHalo = new Emoji("\u{1F607}", "Smiling Face with Halo");
+    const smilingFaceWithHorns = new Emoji("\u{1F608}", "Smiling Face with Horns");
+    const winkingFace = new Emoji("\u{1F609}", "Winking Face");
+    const smilingFaceWithSmilingEyes = new Emoji("\u{1F60A}", "Smiling Face with Smiling Eyes");
+    const faceSavoringFood = new Emoji("\u{1F60B}", "Face Savoring Food");
+    const relievedFace = new Emoji("\u{1F60C}", "Relieved Face");
+    const smilingFaceWithHeartEyes = new Emoji("\u{1F60D}", "Smiling Face with Heart-Eyes");
+    const smilingFaceWithSunglasses = new Emoji("\u{1F60E}", "Smiling Face with Sunglasses");
+    const smirkingFace = new Emoji("\u{1F60F}", "Smirking Face");
+    const neutralFace = new Emoji("\u{1F610}", "Neutral Face");
+    const expressionlessFace = new Emoji("\u{1F611}", "Expressionless Face");
+    const unamusedFace = new Emoji("\u{1F612}", "Unamused Face");
+    const downcastFaceWithSweat = new Emoji("\u{1F613}", "Downcast Face with Sweat");
+    const pensiveFace = new Emoji("\u{1F614}", "Pensive Face");
+    const confusedFace = new Emoji("\u{1F615}", "Confused Face");
+    const confoundedFace = new Emoji("\u{1F616}", "Confounded Face");
+    const kissingFace = new Emoji("\u{1F617}", "Kissing Face");
+    const faceBlowingAKiss = new Emoji("\u{1F618}", "Face Blowing a Kiss");
+    const kissingFaceWithSmilingEyes = new Emoji("\u{1F619}", "Kissing Face with Smiling Eyes");
+    const kissingFaceWithClosedEyes = new Emoji("\u{1F61A}", "Kissing Face with Closed Eyes");
+    const faceWithTongue = new Emoji("\u{1F61B}", "Face with Tongue");
+    const winkingFaceWithTongue = new Emoji("\u{1F61C}", "Winking Face with Tongue");
+    const squintingFaceWithTongue = new Emoji("\u{1F61D}", "Squinting Face with Tongue");
+    const disappointedFace = new Emoji("\u{1F61E}", "Disappointed Face");
+    const worriedFace = new Emoji("\u{1F61F}", "Worried Face");
+    const angryFace = new Emoji("\u{1F620}", "Angry Face");
+    const poutingFace = new Emoji("\u{1F621}", "Pouting Face");
+    const cryingFace = new Emoji("\u{1F622}", "Crying Face");
+    const perseveringFace = new Emoji("\u{1F623}", "Persevering Face");
+    const faceWithSteamFromNose = new Emoji("\u{1F624}", "Face with Steam From Nose");
+    const sadButRelievedFace = new Emoji("\u{1F625}", "Sad but Relieved Face");
+    const frowningFaceWithOpenMouth = new Emoji("\u{1F626}", "Frowning Face with Open Mouth");
+    const anguishedFace = new Emoji("\u{1F627}", "Anguished Face");
+    const fearfulFace = new Emoji("\u{1F628}", "Fearful Face");
+    const wearyFace = new Emoji("\u{1F629}", "Weary Face");
+    const sleepyFace = new Emoji("\u{1F62A}", "Sleepy Face");
+    const tiredFace = new Emoji("\u{1F62B}", "Tired Face");
+    const grimacingFace = new Emoji("\u{1F62C}", "Grimacing Face");
+    const loudlyCryingFace = new Emoji("\u{1F62D}", "Loudly Crying Face");
+    const faceWithOpenMouth = new Emoji("\u{1F62E}", "Face with Open Mouth");
+    const hushedFace = new Emoji("\u{1F62F}", "Hushed Face");
+    const anxiousFaceWithSweat = new Emoji("\u{1F630}", "Anxious Face with Sweat");
+    const faceScreamingInFear = new Emoji("\u{1F631}", "Face Screaming in Fear");
+    const astonishedFace = new Emoji("\u{1F632}", "Astonished Face");
+    const flushedFace = new Emoji("\u{1F633}", "Flushed Face");
+    const sleepingFace = new Emoji("\u{1F634}", "Sleeping Face");
+    const dizzyFace = new Emoji("\u{1F635}", "Dizzy Face");
+    const faceWithoutMouth = new Emoji("\u{1F636}", "Face Without Mouth");
+    const faceWithMedicalMask = new Emoji("\u{1F637}", "Face with Medical Mask");
+    const grinningCatWithSmilingEyes = new Emoji("\u{1F638}", "Grinning Cat with Smiling Eyes");
+    const catWithTearsOfJoy = new Emoji("\u{1F639}", "Cat with Tears of Joy");
+    const grinningCat = new Emoji("\u{1F63A}", "Grinning Cat");
+    const smilingCatWithHeartEyes = new Emoji("\u{1F63B}", "Smiling Cat with Heart-Eyes");
+    const catWithWrySmile = new Emoji("\u{1F63C}", "Cat with Wry Smile");
+    const kissingCat = new Emoji("\u{1F63D}", "Kissing Cat");
+    const poutingCat = new Emoji("\u{1F63E}", "Pouting Cat");
+    const cryingCat = new Emoji("\u{1F63F}", "Crying Cat");
+    const wearyCat = new Emoji("\u{1F640}", "Weary Cat");
+    const slightlyFrowningFace = new Emoji("\u{1F641}", "Slightly Frowning Face");
+    const slightlySmilingFace = new Emoji("\u{1F642}", "Slightly Smiling Face");
+    const upsideDownFace = new Emoji("\u{1F643}", "Upside-Down Face");
+    const faceWithRollingEyes = new Emoji("\u{1F644}", "Face with Rolling Eyes");
+    const seeNoEvilMonkey = new Emoji("\u{1F648}", "See-No-Evil Monkey");
+    const hearNoEvilMonkey = new Emoji("\u{1F649}", "Hear-No-Evil Monkey");
+    const speakNoEvilMonkey = new Emoji("\u{1F64A}", "Speak-No-Evil Monkey");
+    const zipperMouthFace = new Emoji("\u{1F910}", "Zipper-Mouth Face");
+    const moneyMouthFace = new Emoji("\u{1F911}", "Money-Mouth Face");
+    const faceWithThermometer = new Emoji("\u{1F912}", "Face with Thermometer");
+    const nerdFace = new Emoji("\u{1F913}", "Nerd Face");
+    const thinkingFace = new Emoji("\u{1F914}", "Thinking Face");
+    const faceWithHeadBandage = new Emoji("\u{1F915}", "Face with Head-Bandage");
+    const robot = new Emoji("\u{1F916}", "Robot");
+    const huggingFace = new Emoji("\u{1F917}", "Hugging Face");
+    const cowboyHatFace = new Emoji("\u{1F920}", "Cowboy Hat Face");
+    const clownFace = new Emoji("\u{1F921}", "Clown Face");
+    const nauseatedFace = new Emoji("\u{1F922}", "Nauseated Face");
+    const rollingOnTheFloorLaughing = new Emoji("\u{1F923}", "Rolling on the Floor Laughing");
+    const droolingFace = new Emoji("\u{1F924}", "Drooling Face");
+    const lyingFace = new Emoji("\u{1F925}", "Lying Face");
+    const sneezingFace = new Emoji("\u{1F927}", "Sneezing Face");
+    const faceWithRaisedEyebrow = new Emoji("\u{1F928}", "Face with Raised Eyebrow");
+    const starStruck = new Emoji("\u{1F929}", "Star-Struck");
+    const zanyFace = new Emoji("\u{1F92A}", "Zany Face");
+    const shushingFace = new Emoji("\u{1F92B}", "Shushing Face");
+    const faceWithSymbolsOnMouth = new Emoji("\u{1F92C}", "Face with Symbols on Mouth");
+    const faceWithHandOverMouth = new Emoji("\u{1F92D}", "Face with Hand Over Mouth");
+    const faceVomiting = new Emoji("\u{1F92E}", "Face Vomiting");
+    const explodingHead = new Emoji("\u{1F92F}", "Exploding Head");
+    const smilingFaceWithHearts = new Emoji("\u{1F970}", "Smiling Face with Hearts");
+    const yawningFace = new Emoji("\u{1F971}", "Yawning Face");
+    const partyingFace = new Emoji("\u{1F973}", "Partying Face");
+    const woozyFace = new Emoji("\u{1F974}", "Woozy Face");
+    const hotFace = new Emoji("\u{1F975}", "Hot Face");
+    const coldFace = new Emoji("\u{1F976}", "Cold Face");
+    const pleadingFace = new Emoji("\u{1F97A}", "Pleading Face");
+    const faceWithMonocle = new Emoji("\u{1F9D0}", "Face with Monocle");
+    const skullAndCrossbones = new Emoji("\u2620\uFE0F", "Skull and Crossbones");
+    const frowningFace = new Emoji("\u2639\uFE0F", "Frowning Face");
+    const smilingFace = new Emoji("\u263A\uFE0F", "Smiling Face");
+    const speakingHead = new Emoji("\u{1F5E3}\uFE0F", "Speaking Head");
+    const bustInSilhouette = new Emoji("\u{1F464}", "Bust in Silhouette");
+    const kissMark = new Emoji("\u{1F48B}", "Kiss Mark");
+    const loveLetter = new Emoji("\u{1F48C}", "Love Letter");
+    const beatingHeart = new Emoji("\u{1F493}", "Beating Heart");
+    const brokenHeart = new Emoji("\u{1F494}", "Broken Heart");
+    const twoHearts = new Emoji("\u{1F495}", "Two Hearts");
+    const sparklingHeart = new Emoji("\u{1F496}", "Sparkling Heart");
+    const growingHeart = new Emoji("\u{1F497}", "Growing Heart");
+    const heartWithArrow = new Emoji("\u{1F498}", "Heart with Arrow");
+    const blueHeart = new Emoji("\u{1F499}", "Blue Heart");
+    const greenHeart = new Emoji("\u{1F49A}", "Green Heart");
+    const yellowHeart = new Emoji("\u{1F49B}", "Yellow Heart");
+    const purpleHeart = new Emoji("\u{1F49C}", "Purple Heart");
+    const heartWithRibbon = new Emoji("\u{1F49D}", "Heart with Ribbon");
+    const revolvingHearts = new Emoji("\u{1F49E}", "Revolving Hearts");
+    const heartDecoration = new Emoji("\u{1F49F}", "Heart Decoration");
+    const blackHeart = new Emoji("\u{1F5A4}", "Black Heart");
+    const whiteHeart = new Emoji("\u{1F90D}", "White Heart");
+    const brownHeart = new Emoji("\u{1F90E}", "Brown Heart");
+    const orangeHeart = new Emoji("\u{1F9E1}", "Orange Heart");
+    const heartExclamation = new Emoji("\u2763\uFE0F", "Heart Exclamation");
+    const redHeart = new Emoji("\u2764\uFE0F", "Red Heart");
+    const angerSymbol = new Emoji("\u{1F4A2}", "Anger Symbol");
+    const bomb = new Emoji("\u{1F4A3}", "Bomb");
+    const zzz = new Emoji("\u{1F4A4}", "Zzz");
+    const collision = new Emoji("\u{1F4A5}", "Collision");
+    const sweatDroplets = new Emoji("\u{1F4A6}", "Sweat Droplets");
+    const dashingAway = new Emoji("\u{1F4A8}", "Dashing Away");
+    const dizzy = new Emoji("\u{1F4AB}", "Dizzy");
+    const speechBalloon = new Emoji("\u{1F4AC}", "Speech Balloon");
+    const thoughtBalloon = new Emoji("\u{1F4AD}", "Thought Balloon");
+    const hundredPoints = new Emoji("\u{1F4AF}", "Hundred Points");
+    const hole = new Emoji("\u{1F573}\uFE0F", "Hole");
+    const leftSpeechBubble = new Emoji("\u{1F5E8}\uFE0F", "Left Speech Bubble");
+    const rightSpeechBubble = new Emoji("\u{1F5E9}\uFE0F", "Right Speech Bubble");
+    const conversationBubbles2 = new Emoji("\u{1F5EA}\uFE0F", "Conversation Bubbles 2");
+    const conversationBubbles3 = new Emoji("\u{1F5EB}\uFE0F", "Conversation Bubbles 3");
+    const leftThoughtBubble = new Emoji("\u{1F5EC}\uFE0F", "Left Thought Bubble");
+    const rightThoughtBubble = new Emoji("\u{1F5ED}\uFE0F", "Right Thought Bubble");
+    const leftAngerBubble = new Emoji("\u{1F5EE}\uFE0F", "Left Anger Bubble");
+    const rightAngerBubble = new Emoji("\u{1F5EF}\uFE0F", "Right Anger Bubble");
+    const angerBubble = new Emoji("\u{1F5F0}\uFE0F", "Anger Bubble");
+    const angerBubbleLightning = new Emoji("\u{1F5F1}\uFE0F", "Anger Bubble Lightning");
+    const lightningBolt = new Emoji("\u{1F5F2}\uFE0F", "Lightning Bolt");
+    const backhandIndexPointingUp = new Emoji("\u{1F446}", "Backhand Index Pointing Up");
+    const backhandIndexPointingDown = new Emoji("\u{1F447}", "Backhand Index Pointing Down");
+    const backhandIndexPointingLeft = new Emoji("\u{1F448}", "Backhand Index Pointing Left");
+    const backhandIndexPointingRight = new Emoji("\u{1F449}", "Backhand Index Pointing Right");
+    const oncomingFist = new Emoji("\u{1F44A}", "Oncoming Fist");
+    const wavingHand = new Emoji("\u{1F44B}", "Waving Hand");
+    const oKHand = new Emoji("\u{1F58F}", "OK Hand");
+    const thumbsUp = new Emoji("\u{1F44D}", "Thumbs Up");
+    const thumbsDown = new Emoji("\u{1F44E}", "Thumbs Down");
+    const clappingHands = new Emoji("\u{1F44F}", "Clapping Hands");
+    const openHands = new Emoji("\u{1F450}", "Open Hands");
+    const nailPolish = new Emoji("\u{1F485}", "Nail Polish");
+    const handWithFingersSplayed = new Emoji("\u{1F590}\uFE0F", "Hand with Fingers Splayed");
+    const handWithFingersSplayed2 = new Emoji("\u{1F591}\uFE0F", "Hand with Fingers Splayed 2");
+    const thumbsUp2 = new Emoji("\u{1F592}", "Thumbs Up 2");
+    const thumbsDown2 = new Emoji("\u{1F593}", "Thumbs Down 2");
+    const peaceFingers = new Emoji("\u{1F594}", "Peace Fingers");
+    const middleFinger = new Emoji("\u{1F595}", "Middle Finger");
+    const vulcanSalute = new Emoji("\u{1F596}", "Vulcan Salute");
+    const handPointingDown = new Emoji("\u{1F597}", "Hand Pointing Down");
+    const handPointingLeft = new Emoji("\u{1F598}", "Hand Pointing Left");
+    const handPointingRight = new Emoji("\u{1F599}", "Hand Pointing Right");
+    const handPointingLeft2 = new Emoji("\u{1F59A}", "Hand Pointing Left 2");
+    const handPointingRight2 = new Emoji("\u{1F59B}", "Hand Pointing Right 2");
+    const indexPointingLeft = new Emoji("\u{1F59C}", "Index Pointing Left");
+    const indexPointingRight = new Emoji("\u{1F59D}", "Index Pointing Right");
+    const indexPointingUp = new Emoji("\u{1F59E}", "Index Pointing Up");
+    const indexPointingDown = new Emoji("\u{1F59F}", "Index Pointing Down");
+    const indexPointingUp2 = new Emoji("\u{1F5A0}", "Index Pointing Up 2");
+    const indexPointingDown2 = new Emoji("\u{1F5A1}", "Index Pointing Down 2");
+    const indexPointingUp3 = new Emoji("\u{1F5A2}", "Index Pointing Up 3");
+    const indexPointingDown3 = new Emoji("\u{1F5A3}", "Index Pointing Down 3");
+    const raisingHands = new Emoji("\u{1F64C}", "Raising Hands");
+    const foldedHands = new Emoji("\u{1F64F}", "Folded Hands");
+    const pinchedFingers = new Emoji("\u{1F90C}", "Pinched Fingers");
+    const pinchingHand = new Emoji("\u{1F90F}", "Pinching Hand");
+    const signOfTheHorns = new Emoji("\u{1F918}", "Sign of the Horns");
+    const callMeHand = new Emoji("\u{1F919}", "Call Me Hand");
+    const raisedBackOfHand = new Emoji("\u{1F91A}", "Raised Back of Hand");
+    const leftFacingFist = new Emoji("\u{1F91B}", "Left-Facing Fist");
+    const rightFacingFist = new Emoji("\u{1F91C}", "Right-Facing Fist");
+    const handshake = new Emoji("\u{1F91D}", "Handshake");
+    const crossedFingers = new Emoji("\u{1F91E}", "Crossed Fingers");
+    const loveYouGesture = new Emoji("\u{1F91F}", "Love-You Gesture");
+    const palmsUpTogether = new Emoji("\u{1F932}", "Palms Up Together");
+    const indexPointingUp4 = new Emoji("\u261D\uFE0F", "Index Pointing Up 4");
+    const raisedFist = new Emoji("\u270A", "Raised Fist");
+    const raisedHand = new Emoji("\u270B", "Raised Hand");
+    const victoryHand = new Emoji("\u270C\uFE0F", "Victory Hand");
+    const writingHand = new Emoji("\u270D\uFE0F", "Writing Hand");
+    const redCircle = new Emoji("\u{1F534}", "Red Circle");
+    const blueCircle = new Emoji("\u{1F535}", "Blue Circle");
+    const largeOrangeDiamond = new Emoji("\u{1F536}", "Large Orange Diamond");
+    const largeBlueDiamond = new Emoji("\u{1F537}", "Large Blue Diamond");
+    const smallOrangeDiamond = new Emoji("\u{1F538}", "Small Orange Diamond");
+    const smallBlueDiamond = new Emoji("\u{1F539}", "Small Blue Diamond");
+    const redTrianglePointedUp = new Emoji("\u{1F53A}", "Red Triangle Pointed Up");
+    const redTrianglePointedDown = new Emoji("\u{1F53B}", "Red Triangle Pointed Down");
+    const orangeCircle = new Emoji("\u{1F7E0}", "Orange Circle");
+    const yellowCircle = new Emoji("\u{1F7E1}", "Yellow Circle");
+    const greenCircle = new Emoji("\u{1F7E2}", "Green Circle");
+    const purpleCircle = new Emoji("\u{1F7E3}", "Purple Circle");
+    const brownCircle = new Emoji("\u{1F7E4}", "Brown Circle");
+    const hollowRedCircle = new Emoji("\u2B55", "Hollow Red Circle");
+    const whiteCircle = new Emoji("\u26AA", "White Circle");
+    const blackCircle = new Emoji("\u26AB", "Black Circle");
+    const redSquare = new Emoji("\u{1F7E5}", "Red Square");
+    const blueSquare = new Emoji("\u{1F7E6}", "Blue Square");
+    const orangeSquare = new Emoji("\u{1F7E7}", "Orange Square");
+    const yellowSquare = new Emoji("\u{1F7E8}", "Yellow Square");
+    const greenSquare = new Emoji("\u{1F7E9}", "Green Square");
+    const purpleSquare = new Emoji("\u{1F7EA}", "Purple Square");
+    const brownSquare = new Emoji("\u{1F7EB}", "Brown Square");
+    const blackSquareButton = new Emoji("\u{1F532}", "Black Square Button");
+    const whiteSquareButton = new Emoji("\u{1F533}", "White Square Button");
+    const blackSmallSquare = new Emoji("\u25AA\uFE0F", "Black Small Square");
+    const whiteSmallSquare = new Emoji("\u25AB\uFE0F", "White Small Square");
+    const whiteMediumSmallSquare = new Emoji("\u25FD", "White Medium-Small Square");
+    const blackMediumSmallSquare = new Emoji("\u25FE", "Black Medium-Small Square");
+    const whiteMediumSquare = new Emoji("\u25FB\uFE0F", "White Medium Square");
+    const blackMediumSquare = new Emoji("\u25FC\uFE0F", "Black Medium Square");
+    const blackLargeSquare = new Emoji("\u2B1B", "Black Large Square");
+    const whiteLargeSquare = new Emoji("\u2B1C", "White Large Square");
+    const star = new Emoji("\u2B50", "Star");
+    const diamondWithADot = new Emoji("\u{1F4A0}", "Diamond with a Dot");
+    const eye = new Emoji("\u{1F441}\uFE0F", "Eye");
+    const eyeInSpeechBubble = new Emoji("\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F", "Eye in Speech Bubble");
+    const eyes = new Emoji("\u{1F440}", "Eyes");
+    const ear = new Emoji("\u{1F442}", "Ear");
+    const nose = new Emoji("\u{1F443}", "Nose");
+    const mouth = new Emoji("\u{1F444}", "Mouth");
+    const tongue = new Emoji("\u{1F445}", "Tongue");
+    const flexedBiceps = new Emoji("\u{1F4AA}", "Flexed Biceps");
+    const selfie = new Emoji("\u{1F933}", "Selfie");
+    const bone = new Emoji("\u{1F9B4}", "Bone");
+    const leg = new Emoji("\u{1F9B5}", "Leg");
+    const foot = new Emoji("\u{1F9B6}", "Foot");
+    const tooth = new Emoji("\u{1F9B7}", "Tooth");
+    const earWithHearingAid = new Emoji("\u{1F9BB}", "Ear with Hearing Aid");
+    const mechanicalArm = new Emoji("\u{1F9BE}", "Mechanical Arm");
+    const mechanicalLeg = new Emoji("\u{1F9BF}", "Mechanical Leg");
+    const anatomicalHeart = new Emoji("\u{1FAC0}", "Anatomical Heart");
+    const lungs = new Emoji("\u{1FAC1}", "Lungs");
+    const brain = new Emoji("\u{1F9E0}", "Brain");
+    const snowflake = new Emoji("\u2744\uFE0F", "Snowflake");
+    const rainbow = new Emoji("\u{1F308}", "Rainbow");
+    const sunriseOverMountains = new Emoji("\u{1F304}", "Sunrise Over Mountains");
+    const sunrise = new Emoji("\u{1F305}", "Sunrise");
+    const cityscapeAtDusk = new Emoji("\u{1F306}", "Cityscape at Dusk");
+    const sunset = new Emoji("\u{1F307}", "Sunset");
+    const nightWithStars = new Emoji("\u{1F303}", "Night with Stars");
+    const closedUmbrella = new Emoji("\u{1F302}", "Closed Umbrella");
+    const umbrella = new Emoji("\u2602\uFE0F", "Umbrella");
+    const umbrellaWithRainDrops = new Emoji("\u2614\uFE0F", "Umbrella with Rain Drops");
+    const snowman = new Emoji("\u2603\uFE0F", "Snowman");
+    const snowmanWithoutSnow = new Emoji("\u26C4", "Snowman Without Snow");
+    const sun = new Emoji("\u2600\uFE0F", "Sun");
+    const cloud = new Emoji("\u2601\uFE0F", "Cloud");
+    const sunBehindSmallCloud = new Emoji("\u{1F324}\uFE0F", "Sun Behind Small Cloud");
+    const sunBehindCloud = new Emoji("\u26C5", "Sun Behind Cloud");
+    const sunBehindLargeCloud = new Emoji("\u{1F325}\uFE0F", "Sun Behind Large Cloud");
+    const sunBehindRainCloud = new Emoji("\u{1F326}\uFE0F", "Sun Behind Rain Cloud");
+    const cloudWithRain = new Emoji("\u{1F327}\uFE0F", "Cloud with Rain");
+    const cloudWithSnow = new Emoji("\u{1F328}\uFE0F", "Cloud with Snow");
+    const cloudWithLightning = new Emoji("\u{1F329}\uFE0F", "Cloud with Lightning");
+    const cloudWithLightningAndRain = new Emoji("\u26C8\uFE0F", "Cloud with Lightning and Rain");
+    const cyclone = new Emoji("\u{1F300}", "Cyclone");
+    const tornado = new Emoji("\u{1F32A}\uFE0F", "Tornado");
+    const windFace = new Emoji("\u{1F32C}\uFE0F", "Wind Face");
+    const waterWave = new Emoji("\u{1F30A}", "Water Wave");
+    const fog = new Emoji("\u{1F32B}\uFE0F", "Fog");
+    const foggy = new Emoji("\u{1F301}", "Foggy");
+    const thermometer = new Emoji("\u{1F321}\uFE0F", "Thermometer");
+    const cat = new Emoji("\u{1F408}", "Cat");
+    const blackCat = new Emoji("\u{1F408}\u200D\u2B1B", "Black Cat");
+    const dog = new Emoji("\u{1F415}", "Dog");
+    const serviceDog = new Emoji("\u{1F415}\u200D\u{1F9BA}", "Service Dog");
+    const bear = new Emoji("\u{1F43B}", "Bear");
+    const polarBear = new Emoji("\u{1F43B}\u200D\u2744\uFE0F", "Polar Bear");
+    const rat = new Emoji("\u{1F400}", "Rat");
+    const mouse = new Emoji("\u{1F401}", "Mouse");
+    const ox = new Emoji("\u{1F402}", "Ox");
+    const waterBuffalo = new Emoji("\u{1F403}", "Water Buffalo");
+    const cow = new Emoji("\u{1F404}", "Cow");
+    const tiger = new Emoji("\u{1F405}", "Tiger");
+    const leopard = new Emoji("\u{1F406}", "Leopard");
+    const rabbit = new Emoji("\u{1F407}", "Rabbit");
+    const dragon = new Emoji("\u{1F409}", "Dragon");
+    const crocodile = new Emoji("\u{1F40A}", "Crocodile");
+    const whale = new Emoji("\u{1F40B}", "Whale");
+    const snail = new Emoji("\u{1F40C}", "Snail");
+    const snake = new Emoji("\u{1F40D}", "Snake");
+    const horse = new Emoji("\u{1F40E}", "Horse");
+    const ram = new Emoji("\u{1F40F}", "Ram");
+    const goat = new Emoji("\u{1F410}", "Goat");
+    const ewe = new Emoji("\u{1F411}", "Ewe");
+    const monkey = new Emoji("\u{1F412}", "Monkey");
+    const rooster = new Emoji("\u{1F413}", "Rooster");
+    const chicken = new Emoji("\u{1F414}", "Chicken");
+    const pig = new Emoji("\u{1F416}", "Pig");
+    const boar = new Emoji("\u{1F417}", "Boar");
+    const elephant = new Emoji("\u{1F418}", "Elephant");
+    const octopus = new Emoji("\u{1F419}", "Octopus");
+    const spiralShell = new Emoji("\u{1F41A}", "Spiral Shell");
+    const bug = new Emoji("\u{1F41B}", "Bug");
+    const ant = new Emoji("\u{1F41C}", "Ant");
+    const honeybee = new Emoji("\u{1F41D}", "Honeybee");
+    const ladyBeetle = new Emoji("\u{1F41E}", "Lady Beetle");
+    const fish = new Emoji("\u{1F41F}", "Fish");
+    const tropicalFish = new Emoji("\u{1F420}", "Tropical Fish");
+    const blowfish = new Emoji("\u{1F421}", "Blowfish");
+    const turtle = new Emoji("\u{1F422}", "Turtle");
+    const hatchingChick = new Emoji("\u{1F423}", "Hatching Chick");
+    const babyChick = new Emoji("\u{1F424}", "Baby Chick");
+    const frontFacingBabyChick = new Emoji("\u{1F425}", "Front-Facing Baby Chick");
+    const bird = new Emoji("\u{1F426}", "Bird");
+    const penguin = new Emoji("\u{1F427}", "Penguin");
+    const koala = new Emoji("\u{1F428}", "Koala");
+    const poodle = new Emoji("\u{1F429}", "Poodle");
+    const camel = new Emoji("\u{1F42A}", "Camel");
+    const twoHumpCamel = new Emoji("\u{1F42B}", "Two-Hump Camel");
+    const dolphin = new Emoji("\u{1F42C}", "Dolphin");
+    const mouseFace = new Emoji("\u{1F42D}", "Mouse Face");
+    const cowFace = new Emoji("\u{1F42E}", "Cow Face");
+    const tigerFace = new Emoji("\u{1F42F}", "Tiger Face");
+    const rabbitFace = new Emoji("\u{1F430}", "Rabbit Face");
+    const catFace = new Emoji("\u{1F431}", "Cat Face");
+    const dragonFace = new Emoji("\u{1F432}", "Dragon Face");
+    const spoutingWhale = new Emoji("\u{1F433}", "Spouting Whale");
+    const horseFace = new Emoji("\u{1F434}", "Horse Face");
+    const monkeyFace = new Emoji("\u{1F435}", "Monkey Face");
+    const dogFace = new Emoji("\u{1F436}", "Dog Face");
+    const pigFace = new Emoji("\u{1F437}", "Pig Face");
+    const frog = new Emoji("\u{1F438}", "Frog");
+    const hamster = new Emoji("\u{1F439}", "Hamster");
+    const wolf = new Emoji("\u{1F43A}", "Wolf");
+    const panda = new Emoji("\u{1F43C}", "Panda");
+    const pigNose = new Emoji("\u{1F43D}", "Pig Nose");
+    const pawPrints = new Emoji("\u{1F43E}", "Paw Prints");
+    const chipmunk = new Emoji("\u{1F43F}\uFE0F", "Chipmunk");
+    const dove = new Emoji("\u{1F54A}\uFE0F", "Dove");
+    const spider = new Emoji("\u{1F577}\uFE0F", "Spider");
+    const spiderWeb = new Emoji("\u{1F578}\uFE0F", "Spider Web");
+    const lion = new Emoji("\u{1F981}", "Lion");
+    const scorpion = new Emoji("\u{1F982}", "Scorpion");
+    const turkey = new Emoji("\u{1F983}", "Turkey");
+    const unicorn = new Emoji("\u{1F984}", "Unicorn");
+    const eagle = new Emoji("\u{1F985}", "Eagle");
+    const duck = new Emoji("\u{1F986}", "Duck");
+    const bat = new Emoji("\u{1F987}", "Bat");
+    const shark = new Emoji("\u{1F988}", "Shark");
+    const owl = new Emoji("\u{1F989}", "Owl");
+    const fox = new Emoji("\u{1F98A}", "Fox");
+    const butterfly = new Emoji("\u{1F98B}", "Butterfly");
+    const deer = new Emoji("\u{1F98C}", "Deer");
+    const gorilla = new Emoji("\u{1F98D}", "Gorilla");
+    const lizard = new Emoji("\u{1F98E}", "Lizard");
+    const rhinoceros = new Emoji("\u{1F98F}", "Rhinoceros");
+    const giraffe = new Emoji("\u{1F992}", "Giraffe");
+    const zebra = new Emoji("\u{1F993}", "Zebra");
+    const hedgehog = new Emoji("\u{1F994}", "Hedgehog");
+    const sauropod = new Emoji("\u{1F995}", "Sauropod");
+    const tRex = new Emoji("\u{1F996}", "T-Rex");
+    const cricket = new Emoji("\u{1F997}", "Cricket");
+    const kangaroo = new Emoji("\u{1F998}", "Kangaroo");
+    const llama = new Emoji("\u{1F999}", "Llama");
+    const peacock = new Emoji("\u{1F99A}", "Peacock");
+    const hippopotamus = new Emoji("\u{1F99B}", "Hippopotamus");
+    const parrot = new Emoji("\u{1F99C}", "Parrot");
+    const raccoon = new Emoji("\u{1F99D}", "Raccoon");
+    const mosquito = new Emoji("\u{1F99F}", "Mosquito");
+    const microbe = new Emoji("\u{1F9A0}", "Microbe");
+    const badger = new Emoji("\u{1F9A1}", "Badger");
+    const swan = new Emoji("\u{1F9A2}", "Swan");
+    const sloth = new Emoji("\u{1F9A5}", "Sloth");
+    const otter = new Emoji("\u{1F9A6}", "Otter");
+    const orangutan = new Emoji("\u{1F9A7}", "Orangutan");
+    const skunk = new Emoji("\u{1F9A8}", "Skunk");
+    const flamingo = new Emoji("\u{1F9A9}", "Flamingo");
+    const guideDog = new Emoji("\u{1F9AE}", "Guide Dog");
+    const whiteFlower = new Emoji("\u{1F4AE}", "White Flower");
+    const seedling = new Emoji("\u{1F331}", "Seedling");
+    const evergreenTree = new Emoji("\u{1F332}", "Evergreen Tree");
+    const deciduousTree = new Emoji("\u{1F333}", "Deciduous Tree");
+    const palmTree = new Emoji("\u{1F334}", "Palm Tree");
+    const cactus = new Emoji("\u{1F335}", "Cactus");
+    const tulip = new Emoji("\u{1F337}", "Tulip");
+    const cherryBlossom = new Emoji("\u{1F338}", "Cherry Blossom");
+    const rose = new Emoji("\u{1F339}", "Rose");
+    const hibiscus = new Emoji("\u{1F33A}", "Hibiscus");
+    const sunflower = new Emoji("\u{1F33B}", "Sunflower");
+    const blossom = new Emoji("\u{1F33C}", "Blossom");
+    const herb = new Emoji("\u{1F33F}", "Herb");
+    const fourLeafClover = new Emoji("\u{1F340}", "Four Leaf Clover");
+    const mapleLeaf = new Emoji("\u{1F341}", "Maple Leaf");
+    const fallenLeaf = new Emoji("\u{1F342}", "Fallen Leaf");
+    const leafFlutteringInWind = new Emoji("\u{1F343}", "Leaf Fluttering in Wind");
+    const rosette = new Emoji("\u{1F3F5}\uFE0F", "Rosette");
+    const bouquet = new Emoji("\u{1F490}", "Bouquet");
+    const wiltedFlower = new Emoji("\u{1F940}", "Wilted Flower");
+    const shamrock = new Emoji("\u2618\uFE0F", "Shamrock");
+    const banana = new Emoji("\u{1F34C}", "Banana");
+    const hotDog = new Emoji("\u{1F32D}", "Hot Dog");
+    const taco = new Emoji("\u{1F32E}", "Taco");
+    const burrito = new Emoji("\u{1F32F}", "Burrito");
+    const chestnut = new Emoji("\u{1F330}", "Chestnut");
+    const hotPepper = new Emoji("\u{1F336}\uFE0F", "Hot Pepper");
+    const earOfCorn = new Emoji("\u{1F33D}", "Ear of Corn");
+    const mushroom = new Emoji("\u{1F344}", "Mushroom");
+    const tomato = new Emoji("\u{1F345}", "Tomato");
+    const eggplant = new Emoji("\u{1F346}", "Eggplant");
+    const grapes = new Emoji("\u{1F347}", "Grapes");
+    const melon = new Emoji("\u{1F348}", "Melon");
+    const watermelon = new Emoji("\u{1F349}", "Watermelon");
+    const tangerine = new Emoji("\u{1F34A}", "Tangerine");
+    const lemon = new Emoji("\u{1F34B}", "Lemon");
+    const pineapple = new Emoji("\u{1F34D}", "Pineapple");
+    const redApple = new Emoji("\u{1F34E}", "Red Apple");
+    const greenApple = new Emoji("\u{1F34F}", "Green Apple");
+    const pear = new Emoji("\u{1F350}", "Pear");
+    const peach = new Emoji("\u{1F351}", "Peach");
+    const cherries = new Emoji("\u{1F352}", "Cherries");
+    const strawberry = new Emoji("\u{1F353}", "Strawberry");
+    const hamburger = new Emoji("\u{1F354}", "Hamburger");
+    const pizza = new Emoji("\u{1F355}", "Pizza");
+    const meatOnBone = new Emoji("\u{1F356}", "Meat on Bone");
+    const poultryLeg = new Emoji("\u{1F357}", "Poultry Leg");
+    const riceCracker = new Emoji("\u{1F358}", "Rice Cracker");
+    const riceBall = new Emoji("\u{1F359}", "Rice Ball");
+    const cookedRice = new Emoji("\u{1F35A}", "Cooked Rice");
+    const curryRice = new Emoji("\u{1F35B}", "Curry Rice");
+    const steamingBowl = new Emoji("\u{1F35C}", "Steaming Bowl");
+    const spaghetti = new Emoji("\u{1F35D}", "Spaghetti");
+    const bread = new Emoji("\u{1F35E}", "Bread");
+    const frenchFries = new Emoji("\u{1F35F}", "French Fries");
+    const roastedSweetPotato = new Emoji("\u{1F360}", "Roasted Sweet Potato");
+    const dango = new Emoji("\u{1F361}", "Dango");
+    const oden = new Emoji("\u{1F362}", "Oden");
+    const sushi = new Emoji("\u{1F363}", "Sushi");
+    const friedShrimp = new Emoji("\u{1F364}", "Fried Shrimp");
+    const fishCakeWithSwirl = new Emoji("\u{1F365}", "Fish Cake with Swirl");
+    const bentoBox = new Emoji("\u{1F371}", "Bento Box");
+    const potOfFood = new Emoji("\u{1F372}", "Pot of Food");
+    const popcorn = new Emoji("\u{1F37F}", "Popcorn");
+    const croissant = new Emoji("\u{1F950}", "Croissant");
+    const avocado = new Emoji("\u{1F951}", "Avocado");
+    const cucumber = new Emoji("\u{1F952}", "Cucumber");
+    const bacon = new Emoji("\u{1F953}", "Bacon");
+    const potato = new Emoji("\u{1F954}", "Potato");
+    const carrot = new Emoji("\u{1F955}", "Carrot");
+    const baguetteBread = new Emoji("\u{1F956}", "Baguette Bread");
+    const greenSalad = new Emoji("\u{1F957}", "Green Salad");
+    const shallowPanOfFood = new Emoji("\u{1F958}", "Shallow Pan of Food");
+    const stuffedFlatbread = new Emoji("\u{1F959}", "Stuffed Flatbread");
+    const egg = new Emoji("\u{1F95A}", "Egg");
+    const peanuts = new Emoji("\u{1F95C}", "Peanuts");
+    const kiwiFruit = new Emoji("\u{1F95D}", "Kiwi Fruit");
+    const pancakes = new Emoji("\u{1F95E}", "Pancakes");
+    const dumpling = new Emoji("\u{1F95F}", "Dumpling");
+    const fortuneCookie = new Emoji("\u{1F960}", "Fortune Cookie");
+    const takeoutBox = new Emoji("\u{1F961}", "Takeout Box");
+    const bowlWithSpoon = new Emoji("\u{1F963}", "Bowl with Spoon");
+    const coconut = new Emoji("\u{1F965}", "Coconut");
+    const broccoli = new Emoji("\u{1F966}", "Broccoli");
+    const pretzel = new Emoji("\u{1F968}", "Pretzel");
+    const cutOfMeat = new Emoji("\u{1F969}", "Cut of Meat");
+    const sandwich = new Emoji("\u{1F96A}", "Sandwich");
+    const cannedFood = new Emoji("\u{1F96B}", "Canned Food");
+    const leafyGreen = new Emoji("\u{1F96C}", "Leafy Green");
+    const mango = new Emoji("\u{1F96D}", "Mango");
+    const moonCake = new Emoji("\u{1F96E}", "Moon Cake");
+    const bagel = new Emoji("\u{1F96F}", "Bagel");
+    const crab = new Emoji("\u{1F980}", "Crab");
+    const shrimp = new Emoji("\u{1F990}", "Shrimp");
+    const squid = new Emoji("\u{1F991}", "Squid");
+    const lobster = new Emoji("\u{1F99E}", "Lobster");
+    const oyster = new Emoji("\u{1F9AA}", "Oyster");
+    const cheeseWedge = new Emoji("\u{1F9C0}", "Cheese Wedge");
+    const salt = new Emoji("\u{1F9C2}", "Salt");
+    const garlic = new Emoji("\u{1F9C4}", "Garlic");
+    const onion = new Emoji("\u{1F9C5}", "Onion");
+    const falafel = new Emoji("\u{1F9C6}", "Falafel");
+    const waffle = new Emoji("\u{1F9C7}", "Waffle");
+    const butter = new Emoji("\u{1F9C8}", "Butter");
+    const softIceCream = new Emoji("\u{1F366}", "Soft Ice Cream");
+    const shavedIce = new Emoji("\u{1F367}", "Shaved Ice");
+    const iceCream = new Emoji("\u{1F368}", "Ice Cream");
+    const doughnut = new Emoji("\u{1F369}", "Doughnut");
+    const cookie = new Emoji("\u{1F36A}", "Cookie");
+    const chocolateBar = new Emoji("\u{1F36B}", "Chocolate Bar");
+    const candy = new Emoji("\u{1F36C}", "Candy");
+    const lollipop = new Emoji("\u{1F36D}", "Lollipop");
+    const custard = new Emoji("\u{1F36E}", "Custard");
+    const honeyPot = new Emoji("\u{1F36F}", "Honey Pot");
+    const shortcake = new Emoji("\u{1F370}", "Shortcake");
+    const birthdayCake = new Emoji("\u{1F382}", "Birthday Cake");
+    const pie = new Emoji("\u{1F967}", "Pie");
+    const cupcake = new Emoji("\u{1F9C1}", "Cupcake");
+    const teacupWithoutHandle = new Emoji("\u{1F375}", "Teacup Without Handle");
+    const sake = new Emoji("\u{1F376}", "Sake");
+    const wineGlass = new Emoji("\u{1F377}", "Wine Glass");
+    const cocktailGlass = new Emoji("\u{1F378}", "Cocktail Glass");
+    const tropicalDrink = new Emoji("\u{1F379}", "Tropical Drink");
+    const beerMug = new Emoji("\u{1F37A}", "Beer Mug");
+    const clinkingBeerMugs = new Emoji("\u{1F37B}", "Clinking Beer Mugs");
+    const babyBottle = new Emoji("\u{1F37C}", "Baby Bottle");
+    const bottleWithPoppingCork = new Emoji("\u{1F37E}", "Bottle with Popping Cork");
+    const clinkingGlasses = new Emoji("\u{1F942}", "Clinking Glasses");
+    const tumblerGlass = new Emoji("\u{1F943}", "Tumbler Glass");
+    const glassOfMilk = new Emoji("\u{1F95B}", "Glass of Milk");
+    const cupWithStraw = new Emoji("\u{1F964}", "Cup with Straw");
+    const beverageBox = new Emoji("\u{1F9C3}", "Beverage Box");
+    const mate = new Emoji("\u{1F9C9}", "Mate");
+    const ice = new Emoji("\u{1F9CA}", "Ice");
+    const hotBeverage = new Emoji("\u2615", "Hot Beverage");
+    const forkAndKnife = new Emoji("\u{1F374}", "Fork and Knife");
+    const forkAndKnifeWithPlate = new Emoji("\u{1F37D}\uFE0F", "Fork and Knife with Plate");
+    const amphora = new Emoji("\u{1F3FA}", "Amphora");
+    const kitchenKnife = new Emoji("\u{1F52A}", "Kitchen Knife");
+    const spoon = new Emoji("\u{1F944}", "Spoon");
+    const chopsticks = new Emoji("\u{1F962}", "Chopsticks");
+    const whiteFlag = new Emoji("\u{1F3F3}\uFE0F", "White Flag");
+    const rainbowFlag = new Emoji("\u{1F3F3}\uFE0F\u200D\u{1F308}", "Rainbow Flag");
+    const transgenderFlag = new Emoji("\u{1F3F3}\uFE0F\u200D\u26A7\uFE0F", "Transgender Flag");
+    const blackFlag = new Emoji("\u{1F3F4}", "Black Flag");
+    const pirateFlag = new Emoji("\u{1F3F4}\u200D\u2620\uFE0F", "Pirate Flag");
+    const crossedFlags = new Emoji("\u{1F38C}", "Crossed Flags");
+    const chequeredFlag = new Emoji("\u{1F3C1}", "Chequered Flag");
+    const flagEngland = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England");
+    const flagScotland = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland");
+    const flagWales = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales");
+    const triangularFlag = new Emoji("\u{1F6A9}", "Triangular Flag");
+    const motorcycle = new Emoji("\u{1F3CD}\uFE0F", "Motorcycle");
+    const racingCar = new Emoji("\u{1F3CE}\uFE0F", "Racing Car");
+    const seat = new Emoji("\u{1F4BA}", "Seat");
+    const helicopter = new Emoji("\u{1F681}", "Helicopter");
+    const locomotive = new Emoji("\u{1F682}", "Locomotive");
+    const railwayCar = new Emoji("\u{1F683}", "Railway Car");
+    const highSpeedTrain = new Emoji("\u{1F684}", "High-Speed Train");
+    const bulletTrain = new Emoji("\u{1F685}", "Bullet Train");
+    const train = new Emoji("\u{1F686}", "Train");
+    const metro = new Emoji("\u{1F687}", "Metro");
+    const lightRail = new Emoji("\u{1F688}", "Light Rail");
+    const station = new Emoji("\u{1F689}", "Station");
+    const tram = new Emoji("\u{1F68A}", "Tram");
+    const tramCar = new Emoji("\u{1F68B}", "Tram Car");
+    const bus = new Emoji("\u{1F68C}", "Bus");
+    const oncomingBus = new Emoji("\u{1F68D}", "Oncoming Bus");
+    const trolleybus = new Emoji("\u{1F68E}", "Trolleybus");
+    const busStop = new Emoji("\u{1F68F}", "Bus Stop");
+    const minibus = new Emoji("\u{1F690}", "Minibus");
+    const ambulance = new Emoji("\u{1F691}", "Ambulance");
+    const taxi = new Emoji("\u{1F695}", "Taxi");
+    const oncomingTaxi = new Emoji("\u{1F696}", "Oncoming Taxi");
+    const automobile = new Emoji("\u{1F697}", "Automobile");
+    const oncomingAutomobile = new Emoji("\u{1F698}", "Oncoming Automobile");
+    const sportUtilityVehicle = new Emoji("\u{1F699}", "Sport Utility Vehicle");
+    const deliveryTruck = new Emoji("\u{1F69A}", "Delivery Truck");
+    const articulatedLorry = new Emoji("\u{1F69B}", "Articulated Lorry");
+    const tractor = new Emoji("\u{1F69C}", "Tractor");
+    const monorail = new Emoji("\u{1F69D}", "Monorail");
+    const mountainRailway = new Emoji("\u{1F69E}", "Mountain Railway");
+    const suspensionRailway = new Emoji("\u{1F69F}", "Suspension Railway");
+    const mountainCableway = new Emoji("\u{1F6A0}", "Mountain Cableway");
+    const aerialTramway = new Emoji("\u{1F6A1}", "Aerial Tramway");
+    const ship = new Emoji("\u{1F6A2}", "Ship");
+    const speedboat = new Emoji("\u{1F6A4}", "Speedboat");
+    const horizontalTrafficLight = new Emoji("\u{1F6A5}", "Horizontal Traffic Light");
+    const verticalTrafficLight = new Emoji("\u{1F6A6}", "Vertical Traffic Light");
+    const construction = new Emoji("\u{1F6A7}", "Construction");
+    const bicycle = new Emoji("\u{1F6B2}", "Bicycle");
+    const stopSign = new Emoji("\u{1F6D1}", "Stop Sign");
+    const oilDrum = new Emoji("\u{1F6E2}\uFE0F", "Oil Drum");
+    const motorway = new Emoji("\u{1F6E3}\uFE0F", "Motorway");
+    const railwayTrack = new Emoji("\u{1F6E4}\uFE0F", "Railway Track");
+    const motorBoat = new Emoji("\u{1F6E5}\uFE0F", "Motor Boat");
+    const smallAirplane = new Emoji("\u{1F6E9}\uFE0F", "Small Airplane");
+    const airplaneDeparture = new Emoji("\u{1F6EB}", "Airplane Departure");
+    const airplaneArrival = new Emoji("\u{1F6EC}", "Airplane Arrival");
+    const satellite = new Emoji("\u{1F6F0}\uFE0F", "Satellite");
+    const passengerShip = new Emoji("\u{1F6F3}\uFE0F", "Passenger Ship");
+    const kickScooter = new Emoji("\u{1F6F4}", "Kick Scooter");
+    const motorScooter = new Emoji("\u{1F6F5}", "Motor Scooter");
+    const canoe = new Emoji("\u{1F6F6}", "Canoe");
+    const flyingSaucer = new Emoji("\u{1F6F8}", "Flying Saucer");
+    const skateboard = new Emoji("\u{1F6F9}", "Skateboard");
+    const autoRickshaw = new Emoji("\u{1F6FA}", "Auto Rickshaw");
+    const parachute = new Emoji("\u{1FA82}", "Parachute");
+    const anchor = new Emoji("\u2693", "Anchor");
+    const ferry = new Emoji("\u26F4\uFE0F", "Ferry");
+    const sailboat = new Emoji("\u26F5", "Sailboat");
+    const fuelPump = new Emoji("\u26FD", "Fuel Pump");
+    const oneOClock = new Emoji("\u{1F550}", "One O’Clock");
+    const twoOClock = new Emoji("\u{1F551}", "Two O’Clock");
+    const threeOClock = new Emoji("\u{1F552}", "Three O’Clock");
+    const fourOClock = new Emoji("\u{1F553}", "Four O’Clock");
+    const fiveOClock = new Emoji("\u{1F554}", "Five O’Clock");
+    const sixOClock = new Emoji("\u{1F555}", "Six O’Clock");
+    const sevenOClock = new Emoji("\u{1F556}", "Seven O’Clock");
+    const eightOClock = new Emoji("\u{1F557}", "Eight O’Clock");
+    const nineOClock = new Emoji("\u{1F558}", "Nine O’Clock");
+    const tenOClock = new Emoji("\u{1F559}", "Ten O’Clock");
+    const elevenOClock = new Emoji("\u{1F55A}", "Eleven O’Clock");
+    const twelveOClock = new Emoji("\u{1F55B}", "Twelve O’Clock");
+    const oneThirty = new Emoji("\u{1F55C}", "One-Thirty");
+    const twoThirty = new Emoji("\u{1F55D}", "Two-Thirty");
+    const threeThirty = new Emoji("\u{1F55E}", "Three-Thirty");
+    const fourThirty = new Emoji("\u{1F55F}", "Four-Thirty");
+    const fiveThirty = new Emoji("\u{1F560}", "Five-Thirty");
+    const sixThirty = new Emoji("\u{1F561}", "Six-Thirty");
+    const sevenThirty = new Emoji("\u{1F562}", "Seven-Thirty");
+    const eightThirty = new Emoji("\u{1F563}", "Eight-Thirty");
+    const nineThirty = new Emoji("\u{1F564}", "Nine-Thirty");
+    const tenThirty = new Emoji("\u{1F565}", "Ten-Thirty");
+    const elevenThirty = new Emoji("\u{1F566}", "Eleven-Thirty");
+    const twelveThirty = new Emoji("\u{1F567}", "Twelve-Thirty");
+    const mantelpieceClock = new Emoji("\u{1F570}\uFE0F", "Mantelpiece Clock");
+    const watch = new Emoji("\u231A", "Watch");
+    const alarmClock = new Emoji("\u23F0", "Alarm Clock");
+    const stopwatch = new Emoji("\u23F1\uFE0F", "Stopwatch");
+    const timerClock = new Emoji("\u23F2\uFE0F", "Timer Clock");
+    const hourglassDone = new Emoji("\u231B", "Hourglass Done");
+    const hourglassNotDone = new Emoji("\u23F3", "Hourglass Not Done");
+    const clockwiseVerticalArrows = new Emoji("\u{1F503}\uFE0F", "Clockwise Vertical Arrows");
+    const counterclockwiseArrowsButton = new Emoji("\u{1F504}\uFE0F", "Counterclockwise Arrows Button");
+    const leftRightArrow = new Emoji("\u2194\uFE0F", "Left-Right Arrow");
+    const upDownArrow = new Emoji("\u2195\uFE0F", "Up-Down Arrow");
+    const upLeftArrow = new Emoji("\u2196\uFE0F", "Up-Left Arrow");
+    const upRightArrow = new Emoji("\u2197\uFE0F", "Up-Right Arrow");
+    const downRightArrow = new Emoji("\u2198\uFE0F", "Down-Right Arrow");
+    const downLeftArrow = new Emoji("\u2199\uFE0F", "Down-Left Arrow");
+    const rightArrowCurvingLeft = new Emoji("\u21A9\uFE0F", "Right Arrow Curving Left");
+    const leftArrowCurvingRight = new Emoji("\u21AA\uFE0F", "Left Arrow Curving Right");
+    const rightArrow = new Emoji("\u27A1\uFE0F", "Right Arrow");
+    const rightArrowCurvingUp = new Emoji("\u2934\uFE0F", "Right Arrow Curving Up");
+    const rightArrowCurvingDown = new Emoji("\u2935\uFE0F", "Right Arrow Curving Down");
+    const leftArrow = new Emoji("\u2B05\uFE0F", "Left Arrow");
+    const upArrow = new Emoji("\u2B06\uFE0F", "Up Arrow");
+    const downArrow = new Emoji("\u2B07\uFE0F", "Down Arrow");
+    const cLButton = new Emoji("\u{1F191}", "CL Button");
+    const coolButton = new Emoji("\u{1F192}", "Cool Button");
+    const freeButton = new Emoji("\u{1F193}", "Free Button");
+    const iDButton = new Emoji("\u{1F194}", "ID Button");
+    const newButton = new Emoji("\u{1F195}", "New Button");
+    const nGButton = new Emoji("\u{1F196}", "NG Button");
+    const oKButton = new Emoji("\u{1F197}", "OK Button");
+    const sOSButton = new Emoji("\u{1F198}", "SOS Button");
+    const upButton = new Emoji("\u{1F199}", "Up! Button");
+    const vsButton = new Emoji("\u{1F19A}", "Vs Button");
+    const radioButton = new Emoji("\u{1F518}", "Radio Button");
+    const backArrow = new Emoji("\u{1F519}", "Back Arrow");
+    const endArrow = new Emoji("\u{1F51A}", "End Arrow");
+    const onArrow = new Emoji("\u{1F51B}", "On! Arrow");
+    const soonArrow = new Emoji("\u{1F51C}", "Soon Arrow");
+    const topArrow = new Emoji("\u{1F51D}", "Top Arrow");
+    const checkBoxWithCheck = new Emoji("\u2611\uFE0F", "Check Box with Check");
+    const inputLatinUppercase = new Emoji("\u{1F520}", "Input Latin Uppercase");
+    const inputLatinLowercase = new Emoji("\u{1F521}", "Input Latin Lowercase");
+    const inputNumbers = new Emoji("\u{1F522}", "Input Numbers");
+    const inputSymbols = new Emoji("\u{1F523}", "Input Symbols");
+    const inputLatinLetters = new Emoji("\u{1F524}", "Input Latin Letters");
+    const shuffleTracksButton = new Emoji("\u{1F500}", "Shuffle Tracks Button");
+    const repeatButton = new Emoji("\u{1F501}", "Repeat Button");
+    const repeatSingleButton = new Emoji("\u{1F502}", "Repeat Single Button");
+    const upwardsButton = new Emoji("\u{1F53C}", "Upwards Button");
+    const downwardsButton = new Emoji("\u{1F53D}", "Downwards Button");
+    const playButton = new Emoji("\u25B6\uFE0F", "Play Button");
+    const reverseButton = new Emoji("\u25C0\uFE0F", "Reverse Button");
+    const ejectButton = new Emoji("\u23CF\uFE0F", "Eject Button");
+    const fastForwardButton = new Emoji("\u23E9", "Fast-Forward Button");
+    const fastReverseButton = new Emoji("\u23EA", "Fast Reverse Button");
+    const fastUpButton = new Emoji("\u23EB", "Fast Up Button");
+    const fastDownButton = new Emoji("\u23EC", "Fast Down Button");
+    const nextTrackButton = new Emoji("\u23ED\uFE0F", "Next Track Button");
+    const lastTrackButton = new Emoji("\u23EE\uFE0F", "Last Track Button");
+    const playOrPauseButton = new Emoji("\u23EF\uFE0F", "Play or Pause Button");
+    const pauseButton = new Emoji("\u23F8\uFE0F", "Pause Button");
+    const stopButton = new Emoji("\u23F9\uFE0F", "Stop Button");
+    const recordButton = new Emoji("\u23FA\uFE0F", "Record Button");
+    const aries = new Emoji("\u2648", "Aries");
+    const taurus = new Emoji("\u2649", "Taurus");
+    const gemini = new Emoji("\u264A", "Gemini");
+    const cancer = new Emoji("\u264B", "Cancer");
+    const leo = new Emoji("\u264C", "Leo");
+    const virgo = new Emoji("\u264D", "Virgo");
+    const libra = new Emoji("\u264E", "Libra");
+    const scorpio = new Emoji("\u264F", "Scorpio");
+    const sagittarius = new Emoji("\u2650", "Sagittarius");
+    const capricorn = new Emoji("\u2651", "Capricorn");
+    const aquarius = new Emoji("\u2652", "Aquarius");
+    const pisces = new Emoji("\u2653", "Pisces");
+    const ophiuchus = new Emoji("\u26CE", "Ophiuchus");
+    const digitZero = new Emoji("\u0030\uFE0F", "Digit Zero");
+    const digitOne = new Emoji("\u0031\uFE0F", "Digit One");
+    const digitTwo = new Emoji("\u0032\uFE0F", "Digit Two");
+    const digitThree = new Emoji("\u0033\uFE0F", "Digit Three");
+    const digitFour = new Emoji("\u0034\uFE0F", "Digit Four");
+    const digitFive = new Emoji("\u0035\uFE0F", "Digit Five");
+    const digitSix = new Emoji("\u0036\uFE0F", "Digit Six");
+    const digitSeven = new Emoji("\u0037\uFE0F", "Digit Seven");
+    const digitEight = new Emoji("\u0038\uFE0F", "Digit Eight");
+    const digitNine = new Emoji("\u0039\uFE0F", "Digit Nine");
+    const asterisk = new Emoji("\u002A\uFE0F", "Asterisk");
+    const numberSign = new Emoji("\u0023\uFE0F", "Number Sign");
+    const keycapDigitZero = new Emoji("\u0030\uFE0F\u20E3", "Keycap Digit Zero");
+    const keycapDigitOne = new Emoji("\u0031\uFE0F\u20E3", "Keycap Digit One");
+    const keycapDigitTwo = new Emoji("\u0032\uFE0F\u20E3", "Keycap Digit Two");
+    const keycapDigitThree = new Emoji("\u0033\uFE0F\u20E3", "Keycap Digit Three");
+    const keycapDigitFour = new Emoji("\u0034\uFE0F\u20E3", "Keycap Digit Four");
+    const keycapDigitFive = new Emoji("\u0035\uFE0F\u20E3", "Keycap Digit Five");
+    const keycapDigitSix = new Emoji("\u0036\uFE0F\u20E3", "Keycap Digit Six");
+    const keycapDigitSeven = new Emoji("\u0037\uFE0F\u20E3", "Keycap Digit Seven");
+    const keycapDigitEight = new Emoji("\u0038\uFE0F\u20E3", "Keycap Digit Eight");
+    const keycapDigitNine = new Emoji("\u0039\uFE0F\u20E3", "Keycap Digit Nine");
+    const keycapAsterisk = new Emoji("\u002A\uFE0F\u20E3", "Keycap Asterisk");
+    const keycapNumberSign = new Emoji("\u0023\uFE0F\u20E3", "Keycap Number Sign");
+    const keycap10 = new Emoji("\u{1F51F}", "Keycap: 10");
+    const multiply = new Emoji("\u2716\uFE0F", "Multiply");
+    const plus = new Emoji("\u2795", "Plus");
+    const minus = new Emoji("\u2796", "Minus");
+    const divide = new Emoji("\u2797", "Divide");
+    const spadeSuit = new Emoji("\u2660\uFE0F", "Spade Suit");
+    const clubSuit = new Emoji("\u2663\uFE0F", "Club Suit");
+    const heartSuit = new Emoji("\u2665\uFE0F", "Heart Suit");
+    const diamondSuit = new Emoji("\u2666\uFE0F", "Diamond Suit");
+    const mahjongRedDragon = new Emoji("\u{1F004}", "Mahjong Red Dragon");
+    const joker = new Emoji("\u{1F0CF}", "Joker");
+    const directHit = new Emoji("\u{1F3AF}", "Direct Hit");
+    const slotMachine = new Emoji("\u{1F3B0}", "Slot Machine");
+    const pool8Ball = new Emoji("\u{1F3B1}", "Pool 8 Ball");
+    const gameDie = new Emoji("\u{1F3B2}", "Game Die");
+    const bowling = new Emoji("\u{1F3B3}", "Bowling");
+    const flowerPlayingCards = new Emoji("\u{1F3B4}", "Flower Playing Cards");
+    const puzzlePiece = new Emoji("\u{1F9E9}", "Puzzle Piece");
+    const chessPawn = new Emoji("\u265F\uFE0F", "Chess Pawn");
+    const yoYo = new Emoji("\u{1FA80}", "Yo-Yo");
+    const kite = new Emoji("\u{1FA81}", "Kite");
+    const runningShirt = new Emoji("\u{1F3BD}", "Running Shirt");
+    const tennis = new Emoji("\u{1F3BE}", "Tennis");
+    const skis = new Emoji("\u{1F3BF}", "Skis");
+    const basketball = new Emoji("\u{1F3C0}", "Basketball");
+    const sportsMedal = new Emoji("\u{1F3C5}", "Sports Medal");
+    const trophy = new Emoji("\u{1F3C6}", "Trophy");
+    const americanFootball = new Emoji("\u{1F3C8}", "American Football");
+    const rugbyFootball = new Emoji("\u{1F3C9}", "Rugby Football");
+    const cricketGame = new Emoji("\u{1F3CF}", "Cricket Game");
+    const volleyball = new Emoji("\u{1F3D0}", "Volleyball");
+    const fieldHockey = new Emoji("\u{1F3D1}", "Field Hockey");
+    const iceHockey = new Emoji("\u{1F3D2}", "Ice Hockey");
+    const pingPong = new Emoji("\u{1F3D3}", "Ping Pong");
+    const badminton = new Emoji("\u{1F3F8}", "Badminton");
+    const sled = new Emoji("\u{1F6F7}", "Sled");
+    const goalNet = new Emoji("\u{1F945}", "Goal Net");
+    const medal1stPlace = new Emoji("\u{1F947}", "Medal: 1st Place");
+    const medal2ndPlace = new Emoji("\u{1F948}", "Medal: 2nd Place");
+    const medal3rdPlace = new Emoji("\u{1F949}", "Medal: 3rd Place");
+    const boxingGlove = new Emoji("\u{1F94A}", "Boxing Glove");
+    const curlingStone = new Emoji("\u{1F94C}", "Curling Stone");
+    const lacrosse = new Emoji("\u{1F94D}", "Lacrosse");
+    const softball = new Emoji("\u{1F94E}", "Softball");
+    const flyingDisc = new Emoji("\u{1F94F}", "Flying Disc");
+    const soccerBall = new Emoji("\u26BD", "Soccer Ball");
+    const baseball = new Emoji("\u26BE", "Baseball");
+    const iceSkate = new Emoji("\u26F8\uFE0F", "Ice Skate");
+    const topHat = new Emoji("\u{1F3A9}", "Top Hat");
+    const divingMask = new Emoji("\u{1F93F}", "Diving Mask");
+    const womanSHat = new Emoji("\u{1F452}", "Woman’s Hat");
+    const glasses = new Emoji("\u{1F453}", "Glasses");
+    const sunglasses = new Emoji("\u{1F576}\uFE0F", "Sunglasses");
+    const necktie = new Emoji("\u{1F454}", "Necktie");
+    const tShirt = new Emoji("\u{1F455}", "T-Shirt");
+    const jeans = new Emoji("\u{1F456}", "Jeans");
+    const dress = new Emoji("\u{1F457}", "Dress");
+    const kimono = new Emoji("\u{1F458}", "Kimono");
+    const bikini = new Emoji("\u{1F459}", "Bikini");
+    const womanSClothes = new Emoji("\u{1F45A}", "Woman’s Clothes");
+    const purse = new Emoji("\u{1F45B}", "Purse");
+    const handbag = new Emoji("\u{1F45C}", "Handbag");
+    const clutchBag = new Emoji("\u{1F45D}", "Clutch Bag");
+    const manSShoe = new Emoji("\u{1F45E}", "Man’s Shoe");
+    const runningShoe = new Emoji("\u{1F45F}", "Running Shoe");
+    const highHeeledShoe = new Emoji("\u{1F460}", "High-Heeled Shoe");
+    const womanSSandal = new Emoji("\u{1F461}", "Woman’s Sandal");
+    const womanSBoot = new Emoji("\u{1F462}", "Woman’s Boot");
+    const martialArtsUniform = new Emoji("\u{1F94B}", "Martial Arts Uniform");
+    const sari = new Emoji("\u{1F97B}", "Sari");
+    const labCoat = new Emoji("\u{1F97C}", "Lab Coat");
+    const goggles = new Emoji("\u{1F97D}", "Goggles");
+    const hikingBoot = new Emoji("\u{1F97E}", "Hiking Boot");
+    const flatShoe = new Emoji("\u{1F97F}", "Flat Shoe");
+    const billedCap = new Emoji("\u{1F9E2}", "Billed Cap");
+    const scarf = new Emoji("\u{1F9E3}", "Scarf");
+    const gloves = new Emoji("\u{1F9E4}", "Gloves");
+    const coat = new Emoji("\u{1F9E5}", "Coat");
+    const socks = new Emoji("\u{1F9E6}", "Socks");
+    const nazarAmulet = new Emoji("\u{1F9FF}", "Nazar Amulet");
+    const balletShoes = new Emoji("\u{1FA70}", "Ballet Shoes");
+    const onePieceSwimsuit = new Emoji("\u{1FA71}", "One-Piece Swimsuit");
+    const briefs = new Emoji("\u{1FA72}", "Briefs");
+    const shorts = new Emoji("\u{1FA73}", "Shorts");
+    const buildingConstruction = new Emoji("\u{1F3D7}\uFE0F", "Building Construction");
+    const houses = new Emoji("\u{1F3D8}\uFE0F", "Houses");
+    const cityscape = new Emoji("\u{1F3D9}\uFE0F", "Cityscape");
+    const derelictHouse = new Emoji("\u{1F3DA}\uFE0F", "Derelict House");
+    const classicalBuilding = new Emoji("\u{1F3DB}\uFE0F", "Classical Building");
+    const desert = new Emoji("\u{1F3DC}\uFE0F", "Desert");
+    const desertIsland = new Emoji("\u{1F3DD}\uFE0F", "Desert Island");
+    const nationalPark = new Emoji("\u{1F3DE}\uFE0F", "National Park");
+    const stadium = new Emoji("\u{1F3DF}\uFE0F", "Stadium");
+    const house = new Emoji("\u{1F3E0}", "House");
+    const houseWithGarden = new Emoji("\u{1F3E1}", "House with Garden");
+    const officeBuilding = new Emoji("\u{1F3E2}", "Office Building");
+    const japanesePostOffice = new Emoji("\u{1F3E3}", "Japanese Post Office");
+    const postOffice = new Emoji("\u{1F3E4}", "Post Office");
+    const hospital = new Emoji("\u{1F3E5}", "Hospital");
+    const bank = new Emoji("\u{1F3E6}", "Bank");
+    const aTMSign = new Emoji("\u{1F3E7}", "ATM Sign");
+    const hotel = new Emoji("\u{1F3E8}", "Hotel");
+    const loveHotel = new Emoji("\u{1F3E9}", "Love Hotel");
+    const convenienceStore = new Emoji("\u{1F3EA}", "Convenience Store");
+    const departmentStore = new Emoji("\u{1F3EC}", "Department Store");
+    const bridgeAtNight = new Emoji("\u{1F309}", "Bridge at Night");
+    const fountain = new Emoji("\u26F2", "Fountain");
+    const shoppingBags = new Emoji("\u{1F6CD}\uFE0F", "Shopping Bags");
+    const receipt = new Emoji("\u{1F9FE}", "Receipt");
+    const shoppingCart = new Emoji("\u{1F6D2}", "Shopping Cart");
+    const barberPole = new Emoji("\u{1F488}", "Barber Pole");
+    const wedding = new Emoji("\u{1F492}", "Wedding");
+    const ballotBoxWithBallot = new Emoji("\u{1F5F3}\uFE0F", "Ballot Box with Ballot");
+    const musicalScore = new Emoji("\u{1F3BC}", "Musical Score");
+    const musicalNotes = new Emoji("\u{1F3B6}", "Musical Notes");
+    const musicalNote = new Emoji("\u{1F3B5}", "Musical Note");
+    const saxophone = new Emoji("\u{1F3B7}", "Saxophone");
+    const guitar = new Emoji("\u{1F3B8}", "Guitar");
+    const musicalKeyboard = new Emoji("\u{1F3B9}", "Musical Keyboard");
+    const trumpet = new Emoji("\u{1F3BA}", "Trumpet");
+    const violin = new Emoji("\u{1F3BB}", "Violin");
+    const drum = new Emoji("\u{1F941}", "Drum");
+    const banjo = new Emoji("\u{1FA95}", "Banjo");
+    const globeShowingAmericas = new Emoji("\u{1F30E}", "Globe Showing Americas");
+    const milkyWay = new Emoji("\u{1F30C}", "Milky Way");
+    const globeShowingEuropeAfrica = new Emoji("\u{1F30D}", "Globe Showing Europe-Africa");
+    const globeShowingAsiaAustralia = new Emoji("\u{1F30F}", "Globe Showing Asia-Australia");
+    const globeWithMeridians = new Emoji("\u{1F310}", "Globe with Meridians");
+    const newMoon = new Emoji("\u{1F311}", "New Moon");
+    const waxingCrescentMoon = new Emoji("\u{1F312}", "Waxing Crescent Moon");
+    const firstQuarterMoon = new Emoji("\u{1F313}", "First Quarter Moon");
+    const waxingGibbousMoon = new Emoji("\u{1F314}", "Waxing Gibbous Moon");
+    const fullMoon = new Emoji("\u{1F315}", "Full Moon");
+    const waningGibbousMoon = new Emoji("\u{1F316}", "Waning Gibbous Moon");
+    const lastQuarterMoon = new Emoji("\u{1F317}", "Last Quarter Moon");
+    const waningCrescentMoon = new Emoji("\u{1F318}", "Waning Crescent Moon");
+    const crescentMoon = new Emoji("\u{1F319}", "Crescent Moon");
+    const newMoonFace = new Emoji("\u{1F31A}", "New Moon Face");
+    const firstQuarterMoonFace = new Emoji("\u{1F31B}", "First Quarter Moon Face");
+    const lastQuarterMoonFace = new Emoji("\u{1F31C}", "Last Quarter Moon Face");
+    const fullMoonFace = new Emoji("\u{1F31D}", "Full Moon Face");
+    const sunWithFace = new Emoji("\u{1F31E}", "Sun with Face");
+    const glowingStar = new Emoji("\u{1F31F}", "Glowing Star");
+    const shootingStar = new Emoji("\u{1F320}", "Shooting Star");
+    const comet = new Emoji("\u2604\uFE0F", "Comet");
+    const ringedPlanet = new Emoji("\u{1FA90}", "Ringed Planet");
+    const moneyBag = new Emoji("\u{1F4B0}", "Money Bag");
+    const currencyExchange = new Emoji("\u{1F4B1}", "Currency Exchange");
+    const heavyDollarSign = new Emoji("\u{1F4B2}", "Heavy Dollar Sign");
+    const creditCard = new Emoji("\u{1F4B3}", "Credit Card");
+    const yenBanknote = new Emoji("\u{1F4B4}", "Yen Banknote");
+    const dollarBanknote = new Emoji("\u{1F4B5}", "Dollar Banknote");
+    const euroBanknote = new Emoji("\u{1F4B6}", "Euro Banknote");
+    const poundBanknote = new Emoji("\u{1F4B7}", "Pound Banknote");
+    const moneyWithWings = new Emoji("\u{1F4B8}", "Money with Wings");
+    const chartIncreasingWithYen = new Emoji("\u{1F4B9}", "Chart Increasing with Yen");
+    const pen = new Emoji("\u{1F58A}\uFE0F", "Pen");
+    const fountainPen = new Emoji("\u{1F58B}\uFE0F", "Fountain Pen");
+    const paintbrush = new Emoji("\u{1F58C}\uFE0F", "Paintbrush");
+    const crayon = new Emoji("\u{1F58D}\uFE0F", "Crayon");
+    const pencil = new Emoji("\u270F\uFE0F", "Pencil");
+    const blackNib = new Emoji("\u2712\uFE0F", "Black Nib");
+    const alembic = new Emoji("\u2697\uFE0F", "Alembic");
+    const gear = new Emoji("\u2699\uFE0F", "Gear");
+    const atomSymbol = new Emoji("\u269B\uFE0F", "Atom Symbol");
+    const keyboard = new Emoji("\u2328\uFE0F", "Keyboard");
+    const telephone = new Emoji("\u260E\uFE0F", "Telephone");
+    const studioMicrophone = new Emoji("\u{1F399}\uFE0F", "Studio Microphone");
+    const levelSlider = new Emoji("\u{1F39A}\uFE0F", "Level Slider");
+    const controlKnobs = new Emoji("\u{1F39B}\uFE0F", "Control Knobs");
+    const movieCamera = new Emoji("\u{1F3A5}", "Movie Camera");
+    const headphone = new Emoji("\u{1F3A7}", "Headphone");
+    const videoGame = new Emoji("\u{1F3AE}", "Video Game");
+    const lightBulb = new Emoji("\u{1F4A1}", "Light Bulb");
+    const computerDisk = new Emoji("\u{1F4BD}", "Computer Disk");
+    const floppyDisk = new Emoji("\u{1F4BE}", "Floppy Disk");
+    const opticalDisk = new Emoji("\u{1F4BF}", "Optical Disk");
+    const dVD = new Emoji("\u{1F4C0}", "DVD");
+    const telephoneReceiver = new Emoji("\u{1F4DE}", "Telephone Receiver");
+    const pager = new Emoji("\u{1F4DF}", "Pager");
+    const faxMachine = new Emoji("\u{1F4E0}", "Fax Machine");
+    const satelliteAntenna = new Emoji("\u{1F4E1}", "Satellite Antenna");
+    const loudspeaker = new Emoji("\u{1F4E2}", "Loudspeaker");
+    const megaphone = new Emoji("\u{1F4E3}", "Megaphone");
+    const mobilePhone = new Emoji("\u{1F4F1}", "Mobile Phone");
+    const mobilePhoneWithArrow = new Emoji("\u{1F4F2}", "Mobile Phone with Arrow");
+    const mobilePhoneVibrating = new Emoji("\u{1F4F3}", "Mobile Phone Vibrating");
+    const mobilePhoneOff = new Emoji("\u{1F4F4}", "Mobile Phone Off");
+    const noMobilePhone = new Emoji("\u{1F4F5}", "No Mobile Phone");
+    const antennaBars = new Emoji("\u{1F4F6}", "Antenna Bars");
+    const camera = new Emoji("\u{1F4F7}", "Camera");
+    const cameraWithFlash = new Emoji("\u{1F4F8}", "Camera with Flash");
+    const videoCamera = new Emoji("\u{1F4F9}", "Video Camera");
+    const television = new Emoji("\u{1F4FA}", "Television");
+    const radio = new Emoji("\u{1F4FB}", "Radio");
+    const videocassette = new Emoji("\u{1F4FC}", "Videocassette");
+    const filmProjector = new Emoji("\u{1F4FD}\uFE0F", "Film Projector");
+    const dimButton = new Emoji("\u{1F505}", "Dim Button");
+    const brightButton = new Emoji("\u{1F506}", "Bright Button");
+    const mutedSpeaker = new Emoji("\u{1F507}", "Muted Speaker");
+    const speakerLowVolume = new Emoji("\u{1F508}", "Speaker Low Volume");
+    const speakerMediumVolume = new Emoji("\u{1F509}", "Speaker Medium Volume");
+    const speakerHighVolume = new Emoji("\u{1F50A}", "Speaker High Volume");
+    const battery = new Emoji("\u{1F50B}", "Battery");
+    const electricPlug = new Emoji("\u{1F50C}", "Electric Plug");
+    const magnifyingGlassTiltedLeft = new Emoji("\u{1F50D}", "Magnifying Glass Tilted Left");
+    const magnifyingGlassTiltedRight = new Emoji("\u{1F50E}", "Magnifying Glass Tilted Right");
+    const lockedWithPen = new Emoji("\u{1F50F}", "Locked with Pen");
+    const lockedWithKey = new Emoji("\u{1F510}", "Locked with Key");
+    const key = new Emoji("\u{1F511}", "Key");
+    const locked = new Emoji("\u{1F512}", "Locked");
+    const unlocked = new Emoji("\u{1F513}", "Unlocked");
+    const bell = new Emoji("\u{1F514}", "Bell");
+    const bellWithSlash = new Emoji("\u{1F515}", "Bell with Slash");
+    const bookmark = new Emoji("\u{1F516}", "Bookmark");
+    const link = new Emoji("\u{1F517}", "Link");
+    const joystick = new Emoji("\u{1F579}\uFE0F", "Joystick");
+    const desktopComputer = new Emoji("\u{1F5A5}\uFE0F", "Desktop Computer");
+    const printer = new Emoji("\u{1F5A8}\uFE0F", "Printer");
+    const computerMouse = new Emoji("\u{1F5B1}\uFE0F", "Computer Mouse");
+    const trackball = new Emoji("\u{1F5B2}\uFE0F", "Trackball");
+    const cardIndexDividers = new Emoji("\u{1F5C2}", "Card Index Dividers");
+    const cardFileBox = new Emoji("\u{1F5C3}", "Card File Box");
+    const fileCabinet = new Emoji("\u{1F5C4}", "File Cabinet");
+    const wastebasket = new Emoji("\u{1F5D1}", "Wastebasket");
+    const spiralNotePad = new Emoji("\u{1F5D2}", "Spiral Note Pad");
+    const spiralCalendar = new Emoji("\u{1F5D3}", "Spiral Calendar");
+    const compression = new Emoji("\u{1F5DC}", "Compression");
+    const oldKey = new Emoji("\u{1F5DD}", "Old Key");
+    const outboxTray = new Emoji("\u{1F4E4}", "Outbox Tray");
+    const inboxTray = new Emoji("\u{1F4E5}", "Inbox Tray");
+    const packageBox = new Emoji("\u{1F4E6}", "Package Box");
+    const eMail = new Emoji("\u{1F4E7}", "E-Mail");
+    const incomingEnvelope = new Emoji("\u{1F4E8}", "Incoming Envelope");
+    const envelopeWithArrow = new Emoji("\u{1F4E9}", "Envelope with Arrow");
+    const closedMailboxWithLoweredFlag = new Emoji("\u{1F4EA}", "Closed Mailbox with Lowered Flag");
+    const closedMailboxWithRaisedFlag = new Emoji("\u{1F4EB}", "Closed Mailbox with Raised Flag");
+    const openMailboxWithRaisedFlag = new Emoji("\u{1F4EC}", "Open Mailbox with Raised Flag");
+    const openMailboxWithLoweredFlag = new Emoji("\u{1F4ED}", "Open Mailbox with Lowered Flag");
+    const postbox = new Emoji("\u{1F4EE}", "Postbox");
+    const postalHorn = new Emoji("\u{1F4EF}", "Postal Horn");
+    const ribbon = new Emoji("\u{1F380}", "Ribbon");
+    const wrappedGift = new Emoji("\u{1F381}", "Wrapped Gift");
+    const jackOLantern = new Emoji("\u{1F383}", "Jack-O-Lantern");
+    const christmasTree = new Emoji("\u{1F384}", "Christmas Tree");
+    const firecracker = new Emoji("\u{1F9E8}", "Firecracker");
+    const fireworks = new Emoji("\u{1F386}", "Fireworks");
+    const sparkler = new Emoji("\u{1F387}", "Sparkler");
+    const sparkles = new Emoji("\u2728", "Sparkles");
+    const sparkle = new Emoji("\u2747\uFE0F", "Sparkle");
+    const balloon = new Emoji("\u{1F388}", "Balloon");
+    const partyPopper = new Emoji("\u{1F389}", "Party Popper");
+    const confettiBall = new Emoji("\u{1F38A}", "Confetti Ball");
+    const tanabataTree = new Emoji("\u{1F38B}", "Tanabata Tree");
+    const pineDecoration = new Emoji("\u{1F38D}", "Pine Decoration");
+    const japaneseDolls = new Emoji("\u{1F38E}", "Japanese Dolls");
+    const carpStreamer = new Emoji("\u{1F38F}", "Carp Streamer");
+    const windChime = new Emoji("\u{1F390}", "Wind Chime");
+    const moonViewingCeremony = new Emoji("\u{1F391}", "Moon Viewing Ceremony");
+    const backpack = new Emoji("\u{1F392}", "Backpack");
+    const redEnvelope = new Emoji("\u{1F9E7}", "Red Envelope");
+    const redPaperLantern = new Emoji("\u{1F3EE}", "Red Paper Lantern");
+    const militaryMedal = new Emoji("\u{1F396}\uFE0F", "Military Medal");
+    const fishingPole = new Emoji("\u{1F3A3}", "Fishing Pole");
+    const flashlight = new Emoji("\u{1F526}", "Flashlight");
+    const hammer = new Emoji("\u{1F528}", "Hammer");
+    const nutAndBolt = new Emoji("\u{1F529}", "Nut and Bolt");
+    const hammerAndWrench = new Emoji("\u{1F6E0}\uFE0F", "Hammer and Wrench");
+    const compass = new Emoji("\u{1F9ED}", "Compass");
+    const fireExtinguisher = new Emoji("\u{1F9EF}", "Fire Extinguisher");
+    const toolbox = new Emoji("\u{1F9F0}", "Toolbox");
+    const brick = new Emoji("\u{1F9F1}", "Brick");
+    const axe = new Emoji("\u{1FA93}", "Axe");
+    const hammerAndPick = new Emoji("\u2692\uFE0F", "Hammer and Pick");
+    const pick = new Emoji("\u26CF\uFE0F", "Pick");
+    const rescueWorkerSHelmet = new Emoji("\u26D1\uFE0F", "Rescue Worker’s Helmet");
+    const chains = new Emoji("\u26D3\uFE0F", "Chains");
+    const fileFolder = new Emoji("\u{1F4C1}", "File Folder");
+    const openFileFolder = new Emoji("\u{1F4C2}", "Open File Folder");
+    const pageWithCurl = new Emoji("\u{1F4C3}", "Page with Curl");
+    const pageFacingUp = new Emoji("\u{1F4C4}", "Page Facing Up");
+    const calendar = new Emoji("\u{1F4C5}", "Calendar");
+    const tearOffCalendar = new Emoji("\u{1F4C6}", "Tear-Off Calendar");
+    const cardIndex = new Emoji("\u{1F4C7}", "Card Index");
+    const chartIncreasing = new Emoji("\u{1F4C8}", "Chart Increasing");
+    const chartDecreasing = new Emoji("\u{1F4C9}", "Chart Decreasing");
+    const barChart = new Emoji("\u{1F4CA}", "Bar Chart");
+    const clipboard = new Emoji("\u{1F4CB}", "Clipboard");
+    const pushpin = new Emoji("\u{1F4CC}", "Pushpin");
+    const roundPushpin = new Emoji("\u{1F4CD}", "Round Pushpin");
+    const paperclip = new Emoji("\u{1F4CE}", "Paperclip");
+    const linkedPaperclips = new Emoji("\u{1F587}\uFE0F", "Linked Paperclips");
+    const straightRuler = new Emoji("\u{1F4CF}", "Straight Ruler");
+    const triangularRuler = new Emoji("\u{1F4D0}", "Triangular Ruler");
+    const bookmarkTabs = new Emoji("\u{1F4D1}", "Bookmark Tabs");
+    const ledger = new Emoji("\u{1F4D2}", "Ledger");
+    const notebook = new Emoji("\u{1F4D3}", "Notebook");
+    const notebookWithDecorativeCover = new Emoji("\u{1F4D4}", "Notebook with Decorative Cover");
+    const closedBook = new Emoji("\u{1F4D5}", "Closed Book");
+    const openBook = new Emoji("\u{1F4D6}", "Open Book");
+    const greenBook = new Emoji("\u{1F4D7}", "Green Book");
+    const blueBook = new Emoji("\u{1F4D8}", "Blue Book");
+    const orangeBook = new Emoji("\u{1F4D9}", "Orange Book");
+    const books = new Emoji("\u{1F4DA}", "Books");
+    const nameBadge = new Emoji("\u{1F4DB}", "Name Badge");
+    const scroll = new Emoji("\u{1F4DC}", "Scroll");
+    const memo = new Emoji("\u{1F4DD}", "Memo");
+    const scissors = new Emoji("\u2702\uFE0F", "Scissors");
+    const envelope = new Emoji("\u2709\uFE0F", "Envelope");
+    const cinema = new Emoji("\u{1F3A6}", "Cinema");
+    const noOneUnderEighteen = new Emoji("\u{1F51E}", "No One Under Eighteen");
+    const prohibited = new Emoji("\u{1F6AB}", "Prohibited");
+    const cigarette = new Emoji("\u{1F6AC}", "Cigarette");
+    const noSmoking = new Emoji("\u{1F6AD}", "No Smoking");
+    const litterInBinSign = new Emoji("\u{1F6AE}", "Litter in Bin Sign");
+    const noLittering = new Emoji("\u{1F6AF}", "No Littering");
+    const potableWater = new Emoji("\u{1F6B0}", "Potable Water");
+    const nonPotableWater = new Emoji("\u{1F6B1}", "Non-Potable Water");
+    const noBicycles = new Emoji("\u{1F6B3}", "No Bicycles");
+    const noPedestrians = new Emoji("\u{1F6B7}", "No Pedestrians");
+    const childrenCrossing = new Emoji("\u{1F6B8}", "Children Crossing");
+    const menSRoom = new Emoji("\u{1F6B9}", "Men’s Room");
+    const womenSRoom = new Emoji("\u{1F6BA}", "Women’s Room");
+    const restroom = new Emoji("\u{1F6BB}", "Restroom");
+    const babySymbol = new Emoji("\u{1F6BC}", "Baby Symbol");
+    const waterCloset = new Emoji("\u{1F6BE}", "Water Closet");
+    const passportControl = new Emoji("\u{1F6C2}", "Passport Control");
+    const customs = new Emoji("\u{1F6C3}", "Customs");
+    const baggageClaim = new Emoji("\u{1F6C4}", "Baggage Claim");
+    const leftLuggage = new Emoji("\u{1F6C5}", "Left Luggage");
+    const parkingButton = new Emoji("\u{1F17F}\uFE0F", "Parking Button");
+    const wheelchairSymbol = new Emoji("\u267F", "Wheelchair Symbol");
+    const radioactive = new Emoji("\u2622\uFE0F", "Radioactive");
+    const biohazard = new Emoji("\u2623\uFE0F", "Biohazard");
+    const warning = new Emoji("\u26A0\uFE0F", "Warning");
+    const highVoltage = new Emoji("\u26A1", "High Voltage");
+    const noEntry = new Emoji("\u26D4", "No Entry");
+    const recyclingSymbol = new Emoji("\u267B\uFE0F", "Recycling Symbol");
+    const dottedSixPointedStar = new Emoji("\u{1F52F}", "Dotted Six-Pointed Star");
+    const starOfDavid = new Emoji("\u2721\uFE0F", "Star of David");
+    const om = new Emoji("\u{1F549}\uFE0F", "Om");
+    const kaaba = new Emoji("\u{1F54B}", "Kaaba");
+    const mosque = new Emoji("\u{1F54C}", "Mosque");
+    const synagogue = new Emoji("\u{1F54D}", "Synagogue");
+    const menorah = new Emoji("\u{1F54E}", "Menorah");
+    const placeOfWorship = new Emoji("\u{1F6D0}", "Place of Worship");
+    const hinduTemple = new Emoji("\u{1F6D5}", "Hindu Temple");
+    const orthodoxCross = new Emoji("\u2626\uFE0F", "Orthodox Cross");
+    const latinCross = new Emoji("\u271D\uFE0F", "Latin Cross");
+    const starAndCrescent = new Emoji("\u262A\uFE0F", "Star and Crescent");
+    const peaceSymbol = new Emoji("\u262E\uFE0F", "Peace Symbol");
+    const yinYang = new Emoji("\u262F\uFE0F", "Yin Yang");
+    const wheelOfDharma = new Emoji("\u2638\uFE0F", "Wheel of Dharma");
+    const infinity = new Emoji("\u267E\uFE0F", "Infinity");
+    const diyaLamp = new Emoji("\u{1FA94}", "Diya Lamp");
+    const shintoShrine = new Emoji("\u26E9\uFE0F", "Shinto Shrine");
+    const church = new Emoji("\u26EA", "Church");
+    const eightPointedStar = new Emoji("\u2734\uFE0F", "Eight-Pointed Star");
+    const prayerBeads = new Emoji("\u{1F4FF}", "Prayer Beads");
+    const door = new Emoji("\u{1F6AA}", "Door");
+    const lipstick = new Emoji("\u{1F484}", "Lipstick");
+    const ring = new Emoji("\u{1F48D}", "Ring");
+    const gemStone = new Emoji("\u{1F48E}", "Gem Stone");
+    const newspaper = new Emoji("\u{1F4F0}", "Newspaper");
+    const fire = new Emoji("\u{1F525}", "Fire");
+    const pistol = new Emoji("\u{1F52B}", "Pistol");
+    const candle = new Emoji("\u{1F56F}\uFE0F", "Candle");
+    const framedPicture = new Emoji("\u{1F5BC}\uFE0F", "Framed Picture");
+    const rolledUpNewspaper = new Emoji("\u{1F5DE}\uFE0F", "Rolled-Up Newspaper");
+    const worldMap = new Emoji("\u{1F5FA}\uFE0F", "World Map");
+    const toilet = new Emoji("\u{1F6BD}", "Toilet");
+    const shower = new Emoji("\u{1F6BF}", "Shower");
+    const bathtub = new Emoji("\u{1F6C1}", "Bathtub");
+    const couchAndLamp = new Emoji("\u{1F6CB}\uFE0F", "Couch and Lamp");
+    const bed = new Emoji("\u{1F6CF}\uFE0F", "Bed");
+    const lotionBottle = new Emoji("\u{1F9F4}", "Lotion Bottle");
+    const thread = new Emoji("\u{1F9F5}", "Thread");
+    const yarn = new Emoji("\u{1F9F6}", "Yarn");
+    const safetyPin = new Emoji("\u{1F9F7}", "Safety Pin");
+    const teddyBear = new Emoji("\u{1F9F8}", "Teddy Bear");
+    const broom = new Emoji("\u{1F9F9}", "Broom");
+    const basket = new Emoji("\u{1F9FA}", "Basket");
+    const rollOfPaper = new Emoji("\u{1F9FB}", "Roll of Paper");
+    const soap = new Emoji("\u{1F9FC}", "Soap");
+    const sponge = new Emoji("\u{1F9FD}", "Sponge");
+    const chair = new Emoji("\u{1FA91}", "Chair");
+    const razor = new Emoji("\u{1FA92}", "Razor");
+    const reminderRibbon = new Emoji("\u{1F397}\uFE0F", "Reminder Ribbon");
+    const filmFrames = new Emoji("\u{1F39E}\uFE0F", "Film Frames");
+    const admissionTickets = new Emoji("\u{1F39F}\uFE0F", "Admission Tickets");
+    const carouselHorse = new Emoji("\u{1F3A0}", "Carousel Horse");
+    const ferrisWheel = new Emoji("\u{1F3A1}", "Ferris Wheel");
+    const rollerCoaster = new Emoji("\u{1F3A2}", "Roller Coaster");
+    const circusTent = new Emoji("\u{1F3AA}", "Circus Tent");
+    const ticket = new Emoji("\u{1F3AB}", "Ticket");
+    const clapperBoard = new Emoji("\u{1F3AC}", "Clapper Board");
+    const performingArts = new Emoji("\u{1F3AD}", "Performing Arts");
+    const label = new Emoji("\u{1F3F7}\uFE0F", "Label");
+    const volcano = new Emoji("\u{1F30B}", "Volcano");
+    const snowCappedMountain = new Emoji("\u{1F3D4}\uFE0F", "Snow-Capped Mountain");
+    const mountain = new Emoji("\u26F0\uFE0F", "Mountain");
+    const camping = new Emoji("\u{1F3D5}\uFE0F", "Camping");
+    const beachWithUmbrella = new Emoji("\u{1F3D6}\uFE0F", "Beach with Umbrella");
+    const umbrellaOnGround = new Emoji("\u26F1\uFE0F", "Umbrella on Ground");
+    const japaneseCastle = new Emoji("\u{1F3EF}", "Japanese Castle");
+    const footprints = new Emoji("\u{1F463}", "Footprints");
+    const mountFuji = new Emoji("\u{1F5FB}", "Mount Fuji");
+    const tokyoTower = new Emoji("\u{1F5FC}", "Tokyo Tower");
+    const statueOfLiberty = new Emoji("\u{1F5FD}", "Statue of Liberty");
+    const mapOfJapan = new Emoji("\u{1F5FE}", "Map of Japan");
+    const moai = new Emoji("\u{1F5FF}", "Moai");
+    const bellhopBell = new Emoji("\u{1F6CE}\uFE0F", "Bellhop Bell");
+    const luggage = new Emoji("\u{1F9F3}", "Luggage");
+    const flagInHole = new Emoji("\u26F3", "Flag in Hole");
+    const tent = new Emoji("\u26FA", "Tent");
+    const hotSprings = new Emoji("\u2668\uFE0F", "Hot Springs");
+    const castle = new Emoji("\u{1F3F0}", "Castle");
+    const bowAndArrow = new Emoji("\u{1F3F9}", "Bow and Arrow");
+    const tridentEmblem = new Emoji("\u{1F531}", "Trident Emblem");
+    const dagger = new Emoji("\u{1F5E1}\uFE0F", "Dagger");
+    const shield = new Emoji("\u{1F6E1}\uFE0F", "Shield");
+    const crystalBall = new Emoji("\u{1F52E}", "Crystal Ball");
+    const crossedSwords = new Emoji("\u2694\uFE0F", "Crossed Swords");
+    const fleurDeLis = new Emoji("\u269C\uFE0F", "Fleur-de-lis");
+    const questionMark = new Emoji("\u2753", "Question Mark");
+    const squareFourCorners = new Emoji("\u26F6\uFE0F", "Square: Four Corners");
+    const droplet = new Emoji("\u{1F4A7}", "Droplet");
+    const dropOfBlood = new Emoji("\u{1FA78}", "Drop of Blood");
+    const adhesiveBandage = new Emoji("\u{1FA79}", "Adhesive Bandage");
+    const stethoscope = new Emoji("\u{1FA7A}", "Stethoscope");
+    const syringe = new Emoji("\u{1F489}", "Syringe");
+    const pill = new Emoji("\u{1F48A}", "Pill");
+    const testTube = new Emoji("\u{1F9EA}", "Test Tube");
+    const petriDish = new Emoji("\u{1F9EB}", "Petri Dish");
+    const dNA = new Emoji("\u{1F9EC}", "DNA");
+    const abacus = new Emoji("\u{1F9EE}", "Abacus");
+    const magnet = new Emoji("\u{1F9F2}", "Magnet");
+    const telescope = new Emoji("\u{1F52D}", "Telescope");
+    const whiteChessKing = new Emoji("\u2654", "White Chess King");
+    const whiteChessQueen = new Emoji("\u2655", "White Chess Queen");
+    const whiteChessRook = new Emoji("\u2656", "White Chess Rook");
+    const whiteChessBishop = new Emoji("\u2657", "White Chess Bishop");
+    const whiteChessKnight = new Emoji("\u2658", "White Chess Knight");
+    const whiteChessPawn = new Emoji("\u2659", "White Chess Pawn");
+    const blackChessKing = new Emoji("\u265A", "Black Chess King");
+    const blackChessQueen = new Emoji("\u265B", "Black Chess Queen");
+    const blackChessRook = new Emoji("\u265C", "Black Chess Rook");
+    const blackChessBishop = new Emoji("\u265D", "Black Chess Bishop");
+    const blackChessKnight = new Emoji("\u265E", "Black Chess Knight");
+    const blackChessPawn = new Emoji("\u265F", "Black Chess Pawn");
+
+    const allFrowning = [
+        frowning,
+        frowningLightSkinTone,
+        frowningMediumLightSkinTone,
+        frowningMediumSkinTone,
+        frowningMediumDarkSkinTone,
+        frowningDarkSkinTone
+    ];
+    const allFrowningGroup = new EmojiGroup("\u{1F64D}\uDE4D", "Frowning", ...allFrowning);
+    const allFrowningMale = [
+        frowningMale,
+        frowningLightSkinToneMale,
+        frowningMediumLightSkinToneMale,
+        frowningMediumSkinToneMale,
+        frowningMediumDarkSkinToneMale,
+        frowningDarkSkinToneMale
+    ];
+    const allFrowningMaleGroup = new EmojiGroup("\u{1F64D}\uDE4D\u200D\u2642\uFE0F", "Frowning: Male", ...allFrowningMale);
+    const allFrowningFemale = [
+        frowningFemale,
+        frowningLightSkinToneFemale,
+        frowningMediumLightSkinToneFemale,
+        frowningMediumSkinToneFemale,
+        frowningMediumDarkSkinToneFemale,
+        frowningDarkSkinToneFemale
+    ];
+    const allFrowningFemaleGroup = new EmojiGroup("\u{1F64D}\uDE4D\u200D\u2640\uFE0F", "Frowning: Female", ...allFrowningFemale);
+    const allFrowners = [
+        allFrowningGroup,
+        allFrowningMaleGroup,
+        allFrowningFemaleGroup
+    ];
+    const allFrownersGroup = new EmojiGroup("\u{1F64D}\uDE4D", "Frowning", ...allFrowners);
+    const allPouting = [
+        pouting,
+        poutingLightSkinTone,
+        poutingMediumLightSkinTone,
+        poutingMediumSkinTone,
+        poutingMediumDarkSkinTone,
+        poutingDarkSkinTone
+    ];
+    const allPoutingGroup = new EmojiGroup("\u{1F64E}\uDE4E", "Pouting", ...allPouting);
+    const allPoutingMale = [
+        poutingMale,
+        poutingLightSkinToneMale,
+        poutingMediumLightSkinToneMale,
+        poutingMediumSkinToneMale,
+        poutingMediumDarkSkinToneMale,
+        poutingDarkSkinToneMale
+    ];
+    const allPoutingMaleGroup = new EmojiGroup("\u{1F64E}\uDE4E\u200D\u2642\uFE0F", "Pouting: Male", ...allPoutingMale);
+    const allPoutingFemale = [
+        poutingFemale,
+        poutingLightSkinToneFemale,
+        poutingMediumLightSkinToneFemale,
+        poutingMediumSkinToneFemale,
+        poutingMediumDarkSkinToneFemale,
+        poutingDarkSkinToneFemale
+    ];
+    const allPoutingFemaleGroup = new EmojiGroup("\u{1F64E}\uDE4E\u200D\u2640\uFE0F", "Pouting: Female", ...allPoutingFemale);
+    const allPouters = [
+        allPoutingGroup,
+        allPoutingMaleGroup,
+        allPoutingFemaleGroup
+    ];
+    const allPoutersGroup = new EmojiGroup("\u{1F64E}\uDE4E", "Pouting", ...allPouters);
+    const allGesturingNO = [
+        gesturingNO,
+        gesturingNOLightSkinTone,
+        gesturingNOMediumLightSkinTone,
+        gesturingNOMediumSkinTone,
+        gesturingNOMediumDarkSkinTone,
+        gesturingNODarkSkinTone
+    ];
+    const allGesturingNOGroup = new EmojiGroup("\u{1F645}\uDE45", "Gesturing NO", ...allGesturingNO);
+    const allGesturingNOMale = [
+        gesturingNOMale,
+        gesturingNOLightSkinToneMale,
+        gesturingNOMediumLightSkinToneMale,
+        gesturingNOMediumSkinToneMale,
+        gesturingNOMediumDarkSkinToneMale,
+        gesturingNODarkSkinToneMale
+    ];
+    const allGesturingNOMaleGroup = new EmojiGroup("\u{1F645}\uDE45\u200D\u2642\uFE0F", "Gesturing NO: Male", ...allGesturingNOMale);
+    const allGesturingNOFemale = [
+        gesturingNOFemale,
+        gesturingNOLightSkinToneFemale,
+        gesturingNOMediumLightSkinToneFemale,
+        gesturingNOMediumSkinToneFemale,
+        gesturingNOMediumDarkSkinToneFemale,
+        gesturingNODarkSkinToneFemale
+    ];
+    const allGesturingNOFemaleGroup = new EmojiGroup("\u{1F645}\uDE45\u200D\u2640\uFE0F", "Gesturing NO: Female", ...allGesturingNOFemale);
+    const allNoGuesturerersGroup = [
+        allGesturingNOGroup,
+        allGesturingNOMaleGroup,
+        allGesturingNOFemaleGroup
+    ];
+    const allNoGuesturerersGroupGroup = new EmojiGroup("\u{1F645}\uDE45", "Gesturing NO", ...allNoGuesturerersGroup);
+    const allGesturingOK = [
+        gesturingOK,
+        gesturingOKLightSkinTone,
+        gesturingOKMediumLightSkinTone,
+        gesturingOKMediumSkinTone,
+        gesturingOKMediumDarkSkinTone,
+        gesturingOKDarkSkinTone
+    ];
+    const allGesturingOKGroup = new EmojiGroup("\u{1F646}\uDE46", "Gesturing OK", ...allGesturingOK);
+    const allGesturingOKMale = [
+        gesturingOKMale,
+        gesturingOKLightSkinToneMale,
+        gesturingOKMediumLightSkinToneMale,
+        gesturingOKMediumSkinToneMale,
+        gesturingOKMediumDarkSkinToneMale,
+        gesturingOKDarkSkinToneMale
+    ];
+    const allGesturingOKMaleGroup = new EmojiGroup("\u{1F646}\uDE46\u200D\u2642\uFE0F", "Gesturing OK: Male", ...allGesturingOKMale);
+    const allGesturingOKFemale = [
+        gesturingOKFemale,
+        gesturingOKLightSkinToneFemale,
+        gesturingOKMediumLightSkinToneFemale,
+        gesturingOKMediumSkinToneFemale,
+        gesturingOKMediumDarkSkinToneFemale,
+        gesturingOKDarkSkinToneFemale
+    ];
+    const allGesturingOKFemaleGroup = new EmojiGroup("\u{1F646}\uDE46\u200D\u2640\uFE0F", "Gesturing OK: Female", ...allGesturingOKFemale);
+    const allOKGesturerersGroup = [
+        allGesturingOKGroup,
+        allGesturingOKMaleGroup,
+        allGesturingOKFemaleGroup
+    ];
+    const allOKGesturerersGroupGroup = new EmojiGroup("\u{1F646}\uDE46", "Gesturing OK", ...allOKGesturerersGroup);
+    const allTippingHand = [
+        tippingHand,
+        tippingHandLightSkinTone,
+        tippingHandMediumLightSkinTone,
+        tippingHandMediumSkinTone,
+        tippingHandMediumDarkSkinTone,
+        tippingHandDarkSkinTone
+    ];
+    const allTippingHandGroup = new EmojiGroup("\u{1F481}\uDC81", "Tipping Hand", ...allTippingHand);
+    const allTippingHandMale = [
+        tippingHandMale,
+        tippingHandLightSkinToneMale,
+        tippingHandMediumLightSkinToneMale,
+        tippingHandMediumSkinToneMale,
+        tippingHandMediumDarkSkinToneMale,
+        tippingHandDarkSkinToneMale
+    ];
+    const allTippingHandMaleGroup = new EmojiGroup("\u{1F481}\uDC81\u200D\u2642\uFE0F", "Tipping Hand: Male", ...allTippingHandMale);
+    const allTippingHandFemale = [
+        tippingHandFemale,
+        tippingHandLightSkinToneFemale,
+        tippingHandMediumLightSkinToneFemale,
+        tippingHandMediumSkinToneFemale,
+        tippingHandMediumDarkSkinToneFemale,
+        tippingHandDarkSkinToneFemale
+    ];
+    const allTippingHandFemaleGroup = new EmojiGroup("\u{1F481}\uDC81\u200D\u2640\uFE0F", "Tipping Hand: Female", ...allTippingHandFemale);
+    const allHandTippersGroup = [
+        allTippingHandGroup,
+        allTippingHandMaleGroup,
+        allTippingHandFemaleGroup
+    ];
+    const allHandTippersGroupGroup = new EmojiGroup("\u{1F481}\uDC81", "Tipping Hand", ...allHandTippersGroup);
+    const allRaisingHand = [
+        raisingHand,
+        raisingHandLightSkinTone,
+        raisingHandMediumLightSkinTone,
+        raisingHandMediumSkinTone,
+        raisingHandMediumDarkSkinTone,
+        raisingHandDarkSkinTone
+    ];
+    const allRaisingHandGroup = new EmojiGroup("\u{1F64B}\uDE4B", "Raising Hand", ...allRaisingHand);
+    const allRaisingHandMale = [
+        raisingHandMale,
+        raisingHandLightSkinToneMale,
+        raisingHandMediumLightSkinToneMale,
+        raisingHandMediumSkinToneMale,
+        raisingHandMediumDarkSkinToneMale,
+        raisingHandDarkSkinToneMale
+    ];
+    const allRaisingHandMaleGroup = new EmojiGroup("\u{1F64B}\uDE4B\u200D\u2642\uFE0F", "Raising Hand: Male", ...allRaisingHandMale);
+    const allRaisingHandFemale = [
+        raisingHandFemale,
+        raisingHandLightSkinToneFemale,
+        raisingHandMediumLightSkinToneFemale,
+        raisingHandMediumSkinToneFemale,
+        raisingHandMediumDarkSkinToneFemale,
+        raisingHandDarkSkinToneFemale
+    ];
+    const allRaisingHandFemaleGroup = new EmojiGroup("\u{1F64B}\uDE4B\u200D\u2640\uFE0F", "Raising Hand: Female", ...allRaisingHandFemale);
+    const allHandRaisers = [
+        allRaisingHandGroup,
+        allRaisingHandMaleGroup,
+        allRaisingHandFemaleGroup
+    ];
+    const allHandRaisersGroup = new EmojiGroup("\u{1F64B}\uDE4B", "Raising Hand", ...allHandRaisers);
+    const allBowing = [
+        bowing,
+        bowingLightSkinTone,
+        bowingMediumLightSkinTone,
+        bowingMediumSkinTone,
+        bowingMediumDarkSkinTone,
+        bowingDarkSkinTone
+    ];
+    const allBowingGroup = new EmojiGroup("\u{1F647}\uDE47", "Bowing", ...allBowing);
+    const allBowingMale = [
+        bowingMale,
+        bowingLightSkinToneMale,
+        bowingMediumLightSkinToneMale,
+        bowingMediumSkinToneMale,
+        bowingMediumDarkSkinToneMale,
+        bowingDarkSkinToneMale
+    ];
+    const allBowingMaleGroup = new EmojiGroup("\u{1F647}\uDE47\u200D\u2642\uFE0F", "Bowing: Male", ...allBowingMale);
+    const allBowingFemale = [
+        bowingFemale,
+        bowingLightSkinToneFemale,
+        bowingMediumLightSkinToneFemale,
+        bowingMediumSkinToneFemale,
+        bowingMediumDarkSkinToneFemale,
+        bowingDarkSkinToneFemale
+    ];
+    const allBowingFemaleGroup = new EmojiGroup("\u{1F647}\uDE47\u200D\u2640\uFE0F", "Bowing: Female", ...allBowingFemale);
+    const allBowers = [
+        allBowingGroup,
+        allBowingMaleGroup,
+        allBowingFemaleGroup
+    ];
+    const allBowersGroup = new EmojiGroup("\u{1F647}\uDE47", "Bowing", ...allBowers);
+    const allFacepalming = [
+        facepalming,
+        facepalmingLightSkinTone,
+        facepalmingMediumLightSkinTone,
+        facepalmingMediumSkinTone,
+        facepalmingMediumDarkSkinTone,
+        facepalmingDarkSkinTone
+    ];
+    const allFacepalmingGroup = new EmojiGroup("\u{1F926}\uDD26", "Facepalming", ...allFacepalming);
+    const allFacepalmingMale = [
+        facepalmingMale,
+        facepalmingLightSkinToneMale,
+        facepalmingMediumLightSkinToneMale,
+        facepalmingMediumSkinToneMale,
+        facepalmingMediumDarkSkinToneMale,
+        facepalmingDarkSkinToneMale
+    ];
+    const allFacepalmingMaleGroup = new EmojiGroup("\u{1F926}\uDD26\u200D\u2642\uFE0F", "Facepalming: Male", ...allFacepalmingMale);
+    const allFacepalmingFemale = [
+        facepalmingFemale,
+        facepalmingLightSkinToneFemale,
+        facepalmingMediumLightSkinToneFemale,
+        facepalmingMediumSkinToneFemale,
+        facepalmingMediumDarkSkinToneFemale,
+        facepalmingDarkSkinToneFemale
+    ];
+    const allFacepalmingFemaleGroup = new EmojiGroup("\u{1F926}\uDD26\u200D\u2640\uFE0F", "Facepalming: Female", ...allFacepalmingFemale);
+    const allFacepalmers = [
+        allFacepalmingGroup,
+        allFacepalmingMaleGroup,
+        allFacepalmingFemaleGroup
+    ];
+    const allFacepalmersGroup = new EmojiGroup("\u{1F926}\uDD26", "Facepalming", ...allFacepalmers);
+    const allShrugging = [
+        shrugging,
+        shruggingLightSkinTone,
+        shruggingMediumLightSkinTone,
+        shruggingMediumSkinTone,
+        shruggingMediumDarkSkinTone,
+        shruggingDarkSkinTone
+    ];
+    const allShruggingGroup = new EmojiGroup("\u{1F937}\uDD37", "Shrugging", ...allShrugging);
+    const allShruggingMale = [
+        shruggingMale,
+        shruggingLightSkinToneMale,
+        shruggingMediumLightSkinToneMale,
+        shruggingMediumSkinToneMale,
+        shruggingMediumDarkSkinToneMale,
+        shruggingDarkSkinToneMale
+    ];
+    const allShruggingMaleGroup = new EmojiGroup("\u{1F937}\uDD37\u200D\u2642\uFE0F", "Shrugging: Male", ...allShruggingMale);
+    const allShruggingFemale = [
+        shruggingFemale,
+        shruggingLightSkinToneFemale,
+        shruggingMediumLightSkinToneFemale,
+        shruggingMediumSkinToneFemale,
+        shruggingMediumDarkSkinToneFemale,
+        shruggingDarkSkinToneFemale
+    ];
+    const allShruggingFemaleGroup = new EmojiGroup("\u{1F937}\uDD37\u200D\u2640\uFE0F", "Shrugging: Female", ...allShruggingFemale);
+    const allShruggers = [
+        allShruggingGroup,
+        allShruggingMaleGroup,
+        allShruggingFemaleGroup
+    ];
+    const allShruggersGroup = new EmojiGroup("\u{1F937}\uDD37", "Shrugging", ...allShruggers);
+    const allCantHear = [
+        cantHear,
+        cantHearLightSkinTone,
+        cantHearMediumLightSkinTone,
+        cantHearMediumSkinTone,
+        cantHearMediumDarkSkinTone,
+        cantHearDarkSkinTone
+    ];
+    const allCantHearGroup = new EmojiGroup("\u{1F9CF}\uDDCF", "Can't Hear", ...allCantHear);
+    const allCantHearMale = [
+        cantHearMale,
+        cantHearLightSkinToneMale,
+        cantHearMediumLightSkinToneMale,
+        cantHearMediumSkinToneMale,
+        cantHearMediumDarkSkinToneMale,
+        cantHearDarkSkinToneMale
+    ];
+    const allCantHearMaleGroup = new EmojiGroup("\u{1F9CF}\uDDCF\u200D\u2642\uFE0F", "Can't Hear: Male", ...allCantHearMale);
+    const allCantHearFemale = [
+        cantHearFemale,
+        cantHearLightSkinToneFemale,
+        cantHearMediumLightSkinToneFemale,
+        cantHearMediumSkinToneFemale,
+        cantHearMediumDarkSkinToneFemale,
+        cantHearDarkSkinToneFemale
+    ];
+    const allCantHearFemaleGroup = new EmojiGroup("\u{1F9CF}\uDDCF\u200D\u2640\uFE0F", "Can't Hear: Female", ...allCantHearFemale);
+    const allCantHearers = [
+        allCantHearGroup,
+        allCantHearMaleGroup,
+        allCantHearFemaleGroup
+    ];
+    const allCantHearersGroup = new EmojiGroup("\u{1F9CF}\uDDCF", "Can't Hear", ...allCantHearers);
+    const allGettingMassage = [
+        gettingMassage,
+        gettingMassageLightSkinTone,
+        gettingMassageMediumLightSkinTone,
+        gettingMassageMediumSkinTone,
+        gettingMassageMediumDarkSkinTone,
+        gettingMassageDarkSkinTone
+    ];
+    const allGettingMassageGroup = new EmojiGroup("\u{1F486}\uDC86", "Getting Massage", ...allGettingMassage);
+    const allGettingMassageMale = [
+        gettingMassageMale,
+        gettingMassageLightSkinToneMale,
+        gettingMassageMediumLightSkinToneMale,
+        gettingMassageMediumSkinToneMale,
+        gettingMassageMediumDarkSkinToneMale,
+        gettingMassageDarkSkinToneMale
+    ];
+    const allGettingMassageMaleGroup = new EmojiGroup("\u{1F486}\uDC86\u200D\u2642\uFE0F", "Getting Massage: Male", ...allGettingMassageMale);
+    const allGettingMassageFemale = [
+        gettingMassageFemale,
+        gettingMassageLightSkinToneFemale,
+        gettingMassageMediumLightSkinToneFemale,
+        gettingMassageMediumSkinToneFemale,
+        gettingMassageMediumDarkSkinToneFemale,
+        gettingMassageDarkSkinToneFemale
+    ];
+    const allGettingMassageFemaleGroup = new EmojiGroup("\u{1F486}\uDC86\u200D\u2640\uFE0F", "Getting Massage: Female", ...allGettingMassageFemale);
+    const allGettingMassaged = [
+        allGettingMassageGroup,
+        allGettingMassageMaleGroup,
+        allGettingMassageFemaleGroup
+    ];
+    const allGettingMassagedGroup = new EmojiGroup("\u{1F486}\uDC86", "Getting Massage", ...allGettingMassaged);
+    const allGettingHaircut = [
+        gettingHaircut,
+        gettingHaircutLightSkinTone,
+        gettingHaircutMediumLightSkinTone,
+        gettingHaircutMediumSkinTone,
+        gettingHaircutMediumDarkSkinTone,
+        gettingHaircutDarkSkinTone
+    ];
+    const allGettingHaircutGroup = new EmojiGroup("\u{1F487}\uDC87", "Getting Haircut", ...allGettingHaircut);
+    const allGettingHaircutMale = [
+        gettingHaircutMale,
+        gettingHaircutLightSkinToneMale,
+        gettingHaircutMediumLightSkinToneMale,
+        gettingHaircutMediumSkinToneMale,
+        gettingHaircutMediumDarkSkinToneMale,
+        gettingHaircutDarkSkinToneMale
+    ];
+    const allGettingHaircutMaleGroup = new EmojiGroup("\u{1F487}\uDC87\u200D\u2642\uFE0F", "Getting Haircut: Male", ...allGettingHaircutMale);
+    const allGettingHaircutFemale = [
+        gettingHaircutFemale,
+        gettingHaircutLightSkinToneFemale,
+        gettingHaircutMediumLightSkinToneFemale,
+        gettingHaircutMediumSkinToneFemale,
+        gettingHaircutMediumDarkSkinToneFemale,
+        gettingHaircutDarkSkinToneFemale
+    ];
+    const allGettingHaircutFemaleGroup = new EmojiGroup("\u{1F487}\uDC87\u200D\u2640\uFE0F", "Getting Haircut: Female", ...allGettingHaircutFemale);
+    const allHairCutters = [
+        allGettingHaircutGroup,
+        allGettingHaircutMaleGroup,
+        allGettingHaircutFemaleGroup
+    ];
+    const allHairCuttersGroup = new EmojiGroup("\u{1F487}\uDC87", "Getting Haircut", ...allHairCutters);
+    const allConstructionWorker = [
+        constructionWorker,
+        constructionWorkerLightSkinTone,
+        constructionWorkerMediumLightSkinTone,
+        constructionWorkerMediumSkinTone,
+        constructionWorkerMediumDarkSkinTone,
+        constructionWorkerDarkSkinTone
+    ];
+    const allConstructionWorkerGroup = new EmojiGroup("\u{1F477}\uDC77", "Construction Worker", ...allConstructionWorker);
+    const allConstructionWorkerMale = [
+        constructionWorkerMale,
+        constructionWorkerLightSkinToneMale,
+        constructionWorkerMediumLightSkinToneMale,
+        constructionWorkerMediumSkinToneMale,
+        constructionWorkerMediumDarkSkinToneMale,
+        constructionWorkerDarkSkinToneMale
+    ];
+    const allConstructionWorkerMaleGroup = new EmojiGroup("\u{1F477}\uDC77\u200D\u2642\uFE0F", "Construction Worker: Male", ...allConstructionWorkerMale);
+    const allConstructionWorkerFemale = [
+        constructionWorkerFemale,
+        constructionWorkerLightSkinToneFemale,
+        constructionWorkerMediumLightSkinToneFemale,
+        constructionWorkerMediumSkinToneFemale,
+        constructionWorkerMediumDarkSkinToneFemale,
+        constructionWorkerDarkSkinToneFemale
+    ];
+    const allConstructionWorkerFemaleGroup = new EmojiGroup("\u{1F477}\uDC77\u200D\u2640\uFE0F", "Construction Worker: Female", ...allConstructionWorkerFemale);
+    const allConstructionWorkers = [
+        allConstructionWorkerGroup,
+        allConstructionWorkerMaleGroup,
+        allConstructionWorkerFemaleGroup
+    ];
+    const allConstructionWorkersGroup = new EmojiGroup("\u{1F477}\uDC77", "Construction Worker", ...allConstructionWorkers);
+    const allGuard = [
+        guard,
+        guardLightSkinTone,
+        guardMediumLightSkinTone,
+        guardMediumSkinTone,
+        guardMediumDarkSkinTone,
+        guardDarkSkinTone
+    ];
+    const allGuardGroup = new EmojiGroup("\u{1F482}\uDC82", "Guard", ...allGuard);
+    const allGuardMale = [
+        guardMale,
+        guardLightSkinToneMale,
+        guardMediumLightSkinToneMale,
+        guardMediumSkinToneMale,
+        guardMediumDarkSkinToneMale,
+        guardDarkSkinToneMale
+    ];
+    const allGuardMaleGroup = new EmojiGroup("\u{1F482}\uDC82\u200D\u2642\uFE0F", "Guard: Male", ...allGuardMale);
+    const allGuardFemale = [
+        guardFemale,
+        guardLightSkinToneFemale,
+        guardMediumLightSkinToneFemale,
+        guardMediumSkinToneFemale,
+        guardMediumDarkSkinToneFemale,
+        guardDarkSkinToneFemale
+    ];
+    const allGuardFemaleGroup = new EmojiGroup("\u{1F482}\uDC82\u200D\u2640\uFE0F", "Guard: Female", ...allGuardFemale);
+    const allGuards = [
+        allGuardGroup,
+        allGuardMaleGroup,
+        allGuardFemaleGroup
+    ];
+    const allGuardsGroup = new EmojiGroup("\u{1F482}\uDC82", "Guard", ...allGuards);
+    const allSpy = [
+        spy,
+        spyLightSkinTone,
+        spyMediumLightSkinTone,
+        spyMediumSkinTone,
+        spyMediumDarkSkinTone,
+        spyDarkSkinTone
+    ];
+    const allSpyGroup = new EmojiGroup("\u{1F575}\uDD75", "Spy", ...allSpy);
+    const allSpyMale = [
+        spyMale,
+        spyLightSkinToneMale,
+        spyMediumLightSkinToneMale,
+        spyMediumSkinToneMale,
+        spyMediumDarkSkinToneMale,
+        spyDarkSkinToneMale
+    ];
+    const allSpyMaleGroup = new EmojiGroup("\u{1F575}\uDD75\u200D\u2642\uFE0F", "Spy: Male", ...allSpyMale);
+    const allSpyFemale = [
+        spyFemale,
+        spyLightSkinToneFemale,
+        spyMediumLightSkinToneFemale,
+        spyMediumSkinToneFemale,
+        spyMediumDarkSkinToneFemale,
+        spyDarkSkinToneFemale
+    ];
+    const allSpyFemaleGroup = new EmojiGroup("\u{1F575}\uDD75\u200D\u2640\uFE0F", "Spy: Female", ...allSpyFemale);
+    const allSpies = [
+        allSpyGroup,
+        allSpyMaleGroup,
+        allSpyFemaleGroup
+    ];
+    const allSpiesGroup = new EmojiGroup("\u{1F575}\uDD75", "Spy", ...allSpies);
+    const allPolice = [
+        police,
+        policeLightSkinTone,
+        policeMediumLightSkinTone,
+        policeMediumSkinTone,
+        policeMediumDarkSkinTone,
+        policeDarkSkinTone
+    ];
+    const allPoliceGroup = new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allPolice);
+    const allPoliceMale = [
+        policeMale,
+        policeLightSkinToneMale,
+        policeMediumLightSkinToneMale,
+        policeMediumSkinToneMale,
+        policeMediumDarkSkinToneMale,
+        policeDarkSkinToneMale
+    ];
+    const allPoliceMaleGroup = new EmojiGroup("\u{1F46E}\uDC6E\u200D\u2642\uFE0F", "Police: Male", ...allPoliceMale);
+    const allPoliceFemale = [
+        policeFemale,
+        policeLightSkinToneFemale,
+        policeMediumLightSkinToneFemale,
+        policeMediumSkinToneFemale,
+        policeMediumDarkSkinToneFemale,
+        policeDarkSkinToneFemale
+    ];
+    const allPoliceFemaleGroup = new EmojiGroup("\u{1F46E}\uDC6E\u200D\u2640\uFE0F", "Police: Female", ...allPoliceFemale);
+    const allCops = [
+        allPoliceGroup,
+        allPoliceMaleGroup,
+        allPoliceFemaleGroup
+    ];
+    const allCopsGroup = new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allCops);
+    const allWearingTurban = [
+        wearingTurban,
+        wearingTurbanLightSkinTone,
+        wearingTurbanMediumLightSkinTone,
+        wearingTurbanMediumSkinTone,
+        wearingTurbanMediumDarkSkinTone,
+        wearingTurbanDarkSkinTone
+    ];
+    const allWearingTurbanGroup = new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allWearingTurban);
+    const allWearingTurbanMale = [
+        wearingTurbanMale,
+        wearingTurbanLightSkinToneMale,
+        wearingTurbanMediumLightSkinToneMale,
+        wearingTurbanMediumSkinToneMale,
+        wearingTurbanMediumDarkSkinToneMale,
+        wearingTurbanDarkSkinToneMale
+    ];
+    const allWearingTurbanMaleGroup = new EmojiGroup("\u{1F473}\uDC73\u200D\u2642\uFE0F", "Wearing Turban: Male", ...allWearingTurbanMale);
+    const allWearingTurbanFemale = [
+        wearingTurbanFemale,
+        wearingTurbanLightSkinToneFemale,
+        wearingTurbanMediumLightSkinToneFemale,
+        wearingTurbanMediumSkinToneFemale,
+        wearingTurbanMediumDarkSkinToneFemale,
+        wearingTurbanDarkSkinToneFemale
+    ];
+    const allWearingTurbanFemaleGroup = new EmojiGroup("\u{1F473}\uDC73\u200D\u2640\uFE0F", "Wearing Turban: Female", ...allWearingTurbanFemale);
+    const allTurbanWearers = [
+        allWearingTurbanGroup,
+        allWearingTurbanMaleGroup,
+        allWearingTurbanFemaleGroup
+    ];
+    const allTurbanWearersGroup = new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allTurbanWearers);
+    const allSuperhero = [
+        superhero,
+        superheroLightSkinTone,
+        superheroMediumLightSkinTone,
+        superheroMediumSkinTone,
+        superheroMediumDarkSkinTone,
+        superheroDarkSkinTone
+    ];
+    const allSuperheroGroup = new EmojiGroup("\u{1F9B8}\uDDB8", "Superhero", ...allSuperhero);
+    const allSuperheroMale = [
+        superheroMale,
+        superheroLightSkinToneMale,
+        superheroMediumLightSkinToneMale,
+        superheroMediumSkinToneMale,
+        superheroMediumDarkSkinToneMale,
+        superheroDarkSkinToneMale
+    ];
+    const allSuperheroMaleGroup = new EmojiGroup("\u{1F9B8}\uDDB8\u200D\u2642\uFE0F", "Superhero: Male", ...allSuperheroMale);
+    const allSuperheroFemale = [
+        superheroFemale,
+        superheroLightSkinToneFemale,
+        superheroMediumLightSkinToneFemale,
+        superheroMediumSkinToneFemale,
+        superheroMediumDarkSkinToneFemale,
+        superheroDarkSkinToneFemale
+    ];
+    const allSuperheroFemaleGroup = new EmojiGroup("\u{1F9B8}\uDDB8\u200D\u2640\uFE0F", "Superhero: Female", ...allSuperheroFemale);
+    const allSuperheroes = [
+        allSuperheroGroup,
+        allSuperheroMaleGroup,
+        allSuperheroFemaleGroup
+    ];
+    const allSuperheroesGroup = new EmojiGroup("\u{1F9B8}\uDDB8", "Superhero", ...allSuperheroes);
+    const allSupervillain = [
+        supervillain,
+        supervillainLightSkinTone,
+        supervillainMediumLightSkinTone,
+        supervillainMediumSkinTone,
+        supervillainMediumDarkSkinTone,
+        supervillainDarkSkinTone
+    ];
+    const allSupervillainGroup = new EmojiGroup("\u{1F9B9}\uDDB9", "Supervillain", ...allSupervillain);
+    const allSupervillainMale = [
+        supervillainMale,
+        supervillainLightSkinToneMale,
+        supervillainMediumLightSkinToneMale,
+        supervillainMediumSkinToneMale,
+        supervillainMediumDarkSkinToneMale,
+        supervillainDarkSkinToneMale
+    ];
+    const allSupervillainMaleGroup = new EmojiGroup("\u{1F9B9}\uDDB9\u200D\u2642\uFE0F", "Supervillain: Male", ...allSupervillainMale);
+    const allSupervillainFemale = [
+        supervillainFemale,
+        supervillainLightSkinToneFemale,
+        supervillainMediumLightSkinToneFemale,
+        supervillainMediumSkinToneFemale,
+        supervillainMediumDarkSkinToneFemale,
+        supervillainDarkSkinToneFemale
+    ];
+    const allSupervillainFemaleGroup = new EmojiGroup("\u{1F9B9}\uDDB9\u200D\u2640\uFE0F", "Supervillain: Female", ...allSupervillainFemale);
+    const allSupervillains = [
+        allSupervillainGroup,
+        allSupervillainMaleGroup,
+        allSupervillainFemaleGroup
+    ];
+    const allSupervillainsGroup = new EmojiGroup("\u{1F9B9}\uDDB9", "Supervillain", ...allSupervillains);
+    const allMage = [
+        mage,
+        mageLightSkinTone,
+        mageMediumLightSkinTone,
+        mageMediumSkinTone,
+        mageMediumDarkSkinTone,
+        mageDarkSkinTone
+    ];
+    const allMageGroup = new EmojiGroup("\u{1F9D9}\uDDD9", "Mage", ...allMage);
+    const allMageMale = [
+        mageMale,
+        mageLightSkinToneMale,
+        mageMediumLightSkinToneMale,
+        mageMediumSkinToneMale,
+        mageMediumDarkSkinToneMale,
+        mageDarkSkinToneMale
+    ];
+    const allMageMaleGroup = new EmojiGroup("\u{1F9D9}\uDDD9\u200D\u2642\uFE0F", "Mage: Male", ...allMageMale);
+    const allMageFemale = [
+        mageFemale,
+        mageLightSkinToneFemale,
+        mageMediumLightSkinToneFemale,
+        mageMediumSkinToneFemale,
+        mageMediumDarkSkinToneFemale,
+        mageDarkSkinToneFemale
+    ];
+    const allMageFemaleGroup = new EmojiGroup("\u{1F9D9}\uDDD9\u200D\u2640\uFE0F", "Mage: Female", ...allMageFemale);
+    const allMages = [
+        allMageGroup,
+        allMageMaleGroup,
+        allMageFemaleGroup
+    ];
+    const allMagesGroup = new EmojiGroup("\u{1F9D9}\uDDD9", "Mage", ...allMages);
+    const allFairy = [
+        fairy,
+        fairyLightSkinTone,
+        fairyMediumLightSkinTone,
+        fairyMediumSkinTone,
+        fairyMediumDarkSkinTone,
+        fairyDarkSkinTone
+    ];
+    const allFairyGroup = new EmojiGroup("\u{1F9DA}\uDDDA", "Fairy", ...allFairy);
+    const allFairyMale = [
+        fairyMale,
+        fairyLightSkinToneMale,
+        fairyMediumLightSkinToneMale,
+        fairyMediumSkinToneMale,
+        fairyMediumDarkSkinToneMale,
+        fairyDarkSkinToneMale
+    ];
+    const allFairyMaleGroup = new EmojiGroup("\u{1F9DA}\uDDDA\u200D\u2642\uFE0F", "Fairy: Male", ...allFairyMale);
+    const allFairyFemale = [
+        fairyFemale,
+        fairyLightSkinToneFemale,
+        fairyMediumLightSkinToneFemale,
+        fairyMediumSkinToneFemale,
+        fairyMediumDarkSkinToneFemale,
+        fairyDarkSkinToneFemale
+    ];
+    const allFairyFemaleGroup = new EmojiGroup("\u{1F9DA}\uDDDA\u200D\u2640\uFE0F", "Fairy: Female", ...allFairyFemale);
+    const allFairies = [
+        allFairyGroup,
+        allFairyMaleGroup,
+        allFairyFemaleGroup
+    ];
+    const allFairiesGroup = new EmojiGroup("\u{1F9DA}\uDDDA", "Fairy", ...allFairies);
+    const allVampire = [
+        vampire,
+        vampireLightSkinTone,
+        vampireMediumLightSkinTone,
+        vampireMediumSkinTone,
+        vampireMediumDarkSkinTone,
+        vampireDarkSkinTone
+    ];
+    const allVampireGroup = new EmojiGroup("\u{1F9DB}\uDDDB", "Vampire", ...allVampire);
+    const allVampireMale = [
+        vampireMale,
+        vampireLightSkinToneMale,
+        vampireMediumLightSkinToneMale,
+        vampireMediumSkinToneMale,
+        vampireMediumDarkSkinToneMale,
+        vampireDarkSkinToneMale
+    ];
+    const allVampireMaleGroup = new EmojiGroup("\u{1F9DB}\uDDDB\u200D\u2642\uFE0F", "Vampire: Male", ...allVampireMale);
+    const allVampireFemale = [
+        vampireFemale,
+        vampireLightSkinToneFemale,
+        vampireMediumLightSkinToneFemale,
+        vampireMediumSkinToneFemale,
+        vampireMediumDarkSkinToneFemale,
+        vampireDarkSkinToneFemale
+    ];
+    const allVampireFemaleGroup = new EmojiGroup("\u{1F9DB}\uDDDB\u200D\u2640\uFE0F", "Vampire: Female", ...allVampireFemale);
+    const allVampires = [
+        allVampireGroup,
+        allVampireMaleGroup,
+        allVampireFemaleGroup
+    ];
+    const allVampiresGroup = new EmojiGroup("\u{1F9DB}\uDDDB", "Vampire", ...allVampires);
+    const allMerperson = [
+        merperson,
+        merpersonLightSkinTone,
+        merpersonMediumLightSkinTone,
+        merpersonMediumSkinTone,
+        merpersonMediumDarkSkinTone,
+        merpersonDarkSkinTone
+    ];
+    const allMerpersonGroup = new EmojiGroup("\u{1F9DC}\uDDDC", "Merperson", ...allMerperson);
+    const allMerpersonMale = [
+        merpersonMale,
+        merpersonLightSkinToneMale,
+        merpersonMediumLightSkinToneMale,
+        merpersonMediumSkinToneMale,
+        merpersonMediumDarkSkinToneMale,
+        merpersonDarkSkinToneMale
+    ];
+    const allMerpersonMaleGroup = new EmojiGroup("\u{1F9DC}\uDDDC\u200D\u2642\uFE0F", "Merperson: Male", ...allMerpersonMale);
+    const allMerpersonFemale = [
+        merpersonFemale,
+        merpersonLightSkinToneFemale,
+        merpersonMediumLightSkinToneFemale,
+        merpersonMediumSkinToneFemale,
+        merpersonMediumDarkSkinToneFemale,
+        merpersonDarkSkinToneFemale
+    ];
+    const allMerpersonFemaleGroup = new EmojiGroup("\u{1F9DC}\uDDDC\u200D\u2640\uFE0F", "Merperson: Female", ...allMerpersonFemale);
+    const allMerpeople = [
+        allMerpersonGroup,
+        allMerpersonMaleGroup,
+        allMerpersonFemaleGroup
+    ];
+    const allMerpeopleGroup = new EmojiGroup("\u{1F9DC}\uDDDC", "Merperson", ...allMerpeople);
+    const allElf = [
+        elf,
+        elfLightSkinTone,
+        elfMediumLightSkinTone,
+        elfMediumSkinTone,
+        elfMediumDarkSkinTone,
+        elfDarkSkinTone
+    ];
+    const allElfGroup = new EmojiGroup("\u{1F9DD}\uDDDD", "Elf", ...allElf);
+    const allElfMale = [
+        elfMale,
+        elfLightSkinToneMale,
+        elfMediumLightSkinToneMale,
+        elfMediumSkinToneMale,
+        elfMediumDarkSkinToneMale,
+        elfDarkSkinToneMale
+    ];
+    const allElfMaleGroup = new EmojiGroup("\u{1F9DD}\uDDDD\u200D\u2642\uFE0F", "Elf: Male", ...allElfMale);
+    const allElfFemale = [
+        elfFemale,
+        elfLightSkinToneFemale,
+        elfMediumLightSkinToneFemale,
+        elfMediumSkinToneFemale,
+        elfMediumDarkSkinToneFemale,
+        elfDarkSkinToneFemale
+    ];
+    const allElfFemaleGroup = new EmojiGroup("\u{1F9DD}\uDDDD\u200D\u2640\uFE0F", "Elf: Female", ...allElfFemale);
+    const allElves = [
+        allElfGroup,
+        allElfMaleGroup,
+        allElfFemaleGroup
+    ];
+    const allElvesGroup = new EmojiGroup("\u{1F9DD}\uDDDD", "Elf", ...allElves);
+    const allWalking = [
         walking,
+        walkingLightSkinTone,
+        walkingMediumLightSkinTone,
+        walkingMediumSkinTone,
+        walkingMediumDarkSkinTone,
+        walkingDarkSkinTone
+    ];
+    const allWalkingGroup = new EmojiGroup("\u{1F6B6}\uDEB6", "Walking", ...allWalking);
+    const allWalkingMale = [
+        walkingMale,
+        walkingLightSkinToneMale,
+        walkingMediumLightSkinToneMale,
+        walkingMediumSkinToneMale,
+        walkingMediumDarkSkinToneMale,
+        walkingDarkSkinToneMale
+    ];
+    const allWalkingMaleGroup = new EmojiGroup("\u{1F6B6}\uDEB6\u200D\u2642\uFE0F", "Walking: Male", ...allWalkingMale);
+    const allWalkingFemale = [
+        walkingFemale,
+        walkingLightSkinToneFemale,
+        walkingMediumLightSkinToneFemale,
+        walkingMediumSkinToneFemale,
+        walkingMediumDarkSkinToneFemale,
+        walkingDarkSkinToneFemale
+    ];
+    const allWalkingFemaleGroup = new EmojiGroup("\u{1F6B6}\uDEB6\u200D\u2640\uFE0F", "Walking: Female", ...allWalkingFemale);
+    const allWalkers = [
+        allWalkingGroup,
+        allWalkingMaleGroup,
+        allWalkingFemaleGroup
+    ];
+    const allWalkersGroup = new EmojiGroup("\u{1F6B6}\uDEB6", "Walking", ...allWalkers);
+    const allStanding = [
         standing,
+        standingLightSkinTone,
+        standingMediumLightSkinTone,
+        standingMediumSkinTone,
+        standingMediumDarkSkinTone,
+        standingDarkSkinTone
+    ];
+    const allStandingGroup = new EmojiGroup("\u{1F9CD}\uDDCD", "Standing", ...allStanding);
+    const allStandingMale = [
+        standingMale,
+        standingLightSkinToneMale,
+        standingMediumLightSkinToneMale,
+        standingMediumSkinToneMale,
+        standingMediumDarkSkinToneMale,
+        standingDarkSkinToneMale
+    ];
+    const allStandingMaleGroup = new EmojiGroup("\u{1F9CD}\uDDCD\u200D\u2642\uFE0F", "Standing: Male", ...allStandingMale);
+    const allStandingFemale = [
+        standingFemale,
+        standingLightSkinToneFemale,
+        standingMediumLightSkinToneFemale,
+        standingMediumSkinToneFemale,
+        standingMediumDarkSkinToneFemale,
+        standingDarkSkinToneFemale
+    ];
+    const allStandingFemaleGroup = new EmojiGroup("\u{1F9CD}\uDDCD\u200D\u2640\uFE0F", "Standing: Female", ...allStandingFemale);
+    const allStanders = [
+        allStandingGroup,
+        allStandingMaleGroup,
+        allStandingFemaleGroup
+    ];
+    const allStandersGroup = new EmojiGroup("\u{1F9CD}\uDDCD", "Standing", ...allStanders);
+    const allKneeling = [
         kneeling,
-        withProbingCane,
-        inMotorizedWheelchair,
-        inManualWheelchair,
-        dancers,
-        jugglers,
-        climbers,
-        fencer,
-        jockeys,
-        skier,
-        snowboarders,
-        golfers,
-        surfers,
-        rowers,
-        swimmers,
-        runners,
-        basketballers,
-        weightLifters,
-        bikers,
-        mountainBikers,
-        cartwheelers,
-        wrestlers,
-        waterPoloers,
-        handBallers
-    });
-    const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
-    const inBath = skin("\u{1F6C0}", "In Bath");
-    const inBed = skin("\u{1F6CC}", "In Bed");
-    const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
-    const resting = gg("Resting", "Depictions of people at rest", {
-        inLotusPosition,
-        inBath,
-        inBed,
-        inSauna
-    });
-    const babies = g(baby.value, baby.desc, baby, cherub);
-    const people = gg("People", "People", {
-        babies,
-        children,
-        adults,
-        elderly
-    });
-    const allPeople = gg("All People", "All People", {
-        people,
-        gestures: gestures$1,
-        inMotion,
-        resting,
-        roles,
-        fantasy
-    });
-    const ogre = e("\u{1F479}", "Ogre");
-    const goblin = e("\u{1F47A}", "Goblin");
-    const ghost = e("\u{1F47B}", "Ghost");
-    const alien = e("\u{1F47D}", "Alien");
-    const alienMonster = e("\u{1F47E}", "Alien Monster");
-    const angryFaceWithHorns = e("\u{1F47F}", "Angry Face with Horns");
-    const skull = e("\u{1F480}", "Skull");
-    const pileOfPoo = e("\u{1F4A9}", "Pile of Poo");
-    const grinningFace = e("\u{1F600}", "Grinning Face");
-    const beamingFaceWithSmilingEyes = e("\u{1F601}", "Beaming Face with Smiling Eyes");
-    const faceWithTearsOfJoy = e("\u{1F602}", "Face with Tears of Joy");
-    const grinningFaceWithBigEyes = e("\u{1F603}", "Grinning Face with Big Eyes");
-    const grinningFaceWithSmilingEyes = e("\u{1F604}", "Grinning Face with Smiling Eyes");
-    const grinningFaceWithSweat = e("\u{1F605}", "Grinning Face with Sweat");
-    const grinningSquitingFace = e("\u{1F606}", "Grinning Squinting Face");
-    const smillingFaceWithHalo = e("\u{1F607}", "Smiling Face with Halo");
-    const smilingFaceWithHorns = e("\u{1F608}", "Smiling Face with Horns");
-    const winkingFace = e("\u{1F609}", "Winking Face");
-    const smilingFaceWithSmilingEyes = e("\u{1F60A}", "Smiling Face with Smiling Eyes");
-    const faceSavoringFood = e("\u{1F60B}", "Face Savoring Food");
-    const relievedFace = e("\u{1F60C}", "Relieved Face");
-    const smilingFaceWithHeartEyes = e("\u{1F60D}", "Smiling Face with Heart-Eyes");
-    const smilingFaceWithSunglasses = e("\u{1F60E}", "Smiling Face with Sunglasses");
-    const smirkingFace = e("\u{1F60F}", "Smirking Face");
-    const neutralFace = e("\u{1F610}", "Neutral Face");
-    const expressionlessFace = e("\u{1F611}", "Expressionless Face");
-    const unamusedFace = e("\u{1F612}", "Unamused Face");
-    const downcastFaceWithSweat = e("\u{1F613}", "Downcast Face with Sweat");
-    const pensiveFace = e("\u{1F614}", "Pensive Face");
-    const confusedFace = e("\u{1F615}", "Confused Face");
-    const confoundedFace = e("\u{1F616}", "Confounded Face");
-    const kissingFace = e("\u{1F617}", "Kissing Face");
-    const faceBlowingAKiss = e("\u{1F618}", "Face Blowing a Kiss");
-    const kissingFaceWithSmilingEyes = e("\u{1F619}", "Kissing Face with Smiling Eyes");
-    const kissingFaceWithClosedEyes = e("\u{1F61A}", "Kissing Face with Closed Eyes");
-    const faceWithTongue = e("\u{1F61B}", "Face with Tongue");
-    const winkingFaceWithTongue = e("\u{1F61C}", "Winking Face with Tongue");
-    const squintingFaceWithTongue = e("\u{1F61D}", "Squinting Face with Tongue");
-    const disappointedFace = e("\u{1F61E}", "Disappointed Face");
-    const worriedFace = e("\u{1F61F}", "Worried Face");
-    const angryFace = e("\u{1F620}", "Angry Face");
-    const poutingFace = e("\u{1F621}", "Pouting Face");
-    const cryingFace = e("\u{1F622}", "Crying Face");
-    const perseveringFace = e("\u{1F623}", "Persevering Face");
-    const faceWithSteamFromNose = e("\u{1F624}", "Face with Steam From Nose");
-    const sadButRelievedFace = e("\u{1F625}", "Sad but Relieved Face");
-    const frowningFaceWithOpenMouth = e("\u{1F626}", "Frowning Face with Open Mouth");
-    const anguishedFace = e("\u{1F627}", "Anguished Face");
-    const fearfulFace = e("\u{1F628}", "Fearful Face");
-    const wearyFace = e("\u{1F629}", "Weary Face");
-    const sleepyFace = e("\u{1F62A}", "Sleepy Face");
-    const tiredFace = e("\u{1F62B}", "Tired Face");
-    const grimacingFace = e("\u{1F62C}", "Grimacing Face");
-    const loudlyCryingFace = e("\u{1F62D}", "Loudly Crying Face");
-    const faceWithOpenMouth = e("\u{1F62E}", "Face with Open Mouth");
-    const hushedFace = e("\u{1F62F}", "Hushed Face");
-    const anxiousFaceWithSweat = e("\u{1F630}", "Anxious Face with Sweat");
-    const faceScreamingInFear = e("\u{1F631}", "Face Screaming in Fear");
-    const astonishedFace = e("\u{1F632}", "Astonished Face");
-    const flushedFace = e("\u{1F633}", "Flushed Face");
-    const sleepingFace = e("\u{1F634}", "Sleeping Face");
-    const dizzyFace = e("\u{1F635}", "Dizzy Face");
-    const faceWithoutMouth = e("\u{1F636}", "Face Without Mouth");
-    const faceWithMedicalMask = e("\u{1F637}", "Face with Medical Mask");
-    const grinningCatWithSmilingEyes = e("\u{1F638}", "Grinning Cat with Smiling Eyes");
-    const catWithTearsOfJoy = e("\u{1F639}", "Cat with Tears of Joy");
-    const grinningCat = e("\u{1F63A}", "Grinning Cat");
-    const smilingCatWithHeartEyes = e("\u{1F63B}", "Smiling Cat with Heart-Eyes");
-    const catWithWrySmile = e("\u{1F63C}", "Cat with Wry Smile");
-    const kissingCat = e("\u{1F63D}", "Kissing Cat");
-    const poutingCat = e("\u{1F63E}", "Pouting Cat");
-    const cryingCat = e("\u{1F63F}", "Crying Cat");
-    const wearyCat = e("\u{1F640}", "Weary Cat");
-    const slightlyFrowningFace = e("\u{1F641}", "Slightly Frowning Face");
-    const slightlySmilingFace = e("\u{1F642}", "Slightly Smiling Face");
-    const updisdeDownFace = e("\u{1F643}", "Upside-Down Face");
-    const faceWithRollingEyes = e("\u{1F644}", "Face with Rolling Eyes");
-    const seeNoEvilMonkey = e("\u{1F648}", "See-No-Evil Monkey");
-    const hearNoEvilMonkey = e("\u{1F649}", "Hear-No-Evil Monkey");
-    const speakNoEvilMonkey = e("\u{1F64A}", "Speak-No-Evil Monkey");
-    const zipperMouthFace = e("\u{1F910}", "Zipper-Mouth Face");
-    const moneyMouthFace = e("\u{1F911}", "Money-Mouth Face");
-    const faceWithThermometer = e("\u{1F912}", "Face with Thermometer");
-    const nerdFace = e("\u{1F913}", "Nerd Face");
-    const thinkingFace = e("\u{1F914}", "Thinking Face");
-    const faceWithHeadBandage = e("\u{1F915}", "Face with Head-Bandage");
-    const robot = e("\u{1F916}", "Robot");
-    const huggingFace = e("\u{1F917}", "Hugging Face");
-    const cowboyHatFace = e("\u{1F920}", "Cowboy Hat Face");
-    const clownFace = e("\u{1F921}", "Clown Face");
-    const nauseatedFace = e("\u{1F922}", "Nauseated Face");
-    const rollingOnTheFloorLaughing = e("\u{1F923}", "Rolling on the Floor Laughing");
-    const droolingFace = e("\u{1F924}", "Drooling Face");
-    const lyingFace = e("\u{1F925}", "Lying Face");
-    const sneezingFace = e("\u{1F927}", "Sneezing Face");
-    const faceWithRaisedEyebrow = e("\u{1F928}", "Face with Raised Eyebrow");
-    const starStruck = e("\u{1F929}", "Star-Struck");
-    const zanyFace = e("\u{1F92A}", "Zany Face");
-    const shushingFace = e("\u{1F92B}", "Shushing Face");
-    const faceWithSymbolsOnMouth = e("\u{1F92C}", "Face with Symbols on Mouth");
-    const faceWithHandOverMouth = e("\u{1F92D}", "Face with Hand Over Mouth");
-    const faceVomitting = e("\u{1F92E}", "Face Vomiting");
-    const explodingHead = e("\u{1F92F}", "Exploding Head");
-    const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
-    const yawningFace = e("\u{1F971}", "Yawning Face");
-    //export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
-    const partyingFace = e("\u{1F973}", "Partying Face");
-    const woozyFace = e("\u{1F974}", "Woozy Face");
-    const hotFace = e("\u{1F975}", "Hot Face");
-    const coldFace = e("\u{1F976}", "Cold Face");
-    //export const disguisedFace = e("\u{1F978}", "Disguised Face");
-    const pleadingFace = e("\u{1F97A}", "Pleading Face");
-    const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
-    const skullAndCrossbones = E("\u2620", "Skull and Crossbones");
-    const frowningFace = E("\u2639", "Frowning Face");
-    const smilingFace = E("\u263A", "Smiling Face");
-    const speakingHead = E("\u{1F5E3}", "Speaking Head");
-    const bust = e("\u{1F464}", "Bust in Silhouette");
-    const faces = gg("Faces", "Round emoji faces", {
-        ogre,
-        goblin,
-        ghost,
-        alien,
-        alienMonster,
-        angryFaceWithHorns,
-        skull,
-        pileOfPoo,
-        grinningFace,
-        beamingFaceWithSmilingEyes,
-        faceWithTearsOfJoy,
-        grinningFaceWithBigEyes,
-        grinningFaceWithSmilingEyes,
-        grinningFaceWithSweat,
-        grinningSquitingFace,
-        smillingFaceWithHalo,
-        smilingFaceWithHorns,
-        winkingFace,
-        smilingFaceWithSmilingEyes,
-        faceSavoringFood,
-        relievedFace,
-        smilingFaceWithHeartEyes,
-        smilingFaceWithSunglasses,
-        smirkingFace,
-        neutralFace,
-        expressionlessFace,
-        unamusedFace,
-        downcastFaceWithSweat,
-        pensiveFace,
-        confusedFace,
-        confoundedFace,
-        kissingFace,
-        faceBlowingAKiss,
-        kissingFaceWithSmilingEyes,
-        kissingFaceWithClosedEyes,
-        faceWithTongue,
-        winkingFaceWithTongue,
-        squintingFaceWithTongue,
-        disappointedFace,
-        worriedFace,
-        angryFace,
-        poutingFace,
-        cryingFace,
-        perseveringFace,
-        faceWithSteamFromNose,
-        sadButRelievedFace,
-        frowningFaceWithOpenMouth,
-        anguishedFace,
-        fearfulFace,
-        wearyFace,
-        sleepyFace,
-        tiredFace,
-        grimacingFace,
-        loudlyCryingFace,
-        faceWithOpenMouth,
-        hushedFace,
-        anxiousFaceWithSweat,
-        faceScreamingInFear,
-        astonishedFace,
-        flushedFace,
-        sleepingFace,
-        dizzyFace,
-        faceWithoutMouth,
-        faceWithMedicalMask,
-        grinningCatWithSmilingEyes,
-        catWithTearsOfJoy,
-        grinningCat,
-        smilingCatWithHeartEyes,
-        catWithWrySmile,
-        kissingCat,
-        poutingCat,
-        cryingCat,
-        wearyCat,
-        slightlyFrowningFace,
-        slightlySmilingFace,
-        updisdeDownFace,
-        faceWithRollingEyes,
-        seeNoEvilMonkey,
-        hearNoEvilMonkey,
-        speakNoEvilMonkey,
-        zipperMouthFace,
-        moneyMouthFace,
-        faceWithThermometer,
-        nerdFace,
-        thinkingFace,
-        faceWithHeadBandage,
-        robot,
-        huggingFace,
-        cowboyHatFace,
-        clownFace,
-        nauseatedFace,
-        rollingOnTheFloorLaughing,
-        droolingFace,
-        lyingFace,
-        sneezingFace,
-        faceWithRaisedEyebrow,
-        starStruck,
-        zanyFace,
-        shushingFace,
-        faceWithSymbolsOnMouth,
-        faceWithHandOverMouth,
-        faceVomitting,
-        explodingHead,
-        smilingFaceWithHearts,
-        yawningFace,
-        //smilingFaceWithTear,
-        partyingFace,
-        woozyFace,
-        hotFace,
-        coldFace,
-        //disguisedFace,
-        pleadingFace,
-        faceWithMonocle,
-        skullAndCrossbones,
-        frowningFace,
-        smilingFace,
-        speakingHead,
-        bust,
-    });
-    const kissMark = e("\u{1F48B}", "Kiss Mark");
-    const loveLetter = e("\u{1F48C}", "Love Letter");
-    const beatingHeart = e("\u{1F493}", "Beating Heart");
-    const brokenHeart = e("\u{1F494}", "Broken Heart");
-    const twoHearts = e("\u{1F495}", "Two Hearts");
-    const sparklingHeart = e("\u{1F496}", "Sparkling Heart");
-    const growingHeart = e("\u{1F497}", "Growing Heart");
-    const heartWithArrow = e("\u{1F498}", "Heart with Arrow");
-    const blueHeart = e("\u{1F499}", "Blue Heart");
-    const greenHeart = e("\u{1F49A}", "Green Heart");
-    const yellowHeart = e("\u{1F49B}", "Yellow Heart");
-    const purpleHeart = e("\u{1F49C}", "Purple Heart");
-    const heartWithRibbon = e("\u{1F49D}", "Heart with Ribbon");
-    const revolvingHearts = e("\u{1F49E}", "Revolving Hearts");
-    const heartDecoration = e("\u{1F49F}", "Heart Decoration");
-    const blackHeart = e("\u{1F5A4}", "Black Heart");
-    const whiteHeart = e("\u{1F90D}", "White Heart");
-    const brownHeart = e("\u{1F90E}", "Brown Heart");
-    const orangeHeart = e("\u{1F9E1}", "Orange Heart");
-    const heartExclamation = E("\u2763", "Heart Exclamation");
-    const redHeart = E("\u2764", "Red Heart");
-    const love = gg("Love", "Hearts and kisses", {
-        kissMark,
-        loveLetter,
-        beatingHeart,
-        brokenHeart,
-        twoHearts,
-        sparklingHeart,
-        growingHeart,
-        heartWithArrow,
-        blueHeart,
-        greenHeart,
-        yellowHeart,
-        purpleHeart,
-        heartWithRibbon,
-        revolvingHearts,
-        heartDecoration,
-        blackHeart,
-        whiteHeart,
-        brownHeart,
-        orangeHeart,
-        heartExclamation,
-        redHeart,
-    });
-    const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
-    const bomb = e("\u{1F4A3}", "Bomb");
-    const zzz = e("\u{1F4A4}", "Zzz");
-    const collision = e("\u{1F4A5}", "Collision");
-    const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
-    const dashingAway = e("\u{1F4A8}", "Dashing Away");
-    const dizzy = e("\u{1F4AB}", "Dizzy");
-    const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
-    const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
-    const hundredPoints = e("\u{1F4AF}", "Hundred Points");
-    const hole = E("\u{1F573}", "Hole");
-    const leftSpeechBubble = E("\u{1F5E8}", "Left Speech Bubble");
-    const rightSpeechBubble = E("\u{1F5E9}", "Right Speech Bubble");
-    const conversationBubbles2 = E("\u{1F5EA}", "Conversation Bubbles 2");
-    const conversationBubbles3 = E("\u{1F5EB}", "Conversation Bubbles 3");
-    const leftThoughtBubble = E("\u{1F5EC}", "Left Thought Bubble");
-    const rightThoughtBubble = E("\u{1F5ED}", "Right Thought Bubble");
-    const leftAngerBubble = E("\u{1F5EE}", "Left Anger Bubble");
-    const rightAngerBubble = E("\u{1F5EF}", "Right Anger Bubble");
-    const angerBubble = E("\u{1F5F0}", "Anger Bubble");
-    const angerBubbleLightningBolt = E("\u{1F5F1}", "Anger Bubble Lightning");
-    const lightningBolt = E("\u{1F5F2}", "Lightning Bolt");
-    const cartoon = g("Cartoon", "Cartoon symbols", angerSymbol, bomb, zzz, collision, sweatDroplets, dashingAway, dizzy, speechBalloon, thoughtBalloon, hundredPoints, hole, leftSpeechBubble, rightSpeechBubble, conversationBubbles2, conversationBubbles3, leftThoughtBubble, rightThoughtBubble, leftAngerBubble, rightAngerBubble, angerBubble, angerBubbleLightningBolt, lightningBolt);
-    const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
-    const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
-    const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
-    const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
-    const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
-    const wavingHand = e("\u{1F44B}", "Waving Hand");
-    const okHand = e("\u{1F58F}", "OK Hand");
-    const thumbsUp = e("\u{1F44D}", "Thumbs Up");
-    const thumbsDown = e("\u{1F44E}", "Thumbs Down");
-    const clappingHands = e("\u{1F44F}", "Clapping Hands");
-    const openHands = e("\u{1F450}", "Open Hands");
-    const nailPolish = e("\u{1F485}", "Nail Polish");
-    const handsWithFingersSplayed = E("\u{1F590}", "Hand with Fingers Splayed");
-    const handsWithFingersSplayed2 = E("\u{1F591}", "Hand with Fingers Splayed 2");
-    const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
-    const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
-    const peaceFingers = e("\u{1F594}", "Peace Fingers");
-    const middleFinger = e("\u{1F595}", "Middle Finger");
-    const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
-    const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
-    const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
-    const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
-    const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
-    const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
-    const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
-    const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
-    const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
-    const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
-    const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
-    const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
-    const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
-    const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
-    const raisingHands = e("\u{1F64C}", "Raising Hands");
-    const foldedHands = e("\u{1F64F}", "Folded Hands");
-    const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
-    const pinchingHand = e("\u{1F90F}", "Pinching Hand");
-    const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
-    const callMeHand = e("\u{1F919}", "Call Me Hand");
-    const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
-    const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
-    const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
-    const handshake = e("\u{1F91D}", "Handshake");
-    const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
-    const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
-    const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
-    const indexPointingUp4 = E("\u261D", "Index Pointing Up 4");
-    const raisedFist = e("\u270A", "Raised Fist");
-    const raisedHand = e("\u270B", "Raised Hand");
-    const victoryHand = E("\u270C", "Victory Hand");
-    const writingHand = E("\u270D", "Writing Hand");
-    const hands = g("Hands", "Hands pointing at things", backhandIndexPointingUp, backhandIndexPointingDown, backhandIndexPointingLeft, backhandIndexPointingRight, oncomingFist, wavingHand, okHand, thumbsUp, thumbsDown, clappingHands, openHands, nailPolish, handsWithFingersSplayed, handsWithFingersSplayed2, handsWithFingersSplayed2, thumbsUp2, thumbsDown2, peaceFingers, middleFinger, vulcanSalute, handPointingDown, handPointingLeft, handPointingRight, handPointingLeft2, handPointingRight2, indexPointingLeft, indexPointingRight, indexPointingUp, indexPointingDown, indexPointingUp2, indexPointingDown2, indexPointingUp3, indexPointingDown3, raisingHands, foldedHands, pinchedFingers, pinchingHand, signOfTheHorns, callMeHand, rasiedBackOfHand, leftFacingFist, rightFacingFist, handshake, crossedFingers, loveYouGesture, palmsUpTogether, indexPointingUp4, raisedFist, raisedHand, victoryHand, writingHand);
-    const redCircle = e("\u{1F534}", "Red Circle");
-    const blueCircle = e("\u{1F535}", "Blue Circle");
-    const largeOrangeDiamond = e("\u{1F536}", "Large Orange Diamond");
-    const largeBlueDiamond = e("\u{1F537}", "Large Blue Diamond");
-    const smallOrangeDiamond = e("\u{1F538}", "Small Orange Diamond");
-    const smallBlueDiamond = e("\u{1F539}", "Small Blue Diamond");
-    const redTrianglePointedUp = e("\u{1F53A}", "Red Triangle Pointed Up");
-    const redTrianglePointedDown = e("\u{1F53B}", "Red Triangle Pointed Down");
-    const orangeCircle = e("\u{1F7E0}", "Orange Circle");
-    const yellowCircle = e("\u{1F7E1}", "Yellow Circle");
-    const greenCircle = e("\u{1F7E2}", "Green Circle");
-    const purpleCircle = e("\u{1F7E3}", "Purple Circle");
-    const brownCircle = e("\u{1F7E4}", "Brown Circle");
-    const hollowRedCircle = e("\u2B55", "Hollow Red Circle");
-    const whiteCircle = e("\u26AA", "White Circle");
-    const blackCircle = e("\u26AB", "Black Circle");
-    const redSquare = e("\u{1F7E5}", "Red Square");
-    const blueSquare = e("\u{1F7E6}", "Blue Square");
-    const orangeSquare = e("\u{1F7E7}", "Orange Square");
-    const yellowSquare = e("\u{1F7E8}", "Yellow Square");
-    const greenSquare = e("\u{1F7E9}", "Green Square");
-    const purpleSquare = e("\u{1F7EA}", "Purple Square");
-    const brownSquare = e("\u{1F7EB}", "Brown Square");
-    const blackSquareButton = e("\u{1F532}", "Black Square Button");
-    const whiteSquareButton = e("\u{1F533}", "White Square Button");
-    const blackSmallSquare = E("\u25AA", "Black Small Square");
-    const whiteSmallSquare = E("\u25AB", "White Small Square");
-    const whiteMediumSmallSquare = e("\u25FD", "White Medium-Small Square");
-    const blackMediumSmallSquare = e("\u25FE", "Black Medium-Small Square");
-    const whiteMediumSquare = E("\u25FB", "White Medium Square");
-    const blackMediumSquare = E("\u25FC", "Black Medium Square");
-    const blackLargeSquare = e("\u2B1B", "Black Large Square");
-    const whiteLargeSquare = e("\u2B1C", "White Large Square");
-    const star = e("\u2B50", "Star");
-    const diamondWithADot = e("\u{1F4A0}", "Diamond with a Dot");
-    const shapes = g("Shapes", "Colored shapes", redCircle, blueCircle, largeOrangeDiamond, largeBlueDiamond, smallOrangeDiamond, smallBlueDiamond, redTrianglePointedUp, redTrianglePointedDown, orangeCircle, yellowCircle, greenCircle, purpleCircle, brownCircle, hollowRedCircle, whiteCircle, blackCircle, redSquare, blueSquare, orangeSquare, yellowSquare, greenSquare, purpleSquare, brownSquare, blackSquareButton, whiteSquareButton, blackSmallSquare, whiteSmallSquare, whiteMediumSmallSquare, blackMediumSmallSquare, whiteMediumSquare, blackMediumSquare, blackLargeSquare, whiteLargeSquare, star, diamondWithADot);
-    const eye = E("\u{1F441}", "Eye");
-    const eyeInSpeechBubble = join(eye, leftSpeechBubble, "Eye in Speech Bubble");
-    const bodyParts = g("Body Parts", "General body parts", e("\u{1F440}", "Eyes"), eye, eyeInSpeechBubble, e("\u{1F442}", "Ear"), e("\u{1F443}", "Nose"), e("\u{1F444}", "Mouth"), e("\u{1F445}", "Tongue"), e("\u{1F4AA}", "Flexed Biceps"), e("\u{1F933}", "Selfie"), e("\u{1F9B4}", "Bone"), e("\u{1F9B5}", "Leg"), e("\u{1F9B6}", "Foot"), e("\u{1F9B7}", "Tooth"), e("\u{1F9BB}", "Ear with Hearing Aid"), e("\u{1F9BE}", "Mechanical Arm"), e("\u{1F9BF}", "Mechanical Leg"), e("\u{1FAC0}", "Anatomical Heart"), e("\u{1FAC1}", "Lungs"), e("\u{1F9E0}", "Brain"));
-    const snowflake = E("\u2744", "Snowflake");
-    const rainbow = e("\u{1F308}", "Rainbow");
-    const weather = g("Weather", "Weather", e("\u{1F304}", "Sunrise Over Mountains"), e("\u{1F305}", "Sunrise"), e("\u{1F306}", "Cityscape at Dusk"), e("\u{1F307}", "Sunset"), e("\u{1F303}", "Night with Stars"), e("\u{1F302}", "Closed Umbrella"), E("\u2602", "Umbrella"), E("\u2614", "Umbrella with Rain Drops"), E("\u2603", "Snowman"), e("\u26C4", "Snowman Without Snow"), E("\u2600", "Sun"), E("\u2601", "Cloud"), E("\u{1F324}", "Sun Behind Small Cloud"), e("\u26C5", "Sun Behind Cloud"), E("\u{1F325}", "Sun Behind Large Cloud"), E("\u{1F326}", "Sun Behind Rain Cloud"), E("\u{1F327}", "Cloud with Rain"), E("\u{1F328}", "Cloud with Snow"), E("\u{1F329}", "Cloud with Lightning"), E("\u26C8", "Cloud with Lightning and Rain"), snowflake, e("\u{1F300}", "Cyclone"), E("\u{1F32A}", "Tornado"), E("\u{1F32C}", "Wind Face"), e("\u{1F30A}", "Water Wave"), E("\u{1F32B}", "Fog"), e("\u{1F301}", "Foggy"), rainbow, E("\u{1F321}", "Thermometer"));
-    const cat = e("\u{1F408}", "Cat");
-    const blackCat = join(cat, blackLargeSquare, "Black Cat");
-    const dog = e("\u{1F415}", "Dog");
-    const serviceDog = join(dog, safetyVest, "Service Dog");
-    const bear = e("\u{1F43B}", "Bear");
-    const polarBear = join(bear, snowflake, "Polar Bear");
-    const animals = g("Animals", "Animals and insects", e("\u{1F400}", "Rat"), e("\u{1F401}", "Mouse"), e("\u{1F402}", "Ox"), e("\u{1F403}", "Water Buffalo"), e("\u{1F404}", "Cow"), e("\u{1F405}", "Tiger"), e("\u{1F406}", "Leopard"), e("\u{1F407}", "Rabbit"), cat, blackCat, e("\u{1F409}", "Dragon"), e("\u{1F40A}", "Crocodile"), e("\u{1F40B}", "Whale"), e("\u{1F40C}", "Snail"), e("\u{1F40D}", "Snake"), e("\u{1F40E}", "Horse"), e("\u{1F40F}", "Ram"), e("\u{1F410}", "Goat"), e("\u{1F411}", "Ewe"), e("\u{1F412}", "Monkey"), e("\u{1F413}", "Rooster"), e("\u{1F414}", "Chicken"), dog, serviceDog, e("\u{1F416}", "Pig"), e("\u{1F417}", "Boar"), e("\u{1F418}", "Elephant"), e("\u{1F419}", "Octopus"), e("\u{1F41A}", "Spiral Shell"), e("\u{1F41B}", "Bug"), e("\u{1F41C}", "Ant"), e("\u{1F41D}", "Honeybee"), e("\u{1F41E}", "Lady Beetle"), e("\u{1F41F}", "Fish"), e("\u{1F420}", "Tropical Fish"), e("\u{1F421}", "Blowfish"), e("\u{1F422}", "Turtle"), e("\u{1F423}", "Hatching Chick"), e("\u{1F424}", "Baby Chick"), e("\u{1F425}", "Front-Facing Baby Chick"), e("\u{1F426}", "Bird"), e("\u{1F427}", "Penguin"), e("\u{1F428}", "Koala"), e("\u{1F429}", "Poodle"), e("\u{1F42A}", "Camel"), e("\u{1F42B}", "Two-Hump Camel"), e("\u{1F42C}", "Dolphin"), e("\u{1F42D}", "Mouse Face"), e("\u{1F42E}", "Cow Face"), e("\u{1F42F}", "Tiger Face"), e("\u{1F430}", "Rabbit Face"), e("\u{1F431}", "Cat Face"), e("\u{1F432}", "Dragon Face"), e("\u{1F433}", "Spouting Whale"), e("\u{1F434}", "Horse Face"), e("\u{1F435}", "Monkey Face"), e("\u{1F436}", "Dog Face"), e("\u{1F437}", "Pig Face"), e("\u{1F438}", "Frog"), e("\u{1F439}", "Hamster"), e("\u{1F43A}", "Wolf"), bear, polarBear, e("\u{1F43C}", "Panda"), e("\u{1F43D}", "Pig Nose"), e("\u{1F43E}", "Paw Prints"), E("\u{1F43F}", "Chipmunk"), E("\u{1F54A}", "Dove"), E("\u{1F577}", "Spider"), E("\u{1F578}", "Spider Web"), e("\u{1F981}", "Lion"), e("\u{1F982}", "Scorpion"), e("\u{1F983}", "Turkey"), e("\u{1F984}", "Unicorn"), e("\u{1F985}", "Eagle"), e("\u{1F986}", "Duck"), e("\u{1F987}", "Bat"), e("\u{1F988}", "Shark"), e("\u{1F989}", "Owl"), e("\u{1F98A}", "Fox"), e("\u{1F98B}", "Butterfly"), e("\u{1F98C}", "Deer"), e("\u{1F98D}", "Gorilla"), e("\u{1F98E}", "Lizard"), e("\u{1F98F}", "Rhinoceros"), e("\u{1F992}", "Giraffe"), e("\u{1F993}", "Zebra"), e("\u{1F994}", "Hedgehog"), e("\u{1F995}", "Sauropod"), e("\u{1F996}", "T-Rex"), e("\u{1F997}", "Cricket"), e("\u{1F998}", "Kangaroo"), e("\u{1F999}", "Llama"), e("\u{1F99A}", "Peacock"), e("\u{1F99B}", "Hippopotamus"), e("\u{1F99C}", "Parrot"), e("\u{1F99D}", "Raccoon"), e("\u{1F99F}", "Mosquito"), e("\u{1F9A0}", "Microbe"), e("\u{1F9A1}", "Badger"), e("\u{1F9A2}", "Swan"), 
-    //e("\u{1F9A3}", "Mammoth"),
-    //e("\u{1F9A4}", "Dodo"),
-    e("\u{1F9A5}", "Sloth"), e("\u{1F9A6}", "Otter"), e("\u{1F9A7}", "Orangutan"), e("\u{1F9A8}", "Skunk"), e("\u{1F9A9}", "Flamingo"), 
-    //e("\u{1F9AB}", "Beaver"),
-    //e("\u{1F9AC}", "Bison"),
-    //e("\u{1F9AD}", "Seal"),
-    //e("\u{1FAB0}", "Fly"),
-    //e("\u{1FAB1}", "Worm"),
-    //e("\u{1FAB2}", "Beetle"),
-    //e("\u{1FAB3}", "Cockroach"),
-    //e("\u{1FAB6}", "Feather"),
-    e("\u{1F9AE}", "Guide Dog"));
-    const whiteFlower = e("\u{1F4AE}", "White Flower");
-    const plants = g("Plants", "Flowers, trees, and things", e("\u{1F331}", "Seedling"), e("\u{1F332}", "Evergreen Tree"), e("\u{1F333}", "Deciduous Tree"), e("\u{1F334}", "Palm Tree"), e("\u{1F335}", "Cactus"), e("\u{1F337}", "Tulip"), e("\u{1F338}", "Cherry Blossom"), e("\u{1F339}", "Rose"), e("\u{1F33A}", "Hibiscus"), e("\u{1F33B}", "Sunflower"), e("\u{1F33C}", "Blossom"), sheafOfRice, e("\u{1F33F}", "Herb"), e("\u{1F340}", "Four Leaf Clover"), e("\u{1F341}", "Maple Leaf"), e("\u{1F342}", "Fallen Leaf"), e("\u{1F343}", "Leaf Fluttering in Wind"), E("\u{1F3F5}", "Rosette"), e("\u{1F490}", "Bouquet"), whiteFlower, e("\u{1F940}", "Wilted Flower"), 
-    //e("\u{1FAB4}", "Potted Plant"),
-    E("\u2618", "Shamrock"));
-    const banana = e("\u{1F34C}", "Banana");
-    const food = g("Food", "Food, drink, and utensils", e("\u{1F32D}", "Hot Dog"), e("\u{1F32E}", "Taco"), e("\u{1F32F}", "Burrito"), e("\u{1F330}", "Chestnut"), E("\u{1F336}", "Hot Pepper"), e("\u{1F33D}", "Ear of Corn"), e("\u{1F344}", "Mushroom"), e("\u{1F345}", "Tomato"), e("\u{1F346}", "Eggplant"), e("\u{1F347}", "Grapes"), e("\u{1F348}", "Melon"), e("\u{1F349}", "Watermelon"), e("\u{1F34A}", "Tangerine"), e("\u{1F34B}", "Lemon"), banana, e("\u{1F34D}", "Pineapple"), e("\u{1F34E}", "Red Apple"), e("\u{1F34F}", "Green Apple"), e("\u{1F350}", "Pear"), e("\u{1F351}", "Peach"), e("\u{1F352}", "Cherries"), e("\u{1F353}", "Strawberry"), e("\u{1F354}", "Hamburger"), e("\u{1F355}", "Pizza"), e("\u{1F356}", "Meat on Bone"), e("\u{1F357}", "Poultry Leg"), e("\u{1F358}", "Rice Cracker"), e("\u{1F359}", "Rice Ball"), e("\u{1F35A}", "Cooked Rice"), e("\u{1F35B}", "Curry Rice"), e("\u{1F35C}", "Steaming Bowl"), e("\u{1F35D}", "Spaghetti"), e("\u{1F35E}", "Bread"), e("\u{1F35F}", "French Fries"), e("\u{1F360}", "Roasted Sweet Potato"), e("\u{1F361}", "Dango"), e("\u{1F362}", "Oden"), e("\u{1F363}", "Sushi"), e("\u{1F364}", "Fried Shrimp"), e("\u{1F365}", "Fish Cake with Swirl"), e("\u{1F371}", "Bento Box"), e("\u{1F372}", "Pot of Food"), cooking, e("\u{1F37F}", "Popcorn"), e("\u{1F950}", "Croissant"), e("\u{1F951}", "Avocado"), e("\u{1F952}", "Cucumber"), e("\u{1F953}", "Bacon"), e("\u{1F954}", "Potato"), e("\u{1F955}", "Carrot"), e("\u{1F956}", "Baguette Bread"), e("\u{1F957}", "Green Salad"), e("\u{1F958}", "Shallow Pan of Food"), e("\u{1F959}", "Stuffed Flatbread"), e("\u{1F95A}", "Egg"), e("\u{1F95C}", "Peanuts"), e("\u{1F95D}", "Kiwi Fruit"), e("\u{1F95E}", "Pancakes"), e("\u{1F95F}", "Dumpling"), e("\u{1F960}", "Fortune Cookie"), e("\u{1F961}", "Takeout Box"), e("\u{1F963}", "Bowl with Spoon"), e("\u{1F965}", "Coconut"), e("\u{1F966}", "Broccoli"), e("\u{1F968}", "Pretzel"), e("\u{1F969}", "Cut of Meat"), e("\u{1F96A}", "Sandwich"), e("\u{1F96B}", "Canned Food"), e("\u{1F96C}", "Leafy Green"), e("\u{1F96D}", "Mango"), e("\u{1F96E}", "Moon Cake"), e("\u{1F96F}", "Bagel"), e("\u{1F980}", "Crab"), e("\u{1F990}", "Shrimp"), e("\u{1F991}", "Squid"), e("\u{1F99E}", "Lobster"), e("\u{1F9AA}", "Oyster"), e("\u{1F9C0}", "Cheese Wedge"), e("\u{1F9C2}", "Salt"), e("\u{1F9C4}", "Garlic"), e("\u{1F9C5}", "Onion"), e("\u{1F9C6}", "Falafel"), e("\u{1F9C7}", "Waffle"), e("\u{1F9C8}", "Butter"), 
-    //e("\u{1FAD0}", "Blueberries"),
-    //e("\u{1FAD1}", "Bell Pepper"),
-    //e("\u{1FAD2}", "Olive"),
-    //e("\u{1FAD3}", "Flatbread"),
-    //e("\u{1FAD4}", "Tamale"),
-    //e("\u{1FAD5}", "Fondue"),
-    e("\u{1F366}", "Soft Ice Cream"), e("\u{1F367}", "Shaved Ice"), e("\u{1F368}", "Ice Cream"), e("\u{1F369}", "Doughnut"), e("\u{1F36A}", "Cookie"), e("\u{1F36B}", "Chocolate Bar"), e("\u{1F36C}", "Candy"), e("\u{1F36D}", "Lollipop"), e("\u{1F36E}", "Custard"), e("\u{1F36F}", "Honey Pot"), e("\u{1F370}", "Shortcake"), e("\u{1F382}", "Birthday Cake"), e("\u{1F967}", "Pie"), e("\u{1F9C1}", "Cupcake"), e("\u{1F375}", "Teacup Without Handle"), e("\u{1F376}", "Sake"), e("\u{1F377}", "Wine Glass"), e("\u{1F378}", "Cocktail Glass"), e("\u{1F379}", "Tropical Drink"), e("\u{1F37A}", "Beer Mug"), e("\u{1F37B}", "Clinking Beer Mugs"), e("\u{1F37C}", "Baby Bottle"), e("\u{1F37E}", "Bottle with Popping Cork"), e("\u{1F942}", "Clinking Glasses"), e("\u{1F943}", "Tumbler Glass"), e("\u{1F95B}", "Glass of Milk"), e("\u{1F964}", "Cup with Straw"), e("\u{1F9C3}", "Beverage Box"), e("\u{1F9C9}", "Mate"), e("\u{1F9CA}", "Ice"), 
-    //e("\u{1F9CB}", "Bubble Tea"),
-    //e("\u{1FAD6}", "Teapot"),
-    e("\u2615", "Hot Beverage"), e("\u{1F374}", "Fork and Knife"), E("\u{1F37D}", "Fork and Knife with Plate"), e("\u{1F3FA}", "Amphora"), e("\u{1F52A}", "Kitchen Knife"), e("\u{1F944}", "Spoon"), e("\u{1F962}", "Chopsticks"));
-    const nations = g("National Flags", "Flags of countries from around the world", e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"), e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"), e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"), e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"), e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"), e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"), e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"), e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"), e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"), e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"), e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"), e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"), e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"), e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"), e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"), e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"), e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"), e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"), e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"), e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"), e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"), e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"), e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"), e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"), e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"), e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"), e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"), e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"), e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"), e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"), e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"), e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"), e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"), e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"), e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"), e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"), e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"), e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"), e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"), e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"), e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"), e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"), e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"), e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"), e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"), e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"), e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"), e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"), e("\u{1F1E8}\u{1F1F3}", "Flag: China"), e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"), e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"), e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"), e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"), e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"), e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"), e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"), e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"), e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"), e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"), e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"), e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"), e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"), e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"), e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"), e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"), e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"), e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"), e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"), e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"), e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"), e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"), e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"), e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"), e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"), e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"), e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"), e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"), e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"), e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"), e("\u{1F1EB}\u{1F1F7}", "Flag: France"), e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"), e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"), e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"), e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"), e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"), e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"), e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"), e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"), e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"), e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"), e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"), e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"), e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"), e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"), e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"), e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"), e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"), e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"), e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"), e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"), e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"), e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"), e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"), e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"), e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"), e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"), e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"), e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"), e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"), e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"), e("\u{1F1EE}\u{1F1F3}", "Flag: India"), e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"), e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"), e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"), e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"), e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"), e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"), e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"), e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"), e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"), e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"), e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"), e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"), e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"), e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"), e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"), e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"), e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"), e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"), e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"), e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"), e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"), e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"), e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"), e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"), e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"), e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"), e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"), e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"), e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"), e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"), e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"), e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"), e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"), e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"), e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"), e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"), e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"), e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"), e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"), e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"), e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"), e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"), e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"), e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"), e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"), e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"), e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"), e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"), e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"), e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"), e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"), e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"), e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"), e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"), e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"), e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"), e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"), e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"), e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"), e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"), e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"), e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"), e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"), e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"), e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"), e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"), e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"), e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"), e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"), e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"), e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"), e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"), e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"), e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"), e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"), e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"), e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"), e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"), e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"), e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"), e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"), e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"), e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"), e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"), e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"), e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"), e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"), e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"), e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"), e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"), e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"), e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"), e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"), e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"), e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"), e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"), e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"), e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"), e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"), e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"), e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"), e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"), e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"), e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"), e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"), e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"), e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"), e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"), e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"), e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"), e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"), e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"), e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"), e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"), e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"), e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"), e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"), e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"), e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"), e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"), e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"), e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"), e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"), e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"), e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"), e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"), e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"), e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"), e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"), e("\u{1F1FA}\u{1F1F8}", "Flag: United States"), e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"), e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"), e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"), e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"), e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"), e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"), e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"), e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"), e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"), e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"), e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"), e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"), e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"), e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"), e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"), e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"), e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
-    const whiteFlag = E("\u{1F3F3}", "White Flag");
-    const rainbowFlag = join(whiteFlag, rainbow, "Rainbow Flag");
-    const transgenderFlag = join(whiteFlag, transgender, "Transgender Flag");
-    const blackFlag = e("\u{1F3F4}", "Black Flag");
-    const pirateFlag = join(blackFlag, skullAndCrossbones, "Pirate Flag");
-    const flags = g("Flags", "Basic flags", e("\u{1F38C}", "Crossed Flags"), e("\u{1F3C1}", "Chequered Flag"), whiteFlag, rainbowFlag, transgenderFlag, blackFlag, pirateFlag, e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"), e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"), e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"), e("\u{1F6A9}", "Triangular Flag"));
-    const motorcycle = E("\u{1F3CD}", "Motorcycle");
-    const racingCar = E("\u{1F3CE}", "Racing Car");
-    const seat = e("\u{1F4BA}", "Seat");
-    const helicopter = e("\u{1F681}", "Helicopter");
-    const locomotive = e("\u{1F682}", "Locomotive");
-    const railwayCar = e("\u{1F683}", "Railway Car");
-    const highspeedTrain = e("\u{1F684}", "High-Speed Train");
-    const bulletTrain = e("\u{1F685}", "Bullet Train");
-    const train = e("\u{1F686}", "Train");
-    const metro = e("\u{1F687}", "Metro");
-    const lightRail = e("\u{1F688}", "Light Rail");
-    const station = e("\u{1F689}", "Station");
-    const tram = e("\u{1F68A}", "Tram");
-    const tramCar = e("\u{1F68B}", "Tram Car");
-    const bus = e("\u{1F68C}", "Bus");
-    const oncomingBus = e("\u{1F68D}", "Oncoming Bus");
-    const trolleyBus = e("\u{1F68E}", "Trolleybus");
-    const busStop = e("\u{1F68F}", "Bus Stop");
-    const miniBus = e("\u{1F690}", "Minibus");
-    const ambulance = e("\u{1F691}", "Ambulance");
-    const taxi = e("\u{1F695}", "Taxi");
-    const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
-    const automobile = e("\u{1F697}", "Automobile");
-    const oncomingAutomobile = e("\u{1F698}", "Oncoming Automobile");
-    const sportUtilityVehicle = e("\u{1F699}", "Sport Utility Vehicle");
-    const deliveryTruck = e("\u{1F69A}", "Delivery Truck");
-    const articulatedLorry = e("\u{1F69B}", "Articulated Lorry");
-    const tractor = e("\u{1F69C}", "Tractor");
-    const monorail = e("\u{1F69D}", "Monorail");
-    const mountainRailway = e("\u{1F69E}", "Mountain Railway");
-    const suspensionRailway = e("\u{1F69F}", "Suspension Railway");
-    const mountainCableway = e("\u{1F6A0}", "Mountain Cableway");
-    const aerialTramway = e("\u{1F6A1}", "Aerial Tramway");
-    const ship = e("\u{1F6A2}", "Ship");
-    const speedBoat = e("\u{1F6A4}", "Speedboat");
-    const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
-    const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
-    const construction = e("\u{1F6A7}", "Construction");
-    const bicycle = e("\u{1F6B2}", "Bicycle");
-    const stopSign = e("\u{1F6D1}", "Stop Sign");
-    const oilDrum = E("\u{1F6E2}", "Oil Drum");
-    const motorway = E("\u{1F6E3}", "Motorway");
-    const railwayTrack = E("\u{1F6E4}", "Railway Track");
-    const motorBoat = E("\u{1F6E5}", "Motor Boat");
-    const smallAirplane = E("\u{1F6E9}", "Small Airplane");
-    const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
-    const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
-    const satellite = E("\u{1F6F0}", "Satellite");
-    const passengerShip = E("\u{1F6F3}", "Passenger Ship");
-    const kickScooter = e("\u{1F6F4}", "Kick Scooter");
-    const motorScooter = e("\u{1F6F5}", "Motor Scooter");
-    const canoe = e("\u{1F6F6}", "Canoe");
-    const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
-    const skateboard = e("\u{1F6F9}", "Skateboard");
-    const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
-    //export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
-    //export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
-    const parachute = e("\u{1FA82}", "Parachute");
-    const anchor = e("\u2693", "Anchor");
-    const ferry = E("\u26F4", "Ferry");
-    const sailboat = e("\u26F5", "Sailboat");
-    const fuelPump = e("\u26FD", "Fuel Pump");
-    const vehicles = g("Vehicles", "Things that go", motorcycle, racingCar, seat, rocket, helicopter, locomotive, railwayCar, highspeedTrain, bulletTrain, train, metro, lightRail, station, tram, tramCar, bus, oncomingBus, trolleyBus, busStop, miniBus, ambulance, fireEngine, taxi, oncomingTaxi, automobile, oncomingAutomobile, sportUtilityVehicle, deliveryTruck, articulatedLorry, tractor, monorail, mountainRailway, suspensionRailway, mountainCableway, aerialTramway, ship, speedBoat, horizontalTrafficLight, verticalTrafficLight, construction, bicycle, stopSign, oilDrum, motorway, railwayTrack, motorBoat, smallAirplane, airplaneDeparture, airplaneArrival, satellite, passengerShip, kickScooter, motorScooter, canoe, flyingSaucer, skateboard, autoRickshaw, 
-    //pickupTruck,
-    //rollerSkate,
-    motorizedWheelchair, manualWheelchair, parachute, anchor, ferry, sailboat, fuelPump, airplane);
-    const bloodTypes = g("Blood Types", "Blood types", e("\u{1F170}", "A Button (Blood Type)"), e("\u{1F171}", "B Button (Blood Type)"), e("\u{1F17E}", "O Button (Blood Type)"), e("\u{1F18E}", "AB Button (Blood Type)"));
-    const regionIndicators = g("Regions", "Region indicators", e("\u{1F1E6}", "Regional Indicator Symbol Letter A"), e("\u{1F1E7}", "Regional Indicator Symbol Letter B"), e("\u{1F1E8}", "Regional Indicator Symbol Letter C"), e("\u{1F1E9}", "Regional Indicator Symbol Letter D"), e("\u{1F1EA}", "Regional Indicator Symbol Letter E"), e("\u{1F1EB}", "Regional Indicator Symbol Letter F"), e("\u{1F1EC}", "Regional Indicator Symbol Letter G"), e("\u{1F1ED}", "Regional Indicator Symbol Letter H"), e("\u{1F1EE}", "Regional Indicator Symbol Letter I"), e("\u{1F1EF}", "Regional Indicator Symbol Letter J"), e("\u{1F1F0}", "Regional Indicator Symbol Letter K"), e("\u{1F1F1}", "Regional Indicator Symbol Letter L"), e("\u{1F1F2}", "Regional Indicator Symbol Letter M"), e("\u{1F1F3}", "Regional Indicator Symbol Letter N"), e("\u{1F1F4}", "Regional Indicator Symbol Letter O"), e("\u{1F1F5}", "Regional Indicator Symbol Letter P"), e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"), e("\u{1F1F7}", "Regional Indicator Symbol Letter R"), e("\u{1F1F8}", "Regional Indicator Symbol Letter S"), e("\u{1F1F9}", "Regional Indicator Symbol Letter T"), e("\u{1F1FA}", "Regional Indicator Symbol Letter U"), e("\u{1F1FB}", "Regional Indicator Symbol Letter V"), e("\u{1F1FC}", "Regional Indicator Symbol Letter W"), e("\u{1F1FD}", "Regional Indicator Symbol Letter X"), e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"), e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
-    const japanese = g("Japanese", "Japanse symbology", e("\u{1F530}", "Japanese Symbol for Beginner"), e("\u{1F201}", "Japanese “Here” Button"), E("\u{1F202}", "Japanese “Service Charge” Button"), e("\u{1F21A}", "Japanese “Free of Charge” Button"), e("\u{1F22F}", "Japanese “Reserved” Button"), e("\u{1F232}", "Japanese “Prohibited” Button"), e("\u{1F233}", "Japanese “Vacancy” Button"), e("\u{1F234}", "Japanese “Passing Grade” Button"), e("\u{1F235}", "Japanese “No Vacancy” Button"), e("\u{1F236}", "Japanese “Not Free of Charge” Button"), E("\u{1F237}", "Japanese “Monthly Amount” Button"), e("\u{1F238}", "Japanese “Application” Button"), e("\u{1F239}", "Japanese “Discount” Button"), e("\u{1F23A}", "Japanese “Open for Business” Button"), e("\u{1F250}", "Japanese “Bargain” Button"), e("\u{1F251}", "Japanese “Acceptable” Button"), E("\u3297", "Japanese “Congratulations” Button"), E("\u3299", "Japanese “Secret” Button"));
-    const clocks = g("Clocks", "Time-keeping pieces", e("\u{1F550}", "One O’Clock"), e("\u{1F551}", "Two O’Clock"), e("\u{1F552}", "Three O’Clock"), e("\u{1F553}", "Four O’Clock"), e("\u{1F554}", "Five O’Clock"), e("\u{1F555}", "Six O’Clock"), e("\u{1F556}", "Seven O’Clock"), e("\u{1F557}", "Eight O’Clock"), e("\u{1F558}", "Nine O’Clock"), e("\u{1F559}", "Ten O’Clock"), e("\u{1F55A}", "Eleven O’Clock"), e("\u{1F55B}", "Twelve O’Clock"), e("\u{1F55C}", "One-Thirty"), e("\u{1F55D}", "Two-Thirty"), e("\u{1F55E}", "Three-Thirty"), e("\u{1F55F}", "Four-Thirty"), e("\u{1F560}", "Five-Thirty"), e("\u{1F561}", "Six-Thirty"), e("\u{1F562}", "Seven-Thirty"), e("\u{1F563}", "Eight-Thirty"), e("\u{1F564}", "Nine-Thirty"), e("\u{1F565}", "Ten-Thirty"), e("\u{1F566}", "Eleven-Thirty"), e("\u{1F567}", "Twelve-Thirty"), E("\u{1F570}", "Mantelpiece Clock"), e("\u231A", "Watch"), e("\u23F0", "Alarm Clock"), E("\u23F1", "Stopwatch"), E("\u23F2", "Timer Clock"), e("\u231B", "Hourglass Done"), e("\u23F3", "Hourglass Not Done"));
-    const clockwiseVerticalArrows = E("\u{1F503}", "Clockwise Vertical Arrows");
-    const counterclockwiseArrowsButton = E("\u{1F504}", "Counterclockwise Arrows Button");
-    const leftRightArrow = E("\u2194", "Left-Right Arrow");
-    const upDownArrow = E("\u2195", "Up-Down Arrow");
-    const upLeftArrow = E("\u2196", "Up-Left Arrow");
-    const upRightArrow = E("\u2197", "Up-Right Arrow");
-    const downRightArrow = e("\u2198", "Down-Right Arrow");
-    const downRightArrowEmoji = E("\u2198", "Down-Right Arrow");
-    const downLeftArrow = E("\u2199", "Down-Left Arrow");
-    const rightArrowCurvingLeft = E("\u21A9", "Right Arrow Curving Left");
-    const leftArrowCurvingRight = E("\u21AA", "Left Arrow Curving Right");
-    const rightArrow = E("\u27A1", "Right Arrow");
-    const rightArrowCurvingUp = E("\u2934", "Right Arrow Curving Up");
-    const rightArrowCurvingDown = E("\u2935", "Right Arrow Curving Down");
-    const leftArrow = E("\u2B05", "Left Arrow");
-    const upArrow = E("\u2B06", "Up Arrow");
-    const downArrow = E("\u2B07", "Down Arrow");
-    const arrows = g("Arrows", "Arrows pointing in different directions", clockwiseVerticalArrows, counterclockwiseArrowsButton, leftRightArrow, upDownArrow, upLeftArrow, upRightArrow, downRightArrowEmoji, downLeftArrow, rightArrowCurvingLeft, leftArrowCurvingRight, rightArrow, rightArrowCurvingUp, rightArrowCurvingDown, leftArrow, upArrow, downArrow);
-    const clearButton = e("\u{1F191}", "CL Button");
-    const coolButton = e("\u{1F192}", "Cool Button");
-    const freeButton = e("\u{1F193}", "Free Button");
-    const idButton = e("\u{1F194}", "ID Button");
-    const newButton = e("\u{1F195}", "New Button");
-    const ngButton = e("\u{1F196}", "NG Button");
-    const okButton = e("\u{1F197}", "OK Button");
-    const sosButton = e("\u{1F198}", "SOS Button");
-    const upButton = e("\u{1F199}", "Up! Button");
-    const vsButton = e("\u{1F19A}", "Vs Button");
-    const radioButton = e("\u{1F518}", "Radio Button");
-    const backArrow = e("\u{1F519}", "Back Arrow");
-    const endArrow = e("\u{1F51A}", "End Arrow");
-    const onArrow = e("\u{1F51B}", "On! Arrow");
-    const soonArrow = e("\u{1F51C}", "Soon Arrow");
-    const topArrow = e("\u{1F51D}", "Top Arrow");
-    const checkBoxWithCheck = E("\u2611", "Check Box with Check");
-    const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
-    const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
-    const inputNumbers = e("\u{1F522}", "Input Numbers");
-    const inputSymbols = e("\u{1F523}", "Input Symbols");
-    const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
-    const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
-    const repeatButton = e("\u{1F501}", "Repeat Button");
-    const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
-    const upwardsButton = e("\u{1F53C}", "Upwards Button");
-    const downwardsButton = e("\u{1F53D}", "Downwards Button");
-    const playButton = E("\u25B6", "Play Button");
-    const reverseButton = E("\u25C0", "Reverse Button");
-    const ejectButton = E("\u23CF", "Eject Button");
-    const fastForwardButton = e("\u23E9", "Fast-Forward Button");
-    const fastReverseButton = e("\u23EA", "Fast Reverse Button");
-    const fastUpButton = e("\u23EB", "Fast Up Button");
-    const fastDownButton = e("\u23EC", "Fast Down Button");
-    const nextTrackButton = E("\u23ED", "Next Track Button");
-    const lastTrackButton = E("\u23EE", "Last Track Button");
-    const playOrPauseButton = E("\u23EF", "Play or Pause Button");
-    const pauseButton = E("\u23F8", "Pause Button");
-    const stopButton = E("\u23F9", "Stop Button");
-    const recordButton = E("\u23FA", "Record Button");
-    const buttons = g("Buttons", "Buttons", clearButton, coolButton, freeButton, idButton, newButton, ngButton, okButton, sosButton, upButton, vsButton, radioButton, backArrow, endArrow, onArrow, soonArrow, topArrow, checkBoxWithCheck, inputLatinUppercase, inputLatinLowercase, inputNumbers, inputSymbols, inputLatinLetters, shuffleTracksButton, repeatButton, repeatSingleButton, upwardsButton, downwardsButton, playButton, pauseButton, reverseButton, ejectButton, fastForwardButton, fastReverseButton, fastUpButton, fastDownButton, nextTrackButton, lastTrackButton, playOrPauseButton, pauseButton, stopButton, recordButton);
-    const zodiac = g("Zodiac", "The symbology of astrology", e("\u2648", "Aries"), e("\u2649", "Taurus"), e("\u264A", "Gemini"), e("\u264B", "Cancer"), e("\u264C", "Leo"), e("\u264D", "Virgo"), e("\u264E", "Libra"), e("\u264F", "Scorpio"), e("\u2650", "Sagittarius"), e("\u2651", "Capricorn"), e("\u2652", "Aquarius"), e("\u2653", "Pisces"), e("\u26CE", "Ophiuchus"));
-    const digit0 = E("0", "Digit Zero");
-    const digit1 = E("1", "Digit One");
-    const digit2 = E("2", "Digit Two");
-    const digit3 = E("3", "Digit Three");
-    const digit4 = E("4", "Digit Four");
-    const digit5 = E("5", "Digit Five");
-    const digit6 = E("6", "Digit Six");
-    const digit7 = E("7", "Digit Seven");
-    const digit8 = E("8", "Digit Eight");
-    const digit9 = E("9", "Digit Nine");
-    const asterisk = E("\u002A", "Asterisk");
-    const numberSign = E("\u0023", "Number Sign");
-    const keycapDigit0 = combo(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
-    const keycapDigit1 = combo(digit1, combiningEnclosingKeycap, "Keycap Digit One");
-    const keycapDigit2 = combo(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
-    const keycapDigit3 = combo(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
-    const keycapDigit4 = combo(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
-    const keycapDigit5 = combo(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
-    const keycapDigit6 = combo(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
-    const keycapDigit7 = combo(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
-    const keycapDigit8 = combo(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
-    const keycapDigit9 = combo(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
-    const keycapAsterisk = combo(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
-    const keycapNumberSign = combo(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
-    const keycap10 = e("\u{1F51F}", "Keycap: 10");
-    const numbers = g("Numbers", "Numbers", digit0, digit1, digit2, digit3, digit4, digit5, digit6, digit7, digit8, digit9, asterisk, numberSign, keycapDigit0, keycapDigit1, keycapDigit2, keycapDigit3, keycapDigit4, keycapDigit5, keycapDigit6, keycapDigit7, keycapDigit8, keycapDigit9, keycapAsterisk, keycapNumberSign, keycap10);
-    const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
-    const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
-    const tags = g("Tags", "Tags", e("\u{E0020}", "Tag Space"), e("\u{E0021}", "Tag Exclamation Mark"), e("\u{E0022}", "Tag Quotation Mark"), e("\u{E0023}", "Tag Number Sign"), e("\u{E0024}", "Tag Dollar Sign"), e("\u{E0025}", "Tag Percent Sign"), e("\u{E0026}", "Tag Ampersand"), e("\u{E0027}", "Tag Apostrophe"), e("\u{E0028}", "Tag Left Parenthesis"), e("\u{E0029}", "Tag Right Parenthesis"), e("\u{E002A}", "Tag Asterisk"), tagPlusSign, e("\u{E002C}", "Tag Comma"), tagMinusHyphen, e("\u{E002E}", "Tag Full Stop"), e("\u{E002F}", "Tag Solidus"), e("\u{E0030}", "Tag Digit Zero"), e("\u{E0031}", "Tag Digit One"), e("\u{E0032}", "Tag Digit Two"), e("\u{E0033}", "Tag Digit Three"), e("\u{E0034}", "Tag Digit Four"), e("\u{E0035}", "Tag Digit Five"), e("\u{E0036}", "Tag Digit Six"), e("\u{E0037}", "Tag Digit Seven"), e("\u{E0038}", "Tag Digit Eight"), e("\u{E0039}", "Tag Digit Nine"), e("\u{E003A}", "Tag Colon"), e("\u{E003B}", "Tag Semicolon"), e("\u{E003C}", "Tag Less-Than Sign"), e("\u{E003D}", "Tag Equals Sign"), e("\u{E003E}", "Tag Greater-Than Sign"), e("\u{E003F}", "Tag Question Mark"), e("\u{E0040}", "Tag Commercial at"), e("\u{E0041}", "Tag Latin Capital Letter a"), e("\u{E0042}", "Tag Latin Capital Letter B"), e("\u{E0043}", "Tag Latin Capital Letter C"), e("\u{E0044}", "Tag Latin Capital Letter D"), e("\u{E0045}", "Tag Latin Capital Letter E"), e("\u{E0046}", "Tag Latin Capital Letter F"), e("\u{E0047}", "Tag Latin Capital Letter G"), e("\u{E0048}", "Tag Latin Capital Letter H"), e("\u{E0049}", "Tag Latin Capital Letter I"), e("\u{E004A}", "Tag Latin Capital Letter J"), e("\u{E004B}", "Tag Latin Capital Letter K"), e("\u{E004C}", "Tag Latin Capital Letter L"), e("\u{E004D}", "Tag Latin Capital Letter M"), e("\u{E004E}", "Tag Latin Capital Letter N"), e("\u{E004F}", "Tag Latin Capital Letter O"), e("\u{E0050}", "Tag Latin Capital Letter P"), e("\u{E0051}", "Tag Latin Capital Letter Q"), e("\u{E0052}", "Tag Latin Capital Letter R"), e("\u{E0053}", "Tag Latin Capital Letter S"), e("\u{E0054}", "Tag Latin Capital Letter T"), e("\u{E0055}", "Tag Latin Capital Letter U"), e("\u{E0056}", "Tag Latin Capital Letter V"), e("\u{E0057}", "Tag Latin Capital Letter W"), e("\u{E0058}", "Tag Latin Capital Letter X"), e("\u{E0059}", "Tag Latin Capital Letter Y"), e("\u{E005A}", "Tag Latin Capital Letter Z"), e("\u{E005B}", "Tag Left Square Bracket"), e("\u{E005C}", "Tag Reverse Solidus"), e("\u{E005D}", "Tag Right Square Bracket"), e("\u{E005E}", "Tag Circumflex Accent"), e("\u{E005F}", "Tag Low Line"), e("\u{E0060}", "Tag Grave Accent"), e("\u{E0061}", "Tag Latin Small Letter a"), e("\u{E0062}", "Tag Latin Small Letter B"), e("\u{E0063}", "Tag Latin Small Letter C"), e("\u{E0064}", "Tag Latin Small Letter D"), e("\u{E0065}", "Tag Latin Small Letter E"), e("\u{E0066}", "Tag Latin Small Letter F"), e("\u{E0067}", "Tag Latin Small Letter G"), e("\u{E0068}", "Tag Latin Small Letter H"), e("\u{E0069}", "Tag Latin Small Letter I"), e("\u{E006A}", "Tag Latin Small Letter J"), e("\u{E006B}", "Tag Latin Small Letter K"), e("\u{E006C}", "Tag Latin Small Letter L"), e("\u{E006D}", "Tag Latin Small Letter M"), e("\u{E006E}", "Tag Latin Small Letter N"), e("\u{E006F}", "Tag Latin Small Letter O"), e("\u{E0070}", "Tag Latin Small Letter P"), e("\u{E0071}", "Tag Latin Small Letter Q"), e("\u{E0072}", "Tag Latin Small Letter R"), e("\u{E0073}", "Tag Latin Small Letter S"), e("\u{E0074}", "Tag Latin Small Letter T"), e("\u{E0075}", "Tag Latin Small Letter U"), e("\u{E0076}", "Tag Latin Small Letter V"), e("\u{E0077}", "Tag Latin Small Letter W"), e("\u{E0078}", "Tag Latin Small Letter X"), e("\u{E0079}", "Tag Latin Small Letter Y"), e("\u{E007A}", "Tag Latin Small Letter Z"), e("\u{E007B}", "Tag Left Curly Bracket"), e("\u{E007C}", "Tag Vertical Line"), e("\u{E007D}", "Tag Right Curly Bracket"), e("\u{E007E}", "Tag Tilde"), e("\u{E007F}", "Cancel Tag"));
-    const math = g("Math", "Math", E("\u2716", "Multiply"), e("\u2795", "Plus"), e("\u2796", "Minus"), e("\u2797", "Divide"));
-    const games = g("Games", "Games", E("\u2660", "Spade Suit"), E("\u2663", "Club Suit"), E("\u2665", "Heart Suit", { color: "red" }), E("\u2666", "Diamond Suit", { color: "red" }), e("\u{1F004}", "Mahjong Red Dragon"), e("\u{1F0CF}", "Joker"), e("\u{1F3AF}", "Direct Hit"), e("\u{1F3B0}", "Slot Machine"), e("\u{1F3B1}", "Pool 8 Ball"), e("\u{1F3B2}", "Game Die"), e("\u{1F3B3}", "Bowling"), e("\u{1F3B4}", "Flower Playing Cards"), e("\u{1F9E9}", "Puzzle Piece"), E("\u265F", "Chess Pawn"), e("\u{1FA80}", "Yo-Yo"), 
-    //e("\u{1FA83}", "Boomerang"),
-    //e("\u{1FA86}", "Nesting Dolls"),
-    e("\u{1FA81}", "Kite"));
-    const sportsEquipment = g("Sports Equipment", "Sports equipment", e("\u{1F3BD}", "Running Shirt"), e("\u{1F3BE}", "Tennis"), e("\u{1F3BF}", "Skis"), e("\u{1F3C0}", "Basketball"), e("\u{1F3C5}", "Sports Medal"), e("\u{1F3C6}", "Trophy"), e("\u{1F3C8}", "American Football"), e("\u{1F3C9}", "Rugby Football"), e("\u{1F3CF}", "Cricket Game"), e("\u{1F3D0}", "Volleyball"), e("\u{1F3D1}", "Field Hockey"), e("\u{1F3D2}", "Ice Hockey"), e("\u{1F3D3}", "Ping Pong"), e("\u{1F3F8}", "Badminton"), e("\u{1F6F7}", "Sled"), e("\u{1F945}", "Goal Net"), e("\u{1F947}", "1st Place Medal"), e("\u{1F948}", "2nd Place Medal"), e("\u{1F949}", "3rd Place Medal"), e("\u{1F94A}", "Boxing Glove"), e("\u{1F94C}", "Curling Stone"), e("\u{1F94D}", "Lacrosse"), e("\u{1F94E}", "Softball"), e("\u{1F94F}", "Flying Disc"), e("\u26BD", "Soccer Ball"), e("\u26BE", "Baseball"), E("\u26F8", "Ice Skate"));
-    const clothing = g("Clothing", "Clothing", e("\u{1F3A9}", "Top Hat"), e("\u{1F93F}", "Diving Mask"), e("\u{1F452}", "Woman’s Hat"), e("\u{1F453}", "Glasses"), E("\u{1F576}", "Sunglasses"), e("\u{1F454}", "Necktie"), e("\u{1F455}", "T-Shirt"), e("\u{1F456}", "Jeans"), e("\u{1F457}", "Dress"), e("\u{1F458}", "Kimono"), e("\u{1F459}", "Bikini"), e("\u{1F45A}", "Woman’s Clothes"), e("\u{1F45B}", "Purse"), e("\u{1F45C}", "Handbag"), e("\u{1F45D}", "Clutch Bag"), e("\u{1F45E}", "Man’s Shoe"), e("\u{1F45F}", "Running Shoe"), e("\u{1F460}", "High-Heeled Shoe"), e("\u{1F461}", "Woman’s Sandal"), e("\u{1F462}", "Woman’s Boot"), e("\u{1F94B}", "Martial Arts Uniform"), e("\u{1F97B}", "Sari"), e("\u{1F97C}", "Lab Coat"), e("\u{1F97D}", "Goggles"), e("\u{1F97E}", "Hiking Boot"), e("\u{1F97F}", "Flat Shoe"), whiteCane, safetyVest, e("\u{1F9E2}", "Billed Cap"), e("\u{1F9E3}", "Scarf"), e("\u{1F9E4}", "Gloves"), e("\u{1F9E5}", "Coat"), e("\u{1F9E6}", "Socks"), e("\u{1F9FF}", "Nazar Amulet"), e("\u{1FA70}", "Ballet Shoes"), e("\u{1FA71}", "One-Piece Swimsuit"), e("\u{1FA72}", "Briefs"), e("\u{1FA73}", "Shorts"));
-    const town = g("Town", "Town", E("\u{1F3D7}", "Building Construction"), E("\u{1F3D8}", "Houses"), E("\u{1F3D9}", "Cityscape"), E("\u{1F3DA}", "Derelict House"), E("\u{1F3DB}", "Classical Building"), E("\u{1F3DC}", "Desert"), E("\u{1F3DD}", "Desert Island"), E("\u{1F3DE}", "National Park"), E("\u{1F3DF}", "Stadium"), e("\u{1F3E0}", "House"), e("\u{1F3E1}", "House with Garden"), e("\u{1F3E2}", "Office Building"), e("\u{1F3E3}", "Japanese Post Office"), e("\u{1F3E4}", "Post Office"), e("\u{1F3E5}", "Hospital"), e("\u{1F3E6}", "Bank"), e("\u{1F3E7}", "ATM Sign"), e("\u{1F3E8}", "Hotel"), e("\u{1F3E9}", "Love Hotel"), e("\u{1F3EA}", "Convenience Store"), school, e("\u{1F3EC}", "Department Store"), factory, e("\u{1F309}", "Bridge at Night"), e("\u26F2", "Fountain"), E("\u{1F6CD}", "Shopping Bags"), e("\u{1F9FE}", "Receipt"), e("\u{1F6D2}", "Shopping Cart"), e("\u{1F488}", "Barber Pole"), e("\u{1F492}", "Wedding"), E("\u{1F5F3}", "Ballot Box with Ballot"));
-    const music = g("Music", "Music", e("\u{1F3BC}", "Musical Score"), e("\u{1F3B6}", "Musical Notes"), e("\u{1F3B5}", "Musical Note"), e("\u{1F3B7}", "Saxophone"), e("\u{1F3B8}", "Guitar"), e("\u{1F3B9}", "Musical Keyboard"), e("\u{1F3BA}", "Trumpet"), e("\u{1F3BB}", "Violin"), e("\u{1F941}", "Drum"), 
-    //e("\u{1FA97}", "Accordion"),
-    //e("\u{1FA98}", "Long Drum"),
-    e("\u{1FA95}", "Banjo"));
-    const astro = g("Astronomy", "Astronomy", e("\u{1F30C}", "Milky Way"), e("\u{1F30D}", "Globe Showing Europe-Africa"), e("\u{1F30E}", "Globe Showing Americas"), e("\u{1F30F}", "Globe Showing Asia-Australia"), e("\u{1F310}", "Globe with Meridians"), e("\u{1F311}", "New Moon"), e("\u{1F312}", "Waxing Crescent Moon"), e("\u{1F313}", "First Quarter Moon"), e("\u{1F314}", "Waxing Gibbous Moon"), e("\u{1F315}", "Full Moon"), e("\u{1F316}", "Waning Gibbous Moon"), e("\u{1F317}", "Last Quarter Moon"), e("\u{1F318}", "Waning Crescent Moon"), e("\u{1F319}", "Crescent Moon"), e("\u{1F31A}", "New Moon Face"), e("\u{1F31B}", "First Quarter Moon Face"), e("\u{1F31C}", "Last Quarter Moon Face"), e("\u{1F31D}", "Full Moon Face"), e("\u{1F31E}", "Sun with Face"), e("\u{1F31F}", "Glowing Star"), e("\u{1F320}", "Shooting Star"), E("\u2604", "Comet"), e("\u{1FA90}", "Ringed Planet"));
-    const finance = g("Finance", "Finance", e("\u{1F4B0}", "Money Bag"), e("\u{1F4B1}", "Currency Exchange"), e("\u{1F4B2}", "Heavy Dollar Sign"), e("\u{1F4B3}", "Credit Card"), e("\u{1F4B4}", "Yen Banknote"), e("\u{1F4B5}", "Dollar Banknote"), e("\u{1F4B6}", "Euro Banknote"), e("\u{1F4B7}", "Pound Banknote"), e("\u{1F4B8}", "Money with Wings"), 
-    //e("\u{1FA99}", "Coin"),
-    e("\u{1F4B9}", "Chart Increasing with Yen"));
-    const writing = g("Writing", "Writing", E("\u{1F58A}", "Pen"), E("\u{1F58B}", "Fountain Pen"), E("\u{1F58C}", "Paintbrush"), E("\u{1F58D}", "Crayon"), E("\u270F", "Pencil"), E("\u2712", "Black Nib"));
-    const alembic = E("\u2697", "Alembic");
-    const gear = E("\u2699", "Gear");
-    const atomSymbol = E("\u269B", "Atom Symbol");
-    const keyboard = E("\u2328", "Keyboard");
-    const telephone = E("\u260E", "Telephone");
-    const studioMicrophone = E("\u{1F399}", "Studio Microphone");
-    const levelSlider = E("\u{1F39A}", "Level Slider");
-    const controlKnobs = E("\u{1F39B}", "Control Knobs");
-    const movieCamera = e("\u{1F3A5}", "Movie Camera");
-    const headphone = e("\u{1F3A7}", "Headphone");
-    const videoGame = e("\u{1F3AE}", "Video Game");
-    const lightBulb = e("\u{1F4A1}", "Light Bulb");
-    const computerDisk = e("\u{1F4BD}", "Computer Disk");
-    const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
-    const opticalDisk = e("\u{1F4BF}", "Optical Disk");
-    const dvd = e("\u{1F4C0}", "DVD");
-    const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
-    const pager = e("\u{1F4DF}", "Pager");
-    const faxMachine = e("\u{1F4E0}", "Fax Machine");
-    const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
-    const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
-    const megaphone = e("\u{1F4E3}", "Megaphone");
-    const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
-    const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
-    const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
-    const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
-    const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
-    const antennaBars = e("\u{1F4F6}", "Antenna Bars");
-    const camera = e("\u{1F4F7}", "Camera");
-    const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
-    const videoCamera = e("\u{1F4F9}", "Video Camera");
-    const television = e("\u{1F4FA}", "Television");
-    const radio = e("\u{1F4FB}", "Radio");
-    const videocassette = e("\u{1F4FC}", "Videocassette");
-    const filmProjector = E("\u{1F4FD}", "Film Projector");
-    const dimButton = e("\u{1F505}", "Dim Button");
-    const brightButton = e("\u{1F506}", "Bright Button");
-    const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
-    const speakerLowVolume = e("\u{1F508}", "Speaker Low Volume");
-    const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
-    const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
-    const battery = e("\u{1F50B}", "Battery");
-    const electricPlug = e("\u{1F50C}", "Electric Plug");
-    const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
-    const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
-    const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
-    const lockedWithKey = e("\u{1F510}", "Locked with Key");
-    const key = e("\u{1F511}", "Key");
-    const locked = e("\u{1F512}", "Locked");
-    const unlocked = e("\u{1F513}", "Unlocked");
-    const bell = e("\u{1F514}", "Bell");
-    const bellWithSlash = e("\u{1F515}", "Bell with Slash");
-    const bookmark = e("\u{1F516}", "Bookmark");
-    const link = e("\u{1F517}", "Link");
-    const joystick = E("\u{1F579}", "Joystick");
-    const desktopComputer = E("\u{1F5A5}", "Desktop Computer");
-    const printer = E("\u{1F5A8}", "Printer");
-    const computerMouse = E("\u{1F5B1}", "Computer Mouse");
-    const trackball = E("\u{1F5B2}", "Trackball");
-    const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
-    const cardFileBox = e("\u{1F5C3}", "Card File Box");
-    const fileCabinet = e("\u{1F5C4}", "File Cabinet");
-    const wastebasket = e("\u{1F5D1}", "Wastebasket");
-    const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
-    const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
-    const compression = e("\u{1F5DC}", "Compression");
-    const oldKey = e("\u{1F5DD}", "Old Key");
-    const tech = g("Technology", "Technology", joystick, videoGame, lightBulb, laptop, briefcase, computerDisk, floppyDisk, opticalDisk, dvd, desktopComputer, keyboard, printer, computerMouse, trackball, telephone, telephoneReceiver, pager, faxMachine, satelliteAntenna, loudspeaker, megaphone, television, radio, videocassette, filmProjector, studioMicrophone, levelSlider, controlKnobs, microphone, movieCamera, headphone, camera, cameraWithFlash, videoCamera, mobilePhone, mobilePhoneOff, mobilePhoneWithArrow, lockedWithPen, lockedWithKey, locked, unlocked, bell, bellWithSlash, bookmark, link, mobilePhoneVibrating, antennaBars, dimButton, brightButton, mutedSpeaker, speakerLowVolume, speakerMediumVolume, speakerHighVolume, battery, electricPlug);
-    const mail = g("Mail", "Mail", e("\u{1F4E4}", "Outbox Tray"), e("\u{1F4E5}", "Inbox Tray"), e("\u{1F4E6}", "Package"), e("\u{1F4E7}", "E-Mail"), e("\u{1F4E8}", "Incoming Envelope"), e("\u{1F4E9}", "Envelope with Arrow"), e("\u{1F4EA}", "Closed Mailbox with Lowered Flag"), e("\u{1F4EB}", "Closed Mailbox with Raised Flag"), e("\u{1F4EC}", "Open Mailbox with Raised Flag"), e("\u{1F4ED}", "Open Mailbox with Lowered Flag"), e("\u{1F4EE}", "Postbox"), e("\u{1F4EF}", "Postal Horn"));
-    const celebration = g("Celebration", "Celebration", e("\u{1F380}", "Ribbon"), e("\u{1F381}", "Wrapped Gift"), e("\u{1F383}", "Jack-O-Lantern"), e("\u{1F384}", "Christmas Tree"), e("\u{1F9E8}", "Firecracker"), e("\u{1F386}", "Fireworks"), e("\u{1F387}", "Sparkler"), e("\u2728", "Sparkles"), E("\u2747", "Sparkle"), e("\u{1F388}", "Balloon"), e("\u{1F389}", "Party Popper"), e("\u{1F38A}", "Confetti Ball"), e("\u{1F38B}", "Tanabata Tree"), e("\u{1F38D}", "Pine Decoration"), e("\u{1F38E}", "Japanese Dolls"), e("\u{1F38F}", "Carp Streamer"), e("\u{1F390}", "Wind Chime"), e("\u{1F391}", "Moon Viewing Ceremony"), e("\u{1F392}", "Backpack"), graduationCap, e("\u{1F9E7}", "Red Envelope"), e("\u{1F3EE}", "Red Paper Lantern"), E("\u{1F396}", "Military Medal"));
-    const tools = g("Tools", "Tools", e("\u{1F3A3}", "Fishing Pole"), e("\u{1F526}", "Flashlight"), wrench, e("\u{1F528}", "Hammer"), e("\u{1F529}", "Nut and Bolt"), E("\u{1F6E0}", "Hammer and Wrench"), e("\u{1F9ED}", "Compass"), e("\u{1F9EF}", "Fire Extinguisher"), e("\u{1F9F0}", "Toolbox"), e("\u{1F9F1}", "Brick"), e("\u{1FA93}", "Axe"), E("\u2692", "Hammer and Pick"), E("\u26CF", "Pick"), E("\u26D1", "Rescue Worker’s Helmet"), E("\u26D3", "Chains"), compression);
-    const office = g("Office", "Office", e("\u{1F4C1}", "File Folder"), e("\u{1F4C2}", "Open File Folder"), e("\u{1F4C3}", "Page with Curl"), e("\u{1F4C4}", "Page Facing Up"), e("\u{1F4C5}", "Calendar"), e("\u{1F4C6}", "Tear-Off Calendar"), e("\u{1F4C7}", "Card Index"), cardIndexDividers, cardFileBox, fileCabinet, wastebasket, spiralNotePad, spiralCalendar, e("\u{1F4C8}", "Chart Increasing"), e("\u{1F4C9}", "Chart Decreasing"), e("\u{1F4CA}", "Bar Chart"), e("\u{1F4CB}", "Clipboard"), e("\u{1F4CC}", "Pushpin"), e("\u{1F4CD}", "Round Pushpin"), e("\u{1F4CE}", "Paperclip"), E("\u{1F587}", "Linked Paperclips"), e("\u{1F4CF}", "Straight Ruler"), e("\u{1F4D0}", "Triangular Ruler"), e("\u{1F4D1}", "Bookmark Tabs"), e("\u{1F4D2}", "Ledger"), e("\u{1F4D3}", "Notebook"), e("\u{1F4D4}", "Notebook with Decorative Cover"), e("\u{1F4D5}", "Closed Book"), e("\u{1F4D6}", "Open Book"), e("\u{1F4D7}", "Green Book"), e("\u{1F4D8}", "Blue Book"), e("\u{1F4D9}", "Orange Book"), e("\u{1F4DA}", "Books"), e("\u{1F4DB}", "Name Badge"), e("\u{1F4DC}", "Scroll"), e("\u{1F4DD}", "Memo"), E("\u2702", "Scissors"), E("\u2709", "Envelope"));
-    const signs = g("Signs", "Signs", e("\u{1F3A6}", "Cinema"), noMobilePhone, e("\u{1F51E}", "No One Under Eighteen"), e("\u{1F6AB}", "Prohibited"), e("\u{1F6AC}", "Cigarette"), e("\u{1F6AD}", "No Smoking"), e("\u{1F6AE}", "Litter in Bin Sign"), e("\u{1F6AF}", "No Littering"), e("\u{1F6B0}", "Potable Water"), e("\u{1F6B1}", "Non-Potable Water"), e("\u{1F6B3}", "No Bicycles"), e("\u{1F6B7}", "No Pedestrians"), e("\u{1F6B8}", "Children Crossing"), e("\u{1F6B9}", "Men’s Room"), e("\u{1F6BA}", "Women’s Room"), e("\u{1F6BB}", "Restroom"), e("\u{1F6BC}", "Baby Symbol"), e("\u{1F6BE}", "Water Closet"), e("\u{1F6C2}", "Passport Control"), e("\u{1F6C3}", "Customs"), e("\u{1F6C4}", "Baggage Claim"), e("\u{1F6C5}", "Left Luggage"), E("\u{1F17F}", "Parking Button"), e("\u267F", "Wheelchair Symbol"), E("\u2622", "Radioactive"), E("\u2623", "Biohazard"), E("\u26A0", "Warning"), e("\u26A1", "High Voltage"), e("\u26D4", "No Entry"), E("\u267B", "Recycling Symbol"), female, male, transgender);
-    const religion = g("Religion", "Religion", e("\u{1F52F}", "Dotted Six-Pointed Star"), E("\u2721", "Star of David"), E("\u{1F549}", "Om"), e("\u{1F54B}", "Kaaba"), e("\u{1F54C}", "Mosque"), e("\u{1F54D}", "Synagogue"), e("\u{1F54E}", "Menorah"), e("\u{1F6D0}", "Place of Worship"), e("\u{1F6D5}", "Hindu Temple"), E("\u2626", "Orthodox Cross"), E("\u271D", "Latin Cross"), E("\u262A", "Star and Crescent"), E("\u262E", "Peace Symbol"), E("\u262F", "Yin Yang"), E("\u2638", "Wheel of Dharma"), E("\u267E", "Infinity"), e("\u{1FA94}", "Diya Lamp"), E("\u26E9", "Shinto Shrine"), e("\u26EA", "Church"), E("\u2734", "Eight-Pointed Star"), e("\u{1F4FF}", "Prayer Beads"));
-    const door = e("\u{1F6AA}", "Door");
-    const household = g("Household", "Household", e("\u{1F484}", "Lipstick"), e("\u{1F48D}", "Ring"), e("\u{1F48E}", "Gem Stone"), e("\u{1F4F0}", "Newspaper"), key, e("\u{1F525}", "Fire"), e("\u{1F52B}", "Pistol"), E("\u{1F56F}", "Candle"), E("\u{1F5BC}", "Framed Picture"), oldKey, E("\u{1F5DE}", "Rolled-Up Newspaper"), E("\u{1F5FA}", "World Map"), door, e("\u{1F6BD}", "Toilet"), e("\u{1F6BF}", "Shower"), e("\u{1F6C1}", "Bathtub"), E("\u{1F6CB}", "Couch and Lamp"), E("\u{1F6CF}", "Bed"), e("\u{1F9F4}", "Lotion Bottle"), e("\u{1F9F5}", "Thread"), e("\u{1F9F6}", "Yarn"), e("\u{1F9F7}", "Safety Pin"), e("\u{1F9F8}", "Teddy Bear"), e("\u{1F9F9}", "Broom"), e("\u{1F9FA}", "Basket"), e("\u{1F9FB}", "Roll of Paper"), e("\u{1F9FC}", "Soap"), e("\u{1F9FD}", "Sponge"), e("\u{1FA91}", "Chair"), e("\u{1FA92}", "Razor"), E("\u{1F397}", "Reminder Ribbon"));
-    const activities = g("Activities", "Activities", E("\u{1F39E}", "Film Frames"), E("\u{1F39F}", "Admission Tickets"), e("\u{1F3A0}", "Carousel Horse"), e("\u{1F3A1}", "Ferris Wheel"), e("\u{1F3A2}", "Roller Coaster"), artistPalette, e("\u{1F3AA}", "Circus Tent"), e("\u{1F3AB}", "Ticket"), e("\u{1F3AC}", "Clapper Board"), e("\u{1F3AD}", "Performing Arts"));
-    const travel = g("Travel", "Travel", E("\u{1F3F7}", "Label"), e("\u{1F30B}", "Volcano"), E("\u{1F3D4}", "Snow-Capped Mountain"), E("\u26F0", "Mountain"), E("\u{1F3D5}", "Camping"), E("\u{1F3D6}", "Beach with Umbrella"), E("\u26F1", "Umbrella on Ground"), e("\u{1F3EF}", "Japanese Castle"), e("\u{1F463}", "Footprints"), e("\u{1F5FB}", "Mount Fuji"), e("\u{1F5FC}", "Tokyo Tower"), e("\u{1F5FD}", "Statue of Liberty"), e("\u{1F5FE}", "Map of Japan"), e("\u{1F5FF}", "Moai"), E("\u{1F6CE}", "Bellhop Bell"), e("\u{1F9F3}", "Luggage"), e("\u26F3", "Flag in Hole"), e("\u26FA", "Tent"), E("\u2668", "Hot Springs"));
-    const medieval = g("Medieval", "Medieval", e("\u{1F3F0}", "Castle"), e("\u{1F3F9}", "Bow and Arrow"), crown, e("\u{1F531}", "Trident Emblem"), E("\u{1F5E1}", "Dagger"), E("\u{1F6E1}", "Shield"), e("\u{1F52E}", "Crystal Ball"), E("\u2694", "Crossed Swords"), E("\u269C", "Fleur-de-lis"));
-    const doubleExclamationMark = E("\u203C", "Double Exclamation Mark");
-    const interrobang = E("\u2049", "Exclamation Question Mark");
-    const information = E("\u2139", "Information");
-    const circledM = E("\u24C2", "Circled M");
-    const checkMarkButton = e("\u2705", "Check Mark Button");
-    const checkMark = E("\u2714", "Check Mark");
-    const eightSpokedAsterisk = E("\u2733", "Eight-Spoked Asterisk");
-    const crossMark = e("\u274C", "Cross Mark");
-    const crossMarkButton = e("\u274E", "Cross Mark Button");
-    const questionMark = e("\u2753", "Question Mark");
-    const whiteQuestionMark = e("\u2754", "White Question Mark");
-    const whiteExclamationMark = e("\u2755", "White Exclamation Mark");
-    const exclamationMark = e("\u2757", "Exclamation Mark");
-    const curlyLoop = e("\u27B0", "Curly Loop");
-    const doubleCurlyLoop = e("\u27BF", "Double Curly Loop");
-    const wavyDash = E("\u3030", "Wavy Dash");
-    const partAlternationMark = E("\u303D", "Part Alternation Mark");
-    const tradeMark = E("\u2122", "Trade Mark");
-    const copyright = E("\u00A9", "Copyright");
-    const registered = E("\u00AE", "Registered");
-    const squareFourCourners = E("\u26F6", "Square: Four Corners");
-    const marks = gg("Marks", "Marks", {
-        doubleExclamationMark,
-        interrobang,
-        information,
-        circledM,
-        checkMarkButton,
-        checkMark,
-        eightSpokedAsterisk,
-        crossMark,
-        crossMarkButton,
-        questionMark,
-        whiteQuestionMark,
-        whiteExclamationMark,
-        exclamationMark,
-        curlyLoop,
-        doubleCurlyLoop,
-        wavyDash,
-        partAlternationMark,
-        tradeMark,
-        copyright,
-        registered,
-    });
-    const droplet = e("\u{1F4A7}", "Droplet");
-    const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
-    const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
-    const stethoscope = e("\u{1FA7A}", "Stethoscope");
-    const syringe = e("\u{1F489}", "Syringe");
-    const pill = e("\u{1F48A}", "Pill");
-    const testTube = e("\u{1F9EA}", "Test Tube");
-    const petriDish = e("\u{1F9EB}", "Petri Dish");
-    const dna = e("\u{1F9EC}", "DNA");
-    const abacus = e("\u{1F9EE}", "Abacus");
-    const magnet = e("\u{1F9F2}", "Magnet");
-    const telescope = e("\u{1F52D}", "Telescope");
-    const science = gg("Science", "Science", {
-        droplet,
-        dropOfBlood,
-        adhesiveBandage,
-        stethoscope,
-        syringe,
-        pill,
-        microscope,
-        testTube,
-        petriDish,
-        dna,
-        abacus,
-        magnet,
-        telescope,
+        kneelingLightSkinTone,
+        kneelingMediumLightSkinTone,
+        kneelingMediumSkinTone,
+        kneelingMediumDarkSkinTone,
+        kneelingDarkSkinTone
+    ];
+    const allKneelingGroup = new EmojiGroup("\u{1F9CE}\uDDCE", "Kneeling", ...allKneeling);
+    const allKneelingMale = [
+        kneelingMale,
+        kneelingLightSkinToneMale,
+        kneelingMediumLightSkinToneMale,
+        kneelingMediumSkinToneMale,
+        kneelingMediumDarkSkinToneMale,
+        kneelingDarkSkinToneMale
+    ];
+    const allKneelingMaleGroup = new EmojiGroup("\u{1F9CE}\uDDCE\u200D\u2642\uFE0F", "Kneeling: Male", ...allKneelingMale);
+    const allKneelingFemale = [
+        kneelingFemale,
+        kneelingLightSkinToneFemale,
+        kneelingMediumLightSkinToneFemale,
+        kneelingMediumSkinToneFemale,
+        kneelingMediumDarkSkinToneFemale,
+        kneelingDarkSkinToneFemale
+    ];
+    const allKneelingFemaleGroup = new EmojiGroup("\u{1F9CE}\uDDCE\u200D\u2640\uFE0F", "Kneeling: Female", ...allKneelingFemale);
+    const allKneelers = [
+        allKneelingGroup,
+        allKneelingMaleGroup,
+        allKneelingFemaleGroup
+    ];
+    const allKneelersGroup = new EmojiGroup("\u{1F9CE}\uDDCE", "Kneeling", ...allKneelers);
+    const allRunning = [
+        running,
+        runningLightSkinTone,
+        runningMediumLightSkinTone,
+        runningMediumSkinTone,
+        runningMediumDarkSkinTone,
+        runningDarkSkinTone
+    ];
+    const allRunningGroup = new EmojiGroup("\u{1F3C3}\uDFC3", "Running", ...allRunning);
+    const allRunningMale = [
+        runningMale,
+        runningLightSkinToneMale,
+        runningMediumLightSkinToneMale,
+        runningMediumSkinToneMale,
+        runningMediumDarkSkinToneMale,
+        runningDarkSkinToneMale
+    ];
+    const allRunningMaleGroup = new EmojiGroup("\u{1F3C3}\uDFC3\u200D\u2642\uFE0F", "Running: Male", ...allRunningMale);
+    const allRunningFemale = [
+        runningFemale,
+        runningLightSkinToneFemale,
+        runningMediumLightSkinToneFemale,
+        runningMediumSkinToneFemale,
+        runningMediumDarkSkinToneFemale,
+        runningDarkSkinToneFemale
+    ];
+    const allRunningFemaleGroup = new EmojiGroup("\u{1F3C3}\uDFC3\u200D\u2640\uFE0F", "Running: Female", ...allRunningFemale);
+    const allRunners = [
+        allRunningGroup,
+        allRunningMaleGroup,
+        allRunningFemaleGroup
+    ];
+    const allRunnersGroup = new EmojiGroup("\u{1F3C3}\uDFC3", "Running", ...allRunners);
+    const allGesturing = [
+        allFrownersGroup,
+        allPoutersGroup,
+        allNoGuesturerersGroupGroup,
+        allOKGesturerersGroupGroup,
+        allHandTippersGroupGroup,
+        allHandRaisersGroup,
+        allBowersGroup,
+        allFacepalmersGroup,
+        allShruggersGroup,
+        allCantHearersGroup,
+        allGettingMassagedGroup,
+        allHairCuttersGroup
+    ];
+    const allGesturingGroup = new EmojiGroup("\u0047\u0065\u0073\u0074\u0075\u0072\u0065\u0073", "Gestures", ...allGesturing);
+    const allBaby = [
+        baby,
+        babyLightSkinTone,
+        babyMediumLightSkinTone,
+        babyMediumSkinTone,
+        babyMediumDarkSkinTone,
+        babyDarkSkinTone
+    ];
+    const allBabyGroup = new EmojiGroup("\u{1F476}\uDC76", "Baby", ...allBaby);
+    const allChild = [
+        child,
+        childLightSkinTone,
+        childMediumLightSkinTone,
+        childMediumSkinTone,
+        childMediumDarkSkinTone,
+        childDarkSkinTone
+    ];
+    const allChildGroup = new EmojiGroup("\u{1F9D2}\uDDD2", "Child", ...allChild);
+    const allBoy = [
+        boy,
+        boyLightSkinTone,
+        boyMediumLightSkinTone,
+        boyMediumSkinTone,
+        boyMediumDarkSkinTone,
+        boyDarkSkinTone
+    ];
+    const allBoyGroup = new EmojiGroup("\u{1F466}\uDC66", "Boy", ...allBoy);
+    const allGirl = [
+        girl,
+        girlLightSkinTone,
+        girlMediumLightSkinTone,
+        girlMediumSkinTone,
+        girlMediumDarkSkinTone,
+        girlDarkSkinTone
+    ];
+    const allGirlGroup = new EmojiGroup("\u{1F467}\uDC67", "Girl", ...allGirl);
+    const allChildren = [
+        allChildGroup,
+        allBoyGroup,
+        allGirlGroup
+    ];
+    const allChildrenGroup = new EmojiGroup("\u{1F9D2}\uDDD2", "Child", ...allChildren);
+    const allBlondPerson = [
+        blondPerson,
+        blondPersonLightSkinTone,
+        blondPersonMediumLightSkinTone,
+        blondPersonMediumSkinTone,
+        blondPersonMediumDarkSkinTone,
+        blondPersonDarkSkinTone
+    ];
+    const allBlondPersonGroup = new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allBlondPerson);
+    const allBlondPersonMale = [
+        blondPersonMale,
+        blondPersonLightSkinToneMale,
+        blondPersonMediumLightSkinToneMale,
+        blondPersonMediumSkinToneMale,
+        blondPersonMediumDarkSkinToneMale,
+        blondPersonDarkSkinToneMale
+    ];
+    const allBlondPersonMaleGroup = new EmojiGroup("\u{1F471}\uDC71\u200D\u2642\uFE0F", "Blond Person: Male", ...allBlondPersonMale);
+    const allBlondPersonFemale = [
+        blondPersonFemale,
+        blondPersonLightSkinToneFemale,
+        blondPersonMediumLightSkinToneFemale,
+        blondPersonMediumSkinToneFemale,
+        blondPersonMediumDarkSkinToneFemale,
+        blondPersonDarkSkinToneFemale
+    ];
+    const allBlondPersonFemaleGroup = new EmojiGroup("\u{1F471}\uDC71\u200D\u2640\uFE0F", "Blond Person: Female", ...allBlondPersonFemale);
+    const allBlondePeople = [
+        allBlondPersonGroup,
+        allBlondPersonMaleGroup,
+        allBlondPersonFemaleGroup
+    ];
+    const allBlondePeopleGroup = new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allBlondePeople);
+    const allPerson = [
+        person,
+        personLightSkinTone,
+        personMediumLightSkinTone,
+        personMediumSkinTone,
+        personMediumDarkSkinTone,
+        personDarkSkinTone,
+        allBlondPersonGroup,
+        allWearingTurbanGroup
+    ];
+    const allPersonGroup = new EmojiGroup("\u{1F9D1}\uDDD1", "Person", ...allPerson);
+    const allBeardedMan = [
+        beardedMan,
+        beardedManLightSkinTone,
+        beardedManMediumLightSkinTone,
+        beardedManMediumSkinTone,
+        beardedManMediumDarkSkinTone,
+        beardedManDarkSkinTone
+    ];
+    const allBeardedManGroup = new EmojiGroup("\u{1F9D4}\uDDD4", "Bearded Man", ...allBeardedMan);
+    const allManWithChineseCap = [
+        manWithChineseCap,
+        manWithChineseCapLightSkinTone,
+        manWithChineseCapMediumLightSkinTone,
+        manWithChineseCapMediumSkinTone,
+        manWithChineseCapMediumDarkSkinTone,
+        manWithChineseCapDarkSkinTone
+    ];
+    const allManWithChineseCapGroup = new EmojiGroup("\u{1F472}\uDC72", "Man With Chinese Cap", ...allManWithChineseCap);
+    const allManInTuxedo = [
+        manInTuxedo,
+        manInTuxedoLightSkinTone,
+        manInTuxedoMediumLightSkinTone,
+        manInTuxedoMediumSkinTone,
+        manInTuxedoMediumDarkSkinTone,
+        manInTuxedoDarkSkinTone
+    ];
+    const allManInTuxedoGroup = new EmojiGroup("\u{1F935}\uDD35", "Man in Tuxedo", ...allManInTuxedo);
+    const allMan = [
+        man,
+        manLightSkinTone,
+        manMediumLightSkinTone,
+        manMediumSkinTone,
+        manMediumDarkSkinTone,
+        manDarkSkinTone
+    ];
+    const allManGroup = new EmojiGroup("\u{1F468}\uDC68", "Man", ...allMan);
+    const allManRedHair = [
+        manRedHair,
+        manLightSkinToneRedHair,
+        manMediumLightSkinToneRedHair,
+        manMediumSkinToneRedHair,
+        manMediumDarkSkinToneRedHair,
+        manDarkSkinToneRedHair
+    ];
+    const allManRedHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B0}\uDDB0", "Man: Red Hair", ...allManRedHair);
+    const allManCurlyHair = [
+        manCurlyHair,
+        manLightSkinToneCurlyHair,
+        manMediumLightSkinToneCurlyHair,
+        manMediumSkinToneCurlyHair,
+        manMediumDarkSkinToneCurlyHair,
+        manDarkSkinToneCurlyHair
+    ];
+    const allManCurlyHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B1}\uDDB1", "Man: Curly Hair", ...allManCurlyHair);
+    const allManWhiteHair = [
+        manWhiteHair,
+        manLightSkinToneWhiteHair,
+        manMediumLightSkinToneWhiteHair,
+        manMediumSkinToneWhiteHair,
+        manMediumDarkSkinToneWhiteHair,
+        manDarkSkinToneWhiteHair
+    ];
+    const allManWhiteHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B3}\uDDB3", "Man: White Hair", ...allManWhiteHair);
+    const allManBald = [
+        manBald,
+        manLightSkinToneBald,
+        manMediumLightSkinToneBald,
+        manMediumSkinToneBald,
+        manMediumDarkSkinToneBald,
+        manDarkSkinToneBald
+    ];
+    const allManBaldGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B2}\uDDB2", "Man: Bald", ...allManBald);
+    const allMen = [
+        allManGroup,
+        allManRedHairGroup,
+        allManCurlyHairGroup,
+        allManWhiteHairGroup,
+        allManBaldGroup,
+        allBlondPersonMaleGroup,
+        allBeardedManGroup,
+        manInSuitLevitating,
+        allManWithChineseCapGroup,
+        allWearingTurbanMaleGroup,
+        allManInTuxedoGroup
+    ];
+    const allMenGroup = new EmojiGroup("\u{1F468}\uDC68", "Man", ...allMen);
+    const allPregnantWoman = [
+        pregnantWoman,
+        pregnantWomanLightSkinTone,
+        pregnantWomanMediumLightSkinTone,
+        pregnantWomanMediumSkinTone,
+        pregnantWomanMediumDarkSkinTone,
+        pregnantWomanDarkSkinTone
+    ];
+    const allPregnantWomanGroup = new EmojiGroup("\u{1F930}\uDD30", "Pregnant Woman", ...allPregnantWoman);
+    const allBreastFeeding = [
+        breastFeeding,
+        breastFeedingLightSkinTone,
+        breastFeedingMediumLightSkinTone,
+        breastFeedingMediumSkinTone,
+        breastFeedingMediumDarkSkinTone,
+        breastFeedingDarkSkinTone
+    ];
+    const allBreastFeedingGroup = new EmojiGroup("\u{1F931}\uDD31", "Breast-Feeding", ...allBreastFeeding);
+    const allWomanWithHeadscarf = [
+        womanWithHeadscarf,
+        womanWithHeadscarfLightSkinTone,
+        womanWithHeadscarfMediumLightSkinTone,
+        womanWithHeadscarfMediumSkinTone,
+        womanWithHeadscarfMediumDarkSkinTone,
+        womanWithHeadscarfDarkSkinTone
+    ];
+    const allWomanWithHeadscarfGroup = new EmojiGroup("\u{1F9D5}\uDDD5", "Woman With Headscarf", ...allWomanWithHeadscarf);
+    const allBrideWithVeil = [
+        brideWithVeil,
+        brideWithVeilLightSkinTone,
+        brideWithVeilMediumLightSkinTone,
+        brideWithVeilMediumSkinTone,
+        brideWithVeilMediumDarkSkinTone,
+        brideWithVeilDarkSkinTone
+    ];
+    const allBrideWithVeilGroup = new EmojiGroup("\u{1F470}\uDC70", "Bride With Veil", ...allBrideWithVeil);
+    const allWoman = [
+        woman,
+        womanLightSkinTone,
+        womanMediumLightSkinTone,
+        womanMediumSkinTone,
+        womanMediumDarkSkinTone,
+        womanDarkSkinTone
+    ];
+    const allWomanGroup = new EmojiGroup("\u{1F469}\uDC69", "Woman", ...allWoman);
+    const allWomanRedHair = [
+        womanRedHair,
+        womanLightSkinToneRedHair,
+        womanMediumLightSkinToneRedHair,
+        womanMediumSkinToneRedHair,
+        womanMediumDarkSkinToneRedHair,
+        womanDarkSkinToneRedHair
+    ];
+    const allWomanRedHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B0}\uDDB0", "Woman: Red Hair", ...allWomanRedHair);
+    const allWomanCurlyHair = [
+        womanCurlyHair,
+        womanLightSkinToneCurlyHair,
+        womanMediumLightSkinToneCurlyHair,
+        womanMediumSkinToneCurlyHair,
+        womanMediumDarkSkinToneCurlyHair,
+        womanDarkSkinToneCurlyHair
+    ];
+    const allWomanCurlyHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B1}\uDDB1", "Woman: Curly Hair", ...allWomanCurlyHair);
+    const allWomanWhiteHair = [
+        womanWhiteHair,
+        womanLightSkinToneWhiteHair,
+        womanMediumLightSkinToneWhiteHair,
+        womanMediumSkinToneWhiteHair,
+        womanMediumDarkSkinToneWhiteHair,
+        womanDarkSkinToneWhiteHair
+    ];
+    const allWomanWhiteHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B3}\uDDB3", "Woman: White Hair", ...allWomanWhiteHair);
+    const allWomanBald = [
+        womanBald,
+        womanLightSkinToneBald,
+        womanMediumLightSkinToneBald,
+        womanMediumSkinToneBald,
+        womanMediumDarkSkinToneBald,
+        womanDarkSkinToneBald
+    ];
+    const allWomanBaldGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B2}\uDDB2", "Woman: Bald", ...allWomanBald);
+    const allWomen = [
+        allWomanGroup,
+        allWomanRedHairGroup,
+        allWomanCurlyHairGroup,
+        allWomanWhiteHairGroup,
+        allWomanBaldGroup,
+        allBlondPersonFemaleGroup,
+        allPregnantWomanGroup,
+        allBreastFeedingGroup,
+        allWomanWithHeadscarfGroup,
+        allWearingTurbanFemaleGroup,
+        allBrideWithVeilGroup
+    ];
+    const allWomenGroup = new EmojiGroup("\u{1F469}\uDC69", "Woman", ...allWomen);
+    const allPersons = [
+        allPersonGroup,
+        allMenGroup,
+        allWomenGroup
+    ];
+    const allPersonsGroup = new EmojiGroup("\u{1F9D1}\uDDD1", "Adult", ...allPersons);
+    const allOlderPerson = [
+        olderPerson,
+        olderPersonLightSkinTone,
+        olderPersonMediumLightSkinTone,
+        olderPersonMediumSkinTone,
+        olderPersonMediumDarkSkinTone,
+        olderPersonDarkSkinTone
+    ];
+    const allOlderPersonGroup = new EmojiGroup("\u{1F9D3}\uDDD3", "Older Person", ...allOlderPerson);
+    const allOldMan = [
+        oldMan,
+        oldManLightSkinTone,
+        oldManMediumLightSkinTone,
+        oldManMediumSkinTone,
+        oldManMediumDarkSkinTone,
+        oldManDarkSkinTone
+    ];
+    const allOldManGroup = new EmojiGroup("\u{1F474}\uDC74", "Old Man", ...allOldMan);
+    const allOldWoman = [
+        oldWoman,
+        oldWomanLightSkinTone,
+        oldWomanMediumLightSkinTone,
+        oldWomanMediumSkinTone,
+        oldWomanMediumDarkSkinTone,
+        oldWomanDarkSkinTone
+    ];
+    const allOldWomanGroup = new EmojiGroup("\u{1F475}\uDC75", "Old Woman", ...allOldWoman);
+    const allOlderPersons = [
+        allOlderPersonGroup,
+        allOldManGroup,
+        allOldWomanGroup
+    ];
+    const allOlderPersonsGroup = new EmojiGroup("\u{1F9D3}\uDDD3", "Older Person", ...allOlderPersons);
+    const allManHealthCare = [
+        manHealthCare,
+        manLightSkinToneHealthCare,
+        manMediumLightSkinToneHealthCare,
+        manMediumSkinToneHealthCare,
+        manMediumDarkSkinToneHealthCare,
+        manDarkSkinToneHealthCare
+    ];
+    const allManHealthCareGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2695\uFE0F", "Man: Health Care", ...allManHealthCare);
+    const allWomanHealthCare = [
+        womanHealthCare,
+        womanLightSkinToneHealthCare,
+        womanMediumLightSkinToneHealthCare,
+        womanMediumSkinToneHealthCare,
+        womanMediumDarkSkinToneHealthCare,
+        womanDarkSkinToneHealthCare
+    ];
+    const allWomanHealthCareGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2695\uFE0F", "Woman: Health Care", ...allWomanHealthCare);
+    const allMedical = [
         medical,
+        allManHealthCareGroup,
+        allWomanHealthCareGroup
+    ];
+    const allMedicalGroup = new EmojiGroup("\u2695\uFE0F", "Medical", ...allMedical);
+    const allManStudent = [
+        manStudent,
+        manLightSkinToneStudent,
+        manMediumLightSkinToneStudent,
+        manMediumSkinToneStudent,
+        manMediumDarkSkinToneStudent,
+        manDarkSkinToneStudent
+    ];
+    const allManStudentGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F393}\uDF93", "Man: Student", ...allManStudent);
+    const allWomanStudent = [
+        womanStudent,
+        womanLightSkinToneStudent,
+        womanMediumLightSkinToneStudent,
+        womanMediumSkinToneStudent,
+        womanMediumDarkSkinToneStudent,
+        womanDarkSkinToneStudent
+    ];
+    const allWomanStudentGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F393}\uDF93", "Woman: Student", ...allWomanStudent);
+    const allGraduationCap = [
+        graduationCap,
+        allManStudentGroup,
+        allWomanStudentGroup
+    ];
+    const allGraduationCapGroup = new EmojiGroup("\u{1F393}\uDF93", "Graduation Cap", ...allGraduationCap);
+    const allManTeacher = [
+        manTeacher,
+        manLightSkinToneTeacher,
+        manMediumLightSkinToneTeacher,
+        manMediumSkinToneTeacher,
+        manMediumDarkSkinToneTeacher,
+        manDarkSkinToneTeacher
+    ];
+    const allManTeacherGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3EB}\uDFEB", "Man: Teacher", ...allManTeacher);
+    const allWomanTeacher = [
+        womanTeacher,
+        womanLightSkinToneTeacher,
+        womanMediumLightSkinToneTeacher,
+        womanMediumSkinToneTeacher,
+        womanMediumDarkSkinToneTeacher,
+        womanDarkSkinToneTeacher
+    ];
+    const allWomanTeacherGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3EB}\uDFEB", "Woman: Teacher", ...allWomanTeacher);
+    const allSchool = [
+        school,
+        allManTeacherGroup,
+        allWomanTeacherGroup
+    ];
+    const allSchoolGroup = new EmojiGroup("\u{1F3EB}\uDFEB", "School", ...allSchool);
+    const allManJudge = [
+        manJudge,
+        manLightSkinToneJudge,
+        manMediumLightSkinToneJudge,
+        manMediumSkinToneJudge,
+        manMediumDarkSkinToneJudge,
+        manDarkSkinToneJudge
+    ];
+    const allManJudgeGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2696\uFE0F", "Man: Judge", ...allManJudge);
+    const allWomanJudge = [
+        womanJudge,
+        womanLightSkinToneJudge,
+        womanMediumLightSkinToneJudge,
+        womanMediumSkinToneJudge,
+        womanMediumDarkSkinToneJudge,
+        womanDarkSkinToneJudge
+    ];
+    const allWomanJudgeGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2696\uFE0F", "Woman: Judge", ...allWomanJudge);
+    const allBalanceScale = [
         balanceScale,
-        alembic,
-        gear,
-        atomSymbol,
-        magnifyingGlassTiltedLeft,
-        magnifyingGlassTiltedRight,
-    });
-    const whiteChessKing = e("\u2654", "White Chess King");
-    const whiteChessQueen = e("\u2655", "White Chess Queen");
-    const whiteChessRook = e("\u2656", "White Chess Rook");
-    const whiteChessBishop = e("\u2657", "White Chess Bishop");
-    const whiteChessKnight = e("\u2658", "White Chess Knight");
-    const whiteChessPawn = e("\u2659", "White Chess Pawn");
-    const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
-        width: "auto",
-        king: whiteChessKing,
-        queen: whiteChessQueen,
-        rook: whiteChessRook,
-        bishop: whiteChessBishop,
-        knight: whiteChessKnight,
-        pawn: whiteChessPawn
-    });
-    const blackChessKing = e("\u265A", "Black Chess King");
-    const blackChessQueen = e("\u265B", "Black Chess Queen");
-    const blackChessRook = e("\u265C", "Black Chess Rook");
-    const blackChessBishop = e("\u265D", "Black Chess Bishop");
-    const blackChessKnight = e("\u265E", "Black Chess Knight");
-    const blackChessPawn = e("\u265F", "Black Chess Pawn");
-    const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
-        width: "auto",
-        king: blackChessKing,
-        queen: blackChessQueen,
-        rook: blackChessRook,
-        bishop: blackChessBishop,
-        knight: blackChessKnight,
-        pawn: blackChessPawn
-    });
-    const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
-        width: "auto",
-        white: whiteChessPawn,
-        black: blackChessPawn
-    });
-    const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
-        width: "auto",
-        white: whiteChessRook,
-        black: blackChessRook
-    });
-    const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
-        width: "auto",
-        white: whiteChessBishop,
-        black: blackChessBishop
-    });
-    const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
-        width: "auto",
-        white: whiteChessKnight,
-        black: blackChessKnight
-    });
-    const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
-        width: "auto",
-        white: whiteChessQueen,
-        black: blackChessQueen
-    });
-    const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
-        width: "auto",
-        white: whiteChessKing,
-        black: blackChessKing
-    });
-    const chess = gg("Chess Pieces", "Chess Pieces", {
-        width: "auto",
-        white: whiteChessPieces,
-        black: blackChessPieces,
-        pawns: chessPawns,
-        rooks: chessRooks,
-        bishops: chessBishops,
-        knights: chessKnights,
-        queens: chessQueens,
-        kings: chessKings
-    });
-    const dice1 = e("\u2680", "Dice: Side 1");
-    const dice2 = e("\u2681", "Dice: Side 2");
-    const dice3 = e("\u2682", "Dice: Side 3");
-    const dice4 = e("\u2683", "Dice: Side 4");
-    const dice5 = e("\u2684", "Dice: Side 5");
-    const dice6 = e("\u2685", "Dice: Side 6");
-    const dice = gg("Dice", "Dice", {
-        dice1,
-        dice2,
-        dice3,
-        dice4,
-        dice5,
-        dice6
-    });
-    const allIcons = gg("All Icons", "All Icons", {
-        faces,
-        love,
-        cartoon,
-        hands,
-        bodyParts,
-        people,
-        gestures: gestures$1,
-        inMotion,
-        resting,
-        roles,
-        fantasy,
-        animals,
-        plants,
-        food,
-        flags,
-        vehicles,
-        clocks,
-        arrows,
-        shapes,
-        buttons,
-        zodiac,
-        chess,
-        dice,
-        math,
-        games,
-        sportsEquipment,
-        clothing,
-        town,
-        music,
-        weather,
-        astro,
-        finance,
-        writing,
-        science,
-        tech,
-        mail,
-        celebration,
-        tools,
-        office,
-        signs,
-        religion,
-        household,
-        activities,
-        travel,
-        medieval
-    });
+        allManJudgeGroup,
+        allWomanJudgeGroup
+    ];
+    const allBalanceScaleGroup = new EmojiGroup("\u2696\uFE0F", "Balance Scale", ...allBalanceScale);
+    const allManFarmer = [
+        manFarmer,
+        manLightSkinToneFarmer,
+        manMediumLightSkinToneFarmer,
+        manMediumSkinToneFarmer,
+        manMediumDarkSkinToneFarmer,
+        manDarkSkinToneFarmer
+    ];
+    const allManFarmerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F33E}\uDF3E", "Man: Farmer", ...allManFarmer);
+    const allWomanFarmer = [
+        womanFarmer,
+        womanLightSkinToneFarmer,
+        womanMediumLightSkinToneFarmer,
+        womanMediumSkinToneFarmer,
+        womanMediumDarkSkinToneFarmer,
+        womanDarkSkinToneFarmer
+    ];
+    const allWomanFarmerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F33E}\uDF3E", "Woman: Farmer", ...allWomanFarmer);
+    const allSheafOfRice = [
+        sheafOfRice,
+        allManFarmerGroup,
+        allWomanFarmerGroup
+    ];
+    const allSheafOfRiceGroup = new EmojiGroup("\u{1F33E}\uDF3E", "Sheaf of Rice", ...allSheafOfRice);
+    const allManCook = [
+        manCook,
+        manLightSkinToneCook,
+        manMediumLightSkinToneCook,
+        manMediumSkinToneCook,
+        manMediumDarkSkinToneCook,
+        manDarkSkinToneCook
+    ];
+    const allManCookGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F373}\uDF73", "Man: Cook", ...allManCook);
+    const allWomanCook = [
+        womanCook,
+        womanLightSkinToneCook,
+        womanMediumLightSkinToneCook,
+        womanMediumSkinToneCook,
+        womanMediumDarkSkinToneCook,
+        womanDarkSkinToneCook
+    ];
+    const allWomanCookGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F373}\uDF73", "Woman: Cook", ...allWomanCook);
+    const allCooking = [
+        cooking,
+        allManCookGroup,
+        allWomanCookGroup
+    ];
+    const allCookingGroup = new EmojiGroup("\u{1F373}\uDF73", "Cooking", ...allCooking);
+    const allManMechanic = [
+        manMechanic,
+        manLightSkinToneMechanic,
+        manMediumLightSkinToneMechanic,
+        manMediumSkinToneMechanic,
+        manMediumDarkSkinToneMechanic,
+        manDarkSkinToneMechanic
+    ];
+    const allManMechanicGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F527}\uDD27", "Man: Mechanic", ...allManMechanic);
+    const allWomanMechanic = [
+        womanMechanic,
+        womanLightSkinToneMechanic,
+        womanMediumLightSkinToneMechanic,
+        womanMediumSkinToneMechanic,
+        womanMediumDarkSkinToneMechanic,
+        womanDarkSkinToneMechanic
+    ];
+    const allWomanMechanicGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F527}\uDD27", "Woman: Mechanic", ...allWomanMechanic);
+    const allWrench = [
+        wrench,
+        allManMechanicGroup,
+        allWomanMechanicGroup
+    ];
+    const allWrenchGroup = new EmojiGroup("\u{1F527}\uDD27", "Wrench", ...allWrench);
+    const allManFactoryWorker = [
+        manFactoryWorker,
+        manLightSkinToneFactoryWorker,
+        manMediumLightSkinToneFactoryWorker,
+        manMediumSkinToneFactoryWorker,
+        manMediumDarkSkinToneFactoryWorker,
+        manDarkSkinToneFactoryWorker
+    ];
+    const allManFactoryWorkerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3ED}\uDFED", "Man: Factory Worker", ...allManFactoryWorker);
+    const allWomanFactoryWorker = [
+        womanFactoryWorker,
+        womanLightSkinToneFactoryWorker,
+        womanMediumLightSkinToneFactoryWorker,
+        womanMediumSkinToneFactoryWorker,
+        womanMediumDarkSkinToneFactoryWorker,
+        womanDarkSkinToneFactoryWorker
+    ];
+    const allWomanFactoryWorkerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3ED}\uDFED", "Woman: Factory Worker", ...allWomanFactoryWorker);
+    const allFactory = [
+        factory,
+        allManFactoryWorkerGroup,
+        allWomanFactoryWorkerGroup
+    ];
+    const allFactoryGroup = new EmojiGroup("\u{1F3ED}\uDFED", "Factory", ...allFactory);
+    const allManOfficeWorker = [
+        manOfficeWorker,
+        manLightSkinToneOfficeWorker,
+        manMediumLightSkinToneOfficeWorker,
+        manMediumSkinToneOfficeWorker,
+        manMediumDarkSkinToneOfficeWorker,
+        manDarkSkinToneOfficeWorker
+    ];
+    const allManOfficeWorkerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F4BC}\uDCBC", "Man: Office Worker", ...allManOfficeWorker);
+    const allWomanOfficeWorker = [
+        womanOfficeWorker,
+        womanLightSkinToneOfficeWorker,
+        womanMediumLightSkinToneOfficeWorker,
+        womanMediumSkinToneOfficeWorker,
+        womanMediumDarkSkinToneOfficeWorker,
+        womanDarkSkinToneOfficeWorker
+    ];
+    const allWomanOfficeWorkerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F4BC}\uDCBC", "Woman: Office Worker", ...allWomanOfficeWorker);
+    const allBriefcase = [
+        briefcase,
+        allManOfficeWorkerGroup,
+        allWomanOfficeWorkerGroup
+    ];
+    const allBriefcaseGroup = new EmojiGroup("\u{1F4BC}\uDCBC", "Briefcase", ...allBriefcase);
+    const allManFireFighter = [
+        manFireFighter,
+        manLightSkinToneFireFighter,
+        manMediumLightSkinToneFireFighter,
+        manMediumSkinToneFireFighter,
+        manMediumDarkSkinToneFireFighter,
+        manDarkSkinToneFireFighter
+    ];
+    const allManFireFighterGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F692}\uDE92", "Man: Fire Fighter", ...allManFireFighter);
+    const allWomanFireFighter = [
+        womanFireFighter,
+        womanLightSkinToneFireFighter,
+        womanMediumLightSkinToneFireFighter,
+        womanMediumSkinToneFireFighter,
+        womanMediumDarkSkinToneFireFighter,
+        womanDarkSkinToneFireFighter
+    ];
+    const allWomanFireFighterGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F692}\uDE92", "Woman: Fire Fighter", ...allWomanFireFighter);
+    const allFireEngine = [
+        fireEngine,
+        allManFireFighterGroup,
+        allWomanFireFighterGroup
+    ];
+    const allFireEngineGroup = new EmojiGroup("\u{1F692}\uDE92", "Fire Engine", ...allFireEngine);
+    const allManAstronaut = [
+        manAstronaut,
+        manLightSkinToneAstronaut,
+        manMediumLightSkinToneAstronaut,
+        manMediumSkinToneAstronaut,
+        manMediumDarkSkinToneAstronaut,
+        manDarkSkinToneAstronaut
+    ];
+    const allManAstronautGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F680}\uDE80", "Man: Astronaut", ...allManAstronaut);
+    const allWomanAstronaut = [
+        womanAstronaut,
+        womanLightSkinToneAstronaut,
+        womanMediumLightSkinToneAstronaut,
+        womanMediumSkinToneAstronaut,
+        womanMediumDarkSkinToneAstronaut,
+        womanDarkSkinToneAstronaut
+    ];
+    const allWomanAstronautGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F680}\uDE80", "Woman: Astronaut", ...allWomanAstronaut);
+    const allRocket = [
+        rocket,
+        allManAstronautGroup,
+        allWomanAstronautGroup
+    ];
+    const allRocketGroup = new EmojiGroup("\u{1F680}\uDE80", "Rocket", ...allRocket);
+    const allManPilot = [
+        manPilot,
+        manLightSkinTonePilot,
+        manMediumLightSkinTonePilot,
+        manMediumSkinTonePilot,
+        manMediumDarkSkinTonePilot,
+        manDarkSkinTonePilot
+    ];
+    const allManPilotGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2708\uFE0F", "Man: Pilot", ...allManPilot);
+    const allWomanPilot = [
+        womanPilot,
+        womanLightSkinTonePilot,
+        womanMediumLightSkinTonePilot,
+        womanMediumSkinTonePilot,
+        womanMediumDarkSkinTonePilot,
+        womanDarkSkinTonePilot
+    ];
+    const allWomanPilotGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2708\uFE0F", "Woman: Pilot", ...allWomanPilot);
+    const allAirplane = [
+        airplane,
+        allManPilotGroup,
+        allWomanPilotGroup
+    ];
+    const allAirplaneGroup = new EmojiGroup("\u2708\uFE0F", "Airplane", ...allAirplane);
+    const allManArtist = [
+        manArtist,
+        manLightSkinToneArtist,
+        manMediumLightSkinToneArtist,
+        manMediumSkinToneArtist,
+        manMediumDarkSkinToneArtist,
+        manDarkSkinToneArtist
+    ];
+    const allManArtistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3A8}\uDFA8", "Man: Artist", ...allManArtist);
+    const allWomanArtist = [
+        womanArtist,
+        womanLightSkinToneArtist,
+        womanMediumLightSkinToneArtist,
+        womanMediumSkinToneArtist,
+        womanMediumDarkSkinToneArtist,
+        womanDarkSkinToneArtist
+    ];
+    const allWomanArtistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3A8}\uDFA8", "Woman: Artist", ...allWomanArtist);
+    const allArtistPalette = [
+        artistPalette,
+        allManArtistGroup,
+        allWomanArtistGroup
+    ];
+    const allArtistPaletteGroup = new EmojiGroup("\u{1F3A8}\uDFA8", "Artist Palette", ...allArtistPalette);
+    const allManSinger = [
+        manSinger,
+        manLightSkinToneSinger,
+        manMediumLightSkinToneSinger,
+        manMediumSkinToneSinger,
+        manMediumDarkSkinToneSinger,
+        manDarkSkinToneSinger
+    ];
+    const allManSingerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3A4}\uDFA4", "Man: Singer", ...allManSinger);
+    const allWomanSinger = [
+        womanSinger,
+        womanLightSkinToneSinger,
+        womanMediumLightSkinToneSinger,
+        womanMediumSkinToneSinger,
+        womanMediumDarkSkinToneSinger,
+        womanDarkSkinToneSinger
+    ];
+    const allWomanSingerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3A4}\uDFA4", "Woman: Singer", ...allWomanSinger);
+    const allMicrophone = [
+        microphone,
+        allManSingerGroup,
+        allWomanSingerGroup
+    ];
+    const allMicrophoneGroup = new EmojiGroup("\u{1F3A4}\uDFA4", "Microphone", ...allMicrophone);
+    const allManTechnologist = [
+        manTechnologist,
+        manLightSkinToneTechnologist,
+        manMediumLightSkinToneTechnologist,
+        manMediumSkinToneTechnologist,
+        manMediumDarkSkinToneTechnologist,
+        manDarkSkinToneTechnologist
+    ];
+    const allManTechnologistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F4BB}\uDCBB", "Man: Technologist", ...allManTechnologist);
+    const allWomanTechnologist = [
+        womanTechnologist,
+        womanLightSkinToneTechnologist,
+        womanMediumLightSkinToneTechnologist,
+        womanMediumSkinToneTechnologist,
+        womanMediumDarkSkinToneTechnologist,
+        womanDarkSkinToneTechnologist
+    ];
+    const allWomanTechnologistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F4BB}\uDCBB", "Woman: Technologist", ...allWomanTechnologist);
+    const allLaptop = [
+        laptop,
+        allManTechnologistGroup,
+        allWomanTechnologistGroup
+    ];
+    const allLaptopGroup = new EmojiGroup("\u{1F4BB}\uDCBB", "Laptop", ...allLaptop);
+    const allManScientist = [
+        manScientist,
+        manLightSkinToneScientist,
+        manMediumLightSkinToneScientist,
+        manMediumSkinToneScientist,
+        manMediumDarkSkinToneScientist,
+        manDarkSkinToneScientist
+    ];
+    const allManScientistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F52C}\uDD2C", "Man: Scientist", ...allManScientist);
+    const allWomanScientist = [
+        womanScientist,
+        womanLightSkinToneScientist,
+        womanMediumLightSkinToneScientist,
+        womanMediumSkinToneScientist,
+        womanMediumDarkSkinToneScientist,
+        womanDarkSkinToneScientist
+    ];
+    const allWomanScientistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F52C}\uDD2C", "Woman: Scientist", ...allWomanScientist);
+    const allMicroscope = [
+        microscope,
+        allManScientistGroup,
+        allWomanScientistGroup
+    ];
+    const allMicroscopeGroup = new EmojiGroup("\u{1F52C}\uDD2C", "Microscope", ...allMicroscope);
+    const allPrince = [
+        prince,
+        princeLightSkinTone,
+        princeMediumLightSkinTone,
+        princeMediumSkinTone,
+        princeMediumDarkSkinTone,
+        princeDarkSkinTone
+    ];
+    const allPrinceGroup = new EmojiGroup("\u{1F934}\uDD34", "Prince", ...allPrince);
+    const allPrincess = [
+        princess,
+        princessLightSkinTone,
+        princessMediumLightSkinTone,
+        princessMediumSkinTone,
+        princessMediumDarkSkinTone,
+        princessDarkSkinTone
+    ];
+    const allPrincessGroup = new EmojiGroup("\u{1F478}\uDC78", "Princess", ...allPrincess);
+    const allRoyalty = [
+        crown,
+        allPrinceGroup,
+        allPrincessGroup
+    ];
+    const allRoyaltyGroup = new EmojiGroup("\u{1F451}\uDC51", "Crown", ...allRoyalty);
+    const allOccupation = [
+        allMedicalGroup,
+        allGraduationCapGroup,
+        allSchoolGroup,
+        allBalanceScaleGroup,
+        allSheafOfRiceGroup,
+        allCookingGroup,
+        allWrenchGroup,
+        allFactoryGroup,
+        allBriefcaseGroup,
+        allMicroscopeGroup,
+        allLaptopGroup,
+        allMicrophoneGroup,
+        allArtistPaletteGroup,
+        allAirplaneGroup,
+        allRocketGroup,
+        allFireEngineGroup,
+        allSpiesGroup,
+        allGuardsGroup,
+        allConstructionWorkersGroup,
+        allRoyaltyGroup
+    ];
+    const allOccupationGroup = new EmojiGroup("\u0052\u006F\u006C\u0065\u0073", "Depictions of people working", ...allOccupation);
+    const allCherub = [
+        cherub,
+        cherubLightSkinTone,
+        cherubMediumLightSkinTone,
+        cherubMediumSkinTone,
+        cherubMediumDarkSkinTone,
+        cherubDarkSkinTone
+    ];
+    const allCherubGroup = new EmojiGroup("\u{1F47C}\uDC7C", "Cherub", ...allCherub);
+    const allSantaClaus = [
+        santaClaus,
+        santaClausLightSkinTone,
+        santaClausMediumLightSkinTone,
+        santaClausMediumSkinTone,
+        santaClausMediumDarkSkinTone,
+        santaClausDarkSkinTone
+    ];
+    const allSantaClausGroup = new EmojiGroup("\u{1F385}\uDF85", "Santa Claus", ...allSantaClaus);
+    const allMrsClaus = [
+        mrsClaus,
+        mrsClausLightSkinTone,
+        mrsClausMediumLightSkinTone,
+        mrsClausMediumSkinTone,
+        mrsClausMediumDarkSkinTone,
+        mrsClausDarkSkinTone
+    ];
+    const allMrsClausGroup = new EmojiGroup("\u{1F936}\uDD36", "Mrs. Claus", ...allMrsClaus);
+    const allGenie = [
+        genie,
+        genieMale,
+        genieFemale
+    ];
+    const allGenieGroup = new EmojiGroup("\u{1F9DE}\uDDDE", "Genie", ...allGenie);
+    const allZombie = [
+        zombie,
+        zombieMale,
+        zombieFemale
+    ];
+    const allZombieGroup = new EmojiGroup("\u{1F9DF}\uDDDF", "Zombie", ...allZombie);
+    const allFantasy = [
+        allCherubGroup,
+        allSantaClausGroup,
+        allMrsClausGroup,
+        allSuperheroesGroup,
+        allSupervillainsGroup,
+        allMagesGroup,
+        allFairiesGroup,
+        allVampiresGroup,
+        allMerpeopleGroup,
+        allElvesGroup,
+        allGenieGroup,
+        allZombieGroup
+    ];
+    const allFantasyGroup = new EmojiGroup("\u0046\u0061\u006E\u0074\u0061\u0073\u0079", "Depictions of fantasy characters", ...allFantasy);
+    const allManProbing = [
+        manProbing,
+        manLightSkinToneProbing,
+        manMediumLightSkinToneProbing,
+        manMediumSkinToneProbing,
+        manMediumDarkSkinToneProbing,
+        manDarkSkinToneProbing
+    ];
+    const allManProbingGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9AF}\uDDAF", "Man: Probing", ...allManProbing);
+    const allWomanProbing = [
+        womanProbing,
+        womanLightSkinToneProbing,
+        womanMediumLightSkinToneProbing,
+        womanMediumSkinToneProbing,
+        womanMediumDarkSkinToneProbing,
+        womanDarkSkinToneProbing
+    ];
+    const allWomanProbingGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9AF}\uDDAF", "Woman: Probing", ...allWomanProbing);
+    const allProbingCane = [
+        probingCane,
+        allManProbingGroup,
+        allWomanProbingGroup
+    ];
+    const allProbingCaneGroup = new EmojiGroup("\u{1F9AF}\uDDAF", "Probing Cane", ...allProbingCane);
+    const allManInMotorizedWheelchair = [
+        manInMotorizedWheelchair,
+        manLightSkinToneInMotorizedWheelchair,
+        manMediumLightSkinToneInMotorizedWheelchair,
+        manMediumSkinToneInMotorizedWheelchair,
+        manMediumDarkSkinToneInMotorizedWheelchair,
+        manDarkSkinToneInMotorizedWheelchair
+    ];
+    const allManInMotorizedWheelchairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9BC}\uDDBC", "Man: In Motorized Wheelchair", ...allManInMotorizedWheelchair);
+    const allWomanInMotorizedWheelchair = [
+        womanInMotorizedWheelchair,
+        womanLightSkinToneInMotorizedWheelchair,
+        womanMediumLightSkinToneInMotorizedWheelchair,
+        womanMediumSkinToneInMotorizedWheelchair,
+        womanMediumDarkSkinToneInMotorizedWheelchair,
+        womanDarkSkinToneInMotorizedWheelchair
+    ];
+    const allWomanInMotorizedWheelchairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9BC}\uDDBC", "Woman: In Motorized Wheelchair", ...allWomanInMotorizedWheelchair);
+    const allMotorizedWheelchair = [
+        motorizedWheelchair,
+        allManInMotorizedWheelchairGroup,
+        allWomanInMotorizedWheelchairGroup
+    ];
+    const allMotorizedWheelchairGroup = new EmojiGroup("\u{1F9BC}\uDDBC", "Motorized Wheelchair", ...allMotorizedWheelchair);
+    const allManInManualWheelchair = [
+        manInManualWheelchair,
+        manLightSkinToneInManualWheelchair,
+        manMediumLightSkinToneInManualWheelchair,
+        manMediumSkinToneInManualWheelchair,
+        manMediumDarkSkinToneInManualWheelchair,
+        manDarkSkinToneInManualWheelchair
+    ];
+    const allManInManualWheelchairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9BD}\uDDBD", "Man: In Manual Wheelchair", ...allManInManualWheelchair);
+    const allWomanInManualWheelchair = [
+        womanInManualWheelchair,
+        womanLightSkinToneInManualWheelchair,
+        womanMediumLightSkinToneInManualWheelchair,
+        womanMediumSkinToneInManualWheelchair,
+        womanMediumDarkSkinToneInManualWheelchair,
+        womanDarkSkinToneInManualWheelchair
+    ];
+    const allWomanInManualWheelchairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9BD}\uDDBD", "Woman: In Manual Wheelchair", ...allWomanInManualWheelchair);
+    const allManualWheelchair = [
+        manualWheelchair,
+        allManInManualWheelchairGroup,
+        allWomanInManualWheelchairGroup
+    ];
+    const allManualWheelchairGroup = new EmojiGroup("\u{1F9BD}\uDDBD", "Manual Wheelchair", ...allManualWheelchair);
+    const allManDancing = [
+        manDancing,
+        manDancingLightSkinTone,
+        manDancingMediumLightSkinTone,
+        manDancingMediumSkinTone,
+        manDancingMediumDarkSkinTone,
+        manDancingDarkSkinTone
+    ];
+    const allManDancingGroup = new EmojiGroup("\u{1F57A}\uDD7A", "Man Dancing", ...allManDancing);
+    const allWomanDancing = [
+        womanDancing,
+        womanDancingLightSkinTone,
+        womanDancingMediumLightSkinTone,
+        womanDancingMediumSkinTone,
+        womanDancingMediumDarkSkinTone,
+        womanDancingDarkSkinTone
+    ];
+    const allWomanDancingGroup = new EmojiGroup("\u{1F483}\uDC83", "Woman Dancing", ...allWomanDancing);
+    const allMenDancing = [
+        allManDancingGroup,
+        allWomanDancingGroup
+    ];
+    const allMenDancingGroup = new EmojiGroup("\u{1F57A}\uDD7A", "Dancing", ...allMenDancing);
+    const allJuggler = [
+        juggler,
+        jugglerLightSkinTone,
+        jugglerMediumLightSkinTone,
+        jugglerMediumSkinTone,
+        jugglerMediumDarkSkinTone,
+        jugglerDarkSkinTone
+    ];
+    const allJugglerGroup = new EmojiGroup("\u{1F939}\uDD39", "Juggler", ...allJuggler);
+    const allJugglerMale = [
+        jugglerMale,
+        jugglerLightSkinToneMale,
+        jugglerMediumLightSkinToneMale,
+        jugglerMediumSkinToneMale,
+        jugglerMediumDarkSkinToneMale,
+        jugglerDarkSkinToneMale
+    ];
+    const allJugglerMaleGroup = new EmojiGroup("\u{1F939}\uDD39\u200D\u2642\uFE0F", "Juggler: Male", ...allJugglerMale);
+    const allJugglerFemale = [
+        jugglerFemale,
+        jugglerLightSkinToneFemale,
+        jugglerMediumLightSkinToneFemale,
+        jugglerMediumSkinToneFemale,
+        jugglerMediumDarkSkinToneFemale,
+        jugglerDarkSkinToneFemale
+    ];
+    const allJugglerFemaleGroup = new EmojiGroup("\u{1F939}\uDD39\u200D\u2640\uFE0F", "Juggler: Female", ...allJugglerFemale);
+    const allJugglers = [
+        allJugglerGroup,
+        allJugglerMaleGroup,
+        allJugglerFemaleGroup
+    ];
+    const allJugglersGroup = new EmojiGroup("\u{1F939}\uDD39", "Juggler", ...allJugglers);
+    const allClimber = [
+        climber,
+        climberLightSkinTone,
+        climberMediumLightSkinTone,
+        climberMediumSkinTone,
+        climberMediumDarkSkinTone,
+        climberDarkSkinTone
+    ];
+    const allClimberGroup = new EmojiGroup("\u{1F9D7}\uDDD7", "Climber", ...allClimber);
+    const allClimberMale = [
+        climberMale,
+        climberLightSkinToneMale,
+        climberMediumLightSkinToneMale,
+        climberMediumSkinToneMale,
+        climberMediumDarkSkinToneMale,
+        climberDarkSkinToneMale
+    ];
+    const allClimberMaleGroup = new EmojiGroup("\u{1F9D7}\uDDD7\u200D\u2642\uFE0F", "Climber: Male", ...allClimberMale);
+    const allClimberFemale = [
+        climberFemale,
+        climberLightSkinToneFemale,
+        climberMediumLightSkinToneFemale,
+        climberMediumSkinToneFemale,
+        climberMediumDarkSkinToneFemale,
+        climberDarkSkinToneFemale
+    ];
+    const allClimberFemaleGroup = new EmojiGroup("\u{1F9D7}\uDDD7\u200D\u2640\uFE0F", "Climber: Female", ...allClimberFemale);
+    const allClimbers = [
+        allClimberGroup,
+        allClimberMaleGroup,
+        allClimberFemaleGroup
+    ];
+    const allClimbersGroup = new EmojiGroup("\u{1F9D7}\uDDD7", "Climber", ...allClimbers);
+    const allJockey = [
+        jockey,
+        jockeyLightSkinTone,
+        jockeyMediumLightSkinTone,
+        jockeyMediumSkinTone,
+        jockeyMediumDarkSkinTone,
+        jockeyDarkSkinTone
+    ];
+    const allJockeyGroup = new EmojiGroup("\u{1F3C7}\uDFC7", "Jockey", ...allJockey);
+    const allSnowboarder = [
+        snowboarder,
+        snowboarderLightSkinTone,
+        snowboarderMediumLightSkinTone,
+        snowboarderMediumSkinTone,
+        snowboarderMediumDarkSkinTone,
+        snowboarderDarkSkinTone
+    ];
+    const allSnowboarderGroup = new EmojiGroup("\u{1F3C2}\uDFC2", "Snowboarder", ...allSnowboarder);
+    const allGolfer = [
+        golfer,
+        golferLightSkinTone,
+        golferMediumLightSkinTone,
+        golferMediumSkinTone,
+        golferMediumDarkSkinTone,
+        golferDarkSkinTone
+    ];
+    const allGolferGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F", "Golfer", ...allGolfer);
+    const allGolferMale = [
+        golferMale,
+        golferLightSkinToneMale,
+        golferMediumLightSkinToneMale,
+        golferMediumSkinToneMale,
+        golferMediumDarkSkinToneMale,
+        golferDarkSkinToneMale
+    ];
+    const allGolferMaleGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F\u200D\u2642\uFE0F", "Golfer: Male", ...allGolferMale);
+    const allGolferFemale = [
+        golferFemale,
+        golferLightSkinToneFemale,
+        golferMediumLightSkinToneFemale,
+        golferMediumSkinToneFemale,
+        golferMediumDarkSkinToneFemale,
+        golferDarkSkinToneFemale
+    ];
+    const allGolferFemaleGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F\u200D\u2640\uFE0F", "Golfer: Female", ...allGolferFemale);
+    const allGolfers = [
+        allGolferGroup,
+        allGolferMaleGroup,
+        allGolferFemaleGroup
+    ];
+    const allGolfersGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F", "Golfer", ...allGolfers);
+    const allSurfing = [
+        surfing,
+        surfingLightSkinTone,
+        surfingMediumLightSkinTone,
+        surfingMediumSkinTone,
+        surfingMediumDarkSkinTone,
+        surfingDarkSkinTone
+    ];
+    const allSurfingGroup = new EmojiGroup("\u{1F3C4}\uDFC4", "Surfing", ...allSurfing);
+    const allSurfingMale = [
+        surfingMale,
+        surfingLightSkinToneMale,
+        surfingMediumLightSkinToneMale,
+        surfingMediumSkinToneMale,
+        surfingMediumDarkSkinToneMale,
+        surfingDarkSkinToneMale
+    ];
+    const allSurfingMaleGroup = new EmojiGroup("\u{1F3C4}\uDFC4\u200D\u2642\uFE0F", "Surfing: Male", ...allSurfingMale);
+    const allSurfingFemale = [
+        surfingFemale,
+        surfingLightSkinToneFemale,
+        surfingMediumLightSkinToneFemale,
+        surfingMediumSkinToneFemale,
+        surfingMediumDarkSkinToneFemale,
+        surfingDarkSkinToneFemale
+    ];
+    const allSurfingFemaleGroup = new EmojiGroup("\u{1F3C4}\uDFC4\u200D\u2640\uFE0F", "Surfing: Female", ...allSurfingFemale);
+    const allSurfers = [
+        allSurfingGroup,
+        allSurfingMaleGroup,
+        allSurfingFemaleGroup
+    ];
+    const allSurfersGroup = new EmojiGroup("\u{1F3C4}\uDFC4", "Surfing", ...allSurfers);
+    const allRowingBoat = [
+        rowingBoat,
+        rowingBoatLightSkinTone,
+        rowingBoatMediumLightSkinTone,
+        rowingBoatMediumSkinTone,
+        rowingBoatMediumDarkSkinTone,
+        rowingBoatDarkSkinTone
+    ];
+    const allRowingBoatGroup = new EmojiGroup("\u{1F6A3}\uDEA3", "Rowing Boat", ...allRowingBoat);
+    const allRowingBoatMale = [
+        rowingBoatMale,
+        rowingBoatLightSkinToneMale,
+        rowingBoatMediumLightSkinToneMale,
+        rowingBoatMediumSkinToneMale,
+        rowingBoatMediumDarkSkinToneMale,
+        rowingBoatDarkSkinToneMale
+    ];
+    const allRowingBoatMaleGroup = new EmojiGroup("\u{1F6A3}\uDEA3\u200D\u2642\uFE0F", "Rowing Boat: Male", ...allRowingBoatMale);
+    const allRowingBoatFemale = [
+        rowingBoatFemale,
+        rowingBoatLightSkinToneFemale,
+        rowingBoatMediumLightSkinToneFemale,
+        rowingBoatMediumSkinToneFemale,
+        rowingBoatMediumDarkSkinToneFemale,
+        rowingBoatDarkSkinToneFemale
+    ];
+    const allRowingBoatFemaleGroup = new EmojiGroup("\u{1F6A3}\uDEA3\u200D\u2640\uFE0F", "Rowing Boat: Female", ...allRowingBoatFemale);
+    const allBoatRowers = [
+        allRowingBoatGroup,
+        allRowingBoatMaleGroup,
+        allRowingBoatFemaleGroup
+    ];
+    const allBoatRowersGroup = new EmojiGroup("\u{1F6A3}\uDEA3", "Rowing Boat", ...allBoatRowers);
+    const allSwimming = [
+        swimming,
+        swimmingLightSkinTone,
+        swimmingMediumLightSkinTone,
+        swimmingMediumSkinTone,
+        swimmingMediumDarkSkinTone,
+        swimmingDarkSkinTone
+    ];
+    const allSwimmingGroup = new EmojiGroup("\u{1F3CA}\uDFCA", "Swimming", ...allSwimming);
+    const allSwimmingMale = [
+        swimmingMale,
+        swimmingLightSkinToneMale,
+        swimmingMediumLightSkinToneMale,
+        swimmingMediumSkinToneMale,
+        swimmingMediumDarkSkinToneMale,
+        swimmingDarkSkinToneMale
+    ];
+    const allSwimmingMaleGroup = new EmojiGroup("\u{1F3CA}\uDFCA\u200D\u2642\uFE0F", "Swimming: Male", ...allSwimmingMale);
+    const allSwimmingFemale = [
+        swimmingFemale,
+        swimmingLightSkinToneFemale,
+        swimmingMediumLightSkinToneFemale,
+        swimmingMediumSkinToneFemale,
+        swimmingMediumDarkSkinToneFemale,
+        swimmingDarkSkinToneFemale
+    ];
+    const allSwimmingFemaleGroup = new EmojiGroup("\u{1F3CA}\uDFCA\u200D\u2640\uFE0F", "Swimming: Female", ...allSwimmingFemale);
+    const allSwimmers = [
+        allSwimmingGroup,
+        allSwimmingMaleGroup,
+        allSwimmingFemaleGroup
+    ];
+    const allSwimmersGroup = new EmojiGroup("\u{1F3CA}\uDFCA", "Swimming", ...allSwimmers);
+    const allBasketBaller = [
+        basketBaller,
+        basketBallerLightSkinTone,
+        basketBallerMediumLightSkinTone,
+        basketBallerMediumSkinTone,
+        basketBallerMediumDarkSkinTone,
+        basketBallerDarkSkinTone
+    ];
+    const allBasketBallerGroup = new EmojiGroup("\u26F9\uFE0F", "Basket Baller", ...allBasketBaller);
+    const allBasketBallerMale = [
+        basketBallerMale,
+        basketBallerLightSkinToneMale,
+        basketBallerMediumLightSkinToneMale,
+        basketBallerMediumSkinToneMale,
+        basketBallerMediumDarkSkinToneMale,
+        basketBallerDarkSkinToneMale
+    ];
+    const allBasketBallerMaleGroup = new EmojiGroup("\u26F9\uFE0F\u200D\u2642\uFE0F", "Basket Baller: Male", ...allBasketBallerMale);
+    const allBasketBallerFemale = [
+        basketBallerFemale,
+        basketBallerLightSkinToneFemale,
+        basketBallerMediumLightSkinToneFemale,
+        basketBallerMediumSkinToneFemale,
+        basketBallerMediumDarkSkinToneFemale,
+        basketBallerDarkSkinToneFemale
+    ];
+    const allBasketBallerFemaleGroup = new EmojiGroup("\u26F9\uFE0F\u200D\u2640\uFE0F", "Basket Baller: Female", ...allBasketBallerFemale);
+    const allBacketBallPlayers = [
+        allBasketBallerGroup,
+        allBasketBallerMaleGroup,
+        allBasketBallerFemaleGroup
+    ];
+    const allBacketBallPlayersGroup = new EmojiGroup("\u26F9\uFE0F", "Basket Baller", ...allBacketBallPlayers);
+    const allWeightLifter = [
+        weightLifter,
+        weightLifterLightSkinTone,
+        weightLifterMediumLightSkinTone,
+        weightLifterMediumSkinTone,
+        weightLifterMediumDarkSkinTone,
+        weightLifterDarkSkinTone
+    ];
+    const allWeightLifterGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F", "Weight Lifter", ...allWeightLifter);
+    const allWeightLifterMale = [
+        weightLifterMale,
+        weightLifterLightSkinToneMale,
+        weightLifterMediumLightSkinToneMale,
+        weightLifterMediumSkinToneMale,
+        weightLifterMediumDarkSkinToneMale,
+        weightLifterDarkSkinToneMale
+    ];
+    const allWeightLifterMaleGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F\u200D\u2642\uFE0F", "Weight Lifter: Male", ...allWeightLifterMale);
+    const allWeightLifterFemale = [
+        weightLifterFemale,
+        weightLifterLightSkinToneFemale,
+        weightLifterMediumLightSkinToneFemale,
+        weightLifterMediumSkinToneFemale,
+        weightLifterMediumDarkSkinToneFemale,
+        weightLifterDarkSkinToneFemale
+    ];
+    const allWeightLifterFemaleGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F\u200D\u2640\uFE0F", "Weight Lifter: Female", ...allWeightLifterFemale);
+    const allWeightLifters = [
+        allWeightLifterGroup,
+        allWeightLifterMaleGroup,
+        allWeightLifterFemaleGroup
+    ];
+    const allWeightLiftersGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F", "Weight Lifter", ...allWeightLifters);
+    const allBiker = [
+        biker,
+        bikerLightSkinTone,
+        bikerMediumLightSkinTone,
+        bikerMediumSkinTone,
+        bikerMediumDarkSkinTone,
+        bikerDarkSkinTone
+    ];
+    const allBikerGroup = new EmojiGroup("\u{1F6B4}\uDEB4", "Biker", ...allBiker);
+    const allBikerMale = [
+        bikerMale,
+        bikerLightSkinToneMale,
+        bikerMediumLightSkinToneMale,
+        bikerMediumSkinToneMale,
+        bikerMediumDarkSkinToneMale,
+        bikerDarkSkinToneMale
+    ];
+    const allBikerMaleGroup = new EmojiGroup("\u{1F6B4}\uDEB4\u200D\u2642\uFE0F", "Biker: Male", ...allBikerMale);
+    const allBikerFemale = [
+        bikerFemale,
+        bikerLightSkinToneFemale,
+        bikerMediumLightSkinToneFemale,
+        bikerMediumSkinToneFemale,
+        bikerMediumDarkSkinToneFemale,
+        bikerDarkSkinToneFemale
+    ];
+    const allBikerFemaleGroup = new EmojiGroup("\u{1F6B4}\uDEB4\u200D\u2640\uFE0F", "Biker: Female", ...allBikerFemale);
+    const allBikers = [
+        allBikerGroup,
+        allBikerMaleGroup,
+        allBikerFemaleGroup
+    ];
+    const allBikersGroup = new EmojiGroup("\u{1F6B4}\uDEB4", "Biker", ...allBikers);
+    const allMountainBiker = [
+        mountainBiker,
+        mountainBikerLightSkinTone,
+        mountainBikerMediumLightSkinTone,
+        mountainBikerMediumSkinTone,
+        mountainBikerMediumDarkSkinTone,
+        mountainBikerDarkSkinTone
+    ];
+    const allMountainBikerGroup = new EmojiGroup("\u{1F6B5}\uDEB5", "Mountain Biker", ...allMountainBiker);
+    const allMountainBikerMale = [
+        mountainBikerMale,
+        mountainBikerLightSkinToneMale,
+        mountainBikerMediumLightSkinToneMale,
+        mountainBikerMediumSkinToneMale,
+        mountainBikerMediumDarkSkinToneMale,
+        mountainBikerDarkSkinToneMale
+    ];
+    const allMountainBikerMaleGroup = new EmojiGroup("\u{1F6B5}\uDEB5\u200D\u2642\uFE0F", "Mountain Biker: Male", ...allMountainBikerMale);
+    const allMountainBikerFemale = [
+        mountainBikerFemale,
+        mountainBikerLightSkinToneFemale,
+        mountainBikerMediumLightSkinToneFemale,
+        mountainBikerMediumSkinToneFemale,
+        mountainBikerMediumDarkSkinToneFemale,
+        mountainBikerDarkSkinToneFemale
+    ];
+    const allMountainBikerFemaleGroup = new EmojiGroup("\u{1F6B5}\uDEB5\u200D\u2640\uFE0F", "Mountain Biker: Female", ...allMountainBikerFemale);
+    const allMountainBikers = [
+        allMountainBikerGroup,
+        allMountainBikerMaleGroup,
+        allMountainBikerFemaleGroup
+    ];
+    const allMountainBikersGroup = new EmojiGroup("\u{1F6B5}\uDEB5", "Mountain Biker", ...allMountainBikers);
+    const allCartwheeler = [
+        cartwheeler,
+        cartwheelerLightSkinTone,
+        cartwheelerMediumLightSkinTone,
+        cartwheelerMediumSkinTone,
+        cartwheelerMediumDarkSkinTone,
+        cartwheelerDarkSkinTone
+    ];
+    const allCartwheelerGroup = new EmojiGroup("\u{1F938}\uDD38", "Cartwheeler", ...allCartwheeler);
+    const allCartwheelerMale = [
+        cartwheelerMale,
+        cartwheelerLightSkinToneMale,
+        cartwheelerMediumLightSkinToneMale,
+        cartwheelerMediumSkinToneMale,
+        cartwheelerMediumDarkSkinToneMale,
+        cartwheelerDarkSkinToneMale
+    ];
+    const allCartwheelerMaleGroup = new EmojiGroup("\u{1F938}\uDD38\u200D\u2642\uFE0F", "Cartwheeler: Male", ...allCartwheelerMale);
+    const allCartwheelerFemale = [
+        cartwheelerFemale,
+        cartwheelerLightSkinToneFemale,
+        cartwheelerMediumLightSkinToneFemale,
+        cartwheelerMediumSkinToneFemale,
+        cartwheelerMediumDarkSkinToneFemale,
+        cartwheelerDarkSkinToneFemale
+    ];
+    const allCartwheelerFemaleGroup = new EmojiGroup("\u{1F938}\uDD38\u200D\u2640\uFE0F", "Cartwheeler: Female", ...allCartwheelerFemale);
+    const allCartwheelers = [
+        allCartwheelerGroup,
+        allCartwheelerMaleGroup,
+        allCartwheelerFemaleGroup
+    ];
+    const allCartwheelersGroup = new EmojiGroup("\u{1F938}\uDD38", "Cartwheeler", ...allCartwheelers);
+    const allWrestler = [
+        wrestler,
+        wrestlerMale,
+        wrestlerFemale
+    ];
+    const allWrestlerGroup = new EmojiGroup("\u{1F93C}\uDD3C", "Wrestler", ...allWrestler);
+    const allWaterPoloPlayer = [
+        waterPoloPlayer,
+        waterPoloPlayerLightSkinTone,
+        waterPoloPlayerMediumLightSkinTone,
+        waterPoloPlayerMediumSkinTone,
+        waterPoloPlayerMediumDarkSkinTone,
+        waterPoloPlayerDarkSkinTone
+    ];
+    const allWaterPoloPlayerGroup = new EmojiGroup("\u{1F93D}\uDD3D", "Water Polo Player", ...allWaterPoloPlayer);
+    const allWaterPoloPlayerMale = [
+        waterPoloPlayerMale,
+        waterPoloPlayerLightSkinToneMale,
+        waterPoloPlayerMediumLightSkinToneMale,
+        waterPoloPlayerMediumSkinToneMale,
+        waterPoloPlayerMediumDarkSkinToneMale,
+        waterPoloPlayerDarkSkinToneMale
+    ];
+    const allWaterPoloPlayerMaleGroup = new EmojiGroup("\u{1F93D}\uDD3D\u200D\u2642\uFE0F", "Water Polo Player: Male", ...allWaterPoloPlayerMale);
+    const allWaterPoloPlayerFemale = [
+        waterPoloPlayerFemale,
+        waterPoloPlayerLightSkinToneFemale,
+        waterPoloPlayerMediumLightSkinToneFemale,
+        waterPoloPlayerMediumSkinToneFemale,
+        waterPoloPlayerMediumDarkSkinToneFemale,
+        waterPoloPlayerDarkSkinToneFemale
+    ];
+    const allWaterPoloPlayerFemaleGroup = new EmojiGroup("\u{1F93D}\uDD3D\u200D\u2640\uFE0F", "Water Polo Player: Female", ...allWaterPoloPlayerFemale);
+    const allWaterPoloPlayers = [
+        allWaterPoloPlayerGroup,
+        allWaterPoloPlayerMaleGroup,
+        allWaterPoloPlayerFemaleGroup
+    ];
+    const allWaterPoloPlayersGroup = new EmojiGroup("\u{1F93D}\uDD3D", "Water Polo Player", ...allWaterPoloPlayers);
+    const allHandBaller = [
+        handBaller,
+        handBallerLightSkinTone,
+        handBallerMediumLightSkinTone,
+        handBallerMediumSkinTone,
+        handBallerMediumDarkSkinTone,
+        handBallerDarkSkinTone
+    ];
+    const allHandBallerGroup = new EmojiGroup("\u{1F93E}\uDD3E", "Hand Baller", ...allHandBaller);
+    const allHandBallerMale = [
+        handBallerMale,
+        handBallerLightSkinToneMale,
+        handBallerMediumLightSkinToneMale,
+        handBallerMediumSkinToneMale,
+        handBallerMediumDarkSkinToneMale,
+        handBallerDarkSkinToneMale
+    ];
+    const allHandBallerMaleGroup = new EmojiGroup("\u{1F93E}\uDD3E\u200D\u2642\uFE0F", "Hand Baller: Male", ...allHandBallerMale);
+    const allHandBallerFemale = [
+        handBallerFemale,
+        handBallerLightSkinToneFemale,
+        handBallerMediumLightSkinToneFemale,
+        handBallerMediumSkinToneFemale,
+        handBallerMediumDarkSkinToneFemale,
+        handBallerDarkSkinToneFemale
+    ];
+    const allHandBallerFemaleGroup = new EmojiGroup("\u{1F93E}\uDD3E\u200D\u2640\uFE0F", "Hand Baller: Female", ...allHandBallerFemale);
+    const allHandBallers = [
+        allHandBallerGroup,
+        allHandBallerMaleGroup,
+        allHandBallerFemaleGroup
+    ];
+    const allHandBallersGroup = new EmojiGroup("\u{1F93E}\uDD3E", "Hand Baller", ...allHandBallers);
+    const allInMotion = [
+        allWalkersGroup,
+        allStandersGroup,
+        allKneelersGroup,
+        allProbingCaneGroup,
+        allMotorizedWheelchairGroup,
+        allManualWheelchairGroup,
+        allMenDancingGroup,
+        allJugglersGroup,
+        allClimbersGroup,
+        fencer,
+        allJockeyGroup,
+        skier,
+        allSnowboarderGroup,
+        allGolfersGroup,
+        allSurfersGroup,
+        allBoatRowersGroup,
+        allSwimmersGroup,
+        allRunnersGroup,
+        allBacketBallPlayersGroup,
+        allWeightLiftersGroup,
+        allBikersGroup,
+        allMountainBikersGroup,
+        allCartwheelersGroup,
+        allWrestlerGroup,
+        allWaterPoloPlayersGroup,
+        allHandBallersGroup
+    ];
+    const allInMotionGroup = new EmojiGroup("\u0049\u006E\u0020\u004D\u006F\u0074\u0069\u006F\u006E", "Depictions of people in motion", ...allInMotion);
+    const allInLotusPosition = [
+        inLotusPosition,
+        inLotusPositionLightSkinTone,
+        inLotusPositionMediumLightSkinTone,
+        inLotusPositionMediumSkinTone,
+        inLotusPositionMediumDarkSkinTone,
+        inLotusPositionDarkSkinTone
+    ];
+    const allInLotusPositionGroup = new EmojiGroup("\u{1F9D8}\uDDD8", "In Lotus Position", ...allInLotusPosition);
+    const allInLotusPositionMale = [
+        inLotusPositionMale,
+        inLotusPositionLightSkinToneMale,
+        inLotusPositionMediumLightSkinToneMale,
+        inLotusPositionMediumSkinToneMale,
+        inLotusPositionMediumDarkSkinToneMale,
+        inLotusPositionDarkSkinToneMale
+    ];
+    const allInLotusPositionMaleGroup = new EmojiGroup("\u{1F9D8}\uDDD8\u200D\u2642\uFE0F", "In Lotus Position: Male", ...allInLotusPositionMale);
+    const allInLotusPositionFemale = [
+        inLotusPositionFemale,
+        inLotusPositionLightSkinToneFemale,
+        inLotusPositionMediumLightSkinToneFemale,
+        inLotusPositionMediumSkinToneFemale,
+        inLotusPositionMediumDarkSkinToneFemale,
+        inLotusPositionDarkSkinToneFemale
+    ];
+    const allInLotusPositionFemaleGroup = new EmojiGroup("\u{1F9D8}\uDDD8\u200D\u2640\uFE0F", "In Lotus Position: Female", ...allInLotusPositionFemale);
+    const allLotusSitters = [
+        allInLotusPositionGroup,
+        allInLotusPositionMaleGroup,
+        allInLotusPositionFemaleGroup
+    ];
+    const allLotusSittersGroup = new EmojiGroup("\u{1F9D8}\uDDD8", "In Lotus Position", ...allLotusSitters);
+    const allInBath = [
+        inBath,
+        inBathLightSkinTone,
+        inBathMediumLightSkinTone,
+        inBathMediumSkinTone,
+        inBathMediumDarkSkinTone,
+        inBathDarkSkinTone
+    ];
+    const allInBathGroup = new EmojiGroup("\u{1F6C0}\uDEC0", "In Bath", ...allInBath);
+    const allInBed = [
+        inBed,
+        inBedLightSkinTone,
+        inBedMediumLightSkinTone,
+        inBedMediumSkinTone,
+        inBedMediumDarkSkinTone,
+        inBedDarkSkinTone
+    ];
+    const allInBedGroup = new EmojiGroup("\u{1F6CC}\uDECC", "In Bed", ...allInBed);
+    const allInSauna = [
+        inSauna,
+        inSaunaLightSkinTone,
+        inSaunaMediumLightSkinTone,
+        inSaunaMediumSkinTone,
+        inSaunaMediumDarkSkinTone,
+        inSaunaDarkSkinTone
+    ];
+    const allInSaunaGroup = new EmojiGroup("\u{1F9D6}\uDDD6", "In Sauna", ...allInSauna);
+    const allInSaunaMale = [
+        inSaunaMale,
+        inSaunaLightSkinToneMale,
+        inSaunaMediumLightSkinToneMale,
+        inSaunaMediumSkinToneMale,
+        inSaunaMediumDarkSkinToneMale,
+        inSaunaDarkSkinToneMale
+    ];
+    const allInSaunaMaleGroup = new EmojiGroup("\u{1F9D6}\uDDD6\u200D\u2642\uFE0F", "In Sauna: Male", ...allInSaunaMale);
+    const allInSaunaFemale = [
+        inSaunaFemale,
+        inSaunaLightSkinToneFemale,
+        inSaunaMediumLightSkinToneFemale,
+        inSaunaMediumSkinToneFemale,
+        inSaunaMediumDarkSkinToneFemale,
+        inSaunaDarkSkinToneFemale
+    ];
+    const allInSaunaFemaleGroup = new EmojiGroup("\u{1F9D6}\uDDD6\u200D\u2640\uFE0F", "In Sauna: Female", ...allInSaunaFemale);
+    const allSauna = [
+        allInSaunaGroup,
+        allInSaunaMaleGroup,
+        allInSaunaFemaleGroup
+    ];
+    const allSaunaGroup = new EmojiGroup("\u{1F9D6}\uDDD6", "In Sauna", ...allSauna);
+    const allResting = [
+        allLotusSittersGroup,
+        allInBathGroup,
+        allInBedGroup,
+        allSaunaGroup
+    ];
+    const allRestingGroup = new EmojiGroup("\u0052\u0065\u0073\u0074\u0069\u006E\u0067", "Depictions of people at rest", ...allResting);
+    const allBabies = [
+        allBabyGroup,
+        allCherubGroup
+    ];
+    const allBabiesGroup = new EmojiGroup("\u{1F476}\uDC76", "Baby", ...allBabies);
+    const allPeople = [
+        allBabiesGroup,
+        allChildrenGroup,
+        allPersonsGroup,
+        allOlderPersonsGroup
+    ];
+    const allPeopleGroup = new EmojiGroup("\u0050\u0065\u006F\u0070\u006C\u0065", "People", ...allPeople);
+    const allCharacters = [
+        allPeopleGroup,
+        allGesturingGroup,
+        allInMotionGroup,
+        allRestingGroup,
+        allOccupationGroup,
+        allFantasyGroup
+    ];
+    const allCharactersGroup = new EmojiGroup("\u0041\u006C\u006C\u0020\u0050\u0065\u006F\u0070\u006C\u0065", "All People", ...allCharacters);
 
     const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
     const loadedFonts = [];
@@ -10236,6 +13788,304 @@
             else {
                 loadedFonts.push(font);
             }
+        }
+    }
+
+    const windows = [];
+    if ("window" in globalThis) {
+        // Closes all the windows.
+        window.addEventListener("unload", () => {
+            for (const w of windows) {
+                w.close();
+            }
+        });
+    }
+    /**
+     * Opens a window that will be closed when the window that opened it is closed.
+     * @param href - the location to load in the window
+     * @param x - the screen position horizontal component
+     * @param y - the screen position vertical component
+     * @param width - the screen size horizontal component
+     * @param height - the screen size vertical component
+     */
+    function openWindow(href, x, y, width, height) {
+        if ("window" in globalThis) {
+            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+            if (w) {
+                windows.push(w);
+            }
+        }
+        else {
+            throw new Error("Cannot open a window from a Worker.");
+        }
+    }
+
+    const hasHTMLCanvas = "HTMLCanvasElement" in globalThis;
+    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
+    const hasImageBitmap = "createImageBitmap" in globalThis;
+    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
+        try {
+            const canv = new OffscreenCanvas(1, 1);
+            const g = canv.getContext("2d");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    })();
+    const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
+        try {
+            const canv = hasOffscreenCanvas
+                ? new OffscreenCanvas(1, 1)
+                : Canvas();
+            const g = canv.getContext("bitmaprenderer");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    })();
+    function drawImageBitmapToCanvas2D(canv, img) {
+        const g = canv.getContext("2d");
+        if (isNullOrUndefined(g)) {
+            throw new Error("Could not create 2d context for canvas");
+        }
+        g.drawImage(img, 0, 0);
+    }
+    function copyImageBitmapToCanvas(canv, img) {
+        const g = canv.getContext("bitmaprenderer");
+        if (isNullOrUndefined(g)) {
+            throw new Error("Could not create bitmaprenderer context for canvas");
+        }
+        g.transferFromImageBitmap(img);
+    }
+    const drawImageBitmapToCanvas = hasImageBitmapRenderingContext
+        ? copyImageBitmapToCanvas
+        : drawImageBitmapToCanvas2D;
+    function createOffscreenCanvas(width, height) {
+        return new OffscreenCanvas(width, height);
+    }
+    function createCanvas(w, h) {
+        return Canvas(width(w), height(h));
+    }
+    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
+        ? createOffscreenCanvas
+        : createCanvas;
+    function createOffscreenCanvasFromImageBitmap(img) {
+        const canv = createOffscreenCanvas(img.width, img.height);
+        drawImageBitmapToCanvas(canv, img);
+        return canv;
+    }
+    function createCanvasFromImageBitmap(img) {
+        const canv = createCanvas(img.width, img.height);
+        drawImageBitmapToCanvas(canv, img);
+        return canv;
+    }
+    const createUtilityCanvasFromImageBitmap = hasOffscreenCanvasRenderingContext2D
+        ? createOffscreenCanvasFromImageBitmap
+        : createCanvasFromImageBitmap;
+    function drawImageToCanvas(canv, img) {
+        const g = canv.getContext("2d");
+        if (isNullOrUndefined(g)) {
+            throw new Error("Could not create 2d context for canvas");
+        }
+        g.drawImage(img, 0, 0);
+    }
+    function createOffscreenCanvasFromImage(img) {
+        const canv = createOffscreenCanvas(img.width, img.height);
+        drawImageToCanvas(canv, img);
+        return canv;
+    }
+    function createCanvasFromImage(img) {
+        const canv = createCanvas(img.width, img.height);
+        drawImageToCanvas(canv, img);
+        return canv;
+    }
+    const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
+        ? createOffscreenCanvasFromImage
+        : createCanvasFromImage;
+    function isOffscreenCanvas(obj) {
+        return hasOffscreenCanvas && obj instanceof OffscreenCanvas;
+    }
+    /**
+     * Resizes a canvas element
+     * @param canv
+     * @param w - the new width of the canvas
+     * @param h - the new height of the canvas
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function setCanvasSize(canv, w, h, superscale = 1) {
+        w = Math.floor(w * superscale);
+        h = Math.floor(h * superscale);
+        if (canv.width != w
+            || canv.height != h) {
+            canv.width = w;
+            canv.height = h;
+            return true;
+        }
+        return false;
+    }
+    function isCanvasRenderingContext2D(ctx) {
+        return ctx.textBaseline != null;
+    }
+    function isOffscreenCanvasRenderingContext2D(ctx) {
+        return ctx.textBaseline != null;
+    }
+    function is2DRenderingContext(ctx) {
+        return isCanvasRenderingContext2D(ctx)
+            || isOffscreenCanvasRenderingContext2D(ctx);
+    }
+    function setCanvas2DContextSize(ctx, w, h, superscale = 1) {
+        const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled, oldTextBaseline = ctx.textBaseline, oldTextAlign = ctx.textAlign, oldFont = ctx.font, resized = setCanvasSize(ctx.canvas, w, h, superscale);
+        if (resized) {
+            ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+            ctx.textBaseline = oldTextBaseline;
+            ctx.textAlign = oldTextAlign;
+            ctx.font = oldFont;
+        }
+        return resized;
+    }
+    /**
+     * Resizes the canvas element of a given rendering context.
+     *
+     * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font
+     * properties of the context will be restored after the context is resized,
+     * as these values are usually reset to their default values when a canvas
+     * is resized.
+     * @param ctx
+     * @param w - the new width of the canvas
+     * @param h - the new height of the canvas
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function setContextSize(ctx, w, h, superscale = 1) {
+        if (is2DRenderingContext(ctx)) {
+            return setCanvas2DContextSize(ctx, w, h, superscale);
+        }
+        else {
+            return setCanvasSize(ctx.canvas, w, h, superscale);
+        }
+    }
+    /**
+     * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+     * @param canv
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function resizeCanvas(canv, superscale = 1) {
+        return setCanvasSize(canv, canv.clientWidth, canv.clientHeight, superscale);
+    }
+    async function canvasView(canvas) {
+        let url;
+        if (isOffscreenCanvas(canvas)) {
+            const blob = await canvas.convertToBlob();
+            url = URL.createObjectURL(blob);
+        }
+        else {
+            url = canvas.toDataURL();
+        }
+        openWindow(url, 0, 0, canvas.width + 10, canvas.height + 100);
+    }
+    async function canvasToBlob(canvas, type, quality) {
+        if (isOffscreenCanvas(canvas)) {
+            return await canvas.convertToBlob({ type, quality });
+        }
+        else {
+            return await new Promise((resolve) => {
+                canvas.toBlob(resolve, type, quality);
+            });
+        }
+    }
+    if (hasHTMLCanvas) {
+        HTMLCanvasElement.prototype.view = async function () {
+            return await canvasView(this);
+        };
+        HTMLCanvasElement.prototype.convertToBlob = async function (opts) {
+            return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
+        };
+    }
+    if (hasOffscreenCanvas) {
+        OffscreenCanvas.prototype.view = async function () {
+            return await canvasView(this);
+        };
+        OffscreenCanvas.prototype.toBlob = function (callback, type, quality) {
+            canvasToBlob(this, type, quality)
+                .then(callback);
+        };
+    }
+
+    class ImageFetcher extends Fetcher {
+        constructor() {
+            super();
+            this.__getCanvas = hasImageBitmap
+                ? this._getCanvasViaImageBitmap
+                : this._getCanvasViaImage;
+        }
+        async readFileImage(file) {
+            const img = new Image();
+            img.src = file;
+            if (!img.complete) {
+                await once(img, "load", "error");
+            }
+            return img;
+        }
+        async _getImageBitmap(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const blob = await this._getBlob(path, headerMap, onProgress);
+            return await createImageBitmap(blob);
+        }
+        async getImageBitmap(path, headerMap, onProgress) {
+            return await this._getImageBitmap(path, headerMap, onProgress);
+        }
+        async _getImage(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const file = await this._getFile(path, headerMap, onProgress);
+            return await this.readFileImage(file);
+        }
+        async getImage(path, headerMap, onProgress) {
+            return await this._getImage(path, headerMap, onProgress);
+        }
+        async _postObjectForImageBitmap(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
+            return await createImageBitmap(blob);
+        }
+        async postObjectForImageBitmap(path, obj, headerMap, onProgress) {
+            return await this._postObjectForImageBitmap(path, obj, headerMap, onProgress);
+        }
+        async _postObjectForImage(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const file = await this._postObjectForFile(path, obj, headerMap, onProgress);
+            return await this.readFileImage(file);
+        }
+        async postObjectForImage(path, obj, headerMap, onProgress) {
+            return await this._postObjectForImage(path, obj, headerMap, onProgress);
+        }
+        async _getCanvasViaImageBitmap(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            return using(await this._getImageBitmap(path, headerMap, onProgress), (img) => {
+                return createUtilityCanvasFromImageBitmap(img);
+            });
+        }
+        async _getCanvasViaImage(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            const img = await this._getImage(path, headerMap, onProgress);
+            return createUtilityCanvasFromImage(img);
+        }
+        async _getCanvas(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            return await this.__getCanvas(path, headerMap, onProgress);
+        }
+        async getCanvas(path, headerMap, onProgress) {
+            return await this._getCanvas(path, headerMap, onProgress);
         }
     }
 
@@ -10485,7 +14335,7 @@
                 this.dispatchEvent(zoomChangedEvt);
             };
             this.element = Div(id("controls"));
-            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCourners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
             Object.seal(this);
         }
         get isFullscreen() {
@@ -10498,7 +14348,7 @@
             else {
                 document.exitFullscreen();
             }
-            updateLabel(this.fullscreenButton, value, downRightArrow.value, squareFourCourners.value);
+            updateLabel(this.fullscreenButton, value, downRightArrow.value, squareFourCorners.value);
         }
         get style() {
             return this.element.style;
@@ -10913,6 +14763,356 @@
             this.videoInputSelect.selectedValue = value;
         }
     }
+
+    const activities = new EmojiGroup("Activities", "Activities", filmFrames, admissionTickets, carouselHorse, ferrisWheel, rollerCoaster, artistPalette, circusTent, ticket, clapperBoard, performingArts);
+
+    const animals = new EmojiGroup("Animals", "Animals and insects", rat, mouse, ox, waterBuffalo, cow, tiger, leopard, rabbit, cat, blackCat, dragon, crocodile, whale, snail, snake, horse, ram, goat, ewe, monkey, rooster, chicken, dog, serviceDog, pig, boar, elephant, octopus, spiralShell, bug, ant, honeybee, ladyBeetle, fish, tropicalFish, blowfish, turtle, hatchingChick, babyChick, frontFacingBabyChick, bird, penguin, koala, poodle, camel, twoHumpCamel, dolphin, mouseFace, cowFace, tigerFace, rabbitFace, catFace, dragonFace, spoutingWhale, horseFace, monkeyFace, dogFace, pigFace, frog, hamster, wolf, bear, polarBear, panda, pigNose, pawPrints, chipmunk, dove, spider, spiderWeb, lion, scorpion, turkey, unicorn, eagle, duck, bat, shark, owl, fox, butterfly, deer, gorilla, lizard, rhinoceros, giraffe, zebra, hedgehog, sauropod, tRex, cricket, kangaroo, llama, peacock, hippopotamus, parrot, raccoon, mosquito, microbe, badger, swan, 
+    //mammoth,
+    //dodo,
+    sloth, otter, orangutan, skunk, flamingo, 
+    //beaver,
+    //bison,
+    //seal,
+    //fly,
+    //worm,
+    //beetle,
+    //cockroach,
+    //feather,
+    guideDog);
+
+    const arrows = new EmojiGroup("Arrows", "Arrows pointing in different directions", clockwiseVerticalArrows, counterclockwiseArrowsButton, leftRightArrow, upDownArrow, upLeftArrow, upRightArrow, downRightArrow, downLeftArrow, rightArrowCurvingLeft, leftArrowCurvingRight, rightArrow, rightArrowCurvingUp, rightArrowCurvingDown, leftArrow, upArrow, downArrow);
+
+    const astro = new EmojiGroup("Astronomy", "Astronomy", milkyWay, globeShowingEuropeAfrica, globeShowingAmericas, globeShowingAsiaAustralia, globeWithMeridians, newMoon, waxingCrescentMoon, firstQuarterMoon, waxingGibbousMoon, fullMoon, waningGibbousMoon, lastQuarterMoon, waningCrescentMoon, crescentMoon, newMoonFace, firstQuarterMoonFace, lastQuarterMoonFace, fullMoonFace, sunWithFace, glowingStar, shootingStar, comet, ringedPlanet);
+
+    const bodyParts = new EmojiGroup("Body Parts", "General body parts", eyes, eye, eyeInSpeechBubble, ear, nose, mouth, tongue, flexedBiceps, selfie, bone, leg, foot, tooth, earWithHearingAid, mechanicalArm, mechanicalLeg, anatomicalHeart, lungs, brain);
+
+    const buttons = new EmojiGroup("Buttons", "Buttons", cLButton, coolButton, freeButton, iDButton, newButton, nGButton, oKButton, sOSButton, upButton, vsButton, radioButton, backArrow, endArrow, onArrow, soonArrow, topArrow, checkBoxWithCheck, inputLatinUppercase, inputLatinLowercase, inputNumbers, inputSymbols, inputLatinLetters, shuffleTracksButton, repeatButton, repeatSingleButton, upwardsButton, downwardsButton, playButton, pauseButton, reverseButton, ejectButton, fastForwardButton, fastReverseButton, fastUpButton, fastDownButton, nextTrackButton, lastTrackButton, playOrPauseButton, pauseButton, stopButton, recordButton);
+
+    const cartoon = new EmojiGroup("Cartoon", "Cartoon symbols", angerSymbol, bomb, zzz, collision, sweatDroplets, dashingAway, dizzy, speechBalloon, thoughtBalloon, hundredPoints, hole, leftSpeechBubble, rightSpeechBubble, conversationBubbles2, conversationBubbles3, leftThoughtBubble, rightThoughtBubble, leftAngerBubble, rightAngerBubble, angerBubble, angerBubbleLightning, lightningBolt);
+
+    const celebration = new EmojiGroup("Celebration", "Celebration", ribbon, wrappedGift, jackOLantern, christmasTree, firecracker, fireworks, sparkler, sparkles, sparkle, balloon, partyPopper, confettiBall, tanabataTree, pineDecoration, japaneseDolls, carpStreamer, windChime, moonViewingCeremony, backpack, graduationCap, redEnvelope, redPaperLantern, militaryMedal);
+
+    const whiteChessPieces = G(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+        width: "auto",
+        king: whiteChessKing,
+        queen: whiteChessQueen,
+        rook: whiteChessRook,
+        bishop: whiteChessBishop,
+        knight: whiteChessKnight,
+        pawn: whiteChessPawn
+    });
+    const blackChessPieces = G(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+        width: "auto",
+        king: blackChessKing,
+        queen: blackChessQueen,
+        rook: blackChessRook,
+        bishop: blackChessBishop,
+        knight: blackChessKnight,
+        pawn: blackChessPawn
+    });
+    const chessPawns = G(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+        width: "auto",
+        white: whiteChessPawn,
+        black: blackChessPawn
+    });
+    const chessRooks = G(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+        width: "auto",
+        white: whiteChessRook,
+        black: blackChessRook
+    });
+    const chessBishops = G(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+        width: "auto",
+        white: whiteChessBishop,
+        black: blackChessBishop
+    });
+    const chessKnights = G(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+        width: "auto",
+        white: whiteChessKnight,
+        black: blackChessKnight
+    });
+    const chessQueens = G(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+        width: "auto",
+        white: whiteChessQueen,
+        black: blackChessQueen
+    });
+    const chessKings = G(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+        width: "auto",
+        white: whiteChessKing,
+        black: blackChessKing
+    });
+    const chess = G("Chess Pieces", "Chess Pieces", {
+        width: "auto",
+        white: whiteChessPieces,
+        black: blackChessPieces,
+        pawns: chessPawns,
+        rooks: chessRooks,
+        bishops: chessBishops,
+        knights: chessKnights,
+        queens: chessQueens,
+        kings: chessKings
+    });
+
+    const clocks = new EmojiGroup("Clocks", "Time-keeping pieces", oneOClock, twoOClock, threeOClock, fourOClock, fiveOClock, sixOClock, sevenOClock, eightOClock, nineOClock, tenOClock, elevenOClock, twelveOClock, oneThirty, twoThirty, threeThirty, fourThirty, fiveThirty, sixThirty, sevenThirty, eightThirty, nineThirty, tenThirty, elevenThirty, twelveThirty, mantelpieceClock, watch, alarmClock, stopwatch, timerClock, hourglassDone, hourglassNotDone);
+
+    const clothing = new EmojiGroup("Clothing", "Clothing", topHat, divingMask, womanSHat, glasses, sunglasses, necktie, tShirt, jeans, dress, kimono, bikini, womanSClothes, purse, handbag, clutchBag, manSShoe, runningShoe, highHeeledShoe, womanSSandal, womanSBoot, martialArtsUniform, sari, labCoat, goggles, hikingBoot, flatShoe, safetyVest, billedCap, scarf, gloves, coat, socks, nazarAmulet, balletShoes, onePieceSwimsuit, briefs, shorts);
+
+    const dice1 = new Emoji("\u2680", "Dice: Side 1");
+    const dice2 = new Emoji("\u2681", "Dice: Side 2");
+    const dice3 = new Emoji("\u2682", "Dice: Side 3");
+    const dice4 = new Emoji("\u2683", "Dice: Side 4");
+    const dice5 = new Emoji("\u2684", "Dice: Side 5");
+    const dice6 = new Emoji("\u2685", "Dice: Side 6");
+    const dice = new EmojiGroup("Dice", "Dice", dice1, dice2, dice3, dice4, dice5, dice6);
+
+    const faces = G("Faces", "Round emoji faces", {
+        ogre,
+        goblin,
+        ghost,
+        alien,
+        alienMonster,
+        angryFaceWithHorns,
+        skull,
+        pileOfPoo,
+        grinningFace,
+        beamingFaceWithSmilingEyes,
+        faceWithTearsOfJoy,
+        grinningFaceWithBigEyes,
+        grinningFaceWithSmilingEyes,
+        grinningFaceWithSweat,
+        grinningSquintingFace,
+        smilingFaceWithHalo,
+        smilingFaceWithHorns,
+        winkingFace,
+        smilingFaceWithSmilingEyes,
+        faceSavoringFood,
+        relievedFace,
+        smilingFaceWithHeartEyes,
+        smilingFaceWithSunglasses,
+        smirkingFace,
+        neutralFace,
+        expressionlessFace,
+        unamusedFace,
+        downcastFaceWithSweat,
+        pensiveFace,
+        confusedFace,
+        confoundedFace,
+        kissingFace,
+        faceBlowingAKiss,
+        kissingFaceWithSmilingEyes,
+        kissingFaceWithClosedEyes,
+        faceWithTongue,
+        winkingFaceWithTongue,
+        squintingFaceWithTongue,
+        disappointedFace,
+        worriedFace,
+        angryFace,
+        poutingFace,
+        cryingFace,
+        perseveringFace,
+        faceWithSteamFromNose,
+        sadButRelievedFace,
+        frowningFaceWithOpenMouth,
+        anguishedFace,
+        fearfulFace,
+        wearyFace,
+        sleepyFace,
+        tiredFace,
+        grimacingFace,
+        loudlyCryingFace,
+        faceWithOpenMouth,
+        hushedFace,
+        anxiousFaceWithSweat,
+        faceScreamingInFear,
+        astonishedFace,
+        flushedFace,
+        sleepingFace,
+        dizzyFace,
+        faceWithoutMouth,
+        faceWithMedicalMask,
+        grinningCatWithSmilingEyes,
+        catWithTearsOfJoy,
+        grinningCat,
+        smilingCatWithHeartEyes,
+        catWithWrySmile,
+        kissingCat,
+        poutingCat,
+        cryingCat,
+        wearyCat,
+        slightlyFrowningFace,
+        slightlySmilingFace,
+        upsideDownFace,
+        faceWithRollingEyes,
+        seeNoEvilMonkey,
+        hearNoEvilMonkey,
+        speakNoEvilMonkey,
+        zipperMouthFace,
+        moneyMouthFace,
+        faceWithThermometer,
+        nerdFace,
+        thinkingFace,
+        faceWithHeadBandage,
+        robot,
+        huggingFace,
+        cowboyHatFace,
+        clownFace,
+        nauseatedFace,
+        rollingOnTheFloorLaughing,
+        droolingFace,
+        lyingFace,
+        sneezingFace,
+        faceWithRaisedEyebrow,
+        starStruck,
+        zanyFace,
+        shushingFace,
+        faceWithSymbolsOnMouth,
+        faceWithHandOverMouth,
+        faceVomiting,
+        explodingHead,
+        smilingFaceWithHearts,
+        yawningFace,
+        //smilingFaceWithTear,
+        partyingFace,
+        woozyFace,
+        hotFace,
+        coldFace,
+        //disguisedFace,
+        pleadingFace,
+        faceWithMonocle,
+        skullAndCrossbones,
+        frowningFace,
+        smilingFace,
+        speakingHead,
+        bustInSilhouette,
+    });
+
+    const finance = new EmojiGroup("Finance", "Finance", moneyBag, currencyExchange, heavyDollarSign, creditCard, yenBanknote, dollarBanknote, euroBanknote, poundBanknote, moneyWithWings, 
+    //coin,
+    chartIncreasingWithYen);
+
+    const flags = new EmojiGroup("Flags", "Basic flags", crossedFlags, chequeredFlag, whiteFlag, rainbowFlag, transgenderFlag, blackFlag, pirateFlag, flagEngland, flagScotland, flagWales, triangularFlag);
+
+    const food = new EmojiGroup("Food", "Food, drink, and utensils", hotDog, taco, burrito, chestnut, hotPepper, earOfCorn, mushroom, tomato, eggplant, grapes, melon, watermelon, tangerine, lemon, banana, pineapple, redApple, greenApple, pear, peach, cherries, strawberry, hamburger, pizza, meatOnBone, poultryLeg, riceCracker, riceBall, cookedRice, curryRice, steamingBowl, spaghetti, bread, frenchFries, roastedSweetPotato, dango, oden, sushi, friedShrimp, fishCakeWithSwirl, bentoBox, potOfFood, cooking, popcorn, croissant, avocado, cucumber, bacon, potato, carrot, baguetteBread, greenSalad, shallowPanOfFood, stuffedFlatbread, egg, peanuts, kiwiFruit, pancakes, dumpling, fortuneCookie, takeoutBox, bowlWithSpoon, coconut, broccoli, pretzel, cutOfMeat, sandwich, cannedFood, leafyGreen, mango, moonCake, bagel, crab, shrimp, squid, lobster, oyster, cheeseWedge, salt, garlic, onion, falafel, waffle, butter, 
+    //blueberries,
+    //bellPepper,
+    //olive,
+    //flatbread,
+    //tamale,
+    //fondue,
+    softIceCream, shavedIce, iceCream, doughnut, cookie, chocolateBar, candy, lollipop, custard, honeyPot, shortcake, birthdayCake, pie, cupcake, teacupWithoutHandle, sake, wineGlass, cocktailGlass, tropicalDrink, beerMug, clinkingBeerMugs, babyBottle, bottleWithPoppingCork, clinkingGlasses, tumblerGlass, glassOfMilk, cupWithStraw, beverageBox, mate, ice, 
+    //bubbleTea,
+    //teapot,
+    hotBeverage, forkAndKnife, forkAndKnifeWithPlate, amphora, kitchenKnife, spoon, chopsticks);
+
+    const games = new EmojiGroup("Games", "Games", spadeSuit, clubSuit, heartSuit, diamondSuit, mahjongRedDragon, joker, directHit, slotMachine, pool8Ball, gameDie, bowling, flowerPlayingCards, puzzlePiece, chessPawn, yoYo, 
+    //boomerang,
+    //nestingDolls,
+    kite);
+
+    const hands = new EmojiGroup("Hands", "Hands pointing at things", backhandIndexPointingUp, backhandIndexPointingDown, backhandIndexPointingLeft, backhandIndexPointingRight, oncomingFist, wavingHand, oKHand, thumbsUp, thumbsDown, clappingHands, openHands, nailPolish, handWithFingersSplayed, handWithFingersSplayed2, thumbsUp2, thumbsDown2, peaceFingers, middleFinger, vulcanSalute, handPointingDown, handPointingLeft, handPointingRight, handPointingLeft2, handPointingRight2, indexPointingLeft, indexPointingRight, indexPointingUp, indexPointingDown, indexPointingUp2, indexPointingDown2, indexPointingUp3, indexPointingDown3, raisingHands, foldedHands, pinchedFingers, pinchingHand, signOfTheHorns, callMeHand, raisedBackOfHand, leftFacingFist, rightFacingFist, handshake, crossedFingers, loveYouGesture, palmsUpTogether, indexPointingUp4, raisedFist, raisedHand, victoryHand, writingHand);
+
+    const household = new EmojiGroup("Household", "Household", lipstick, ring, gemStone, newspaper, key, fire, pistol, candle, framedPicture, oldKey, rolledUpNewspaper, worldMap, door, toilet, shower, bathtub, couchAndLamp, bed, lotionBottle, thread, yarn, safetyPin, teddyBear, broom, basket, rollOfPaper, soap, sponge, chair, razor, reminderRibbon);
+
+    const love = G("Love", "Hearts and kisses", {
+        kissMark,
+        loveLetter,
+        beatingHeart,
+        brokenHeart,
+        twoHearts,
+        sparklingHeart,
+        growingHeart,
+        heartWithArrow,
+        blueHeart,
+        greenHeart,
+        yellowHeart,
+        purpleHeart,
+        heartWithRibbon,
+        revolvingHearts,
+        heartDecoration,
+        blackHeart,
+        whiteHeart,
+        brownHeart,
+        orangeHeart,
+        heartExclamation,
+        redHeart,
+    });
+
+    const mail = new EmojiGroup("Mail", "Mail", outboxTray, inboxTray, packageBox, eMail, incomingEnvelope, envelopeWithArrow, closedMailboxWithLoweredFlag, closedMailboxWithRaisedFlag, openMailboxWithRaisedFlag, openMailboxWithLoweredFlag, postbox, postalHorn);
+
+    const math = new EmojiGroup("Math", "Math", multiply, plus, minus, divide);
+
+    const medieval = new EmojiGroup("Medieval", "Medieval", castle, bowAndArrow, crown, tridentEmblem, dagger, shield, crystalBall, crossedSwords, fleurDeLis);
+
+    const music = new EmojiGroup("Music", "Music", musicalScore, musicalNotes, musicalNote, saxophone, guitar, musicalKeyboard, trumpet, violin, drum, 
+    //accordion,
+    //longDrum,
+    banjo);
+
+    const numbers = new EmojiGroup("Numbers", "Numbers", digitZero, digitOne, digitTwo, digitThree, digitFour, digitFive, digitSix, digitSeven, digitEight, digitNine, asterisk, numberSign, keycapDigitZero, keycapDigitOne, keycapDigitTwo, keycapDigitThree, keycapDigitFour, keycapDigitFive, keycapDigitSix, keycapDigitSeven, keycapDigitEight, keycapDigitNine, keycapAsterisk, keycapNumberSign, keycap10);
+
+    const office = new EmojiGroup("Office", "Office", fileFolder, openFileFolder, pageWithCurl, pageFacingUp, calendar, tearOffCalendar, cardIndex, cardIndexDividers, cardFileBox, fileCabinet, wastebasket, spiralNotePad, spiralCalendar, chartIncreasing, chartDecreasing, barChart, clipboard, pushpin, roundPushpin, paperclip, linkedPaperclips, straightRuler, triangularRuler, bookmarkTabs, ledger, notebook, notebookWithDecorativeCover, closedBook, openBook, greenBook, blueBook, orangeBook, books, nameBadge, scroll, memo, scissors, envelope);
+
+    const plants = new EmojiGroup("Plants", "Flowers, trees, and things", seedling, evergreenTree, deciduousTree, palmTree, cactus, tulip, cherryBlossom, rose, hibiscus, sunflower, blossom, sheafOfRice, herb, fourLeafClover, mapleLeaf, fallenLeaf, leafFlutteringInWind, rosette, bouquet, whiteFlower, wiltedFlower, 
+    //pottedPlant,
+    shamrock);
+
+    const religion = new EmojiGroup("Religion", "Religion", dottedSixPointedStar, starOfDavid, om, kaaba, mosque, synagogue, menorah, placeOfWorship, hinduTemple, orthodoxCross, latinCross, starAndCrescent, peaceSymbol, yinYang, wheelOfDharma, infinity, diyaLamp, shintoShrine, church, eightPointedStar, prayerBeads);
+
+    const science = G("Science", "Science", {
+        droplet,
+        dropOfBlood,
+        adhesiveBandage,
+        stethoscope,
+        syringe,
+        pill,
+        microscope,
+        testTube,
+        petriDish,
+        dNA,
+        abacus,
+        magnet,
+        telescope,
+        medical,
+        balanceScale,
+        alembic,
+        gear,
+        atomSymbol,
+        magnifyingGlassTiltedLeft,
+        magnifyingGlassTiltedRight,
+    });
+
+    const shapes = new EmojiGroup("Shapes", "Colored shapes", redCircle, blueCircle, largeOrangeDiamond, largeBlueDiamond, smallOrangeDiamond, smallBlueDiamond, redTrianglePointedUp, redTrianglePointedDown, orangeCircle, yellowCircle, greenCircle, purpleCircle, brownCircle, hollowRedCircle, whiteCircle, blackCircle, redSquare, blueSquare, orangeSquare, yellowSquare, greenSquare, purpleSquare, brownSquare, blackSquareButton, whiteSquareButton, blackSmallSquare, whiteSmallSquare, whiteMediumSmallSquare, blackMediumSmallSquare, whiteMediumSquare, blackMediumSquare, blackLargeSquare, whiteLargeSquare, star, diamondWithADot);
+
+    const signs = new EmojiGroup("Signs", "Signs", cinema, noMobilePhone, noOneUnderEighteen, prohibited, cigarette, noSmoking, litterInBinSign, noLittering, potableWater, nonPotableWater, noBicycles, noPedestrians, childrenCrossing, menSRoom, womenSRoom, restroom, babySymbol, waterCloset, passportControl, customs, baggageClaim, leftLuggage, parkingButton, wheelchairSymbol, radioactive, biohazard, warning, highVoltage, noEntry, recyclingSymbol, female, male, transgenderSymbol);
+
+    const sportsEquipment = new EmojiGroup("Sports Equipment", "Sports equipment", runningShirt, tennis, skis, basketball, sportsMedal, trophy, americanFootball, rugbyFootball, cricketGame, volleyball, fieldHockey, iceHockey, pingPong, badminton, sled, goalNet, medal1stPlace, medal2ndPlace, medal3rdPlace, boxingGlove, curlingStone, lacrosse, softball, flyingDisc, soccerBall, baseball, iceSkate);
+
+    const tech = new EmojiGroup("Technology", "Technology", joystick, videoGame, lightBulb, laptop, briefcase, computerDisk, floppyDisk, opticalDisk, dVD, desktopComputer, keyboard, printer, computerMouse, trackball, telephone, telephoneReceiver, pager, faxMachine, satelliteAntenna, loudspeaker, megaphone, television, radio, videocassette, filmProjector, studioMicrophone, levelSlider, controlKnobs, microphone, movieCamera, headphone, camera, cameraWithFlash, videoCamera, mobilePhone, mobilePhoneOff, mobilePhoneWithArrow, lockedWithPen, lockedWithKey, locked, unlocked, bell, bellWithSlash, bookmark, link, mobilePhoneVibrating, antennaBars, dimButton, brightButton, mutedSpeaker, speakerLowVolume, speakerMediumVolume, speakerHighVolume, battery, electricPlug);
+
+    const tools = new EmojiGroup("Tools", "Tools", fishingPole, flashlight, wrench, hammer, nutAndBolt, hammerAndWrench, compass, fireExtinguisher, toolbox, brick, axe, hammerAndPick, pick, rescueWorkerSHelmet, chains, compression);
+
+    const town = new EmojiGroup("Town", "Town", buildingConstruction, houses, cityscape, derelictHouse, classicalBuilding, desert, desertIsland, nationalPark, stadium, house, houseWithGarden, officeBuilding, japanesePostOffice, postOffice, hospital, bank, aTMSign, hotel, loveHotel, convenienceStore, school, departmentStore, factory, bridgeAtNight, fountain, shoppingBags, receipt, shoppingCart, barberPole, wedding, ballotBoxWithBallot);
+
+    const travel = new EmojiGroup("Travel", "Travel", label, volcano, snowCappedMountain, mountain, camping, beachWithUmbrella, umbrellaOnGround, japaneseCastle, footprints, mountFuji, tokyoTower, statueOfLiberty, mapOfJapan, moai, bellhopBell, luggage, flagInHole, tent, hotSprings);
+
+    const vehicles = new EmojiGroup("Vehicles", "Things that go", motorcycle, racingCar, seat, rocket, helicopter, locomotive, railwayCar, highSpeedTrain, bulletTrain, train, metro, lightRail, station, tram, tramCar, bus, oncomingBus, trolleybus, busStop, minibus, ambulance, fireEngine, taxi, oncomingTaxi, automobile, oncomingAutomobile, sportUtilityVehicle, deliveryTruck, articulatedLorry, tractor, monorail, mountainRailway, suspensionRailway, mountainCableway, aerialTramway, ship, speedboat, horizontalTrafficLight, verticalTrafficLight, construction, bicycle, stopSign, oilDrum, motorway, railwayTrack, motorBoat, smallAirplane, airplaneDeparture, airplaneArrival, satellite, passengerShip, kickScooter, motorScooter, canoe, flyingSaucer, skateboard, autoRickshaw, 
+    //pickupTruck,
+    //rollerSkate,
+    motorizedWheelchair, manualWheelchair, parachute, anchor, ferry, sailboat, fuelPump, airplane);
+
+    const weather = new EmojiGroup("Weather", "Weather", sunriseOverMountains, sunrise, cityscapeAtDusk, sunset, nightWithStars, closedUmbrella, umbrella, umbrellaWithRainDrops, snowman, snowmanWithoutSnow, sun, cloud, sunBehindSmallCloud, sunBehindCloud, sunBehindLargeCloud, sunBehindRainCloud, cloudWithRain, cloudWithSnow, cloudWithLightning, cloudWithLightningAndRain, snowflake, cyclone, tornado, windFace, waterWave, fog, foggy, rainbow, thermometer);
+
+    const writing = new EmojiGroup("Writing", "Writing", pen, fountainPen, paintbrush, crayon, pencil, blackNib);
+
+    const zodiac = new EmojiGroup("Zodiac", "The symbology of astrology", aries, taurus, gemini, cancer, leo, virgo, libra, scorpio, sagittarius, capricorn, aquarius, pisces, ophiuchus);
+
+    const allIcons = new EmojiGroup("All Icons", "All Icons", faces, love, cartoon, hands, bodyParts, 
+    //people,
+    //gestures,
+    //inMotion,
+    //resting,
+    //roles,
+    //fantasy,
+    animals, plants, food, flags, vehicles, clocks, arrows, shapes, buttons, zodiac, chess, dice, math, games, sportsEquipment, clothing, town, music, weather, astro, finance, writing, science, tech, mail, celebration, tools, office, signs, religion, household, activities, travel, medieval, numbers);
 
     /**
      * Constructs a CSS grid area definition.
@@ -12916,6 +17116,23 @@
         }
     }
 
+    const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
+    const isFirefox = "InstallTrigger" in globalThis;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isOpera = /Opera/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
+        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
+        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
+    const isBlackberry = /BlackBerry/.test(navigator.userAgent);
+    const isUCBrowser = /(UC Browser |UCWEB)/.test(navigator.userAgent);
+    const isOculus = /oculus/.test(navigator.userAgent);
+    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
+    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
+    const isMobileVR = /Mobile VR/.test(navigator.userAgent)
+        || isOculusGo
+        || isOculusQuest;
+
     class ScreenPointerEvent extends TypedEvent {
         constructor(type) {
             super(type);
@@ -13698,6 +17915,13 @@
         AvatarMode["Video"] = "video";
     })(AvatarMode || (AvatarMode = {}));
 
+    function isSurfer(e) {
+        return allSurfersGroup.contains(e)
+            || allBoatRowersGroup.contains(e)
+            || allSwimmersGroup.contains(e)
+            || allMerpeopleGroup.contains(e);
+    }
+
     /**
      * A base class for different types of avatars.
      **/
@@ -13858,7 +18082,7 @@
             this._avatarEmoji = null;
             this.userMovedEvt = new UserMovedEvent(id);
             this.label = isMe ? "(Me)" : `(${this.id})`;
-            this.setAvatarEmoji(bust.value);
+            this.setAvatarEmoji(bustInSilhouette.value);
             this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
             this.userNameText = new TextImage();
             this.userNameText.fillColor = "white";
@@ -14596,21 +18820,9 @@
         }
     }
 
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), client = new Calla(fetcher, audio), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new ImageFetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
     let waitingForEmoji = false;
-    Object.assign(window, {
-        settings,
-        fetcher,
-        client,
-        game,
-        login,
-        directory,
-        controls: controls$1,
-        devices,
-        options,
-        emoji,
-        instructions
-    });
+    let client = null;
     async function recordJoin(Name, Email, Room) {
         await fetcher.postObject("/Contacts", { Name, Email, Room });
     }
@@ -14783,7 +18995,7 @@
         show(controls$1);
         options.user = game.me;
         controls$1.enabled = true;
-        settings.avatarEmoji = settings.avatarEmoji || allPeople.random().value;
+        settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
         rawGameStartEmoji.value = settings.avatarEmoji;
         client.setAvatarEmoji(rawGameStartEmoji);
         game.me.setAvatarEmoji(settings.avatarEmoji);
@@ -14919,9 +19131,22 @@
             fontFamily: "Noto Color Emoji",
             fontSize: 100
         }));
+        client = await loader.load(fetcher, audio);
         await client.getMediaPermissions();
-        await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
         await client.connect();
+        Object.assign(window, {
+            settings,
+            fetcher,
+            client,
+            game,
+            login,
+            directory,
+            controls: controls$1,
+            devices,
+            options,
+            emoji,
+            instructions
+        });
     })();
 
 }());

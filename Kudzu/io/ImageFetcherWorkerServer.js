@@ -1,4 +1,4 @@
-import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
+import { hasImageBitmap } from "../html/canvas";
 import { WorkerServer } from "../workers/WorkerServer";
 import { ImageFetcher } from "./ImageFetcher";
 export class ImageFetcherWorkerServer extends WorkerServer {
@@ -14,10 +14,6 @@ export class ImageFetcherWorkerServer extends WorkerServer {
         if (hasImageBitmap) {
             this.add("getImageBitmap", (path, headerMap, onProgress) => fetcher.getImageBitmap(path, headerMap, onProgress), (imgBmp) => [imgBmp]);
             this.add("postObjectForImageBitmap", (path, obj, headerMap, onProgress) => fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress), (imgBmp) => [imgBmp]);
-            if (hasOffscreenCanvasRenderingContext2D) {
-                this.add("getCubes", (path, headerMap, onProgress) => fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress), (imgBmps) => imgBmps);
-                this.add("getEquiMaps", (path, maxWidth, headerMap, onProgress) => fetcher._getEquiMapViaImageBitmaps(path, maxWidth, headerMap, onProgress), (imgBmps) => imgBmps);
-            }
         }
     }
 }

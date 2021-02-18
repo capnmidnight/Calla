@@ -1,1 +1,0 @@
-{"version":3,"file":"BufferElementArray.js","sourceRoot":"","sources":["BufferElementArray.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,MAAM,EAAE,MAAM,UAAU,CAAC;AAElC,MAAM,OAAO,kBAAmB,SAAQ,MAAM;IAC1C,YAAY,EAA0B,EAAE,KAAa,EAAE,IAAqB;QACxE,KAAK,CAAC,EAAE,EAAE,eAAe,EAAE,KAAK,EAAE,IAAI,CAAC,CAAC;IAC5C,CAAC;CACJ"}

@@ -3,8 +3,8 @@ import { createScript } from "../html/script";
 import type { progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
 import { isGoodNumber, isNullOrUndefined } from "../typeChecks";
-import { BufferAndContentType } from "./BufferAndContentType";
-import { IFetcher } from "./IFetcher";
+import type { BufferAndContentType } from "./BufferAndContentType";
+import type { IFetcher } from "./IFetcher";
 
 export class Fetcher implements IFetcher {
 
