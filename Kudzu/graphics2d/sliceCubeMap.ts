@@ -2,7 +2,7 @@ import type { CanvasTypes } from "../html/canvas";
 import { nextPowerOf2 } from "../math/powerOf2";
 import { sliceImage } from "./sliceImage";
 
-enum CubeMapFaceIndex {
+export enum CubeMapFaceIndex {
     None = -1,
     Left = 0,
     Right = 1,

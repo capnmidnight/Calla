@@ -1,6 +1,6 @@
 import { nextPowerOf2 } from "../math/powerOf2";
 import { sliceImage } from "./sliceImage";
-var CubeMapFaceIndex;
+export var CubeMapFaceIndex;
 (function (CubeMapFaceIndex) {
     CubeMapFaceIndex[CubeMapFaceIndex["None"] = -1] = "None";
     CubeMapFaceIndex[CubeMapFaceIndex["Left"] = 0] = "Left";
