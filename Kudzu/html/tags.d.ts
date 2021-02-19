@@ -14,6 +14,11 @@ export declare function isFocusable(elem: any): elem is IFocusable;
 export declare function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType?: string): void;
 export declare function elementIsDisplayed(elem: HTMLElement): boolean;
 export declare function nodeList2Array<T extends Element>(list: NodeListOf<T> | HTMLCollectionOf<T>): Array<T>;
+export declare function getElement<T extends HTMLElement>(selector: string): T;
+export declare function getButton(selector: string): HTMLButtonElement;
+export declare function getInput(selector: string): HTMLInputElement;
+export declare function getSelect(selector: string): HTMLSelectElement;
+export declare function getCanvas(selector: string): HTMLCanvasElement;
 /**
  * Creates an HTML element for a given tag name.
  *

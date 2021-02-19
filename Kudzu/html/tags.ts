@@ -53,6 +53,26 @@ export function nodeList2Array<T extends Element>(list: NodeListOf<T>|HTMLCollec
     return arr;
 }
 
+export function getElement<T extends HTMLElement>(selector: string) {
+    return document.querySelector<T>(selector);
+}
+
+export function getButton(selector: string) {
+    return getElement<HTMLButtonElement>(selector);
+}
+
+export function getInput(selector: string) {
+    return getElement<HTMLInputElement>(selector);
+}
+
+export function getSelect(selector: string) {
+    return getElement<HTMLSelectElement>(selector);
+}
+
+export function getCanvas(selector: string) {
+    return getElement<HTMLCanvasElement>(selector);
+}
+
 /**
  * Creates an HTML element for a given tag name.
  * 

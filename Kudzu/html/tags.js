@@ -25,6 +25,21 @@ export function nodeList2Array(list) {
     }
     return arr;
 }
+export function getElement(selector) {
+    return document.querySelector(selector);
+}
+export function getButton(selector) {
+    return getElement(selector);
+}
+export function getInput(selector) {
+    return getElement(selector);
+}
+export function getSelect(selector) {
+    return getElement(selector);
+}
+export function getCanvas(selector) {
+    return getElement(selector);
+}
 /**
  * Creates an HTML element for a given tag name.
  *
