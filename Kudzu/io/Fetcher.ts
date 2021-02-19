@@ -39,8 +39,9 @@ export class Fetcher implements IFetcher {
         }));
     }
 
-    private async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response> {
+    protected async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response> {
         const headers: any = {};
+
         if (!(obj instanceof FormData)) {
             headers["Content-Type"] = "application/json";
         }
@@ -317,13 +318,10 @@ export class Fetcher implements IFetcher {
         return await this._postObjectForObject<T, U>(path, obj, headerMap, onProgress);
     }
 
-    async postObject<T>(path: string, obj: T): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
-    async postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
+    protected async _postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
+
         if (onProgress instanceof Function) {
             const [upProg, downProg] = splitProgress(onProgress, 2);
             let headers: Map<string, string> | undefined = headerMap;
@@ -396,6 +394,14 @@ export class Fetcher implements IFetcher {
         else {
             await this.postObjectForResponse(path, obj, headerMap);
         }
+    }
+
+    async postObject<T>(path: string, obj: T): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
+    async postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
+        return await this._postObject(path, obj, headerMap, onProgress);
     }
 
     private readTextXml(text: string): HTMLElement {

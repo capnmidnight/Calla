@@ -5,7 +5,7 @@ export declare class Fetcher implements IFetcher {
     protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined;
     protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined;
     private getResponse;
-    private postObjectForResponse;
+    protected postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response>;
     private readRequestResponse;
     private readResponseBuffer;
     protected _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
@@ -60,6 +60,7 @@ export declare class Fetcher implements IFetcher {
     postObjectForObject<T, U>(path: string, obj: T, onProgress?: progressCallback): Promise<U>;
     postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>): Promise<U>;
     postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<U>;
+    protected _postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void>;
     postObject<T>(path: string, obj: T): Promise<void>;
     postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
     postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;

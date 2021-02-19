@@ -217,7 +217,7 @@ export class Fetcher {
     async postObjectForObject(path, obj, headerMap, onProgress) {
         return await this._postObjectForObject(path, obj, headerMap, onProgress);
     }
-    async postObject(path, obj, headerMap, onProgress) {
+    async _postObject(path, obj, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
         if (onProgress instanceof Function) {
@@ -281,6 +281,9 @@ export class Fetcher {
         else {
             await this.postObjectForResponse(path, obj, headerMap);
         }
+    }
+    async postObject(path, obj, headerMap, onProgress) {
+        return await this._postObject(path, obj, headerMap, onProgress);
     }
     readTextXml(text) {
         const parser = new DOMParser();
