@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "files": [
     "audio/",
+    "client-loader/",
     "dist/",
     "doc/",
     "lib-jitsi-meet/",
@@ -11,6 +12,7 @@
     "omnitone/",
     "resonance-audio/",
     "tele/",
+    "types/",
     "Calla.ts",
     "Calla.js",
     "Calla.d.ts",
@@ -43,7 +45,8 @@
     "kudzu": "file:../Kudzu"
   },
   "scripts": {
-    "build:calla": "npm install && tsc --build && rollup -c --environment BUILD:all,PROJECT:all"
+    "build": "tsc --build && rollup -c --environment BUILD:all,PROJECT:all",
+    "watch": "tsc --watch"
   },
   "homepage": "https://calla.chat",
   "description": "Teleconferencing through Jitsi with audio spatialization",

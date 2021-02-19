@@ -6,7 +6,7 @@
     "collections/",
     "emoji/",
     "events/",
-    "fetchers/",
+    "gis/",
     "graphics2d/",
     "html/",
     "input/",
@@ -16,6 +16,7 @@
     "tasks/",
     "testing/",
     "timers/",
+    "types/",
     "workers/",
     "tsconfig.json",
     "typeChecks.ts",
@@ -35,8 +36,8 @@
     "gl-matrix": "^3.3.0"
   },
   "scripts": {
-    "build:kudzu": "npm install && tsc --build",
-    "watch:kudzu": "npm install && tsc --watch"
+    "build": "tsc --build",
+    "watch": "tsc --watch"
   },
   "description": "JavaScript browser runtime library",
   "author": {
