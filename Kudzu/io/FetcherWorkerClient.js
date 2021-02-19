@@ -31,7 +31,7 @@ export class FetcherWorkerClient extends Fetcher {
     async _postObjectForBuffer(path, obj, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        if (this.worker.enabled) {
+        if (this.worker.enabled && !(obj instanceof FormData)) {
             return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
         }
         else {
@@ -51,8 +51,8 @@ export class FetcherWorkerClient extends Fetcher {
     async _postObjectForObject(path, obj, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
+        if (this.worker.enabled && !(obj instanceof FormData)) {
+            return await this.worker.execute("postObjectForObject", [path, obj, headerMap], onProgress);
         }
         else {
             return await super._postObjectForObject(path, obj, headerMap, onProgress);
@@ -71,8 +71,8 @@ export class FetcherWorkerClient extends Fetcher {
     async _postObjectForFile(path, obj, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
+        if (this.worker.enabled && !(obj instanceof FormData)) {
+            return await this.worker.execute("postObjectForFile", [path, obj, headerMap], onProgress);
         }
         else {
             return await super._postObjectForFile(path, obj, headerMap, onProgress);
