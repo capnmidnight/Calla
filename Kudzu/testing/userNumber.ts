@@ -1,4 +1,4 @@
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined } from "../typeChecks";
 
 function getTestNumber(): string | null {
     if ("location" in globalThis) {
@@ -13,7 +13,7 @@ function getTestNumber(): string | null {
 
 export function hasUserNumber() {
     const testNumber = getTestNumber();
-    return !isNullOrUndefined(testNumber);
+    return isDefined(testNumber);
 }
 
 /**
@@ -23,7 +23,7 @@ export function hasUserNumber() {
  **/
 export function getUserNumber() {
     const testNumber = getTestNumber();
-    return !isNullOrUndefined(testNumber)
+    return isDefined(testNumber)
         ? parseInt(testNumber, 10)
         : 1;
 }

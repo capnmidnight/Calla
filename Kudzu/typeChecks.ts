@@ -19,6 +19,15 @@ export function isNumber(obj: any): obj is number {
     return t(obj, "number", Number);
 }
 
+/**
+ * Check a value to see if it is of a number type
+ * and is not the special NaN value.
+ */
+export function isGoodNumber(obj: any): obj is number {
+    return isNumber(obj)
+        && !Number.isNaN(obj);
+}
+
 export function isObject(obj: any): obj is object {
     return t(obj, "object", Object);
 }
@@ -39,13 +48,13 @@ export function assertNever(x: never, msg?: string): never {
     throw new Error((msg || "Unexpected object: ") + x);
 }
 
-/**
- * Check a value to see if it is of a number type
- * and is not the special NaN value.
- */
-export function isGoodNumber(obj: any): obj is number {
-    return isNumber(obj)
-        && !Number.isNaN(obj);
+export function isNullOrUndefined<T>(obj: T | null | undefined): obj is null | undefined {
+    return obj === null
+        || obj === undefined;
+}
+
+export function isDefined<T>(obj: T | null | undefined): obj is T {
+    return !isNullOrUndefined(obj);
 }
 
 export function isEventListener(obj: EventListenerOrEventListenerObject): obj is EventListener {
@@ -54,9 +63,4 @@ export function isEventListener(obj: EventListenerOrEventListenerObject): obj is
 
 export function isEventListenerObject(obj: EventListenerOrEventListenerObject): obj is EventListenerObject {
     return !isEventListener(obj);
-}
-
-export function isNullOrUndefined(obj: any): obj is null | undefined {
-    return obj === null
-        || obj === undefined;
 }

@@ -1,6 +1,6 @@
 import { vec2, vec3 } from "gl-matrix";
 import { deg2rad } from "../math/deg2rad";
-import { isNullOrUndefined, isNumber } from "../typeChecks";
+import { isDefined, isObject } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { ILatLngPoint, LatLngPoint } from "./LatLngPoint";
 
@@ -93,8 +93,7 @@ export class UTMPoint implements IUTMPoint {
      */
     constructor(easting: number, northing: number, altitude: number, zone: number, hemisphere: GlobeHemisphere);
     constructor(eastingOrCopy?: number | IUTMPoint, northing?: number, altitude?: number, zone?: number, hemisphere?: GlobeHemisphere) {
-        if (!isNullOrUndefined(eastingOrCopy)
-            && !isNumber(eastingOrCopy)) {
+        if (isObject(eastingOrCopy)) {
             this._easting = eastingOrCopy.easting;
             this._northing = eastingOrCopy.northing;
             this._altitude = eastingOrCopy.altitude;
@@ -125,7 +124,7 @@ export class UTMPoint implements IUTMPoint {
     }
 
     equals(other: IUTMPoint): boolean {
-        return !isNullOrUndefined(other)
+        return isDefined(other)
             && this.hemisphere == other.hemisphere
             && this.easting == other.easting
             && this.northing == other.northing

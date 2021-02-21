@@ -1,5 +1,5 @@
 import { Fetcher } from "kudzu/io/Fetcher";
-import { isFunction, isNullOrUndefined } from "kudzu/typeChecks";
+import { isDefined, isFunction } from "kudzu/typeChecks";
 import { AudioManager } from "../audio/AudioManager";
 import { Calla } from "../Calla";
 export class BaseClientLoader {
@@ -7,7 +7,7 @@ export class BaseClientLoader {
         let f = null;
         let a = null;
         let p = null;
-        if (!isNullOrUndefined(fetcher)
+        if (isDefined(fetcher)
             && !(fetcher instanceof AudioManager)
             && !isFunction(fetcher)) {
             f = fetcher;
@@ -18,7 +18,7 @@ export class BaseClientLoader {
         if (fetcher instanceof AudioManager) {
             a = fetcher;
         }
-        else if (!isNullOrUndefined(audio)
+        else if (isDefined(audio)
             && !isFunction(audio)) {
             a = audio;
         }

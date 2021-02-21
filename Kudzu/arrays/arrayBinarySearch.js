@@ -1,4 +1,4 @@
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined, isNullOrUndefined } from "../typeChecks";
 function defaultKeySelector(obj) {
     return obj;
 }
@@ -27,7 +27,7 @@ export function arrayBinarySearchByKey(arr, itemKey, keySelector) {
         const compareToKey = isNullOrUndefined(compareTo)
             ? null
             : keySelector(compareTo);
-        if (!isNullOrUndefined(compareToKey)
+        if (isDefined(compareToKey)
             && itemKey < compareToKey) {
             right = idx;
         }

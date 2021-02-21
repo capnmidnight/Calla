@@ -1,5 +1,5 @@
-import { isBoolean, isDate, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import { Attr, IAppliable, type, margin, styles } from "./attrs";
+import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
+import { Attr, IAppliable, margin, styles, type } from "./attrs";
 
 export type HTMLValuedElement = HTMLElement & { value: string; };
 
@@ -20,13 +20,9 @@ export type TagChild = Node
     | Date;
 
 function hasNode(obj: any): obj is HasNode {
-    return !isNullOrUndefined(obj)
-        && !isString(obj)
-        && !isNumber(obj)
-        && !isBoolean(obj)
-        && !isDate(obj)
+    return isObject(obj)
         && "element" in obj
-        && obj.element instanceof Node;
+        && (obj as any).element instanceof Node;
 }
 
 export interface IFocusable {

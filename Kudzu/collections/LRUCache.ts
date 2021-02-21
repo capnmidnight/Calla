@@ -1,6 +1,6 @@
 import { arrayClear } from "../arrays/arrayClear";
 import { arrayRemove } from "../arrays/arrayRemove";
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined } from "../typeChecks";
 
 export class LRUCache<KeyT, ValueT> {
     map = new Map<KeyT, ValueT>();
@@ -14,7 +14,7 @@ export class LRUCache<KeyT, ValueT> {
         const removed = [];
         while (this.usage.length > this.size) {
             const toDelete = this.usage.shift();
-            if (!isNullOrUndefined(toDelete)) {
+            if (isDefined(toDelete)) {
                 removed.push(toDelete);
                 this.map.delete(toDelete);
             }

@@ -1,5 +1,5 @@
 import { rad2deg } from "../math/rad2deg";
-import { isNullOrUndefined, isNumber } from "../typeChecks";
+import { isNullOrUndefined, isObject } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { GlobeHemisphere, IUTMPoint, UTMPoint } from "./UTMPoint";
 
@@ -60,8 +60,7 @@ export class LatLngPoint implements ILatLngPoint {
      */
     constructor(lat: number, lng: number, alt?: number);
     constructor(lat?: number | ILatLngPoint, lng?: number, alt?: number) {
-        if (!isNullOrUndefined(lat)
-            && !isNumber(lat)) {
+        if (isObject(lat)) {
             this._lat = lat.lat;
             this._lng = lat.lng;
             this._alt = lat.alt;
@@ -194,7 +193,7 @@ export class LatLngPoint implements ILatLngPoint {
      * @param other
      */
     equals(other?: ILatLngPoint | null): boolean {
-        return !isNullOrUndefined(other)
+        return isObject(other)
             && this.lat == other.lat
             && this.lng == other.lng
             && this.alt == other.alt;

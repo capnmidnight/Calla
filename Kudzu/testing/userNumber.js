@@ -1,4 +1,4 @@
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined } from "../typeChecks";
 function getTestNumber() {
     if ("location" in globalThis) {
         const loc = new URL(globalThis.location.href);
@@ -11,7 +11,7 @@ function getTestNumber() {
 }
 export function hasUserNumber() {
     const testNumber = getTestNumber();
-    return !isNullOrUndefined(testNumber);
+    return isDefined(testNumber);
 }
 /**
  * The test instance value that the current window has loaded. This is
@@ -20,7 +20,7 @@ export function hasUserNumber() {
  **/
 export function getUserNumber() {
     const testNumber = getTestNumber();
-    return !isNullOrUndefined(testNumber)
+    return isDefined(testNumber)
         ? parseInt(testNumber, 10)
         : 1;
 }

@@ -1,11 +1,7 @@
-import { isBoolean, isDate, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import { Attr, type, margin, styles } from "./attrs";
+import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
+import { Attr, margin, styles, type } from "./attrs";
 function hasNode(obj) {
-    return !isNullOrUndefined(obj)
-        && !isString(obj)
-        && !isNumber(obj)
-        && !isBoolean(obj)
-        && !isDate(obj)
+    return isObject(obj)
         && "element" in obj
         && obj.element instanceof Node;
 }

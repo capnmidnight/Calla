@@ -1,4 +1,4 @@
-import { isNullOrUndefined, isNumber } from "kudzu/typeChecks";
+import { isDefined, isNullOrUndefined, isNumber } from "kudzu/typeChecks";
 
 const graph = new Map<AudioNode, Set<AudioNode | AudioParam>>();
 const children = new Map<AudioNode, number>();
@@ -56,8 +56,8 @@ function rem(a: AudioNode, b?: AudioNode | AudioParam): boolean {
 }
 
 function isAudioNode(a: AudioNode | AudioParam | number): a is AudioNode {
-    return !isNullOrUndefined(a)
-        && !isNullOrUndefined((a as AudioNode).context);
+    return isDefined(a)
+        && isDefined((a as AudioNode).context);
 }
 
 function isAudioParam(a: AudioNode | AudioParam): a is AudioParam {
