@@ -419,6 +419,7 @@ export class AudioManager extends TypedEventBase {
             sources.delete(id);
             source.dispose();
         }
+        return source;
     }
     /**
      * Remove a user from audio processing.
@@ -432,7 +433,7 @@ export class AudioManager extends TypedEventBase {
      * Remove an audio clip from audio processing.
      **/
     removeClip(id) {
-        this.removeSource(this.clips, id);
+        return this.removeSource(this.clips, id);
     }
     createSourceFromStream(stream) {
         if (useTrackSource) {

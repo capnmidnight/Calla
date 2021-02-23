@@ -521,12 +521,14 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param sources - the collection of audio sources from which to remove.
      * @param id - the id of the audio source to remove
      **/
-    private removeSource<T extends IDisposable>(sources: Map<string, T>, id: string): void {
+    private removeSource<T extends IDisposable>(sources: Map<string, T>, id: string): T {
         const source = sources.get(id);
         if (source) {
             sources.delete(id);
             source.dispose();
         }
+
+        return source;
     }
 
     /**
@@ -541,8 +543,8 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     /**
      * Remove an audio clip from audio processing.
      **/
-    removeClip(id: string): void {
-        this.removeSource(this.clips, id);
+    removeClip(id: string): IPlayableSource {
+        return this.removeSource(this.clips, id);
     }
 
     private createSourceFromStream(stream: MediaStream): AudioStreamSourceNode {

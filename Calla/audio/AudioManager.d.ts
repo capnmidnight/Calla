@@ -120,7 +120,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     /**
      * Remove an audio clip from audio processing.
      **/
-    removeClip(id: string): void;
+    removeClip(id: string): IPlayableSource;
     private createSourceFromStream;
     setUserStream(id: string, stream: MediaStream): Promise<void>;
     updateUserOffsets(): void;
