@@ -2,7 +2,7 @@ import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { assertNever, isDefined, isFunction, isNullOrUndefined, isXHRBodyInit } from "../typeChecks";
+import { assertNever, isDefined, isFunction, isNullOrUndefined, isNumber, isXHRBodyInit } from "../typeChecks";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
 
@@ -111,17 +111,23 @@ export class Fetcher implements IFetcher {
         const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
         const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
 
-        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+        let body: BodyInit = null;
 
         if (isXHRBodyInit(obj)) {
-            xhr.send(obj);
+            body = obj;
         }
         else if (isDefined(obj)) {
-            const json = JSON.stringify(obj);
-            xhr.send(json);
+            body = JSON.stringify(obj);
+            headerMap.set("Content-Type", "application/json;charset=UTF-8");
+        }
+
+        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+
+        if (isDefined(body)) {
+            xhr.send(body);
         }
         else {
-            assertNever(obj);
+            xhr.send();
         }
 
         await upload;

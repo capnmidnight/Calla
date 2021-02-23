@@ -2,7 +2,7 @@ import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { assertNever, isDefined, isFunction, isNullOrUndefined, isXHRBodyInit } from "../typeChecks";
+import { isDefined, isFunction, isNullOrUndefined, isXHRBodyInit } from "../typeChecks";
 function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) {
     return new Promise((resolve, reject) => {
         let done = false;
@@ -85,16 +85,20 @@ export class Fetcher {
         const xhr = new XMLHttpRequest();
         const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
         const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
-        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+        let body = null;
         if (isXHRBodyInit(obj)) {
-            xhr.send(obj);
+            body = obj;
         }
         else if (isDefined(obj)) {
-            const json = JSON.stringify(obj);
-            xhr.send(json);
+            body = JSON.stringify(obj);
+            headerMap.set("Content-Type", "application/json;charset=UTF-8");
+        }
+        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+        if (isDefined(body)) {
+            xhr.send(body);
         }
         else {
-            assertNever(obj);
+            xhr.send();
         }
         await upload;
         await download;
