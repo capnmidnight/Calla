@@ -1,17 +1,82 @@
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
-import type { progressCallback } from "../tasks/progressCallback";
+import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { isGoodNumber, isNullOrUndefined } from "../typeChecks";
+import { assertNever, isDefined, isFunction, isNullOrUndefined, isXHRBodyInit } from "../typeChecks";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
+
+function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
+    return new Promise((resolve: () => void, reject: (status: number) => void) => {
+        let done = false;
+        let loaded = skipLoading;
+        function maybeResolve() {
+            if (loaded && done) {
+                resolve();
+            }
+        }
+
+        async function onError() {
+            await prevTask;
+            reject(xhr.status);
+        }
+
+        target.addEventListener("loadstart", async () => {
+            await prevTask;
+            onProgress(0, 1, name);
+        });
+
+        target.addEventListener("progress", async (ev: Event) => {
+            const evt = ev as ProgressEvent<XMLHttpRequestEventTarget>;
+            await prevTask;
+            onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
+            if (evt.loaded === evt.total) {
+                loaded = true;
+                maybeResolve();
+            }
+        });
+
+        target.addEventListener("load", async () => {
+            await prevTask;
+            onProgress(1, 1, name);
+            done = true;
+            maybeResolve();
+        });
+
+        target.addEventListener("error", onError);
+        target.addEventListener("abort", onError);
+    });
+}
+
+function setXHRHeaders(xhr: XMLHttpRequest, method: string, path: string, xhrType: XMLHttpRequestResponseType, headers?: Map<string, string>): void {
+    xhr.open(method, path);
+    xhr.responseType = xhrType;
+
+    if (headers) {
+        for (const [key, value] of headers) {
+            xhr.setRequestHeader(key, value);
+        }
+    }
+}
+
+async function blobToBuffer(blob: Blob): Promise<BufferAndContentType> {
+    const buffer = await blob.arrayBuffer();
+    return {
+        buffer,
+        contentType: blob.type
+    };
+}
 
 export class Fetcher implements IFetcher {
 
     protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined {
         if (isNullOrUndefined(onProgress)
-            && headerMap instanceof Function) {
+            && isFunction(headerMap)) {
             onProgress = headerMap;
+        }
+
+        if (!isFunction(onProgress)) {
+            onProgress = dumpProgress;
         }
 
         return onProgress;
@@ -25,128 +90,52 @@ export class Fetcher implements IFetcher {
         return undefined;
     }
 
-    private async getResponse(path: string, headerMap?: Map<string, string>): Promise<Response> {
-        const headers = {};
+    private async getXHR<T>(path: string, xhrType: XMLHttpRequestResponseType, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
+        const xhr = new XMLHttpRequest();
 
-        if (headerMap) {
-            for (const pair of headerMap.entries()) {
-                (headers as any)[pair[0]] = pair[1];
-            }
-        }
+        const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
 
-        return await this.readRequestResponse(path, fetch(path, {
-            headers
-        }));
+        setXHRHeaders(xhr, "GET", path, xhrType, headers);
+
+        xhr.send();
+
+        await download;
+
+        return xhr.response as T;
     }
 
-    protected async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response> {
-        const headers: any = {};
+    private async postXHR<T, U>(path: string, xhrType: XMLHttpRequestResponseType, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<U> {
+        const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
+        const xhr = new XMLHttpRequest();
 
-        if (!(obj instanceof FormData)) {
-            headers["Content-Type"] = "application/json";
+        const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
+        const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
+
+        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+
+        if (isXHRBodyInit(obj)) {
+            xhr.send(obj);
         }
-
-        if (headerMap) {
-            for (const pair of headerMap.entries()) {
-                (headers as any)[pair[0]] = pair[1];
-            }
-        }
-
-        const body = obj instanceof FormData
-            ? obj
-            : JSON.stringify(obj);
-
-        return await this.readRequestResponse(path, fetch(path, {
-            method: "POST",
-            headers,
-            body
-        }));
-    }
-
-    private async readRequestResponse(path: string, request: Promise<Response>): Promise<Response> {
-        const response = await request;
-
-        if (!response.ok) {
-            let message = response.statusText;
-            if (response.body) {
-                message += " ";
-                message += await response.text();
-                message = message.trim();
-            }
-
-            throw new Error(`[${response.status}] - ${message} . Path ${path}`);
-        }
-
-        return response;
-    }
-
-    private async readResponseBuffer(path: string, response: Response, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        const contentType = response.headers.get("Content-Type");
-        if (!contentType) {
-            throw new Error("Server did not provide a content type");
-        }
-
-        let contentLength = 1;
-        const contentLengthStr = response.headers.get("Content-Length");
-        if (!contentLengthStr) {
-            console.warn(`Server did not provide a content length header. Path: ${path}`);
+        else if (isDefined(obj)) {
+            const json = JSON.stringify(obj);
+            xhr.send(json);
         }
         else {
-            contentLength = parseInt(contentLengthStr, 10);
-            if (!isGoodNumber(contentLength)) {
-                console.warn(`Server did not provide a valid content length header. Value: ${contentLengthStr}, Path: ${path}`);
-                contentLength = 1;
-            }
+            assertNever(obj);
         }
 
-        const hasContentLength = isGoodNumber(contentLength);
-        if (!hasContentLength) {
-            contentLength = 1;
-        }
+        await upload;
+        await download;
 
-        if (!response.body) {
-            throw new Error("No response body!");
-        }
-
-        const reader = response.body.getReader();
-        const values = [];
-        let receivedLength = 0;
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
-            }
-
-            if (value) {
-                values.push(value);
-                receivedLength += value.length;
-                if (onProgress) {
-                    onProgress(receivedLength, Math.max(receivedLength, contentLength), path);
-                }
-            }
-        }
-
-        const buffer = new ArrayBuffer(receivedLength);
-        const array = new Uint8Array(buffer);
-        receivedLength = 0;
-        for (const value of values) {
-            array.set(value, receivedLength);
-            receivedLength += value.length;
-        }
-
-        if (onProgress) {
-            onProgress(1, 1, path);
-        }
-
-        return { buffer, contentType };
+        return xhr.response as U;
     }
 
     protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const response = await this.getResponse(path, headerMap);
-        return await this.readResponseBuffer(path, response, onProgress);
+        const blob = await this.getXHR<Blob>(path, "blob", headerMap, onProgress);
+        return await blobToBuffer(blob);
     }
 
     async getBuffer(path: string): Promise<BufferAndContentType>;
@@ -161,8 +150,8 @@ export class Fetcher implements IFetcher {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const response = await this.postObjectForResponse(path, obj, headerMap);
-        return await this.readResponseBuffer(path, response, onProgress);
+        const blob = await this.postXHR<T, Blob>(path, "blob", obj, headerMap, onProgress);
+        return await blobToBuffer(blob);
     }
 
     async postObjectForBuffer<T>(path: string, obj: T): Promise<BufferAndContentType>;
@@ -177,8 +166,7 @@ export class Fetcher implements IFetcher {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
-        return new Blob([buffer], { type: contentType });
+        return await this.getXHR<Blob>(path, "blob", headerMap, onProgress);
     }
 
     async getBlob(path: string): Promise<Blob>;
@@ -189,19 +177,18 @@ export class Fetcher implements IFetcher {
         return this._getBlob(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
+    protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-        return new Blob([buffer], { type: contentType });
+        return await this.postXHR<T, Blob>(path, "blob", obj, headerMap, onProgress);
     }
 
     async postObjectForBlob<T>(path: string, obj: T): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, onProgress?: progressCallback): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
-    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
+    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
         return this._postObjectForBlob(path, obj, headerMap, onProgress);
     }
 
@@ -237,18 +224,11 @@ export class Fetcher implements IFetcher {
         return await this._postObjectForFile(path, obj, headerMap, onProgress);
     }
 
-    private readBufferText(buffer: ArrayBuffer): string {
-        const decoder = new TextDecoder("utf-8");
-        const text = decoder.decode(buffer);
-        return text;
-    }
-
     protected async _getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const { buffer } = await this._getBuffer(path, headerMap, onProgress);
-        return this.readBufferText(buffer);
+        return await this.getXHR<string>(path, "text", headerMap, onProgress);
     }
 
     async getText(path: string): Promise<string>;
@@ -263,8 +243,7 @@ export class Fetcher implements IFetcher {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-        return this.readBufferText(buffer);
+        return this.postXHR<T, string>(path, "text", obj, headerMap, onProgress);
     }
 
     async postObjectForText<T>(path: string, obj: T): Promise<string>;
@@ -289,9 +268,10 @@ export class Fetcher implements IFetcher {
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
+
         headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-        const text = await this._getText(path, headerMap, onProgress);
-        return JSON.parse(text) as T;
+
+        return await this.getXHR<T>(path, "json", headerMap, onProgress);
     }
 
     async getObject<T>(path: string): Promise<T>;
@@ -305,9 +285,8 @@ export class Fetcher implements IFetcher {
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-        const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-        return JSON.parse(text) as U;
+
+        return await this.postXHR<T, U>(path, "json", obj, headerMap, onProgress);
     }
 
     async postObjectForObject<T, U>(path: string, obj: T): Promise<U>;
@@ -322,78 +301,7 @@ export class Fetcher implements IFetcher {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        if (onProgress instanceof Function) {
-            const [upProg, downProg] = splitProgress(onProgress, 2);
-            let headers: Map<string, string> | undefined = headerMap;
-            const xhr = new XMLHttpRequest();
-
-            function makeTask(name: string, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
-                return new Promise((resolve: () => void, reject: (status: number) => void) => {
-                    let done = false;
-                    let loaded = skipLoading;
-                    function maybeResolve() {
-                        if (loaded && done) {
-                            resolve();
-                        }
-                    }
-
-                    async function onError() {
-                        await prevTask;
-                        reject(xhr.status);
-                    }
-
-                    target.addEventListener("loadstart", async () => {
-                        await prevTask;
-                        onProgress(0, 1, name);
-                    });
-
-                    target.addEventListener("progress", async (ev: Event) => {
-                        const evt = ev as ProgressEvent<XMLHttpRequestEventTarget>;
-                        await prevTask;
-                        onProgress(evt.loaded, evt.total, name);
-                        if (evt.loaded === evt.total) {
-                            loaded = true;
-                            maybeResolve();
-                        }
-                    });
-
-                    target.addEventListener("load", async () => {
-                        await prevTask;
-                        onProgress(1, 1, name);
-                        done = true;
-                        maybeResolve();
-                    });
-
-                    target.addEventListener("error", onError);
-                    target.addEventListener("abort", onError);
-                });
-            }
-
-            const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
-            const download = makeTask("saving", xhr, downProg, true, upload);
-
-            xhr.open("POST", path);
-
-            if (headers) {
-                for (const [key, value] of headers) {
-                    xhr.setRequestHeader(key, value);
-                }
-            }
-
-            if (obj instanceof FormData) {
-                xhr.send(obj);
-            }
-            else {
-                const json = JSON.stringify(obj);
-                xhr.send(json);
-            }
-
-            await upload;
-            await download;
-        }
-        else {
-            await this.postObjectForResponse(path, obj, headerMap);
-        }
+        await this.postXHR<T, void>(path, "", obj, headerMap, onProgress);
     }
 
     async postObject<T>(path: string, obj: T): Promise<void>;
@@ -404,18 +312,12 @@ export class Fetcher implements IFetcher {
         return await this._postObject(path, obj, headerMap, onProgress);
     }
 
-    private readTextXml(text: string): HTMLElement {
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, "text/xml");
-        return xml.documentElement;
-    }
-
     protected async _getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
-        const text = await this._getText(path, headerMap, onProgress);
-        return this.readTextXml(text);
+        const doc = await this.getXHR<Document>(path, "document", headerMap, onProgress);
+        return doc.documentElement;
     }
 
     async getXml(path: string): Promise<HTMLElement>;
@@ -426,13 +328,20 @@ export class Fetcher implements IFetcher {
         return await this._getXml(path, headerMap, onProgress);
     }
 
+    protected async _postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
+
+        const doc = await this.postXHR<T, Document>(path, "document", obj, headerMap, onProgress);
+        return doc.documentElement;
+    }
+
     async postObjectForXml<T>(path: string, obj: T): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, onProgress?: progressCallback): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
-        const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-        return this.readTextXml(text);
+        return await this._postObjectForXml<T>(path, obj, headerMap, onProgress);
     }
 
     async loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void> {

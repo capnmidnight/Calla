@@ -64,3 +64,27 @@ export function isEventListener(obj: EventListenerOrEventListenerObject): obj is
 export function isEventListenerObject(obj: EventListenerOrEventListenerObject): obj is EventListenerObject {
     return !isEventListener(obj);
 }
+
+export function isArrayBufferView(obj: any): obj is ArrayBufferView {
+    return obj instanceof Uint8Array
+        || obj instanceof Uint8ClampedArray
+        || obj instanceof Int8Array
+        || obj instanceof Uint16Array
+        || obj instanceof Int16Array
+        || obj instanceof Uint32Array
+        || obj instanceof Int32Array
+        || obj instanceof BigUint64Array
+        || obj instanceof BigInt64Array
+        || obj instanceof Float32Array
+        || obj instanceof Float64Array;
+}
+
+export function isXHRBodyInit(obj: any): obj is BodyInit {
+    return isString(obj)
+        || obj instanceof Blob
+        || obj instanceof FormData
+        || obj instanceof ArrayBuffer
+        || obj instanceof Document
+        || isArrayBufferView(obj)
+        || obj instanceof ReadableStream;
+}

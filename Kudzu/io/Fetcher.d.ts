@@ -1,13 +1,11 @@
-import type { progressCallback } from "../tasks/progressCallback";
+import { progressCallback } from "../tasks/progressCallback";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
 export declare class Fetcher implements IFetcher {
     protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined;
     protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined;
-    private getResponse;
-    protected postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response>;
-    private readRequestResponse;
-    private readResponseBuffer;
+    private getXHR;
+    private postXHR;
     protected _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
     getBuffer(path: string): Promise<BufferAndContentType>;
     getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
@@ -38,7 +36,6 @@ export declare class Fetcher implements IFetcher {
     postObjectForFile<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
     postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
     postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    private readBufferText;
     protected _getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
     getText(path: string): Promise<string>;
     getText(path: string, onProgress?: progressCallback): Promise<string>;
@@ -65,12 +62,12 @@ export declare class Fetcher implements IFetcher {
     postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
     postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
     postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
-    private readTextXml;
     protected _getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement>;
     getXml(path: string): Promise<HTMLElement>;
     getXml(path: string, onProgress?: progressCallback): Promise<HTMLElement>;
     getXml(path: string, headerMap?: Map<string, string>): Promise<HTMLElement>;
     getXml(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
+    protected _postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement>;
     postObjectForXml<T>(path: string, obj: T): Promise<HTMLElement>;
     postObjectForXml<T>(path: string, obj: T, onProgress?: progressCallback): Promise<HTMLElement>;
     postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<HTMLElement>;
