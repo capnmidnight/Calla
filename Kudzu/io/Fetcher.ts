@@ -1,5 +1,4 @@
 import { waitFor } from "../events/waitFor";
-import { borderInlineStartColor } from "../html/attrs";
 import { createScript } from "../html/script";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
