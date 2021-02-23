@@ -19,84 +19,84 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
             this.worker = new WorkerClient(scriptPath, workerPoolSize);
         }
     }
-    async _getBuffer(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _getBuffer(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled) {
-            return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
+            return await this.worker.execute("getBuffer", [path, headers], onProgress);
         }
         else {
-            return await super._getBuffer(path, headerMap, onProgress);
+            return await super._getBuffer(path, headers, onProgress);
         }
     }
-    async _postObjectForBuffer(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _postObjectForBuffer(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForBuffer(path, obj, headerMap, onProgress);
+            return await super._postObjectForBuffer(path, obj, headers, onProgress);
         }
     }
-    async _getObject(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _getObject(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled) {
-            return await this.worker.execute("getObject", [path, headerMap], onProgress);
+            return await this.worker.execute("getObject", [path, headers], onProgress);
         }
         else {
-            return await super._getObject(path, headerMap, onProgress);
+            return await super._getObject(path, headers, onProgress);
         }
     }
-    async _postObjectForObject(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _postObjectForObject(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForObject", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForObject(path, obj, headerMap, onProgress);
+            return await super._postObjectForObject(path, obj, headers, onProgress);
         }
     }
-    async _getFile(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _getFile(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled) {
-            return await this.worker.execute("getFile", [path, headerMap], onProgress);
+            return await this.worker.execute("getFile", [path, headers], onProgress);
         }
         else {
-            return await super._getFile(path, headerMap, onProgress);
+            return await super._getFile(path, headers, onProgress);
         }
     }
-    async _postObjectForFile(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _postObjectForFile(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForFile", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForFile(path, obj, headerMap, onProgress);
+            return await super._postObjectForFile(path, obj, headers, onProgress);
         }
     }
-    async _getImageBitmap(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _getImageBitmap(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled) {
-            return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
+            return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
         }
         else {
-            return await super._getImageBitmap(path, headerMap, onProgress);
+            return await super._getImageBitmap(path, headers, onProgress);
         }
     }
-    async _postObjectForImageBitmap(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    async _postObjectForImageBitmap(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && hasImageBitmap && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForImageBitmap", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForImageBitmap", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
+            return await super._postObjectForImageBitmap(path, obj, headers, onProgress);
         }
     }
 }

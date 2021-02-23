@@ -17,62 +17,62 @@ export class ImageFetcher extends Fetcher {
         }
         return img;
     }
-    async _getImageBitmap(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const blob = await this._getBlob(path, headerMap, onProgress);
+    async _getImageBitmap(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const blob = await this._getBlob(path, headers, onProgress);
         return await createImageBitmap(blob);
     }
-    async getImageBitmap(path, headerMap, onProgress) {
-        return await this._getImageBitmap(path, headerMap, onProgress);
+    async getImageBitmap(path, headers, onProgress) {
+        return await this._getImageBitmap(path, headers, onProgress);
     }
-    async _getImage(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const file = await this._getFile(path, headerMap, onProgress);
+    async _getImage(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const file = await this._getFile(path, headers, onProgress);
         return await this.readFileImage(file);
     }
-    async getImage(path, headerMap, onProgress) {
-        return await this._getImage(path, headerMap, onProgress);
+    async getImage(path, headers, onProgress) {
+        return await this._getImage(path, headers, onProgress);
     }
-    async _postObjectForImageBitmap(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
+    async _postObjectForImageBitmap(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const blob = await this._postObjectForBlob(path, obj, headers, onProgress);
         return await createImageBitmap(blob);
     }
-    async postObjectForImageBitmap(path, obj, headerMap, onProgress) {
-        return await this._postObjectForImageBitmap(path, obj, headerMap, onProgress);
+    async postObjectForImageBitmap(path, obj, headers, onProgress) {
+        return await this._postObjectForImageBitmap(path, obj, headers, onProgress);
     }
-    async _postObjectForImage(path, obj, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const file = await this._postObjectForFile(path, obj, headerMap, onProgress);
+    async _postObjectForImage(path, obj, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const file = await this._postObjectForFile(path, obj, headers, onProgress);
         return await this.readFileImage(file);
     }
-    async postObjectForImage(path, obj, headerMap, onProgress) {
-        return await this._postObjectForImage(path, obj, headerMap, onProgress);
+    async postObjectForImage(path, obj, headers, onProgress) {
+        return await this._postObjectForImage(path, obj, headers, onProgress);
     }
-    async _getCanvasViaImageBitmap(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        return using(await this._getImageBitmap(path, headerMap, onProgress), (img) => {
+    async _getCanvasViaImageBitmap(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        return using(await this._getImageBitmap(path, headers, onProgress), (img) => {
             return createUtilityCanvasFromImageBitmap(img);
         });
     }
-    async _getCanvasViaImage(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const img = await this._getImage(path, headerMap, onProgress);
+    async _getCanvasViaImage(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const img = await this._getImage(path, headers, onProgress);
         return createUtilityCanvasFromImage(img);
     }
-    async _getCanvas(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        return await this.__getCanvas(path, headerMap, onProgress);
+    async _getCanvas(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        return await this.__getCanvas(path, headers, onProgress);
     }
-    async getCanvas(path, headerMap, onProgress) {
-        return await this._getCanvas(path, headerMap, onProgress);
+    async getCanvas(path, headers, onProgress) {
+        return await this._getCanvas(path, headers, onProgress);
     }
 }
 //# sourceMappingURL=ImageFetcher.js.map

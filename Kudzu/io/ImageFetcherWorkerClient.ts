@@ -39,99 +39,99 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled) {
-            return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
+            return await this.worker.execute("getBuffer", [path, headers], onProgress);
         }
         else {
-            return await super._getBuffer(path, headerMap, onProgress);
+            return await super._getBuffer(path, headers, onProgress);
         }
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForBuffer(path, obj, headerMap, onProgress);
+            return await super._postObjectForBuffer(path, obj, headers, onProgress);
         }
     }
 
-    protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getObject<T>(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled) {
-            return await this.worker.execute("getObject", [path, headerMap], onProgress);
+            return await this.worker.execute("getObject", [path, headers], onProgress);
         }
         else {
-            return await super._getObject(path, headerMap, onProgress);
+            return await super._getObject(path, headers, onProgress);
         }
     }
 
-    protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForObject", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForObject(path, obj, headerMap, onProgress);
+            return await super._postObjectForObject(path, obj, headers, onProgress);
         }
     }
 
-    protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getFile(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled) {
-            return await this.worker.execute("getFile", [path, headerMap], onProgress);
+            return await this.worker.execute("getFile", [path, headers], onProgress);
         }
         else {
-            return await super._getFile(path, headerMap, onProgress);
+            return await super._getFile(path, headers, onProgress);
         }
     }
 
-    protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForFile", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForFile(path, obj, headerMap, onProgress);
+            return await super._postObjectForFile(path, obj, headers, onProgress);
         }
     }
 
-    protected async _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getImageBitmap(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled) {
-            return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
+            return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
         }
         else {
-            return await super._getImageBitmap(path, headerMap, onProgress);
+            return await super._getImageBitmap(path, headers, onProgress);
         }
     }
 
-    protected async _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForImageBitmap<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && hasImageBitmap && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForImageBitmap", [path, obj, headerMap], onProgress);
+            return await this.worker.execute("postObjectForImageBitmap", [path, obj, headers], onProgress);
         }
         else {
-            return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
+            return await super._postObjectForImageBitmap(path, obj, headers, onProgress);
         }
     }
 }

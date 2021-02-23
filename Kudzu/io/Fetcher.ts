@@ -1,10 +1,21 @@
 import { waitFor } from "../events/waitFor";
+import { borderInlineStartColor } from "../html/attrs";
 import { createScript } from "../html/script";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { assertNever, isDefined, isFunction, isNullOrUndefined, isNumber, isXHRBodyInit } from "../typeChecks";
+import { isDefined, isFunction, isNullOrUndefined, isXHRBodyInit } from "../typeChecks";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
+
+function normalizeMap<KeyT, ValueT>(map: Map<KeyT, ValueT>, key: KeyT, value: ValueT) {
+    if (isNullOrUndefined(map)) {
+        map = new Map<KeyT, ValueT>();
+    }
+    if (!map.has(key)) {
+        map.set(key, value);
+    }
+    return map;
+}
 
 function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
     return new Promise((resolve: () => void, reject: (status: number) => void) => {
@@ -69,10 +80,10 @@ async function blobToBuffer(blob: Blob): Promise<BufferAndContentType> {
 
 export class Fetcher implements IFetcher {
 
-    protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined {
+    protected normalizeOnProgress(headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined {
         if (isNullOrUndefined(onProgress)
-            && isFunction(headerMap)) {
-            onProgress = headerMap;
+            && isFunction(headers)) {
+            onProgress = headers;
         }
 
         if (!isFunction(onProgress)) {
@@ -82,9 +93,9 @@ export class Fetcher implements IFetcher {
         return onProgress;
     }
 
-    protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined {
-        if (headerMap instanceof Map) {
-            return headerMap;
+    protected normalizeHeaders(headers?: Map<string, string> | progressCallback): Map<string, string> | undefined {
+        if (headers instanceof Map) {
+            return headers;
         }
 
         return undefined;
@@ -104,7 +115,7 @@ export class Fetcher implements IFetcher {
         return xhr.response as T;
     }
 
-    private async postXHR<T, U>(path: string, xhrType: XMLHttpRequestResponseType, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<U> {
+    private async postXHR<T, U>(path: string, xhrType: XMLHttpRequestResponseType, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<U> {
         const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
         const xhr = new XMLHttpRequest();
 
@@ -115,13 +126,19 @@ export class Fetcher implements IFetcher {
 
         if (isXHRBodyInit(obj)) {
             body = obj;
+            if (obj instanceof Document) {
+                headers = normalizeMap(headers, "Content-Type", "text/xml;charset=UTF-8");
+            }
+            else if (!(obj instanceof FormData)) {
+                headers = normalizeMap(headers, "Content-Type", "application/octet-stream");
+            }
         }
         else if (isDefined(obj)) {
             body = JSON.stringify(obj);
-            headerMap.set("Content-Type", "application/json;charset=UTF-8");
+            headers = normalizeMap(headers, "Content-Type", "application/json;charset=UTF-8");
         }
 
-        setXHRHeaders(xhr, "POST", path, xhrType, headerMap);
+        setXHRHeaders(xhr, "POST", path, xhrType, headers);
 
         if (isDefined(body)) {
             xhr.send(body);
@@ -136,218 +153,218 @@ export class Fetcher implements IFetcher {
         return xhr.response as U;
     }
 
-    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const blob = await this.getXHR<Blob>(path, "blob", headerMap, onProgress);
+        const blob = await this.getXHR<Blob>(path, "blob", headers, onProgress);
         return await blobToBuffer(blob);
     }
 
     async getBuffer(path: string): Promise<BufferAndContentType>;
     async getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this._getBuffer(path, headerMap, onProgress);
+    async getBuffer(path: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        return await this._getBuffer(path, headers, onProgress);
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const blob = await this.postXHR<T, Blob>(path, "blob", obj, headerMap, onProgress);
+        const blob = await this.postXHR<T, Blob>(path, "blob", obj, headers, onProgress);
         return await blobToBuffer(blob);
     }
 
     async postObjectForBuffer<T>(path: string, obj: T): Promise<BufferAndContentType>;
     async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
+    async postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        return await this._postObjectForBuffer(path, obj, headers, onProgress);
     }
 
-    protected async _getBlob(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        return await this.getXHR<Blob>(path, "blob", headerMap, onProgress);
+        return await this.getXHR<Blob>(path, "blob", headers, onProgress);
     }
 
     async getBlob(path: string): Promise<Blob>;
     async getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;
-    async getBlob(path: string, headerMap?: Map<string, string>): Promise<Blob>;
-    async getBlob(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
-    async getBlob(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        return this._getBlob(path, headerMap, onProgress);
+    async getBlob(path: string, headers?: Map<string, string>): Promise<Blob>;
+    async getBlob(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
+    async getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
+        return this._getBlob(path, headers, onProgress);
     }
 
-    protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForBlob<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        return await this.postXHR<T, Blob>(path, "blob", obj, headerMap, onProgress);
+        return await this.postXHR<T, Blob>(path, "blob", obj, headers, onProgress);
     }
 
     async postObjectForBlob<T>(path: string, obj: T): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, onProgress?: progressCallback): Promise<Blob>;
-    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Blob>;
-    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
-    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        return this._postObjectForBlob(path, obj, headerMap, onProgress);
+    async postObjectForBlob<T>(path: string, obj: T, headers?: Map<string, string>): Promise<Blob>;
+    async postObjectForBlob<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
+    async postObjectForBlob<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
+        return this._postObjectForBlob(path, obj, headers, onProgress);
     }
 
-    protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getFile(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const blob = await this._getBlob(path, headerMap, onProgress);
+        const blob = await this._getBlob(path, headers, onProgress);
         return URL.createObjectURL(blob);
     }
 
     async getFile(path: string): Promise<string>;
     async getFile(path: string, onProgress?: progressCallback): Promise<string>;
-    async getFile(path: string, headerMap?: Map<string, string>): Promise<string>;
-    async getFile(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        return await this._getFile(path, headerMap, onProgress);
+    async getFile(path: string, headers?: Map<string, string>): Promise<string>;
+    async getFile(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
+    async getFile(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        return await this._getFile(path, headers, onProgress);
     }
 
-    protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
+        const blob = await this._postObjectForBlob(path, obj, headers, onProgress);
         return URL.createObjectURL(blob);
     }
 
     async postObjectForFile<T>(path: string, obj: T): Promise<string>;
     async postObjectForFile<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
-    async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
-    async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        return await this._postObjectForFile(path, obj, headerMap, onProgress);
+    async postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string>): Promise<string>;
+    async postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
+    async postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        return await this._postObjectForFile(path, obj, headers, onProgress);
     }
 
-    protected async _getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getText(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        return await this.getXHR<string>(path, "text", headerMap, onProgress);
+        return await this.getXHR<string>(path, "text", headers, onProgress);
     }
 
     async getText(path: string): Promise<string>;
     async getText(path: string, onProgress?: progressCallback): Promise<string>;
-    async getText(path: string, headerMap?: Map<string, string>): Promise<string>;
-    async getText(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        return await this._getText(path, headerMap, onProgress);
+    async getText(path: string, headers?: Map<string, string>): Promise<string>;
+    async getText(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
+    async getText(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        return await this._getText(path, headers, onProgress);
     }
 
-    private async _postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    private async _postObjectForText<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        return this.postXHR<T, string>(path, "text", obj, headerMap, onProgress);
+        return this.postXHR<T, string>(path, "text", obj, headers, onProgress);
     }
 
     async postObjectForText<T>(path: string, obj: T): Promise<string>;
     async postObjectForText<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
-    async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
-    async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        return await this._postObjectForText(path, obj, headerMap, onProgress);
+    async postObjectForText<T>(path: string, obj: T, headers?: Map<string, string>): Promise<string>;
+    async postObjectForText<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
+    async postObjectForText<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        return await this._postObjectForText(path, obj, headers, onProgress);
     }
 
-    private setDefaultAcceptType(headerMap: Map<string, string> | undefined, type: string): Map<string, string> {
-        if (!headerMap) {
-            headerMap = new Map<string, string>();
+    private setDefaultAcceptType(headers: Map<string, string> | undefined, type: string): Map<string, string> {
+        if (!headers) {
+            headers = new Map<string, string>();
         }
 
-        if (!headerMap.has("Accept")) {
-            headerMap.set("Accept", type);
+        if (!headers.has("Accept")) {
+            headers.set("Accept", type);
         }
 
-        return headerMap;
+        return headers;
     }
-    protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getObject<T>(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
+        headers = this.setDefaultAcceptType(headers, "application/json");
 
-        return await this.getXHR<T>(path, "json", headerMap, onProgress);
+        return await this.getXHR<T>(path, "json", headers, onProgress);
     }
 
     async getObject<T>(path: string): Promise<T>;
     async getObject<T>(path: string, onProgress?: progressCallback): Promise<T>;
-    async getObject<T>(path: string, headerMap?: Map<string, string>): Promise<T>;
-    async getObject<T>(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<T>;
-    async getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        return await this._getObject<T>(path, headerMap, onProgress);
+    async getObject<T>(path: string, headers?: Map<string, string>): Promise<T>;
+    async getObject<T>(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T>;
+    async getObject<T>(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        return await this._getObject<T>(path, headers, onProgress);
     }
 
-    protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        return await this.postXHR<T, U>(path, "json", obj, headerMap, onProgress);
+        return await this.postXHR<T, U>(path, "json", obj, headers, onProgress);
     }
 
     async postObjectForObject<T, U>(path: string, obj: T): Promise<U>;
     async postObjectForObject<T, U>(path: string, obj: T, onProgress?: progressCallback): Promise<U>;
-    async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>): Promise<U>;
-    async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<U>;
-    async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
-        return await this._postObjectForObject<T, U>(path, obj, headerMap, onProgress);
+    async postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string>): Promise<U>;
+    async postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<U>;
+    async postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
+        return await this._postObjectForObject<T, U>(path, obj, headers, onProgress);
     }
 
-    protected async _postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObject<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        await this.postXHR<T, void>(path, "", obj, headerMap, onProgress);
+        await this.postXHR<T, void>(path, "", obj, headers, onProgress);
     }
 
     async postObject<T>(path: string, obj: T): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
+    async postObject<T>(path: string, obj: T, headers?: Map<string, string>): Promise<void>;
     async postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
-        return await this._postObject(path, obj, headerMap, onProgress);
+    async postObject<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
+    async postObject<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
+        return await this._postObject(path, obj, headers, onProgress);
     }
 
-    protected async _getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _getXml(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const doc = await this.getXHR<Document>(path, "document", headerMap, onProgress);
+        const doc = await this.getXHR<Document>(path, "document", headers, onProgress);
         return doc.documentElement;
     }
 
     async getXml(path: string): Promise<HTMLElement>;
     async getXml(path: string, onProgress?: progressCallback): Promise<HTMLElement>;
-    async getXml(path: string, headerMap?: Map<string, string>): Promise<HTMLElement>;
-    async getXml(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
-    async getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
-        return await this._getXml(path, headerMap, onProgress);
+    async getXml(path: string, headers?: Map<string, string>): Promise<HTMLElement>;
+    async getXml(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
+    async getXml(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
+        return await this._getXml(path, headers, onProgress);
     }
 
-    protected async _postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
+    protected async _postObjectForXml<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-        const doc = await this.postXHR<T, Document>(path, "document", obj, headerMap, onProgress);
+        const doc = await this.postXHR<T, Document>(path, "document", obj, headers, onProgress);
         return doc.documentElement;
     }
 
     async postObjectForXml<T>(path: string, obj: T): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, onProgress?: progressCallback): Promise<HTMLElement>;
-    async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<HTMLElement>;
-    async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
-    async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
-        return await this._postObjectForXml<T>(path, obj, headerMap, onProgress);
+    async postObjectForXml<T>(path: string, obj: T, headers?: Map<string, string>): Promise<HTMLElement>;
+    async postObjectForXml<T>(path: string, obj: T, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
+    async postObjectForXml<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
+        return await this._postObjectForXml<T>(path, obj, headers, onProgress);
     }
 
     async loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void> {

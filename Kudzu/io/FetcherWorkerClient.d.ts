@@ -14,10 +14,10 @@ export declare class FetcherWorkerClient extends Fetcher {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    protected _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    protected _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    protected _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T>;
-    protected _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U>;
-    protected _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
-    protected _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
+    protected _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    protected _postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    protected _getObject<T>(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T>;
+    protected _postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U>;
+    protected _getFile(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
+    protected _postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
 }
