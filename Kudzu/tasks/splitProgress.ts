@@ -1,19 +1,6 @@
-import { isNumber } from "../typeChecks";
 import type { progressCallback } from "./progressCallback";
 
-export function splitProgress(onProgress: progressCallback|undefined, weights: number | number[]) {
-
-    let subProgressWeights: number[];
-    if (isNumber(weights)) {
-        subProgressWeights = new Array<number>(weights);
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            subProgressWeights[i] = 1 / weights;
-        }
-    }
-    else {
-        subProgressWeights = weights;
-    }
-
+export function splitProgress(onProgress: progressCallback | undefined, subProgressWeights: number[]) {
     let weightTotal = 0;
     for (let i = 0; i < subProgressWeights.length; ++i) {
         weightTotal += subProgressWeights[i];

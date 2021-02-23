@@ -1,15 +1,4 @@
-import { isNumber } from "../typeChecks";
-export function splitProgress(onProgress, weights) {
-    let subProgressWeights;
-    if (isNumber(weights)) {
-        subProgressWeights = new Array(weights);
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            subProgressWeights[i] = 1 / weights;
-        }
-    }
-    else {
-        subProgressWeights = weights;
-    }
+export function splitProgress(onProgress, subProgressWeights) {
     let weightTotal = 0;
     for (let i = 0; i < subProgressWeights.length; ++i) {
         weightTotal += subProgressWeights[i];
