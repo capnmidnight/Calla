@@ -18,6 +18,7 @@ export const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
 export const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
 export const isMobileVR = /Mobile VR/.test(navigator.userAgent)
     || isOculus;
-export const hasWebXR = "xr" in navigator;
+export const hasWebXR = "xr" in navigator
+    && "isSessionSupported" in navigator.xr;
 export const hasWebVR = "getVRDisplays" in navigator;
 //# sourceMappingURL=flags.js.map
