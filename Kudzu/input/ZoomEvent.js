@@ -1,11 +1,11 @@
 export class ZoomEvent extends Event {
-    constructor() {
+    constructor(_dz) {
         super("zoom");
-        this.dz = 0;
+        this._dz = _dz;
         Object.seal(this);
     }
-    set(dz) {
-        this.dz = dz;
+    get dz() {
+        return this._dz;
     }
 }
 //# sourceMappingURL=ZoomEvent.js.map
