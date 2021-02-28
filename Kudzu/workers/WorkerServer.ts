@@ -166,6 +166,7 @@ export class WorkerServer {
                 }
             }
             catch (exp) {
+                console.error(exp);
                 this.onError(taskID, exp.message);
             }
         });
