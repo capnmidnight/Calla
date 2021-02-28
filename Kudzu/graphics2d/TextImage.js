@@ -1,11 +1,15 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { createUtilityCanvas, setContextSize } from "../html/canvas";
+import { once } from "../events/once";
+import { src } from "../html/attrs";
+import { canvasToBlob, createUtilityCanvas, createUtilityCanvasFromImage, setContextSize } from "../html/canvas";
+import { Img } from "../html/tags";
 import { clamp } from "../math/clamp";
-import { isNumber } from "../typeChecks";
+import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
 import { loadFont, makeFont } from "./fonts";
 const redrawnEvt = new TypedEvent("redrawn");
+const notReadyEvt = new TypedEvent("notready");
 export class TextImage extends TypedEventBase {
-    constructor() {
+    constructor(options) {
         super();
         this._minWidth = null;
         this._maxWidth = null;
@@ -24,12 +28,70 @@ export class TextImage extends TypedEventBase {
         this._fontWeight = "normal";
         this._fontFamily = "sans-serif";
         this._fontSize = 20;
-        this._padding = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-        };
+        if (isDefined(options)) {
+            if (isDefined(options.minWidth)) {
+                this._minWidth = options.minWidth;
+            }
+            if (isDefined(options.maxWidth)) {
+                this._maxWidth = options.maxWidth;
+            }
+            if (isDefined(options.minHeight)) {
+                this._minHeight = options.minHeight;
+            }
+            if (isDefined(options.maxHeight)) {
+                this._maxHeight = options.maxHeight;
+            }
+            if (isDefined(options.strokeColor)) {
+                this._strokeColor = options.strokeColor;
+            }
+            if (isDefined(options.strokeSize)) {
+                this._strokeSize = options.strokeSize;
+            }
+            if (isDefined(options.bgColor)) {
+                this._bgColor = options.bgColor;
+            }
+            if (isDefined(options.value)) {
+                this._value = options.value;
+            }
+            if (isDefined(options.scale)) {
+                this._scale = options.scale;
+            }
+            if (isDefined(options.fillColor)) {
+                this._fillColor = options.fillColor;
+            }
+            if (isDefined(options.textDirection)) {
+                this._textDirection = options.textDirection;
+            }
+            if (isDefined(options.wrapWords)) {
+                this._wrapWords = options.wrapWords;
+            }
+            if (isDefined(options.fontStyle)) {
+                this._fontStyle = options.fontStyle;
+            }
+            if (isDefined(options.fontVariant)) {
+                this._fontVariant = options.fontVariant;
+            }
+            if (isDefined(options.fontWeight)) {
+                this._fontWeight = options.fontWeight;
+            }
+            if (isDefined(options.fontFamily)) {
+                this._fontFamily = options.fontFamily;
+            }
+            if (isDefined(options.fontSize)) {
+                this._fontSize = options.fontSize;
+            }
+            if (isDefined(options.padding)) {
+                this._padding = options.padding;
+            }
+        }
+        if (isNullOrUndefined(this._padding)) {
+            this._padding = {
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
+            };
+        }
         this._canvas = createUtilityCanvas(10, 10);
         const g = this.canvas.getContext("2d");
         if (!g) {
@@ -41,6 +103,22 @@ export class TextImage extends TypedEventBase {
         const font = makeFont(this);
         await loadFont(font, value);
         this.value = value;
+    }
+    async makeBlob(value) {
+        const task = once(this, "redrawn", "notready");
+        this.value = value;
+        await task;
+        return await canvasToBlob(this.canvas);
+    }
+    async makeImageBitmap(value) {
+        const blob = await this.makeBlob(value);
+        return await createImageBitmap(blob);
+    }
+    async makeCanvas(value) {
+        const blob = await this.makeBlob(value);
+        const file = URL.createObjectURL(blob);
+        const img = Img(src(file));
+        return createUtilityCanvasFromImage(img);
     }
     get scale() {
         return this._scale;
@@ -392,6 +470,9 @@ export class TextImage extends TypedEventBase {
                 this._g.drawImage(canv, 0, 0);
             }
             this.dispatchEvent(redrawnEvt);
+        }
+        else {
+            this.dispatchEvent(notReadyEvt);
         }
     }
 }

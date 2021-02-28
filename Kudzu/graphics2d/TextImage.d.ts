@@ -1,5 +1,5 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import type { CanvasTypes, Context2D } from "../html/canvas";
+import { CanvasTypes, Context2D } from "../html/canvas";
 export interface PaddingRect {
     top: number;
     right: number;
@@ -8,6 +8,27 @@ export interface PaddingRect {
 }
 interface TextImageEvents {
     redrawn: TypedEvent<"redrawn">;
+    notready: TypedEvent<"notready">;
+}
+export interface TextImageOptions {
+    minWidth: number;
+    maxWidth: number;
+    minHeight: number;
+    maxHeight: number;
+    strokeColor: string;
+    strokeSize: number;
+    bgColor: string;
+    value: string;
+    scale: number;
+    fillColor: string;
+    textDirection: string;
+    wrapWords: boolean;
+    fontStyle: string;
+    fontVariant: string;
+    fontWeight: string;
+    fontFamily: string;
+    fontSize: number;
+    padding: PaddingRect;
 }
 export declare class TextImage extends TypedEventBase<TextImageEvents> {
     private _minWidth;
@@ -30,8 +51,11 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     private _padding;
     private _canvas;
     private _g;
-    constructor();
+    constructor(options?: Partial<TextImageOptions>);
     loadFontAndSetText(value?: string | null): Promise<void>;
+    private makeBlob;
+    makeImageBitmap(value: string): Promise<ImageBitmap>;
+    makeCanvas(value: string): Promise<CanvasTypes>;
     get scale(): number;
     set scale(v: number);
     get minWidth(): number;
