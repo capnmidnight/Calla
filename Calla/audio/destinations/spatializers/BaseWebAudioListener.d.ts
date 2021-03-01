@@ -8,5 +8,6 @@ export declare abstract class BaseWebAudioListener extends BaseListener {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      */
     constructor(audioContext: BaseAudioContext);
+    private disposed2;
     dispose(): void;
 }

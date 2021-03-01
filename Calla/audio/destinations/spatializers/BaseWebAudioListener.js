@@ -7,14 +7,19 @@ export class BaseWebAudioListener extends BaseListener {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      */
     constructor(audioContext) {
+        super(audioContext);
+        this.disposed2 = false;
         const gain = audioContext.createGain();
+        this.input = this.output = gain;
         gain.gain.value = 0.75;
-        super(audioContext, gain, gain);
         this.listener = audioContext.listener;
     }
     dispose() {
-        this.listener = null;
-        super.dispose();
+        if (!this.disposed2) {
+            this.listener = null;
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
 }
 //# sourceMappingURL=BaseWebAudioListener.js.map

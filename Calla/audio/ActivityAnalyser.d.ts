@@ -14,6 +14,7 @@ export declare class ActivityAnalyser extends TypedEventBase<AudioAnaylserEvents
     private activityCounter;
     private analyser;
     constructor(source: AudioStreamSource, audioContext: BaseAudioContext, bufferSize: number);
+    private disposed;
     dispose(): void;
     update(): void;
 }

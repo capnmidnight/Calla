@@ -1,3 +1,4 @@
+import { connect } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 
 /**
@@ -12,16 +13,17 @@ export abstract class BaseWebAudioPanner extends BaseEmitter {
      * @param audioContext - the output WebAudio context
      */
     constructor(audioContext: BaseAudioContext, destination: AudioNode) {
-        const panner = audioContext.createPanner();
-        super(audioContext, panner, panner, destination);
+        super(audioContext, destination);
 
-        this.panner = panner;
+        this.panner = audioContext.createPanner();
 
         this.panner.panningModel = "HRTF";
         this.panner.distanceModel = "inverse";
         this.panner.coneInnerAngle = 360;
         this.panner.coneOuterAngle = 0;
         this.panner.coneOuterGain = 0;
+
+        connect(this.output, this.destination);
     }
 
     copyAudioProperties(from: BaseWebAudioPanner) {

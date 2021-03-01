@@ -234,9 +234,13 @@ export class Calla
         return await this._tele.getVideoInputDevices(filterDuplicates);
     }
 
+    private disposed = false;
     dispose(): void {
-        this.leave();
-        this.disconnect();
+        if (!this.disposed) {
+            this.leave();
+            this.disconnect();
+            this.disposed = true;
+        }
     }
 
     get offsetRadius(): number {

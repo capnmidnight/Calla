@@ -6,6 +6,7 @@ export declare class AudioDestination extends BaseAudioElement<BaseListener> {
     private _nonSpatializedInput;
     private _trueDestination;
     constructor(audioContext: BaseAudioContext, destination: DestinationNode);
+    private disposed2;
     dispose(): void;
     get spatialized(): boolean;
     get spatializedInput(): AudioNode;

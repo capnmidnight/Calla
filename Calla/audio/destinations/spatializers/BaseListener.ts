@@ -7,10 +7,14 @@ import { AudioDestination } from "../AudioDestination";
  * Base class providing functionality for audio listeners.
  **/
 export abstract class BaseListener extends BaseSpatializer {
+
+    input: AudioNode;
+    output: AudioNode;
+
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext, public input: AudioNode, public output: AudioNode) {
+    constructor(audioContext: BaseAudioContext) {
         super(audioContext);
     }
 

@@ -13,6 +13,7 @@ export declare abstract class BaseAudioElement<T extends BaseSpatializer> implem
     private _spatializer;
     protected volumeControl: GainNode;
     constructor(audioContext: BaseAudioContext);
+    private disposed;
     dispose(): void;
     abstract get spatialized(): boolean;
     get volume(): number;

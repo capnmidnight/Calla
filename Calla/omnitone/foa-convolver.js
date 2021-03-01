@@ -28,6 +28,7 @@ export class FOAConvolver {
      * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
      */
     constructor(context, hrirBufferList) {
+        this.disposed = false;
         this._context = context;
         this._active = false;
         this._isBufferLoaded = false;
@@ -82,28 +83,31 @@ export class FOAConvolver {
         this.output = this._summingBus;
     }
     dispose() {
-        if (this._active) {
-            this.disable();
+        if (!this.disposed) {
+            if (this._active) {
+                this.disable();
+            }
+            // Group W and Y, then Z and X.
+            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
+            // Create a network of convolvers using splitter/merger.
+            disconnect(this._mergerWY, this._convolverWY);
+            disconnect(this._mergerZX, this._convolverZX);
+            disconnect(this._convolverWY, this._splitterWY);
+            disconnect(this._convolverZX, this._splitterZX);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterWY, this._inverter, 1, 0);
+            disconnect(this._inverter, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
+            this.disposed = true;
         }
-        // Group W and Y, then Z and X.
-        disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
-        disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
-        disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
-        disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
-        // Create a network of convolvers using splitter/merger.
-        disconnect(this._mergerWY, this._convolverWY);
-        disconnect(this._mergerZX, this._convolverZX);
-        disconnect(this._convolverWY, this._splitterWY);
-        disconnect(this._convolverZX, this._splitterZX);
-        disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
-        disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
-        disconnect(this._splitterWY, this._inverter, 1, 0);
-        disconnect(this._inverter, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
-        disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
-        disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
     }
     /**
      * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo

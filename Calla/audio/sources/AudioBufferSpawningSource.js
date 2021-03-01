@@ -8,6 +8,7 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         super(id, audioContext, source, spatializer);
         this.counter = 0;
         this.playingSources = new Array();
+        this.disposed3 = false;
     }
     connectSpatializer() {
         // do nothing, this node doesn't play on its own
@@ -47,8 +48,11 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         arrayClear(this.playingSources);
     }
     dispose() {
-        this.stop();
-        super.dispose();
+        if (!this.disposed3) {
+            this.stop();
+            super.dispose();
+            this.disposed3 = true;
+        }
     }
 }
 //# sourceMappingURL=AudioBufferSpawningSource.js.map

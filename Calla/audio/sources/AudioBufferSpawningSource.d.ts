@@ -9,5 +9,6 @@ export declare class AudioBufferSpawningSource extends BaseAudioBufferSource {
     get isPlaying(): boolean;
     play(): Promise<void>;
     stop(): void;
+    private disposed3;
     dispose(): void;
 }

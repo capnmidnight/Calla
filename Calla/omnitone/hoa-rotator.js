@@ -245,6 +245,7 @@ export class HOARotator {
      * @param ambisonicOrder - Ambisonic order.
      */
     constructor(context, ambisonicOrder) {
+        this.disposed = false;
         this._context = context;
         this._ambisonicOrder = ambisonicOrder;
         // We need to determine the number of channels K based on the ambisonic order
@@ -286,28 +287,31 @@ export class HOARotator {
         this.output = this._merger;
     }
     dispose() {
-        for (let i = 1; i <= this._ambisonicOrder; i++) {
-            // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-            // matrix. We compute the offset value as the first channel index of the
-            // current order where
-            //   k_last = l^2 + l + m,
-            // and m = -l
-            //   k_last = l^2
-            const orderOffset = i * i;
-            // Uses row-major indexing.
-            const rows = (2 * i + 1);
-            for (let j = 0; j < rows; j++) {
-                const inputIndex = orderOffset + j;
-                for (let k = 0; k < rows; k++) {
-                    const outputIndex = orderOffset + k;
-                    const matrixIndex = j * rows + k;
-                    disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                    disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+        if (!this.disposed) {
+            for (let i = 1; i <= this._ambisonicOrder; i++) {
+                // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+                // matrix. We compute the offset value as the first channel index of the
+                // current order where
+                //   k_last = l^2 + l + m,
+                // and m = -l
+                //   k_last = l^2
+                const orderOffset = i * i;
+                // Uses row-major indexing.
+                const rows = (2 * i + 1);
+                for (let j = 0; j < rows; j++) {
+                    const inputIndex = orderOffset + j;
+                    for (let k = 0; k < rows; k++) {
+                        const outputIndex = orderOffset + k;
+                        const matrixIndex = j * rows + k;
+                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+                    }
                 }
             }
+            // W-channel is not involved in rotation, skip straight to ouput.
+            disconnect(this._splitter, this._merger, 0, 0);
+            this.disposed = true;
         }
-        // W-channel is not involved in rotation, skip straight to ouput.
-        disconnect(this._splitter, this._merger, 0, 0);
     }
     /**
      * Updates the rotation matrix with 3x3 matrix.

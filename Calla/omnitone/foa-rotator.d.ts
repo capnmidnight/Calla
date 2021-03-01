@@ -47,6 +47,7 @@ export declare class FOARotator implements IDisposable {
      * @param context - Associated BaseAudioContext.
      */
     constructor(context: BaseAudioContext);
+    private disposed;
     dispose(): void;
     /**
      * Updates the rotation matrix with 3x3 matrix.

@@ -10,7 +10,7 @@ export declare abstract class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext, input: AudioNode, output: AudioNode);
+    constructor(audioContext: BaseAudioContext);
     /**
      * Creates a spatialzer for an audio source.
      */

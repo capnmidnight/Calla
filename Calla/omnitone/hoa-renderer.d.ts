@@ -50,6 +50,7 @@ export declare class HOARenderer implements IDisposable {
      * Builds the internal audio graph.
      */
     private _buildAudioGraph;
+    private disposed;
     dispose(): void;
     /**
      * Initializes and loads the resource for the renderer.

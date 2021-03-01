@@ -54,6 +54,7 @@ export declare class HOARotator implements IDisposable {
      * @param ambisonicOrder - Ambisonic order.
      */
     constructor(context: BaseAudioContext, ambisonicOrder: number);
+    private disposed;
     dispose(): void;
     /**
      * Updates the rotation matrix with 3x3 matrix.

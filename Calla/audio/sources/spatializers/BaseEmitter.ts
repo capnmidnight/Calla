@@ -1,5 +1,5 @@
 import { BaseSpatializer } from "../../BaseSpatializer";
-import { connect, disconnect } from "../../GraphVisualizer";
+import { disconnect } from "../../GraphVisualizer";
 
 /**
  * Base class providing functionality for audio listeners.
@@ -7,20 +7,23 @@ import { connect, disconnect } from "../../GraphVisualizer";
 export abstract class BaseEmitter
     extends BaseSpatializer {
 
+    input: AudioNode;
+    output: AudioNode;
+
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext, public input: AudioNode, public output: AudioNode, protected destination: AudioNode) {
+    constructor(audioContext: BaseAudioContext, protected destination: AudioNode) {
         super(audioContext);
-
-        if (this.output !== this.destination) {
-            connect(this.output, this.destination);
-        }
     }
 
-    dispose() {
-        if (this.output !== this.destination) {
-            disconnect(this.output, this.destination);
+    private disposed = false;
+    dispose(): void {
+        if (!this.disposed) {
+            if (this.output !== this.destination) {
+                disconnect(this.output, this.destination);
+            }
+            this.disposed = true;
         }
     }
 

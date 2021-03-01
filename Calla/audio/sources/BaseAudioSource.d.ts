@@ -4,6 +4,7 @@ export declare abstract class BaseAudioSource<T extends AudioNode> extends BaseA
     id: string;
     private _source;
     constructor(id: string, audioContext: BaseAudioContext);
+    private disposed2;
     dispose(): void;
     get spatialized(): boolean;
     get source(): T;

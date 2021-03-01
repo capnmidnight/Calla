@@ -47,6 +47,7 @@ export declare class FOAConvolver implements IDisposable {
      * Build the internal audio graph.
      */
     private _buildAudioGraph;
+    private disposed;
     dispose(): void;
     /**
      * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo

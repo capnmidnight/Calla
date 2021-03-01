@@ -1,6 +1,7 @@
 import { vec3 } from "gl-matrix";
 import { clamp } from "kudzu/math/clamp";
 import { project } from "kudzu/math/project";
+import { connect } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 const delta = vec3.create();
 export class VolumeScalingNode extends BaseEmitter {
@@ -8,10 +9,12 @@ export class VolumeScalingNode extends BaseEmitter {
      * Creates a new spatializer that performs no panning, only distance-based volume scaling
      */
     constructor(audioContext, destination, listener) {
+        super(audioContext, destination);
         const gain = audioContext.createGain();
-        super(audioContext, gain, gain, destination);
+        this.input = this.output = gain;
         this.gain = gain;
         this.listener = listener;
+        connect(this.output, this.destination);
         Object.seal(this);
     }
     createNew() {

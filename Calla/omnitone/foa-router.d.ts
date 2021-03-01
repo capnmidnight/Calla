@@ -44,5 +44,6 @@ export declare class FOARouter implements IDisposable {
      * @param channelMap - A new channel map for FOA stream.
      */
     setChannelMap(channelMap: ChannelMap | number[]): void;
+    private disposed;
     dispose(): void;
 }

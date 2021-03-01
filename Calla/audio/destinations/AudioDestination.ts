@@ -19,10 +19,14 @@ export class AudioDestination extends BaseAudioElement<BaseListener> {
         this.setDestination(destination);
     }
 
-    dispose() {
-        this.setDestination(null);
-        disconnect(this._nonSpatializedInput, this.volumeControl);
-        super.dispose();
+    private disposed2 = false;
+    dispose(): void {
+        if (!this.disposed2) {
+            this.setDestination(null);
+            disconnect(this._nonSpatializedInput, this.volumeControl);
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
 
     get spatialized() {

@@ -10,14 +10,19 @@ export abstract class BaseWebAudioListener extends BaseListener {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      */
     constructor(audioContext: BaseAudioContext) {
+        super(audioContext);
         const gain = audioContext.createGain();
         gain.gain.value = 0.75;
-        super(audioContext, gain, gain);
+        this.input = this.output = gain;
         this.listener = audioContext.listener;
     }
 
-    dispose() {
-        this.listener = null;
-        super.dispose();
+    private disposed2 = false;
+    dispose(): void {
+        if (!this.disposed2) {
+            this.listener = null;
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
 }

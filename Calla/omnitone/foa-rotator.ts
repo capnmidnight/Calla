@@ -128,47 +128,52 @@ export class FOARotator implements IDisposable {
         this.output = this._merger;
     }
 
+
+    private disposed = false;
     dispose(): void {
-        // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
-        // X (from channel 1)
-        disconnect(this._splitter, this._inX, 1);
-        // Y (from channel 2)
-        disconnect(this._splitter, this._inY, 2);
-        // Z (from channel 3)
-        disconnect(this._splitter, this._inZ, 3);
+        if (!this.disposed) {
+            // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
+            // X (from channel 1)
+            disconnect(this._splitter, this._inX, 1);
+            // Y (from channel 2)
+            disconnect(this._splitter, this._inY, 2);
+            // Z (from channel 3)
+            disconnect(this._splitter, this._inZ, 3);
 
-        // Apply the rotation in the world space.
-        // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
-        // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
-        // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-        disconnect(this._inX, this._m0);
-        disconnect(this._inX, this._m1);
-        disconnect(this._inX, this._m2);
-        disconnect(this._inY, this._m3);
-        disconnect(this._inY, this._m4);
-        disconnect(this._inY, this._m5);
-        disconnect(this._inZ, this._m6);
-        disconnect(this._inZ, this._m7);
-        disconnect(this._inZ, this._m8);
-        disconnect(this._m0, this._outX);
-        disconnect(this._m1, this._outY);
-        disconnect(this._m2, this._outZ);
-        disconnect(this._m3, this._outX);
-        disconnect(this._m4, this._outY);
-        disconnect(this._m5, this._outZ);
-        disconnect(this._m6, this._outX);
-        disconnect(this._m7, this._outY);
-        disconnect(this._m8, this._outZ);
+            // Apply the rotation in the world space.
+            // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
+            // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
+            // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
+            disconnect(this._inX, this._m0);
+            disconnect(this._inX, this._m1);
+            disconnect(this._inX, this._m2);
+            disconnect(this._inY, this._m3);
+            disconnect(this._inY, this._m4);
+            disconnect(this._inY, this._m5);
+            disconnect(this._inZ, this._m6);
+            disconnect(this._inZ, this._m7);
+            disconnect(this._inZ, this._m8);
+            disconnect(this._m0, this._outX);
+            disconnect(this._m1, this._outY);
+            disconnect(this._m2, this._outZ);
+            disconnect(this._m3, this._outX);
+            disconnect(this._m4, this._outY);
+            disconnect(this._m5, this._outZ);
+            disconnect(this._m6, this._outX);
+            disconnect(this._m7, this._outY);
+            disconnect(this._m8, this._outZ);
 
-        // Transform 3: world space to audio space.
-        // W -> W (to channel 0)
-        disconnect(this._splitter, this._merger, 0, 0);
-        // X (to channel 1)
-        disconnect(this._outX, this._merger, 0, 1);
-        // Y (to channel 2)
-        disconnect(this._outY, this._merger, 0, 2);
-        // Z (to channel 3)
-        disconnect(this._outZ, this._merger, 0, 3);
+            // Transform 3: world space to audio space.
+            // W -> W (to channel 0)
+            disconnect(this._splitter, this._merger, 0, 0);
+            // X (to channel 1)
+            disconnect(this._outX, this._merger, 0, 1);
+            // Y (to channel 2)
+            disconnect(this._outY, this._merger, 0, 2);
+            // Z (to channel 3)
+            disconnect(this._outZ, this._merger, 0, 3);
+            this.disposed = true;
+        }
     }
 
 

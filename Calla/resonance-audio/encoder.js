@@ -26,6 +26,7 @@ export class Encoder {
     constructor(context, options) {
         this.channelGain = new Array();
         this.merger = null;
+        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -82,14 +83,17 @@ export class Encoder {
         connect(this.merger, this.output);
     }
     dispose() {
-        for (let i = 0; i < this.channelGain.length; i++) {
-            disconnect(this.input, this.channelGain[i]);
-            if (this.merger) {
-                disconnect(this.channelGain[i], this.merger, 0, i);
+        if (!this.disposed) {
+            for (let i = 0; i < this.channelGain.length; i++) {
+                disconnect(this.input, this.channelGain[i]);
+                if (this.merger) {
+                    disconnect(this.channelGain[i], this.merger, 0, i);
+                }
             }
-        }
-        if (this.merger) {
-            disconnect(this.merger, this.output);
+            if (this.merger) {
+                disconnect(this.merger, this.output);
+            }
+            this.disposed = true;
         }
     }
     /**

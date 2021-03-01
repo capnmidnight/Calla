@@ -88,11 +88,16 @@ export class FOARouter implements IDisposable {
         connect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
 
+
+    private disposed = false;
     dispose(): void {
-        disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
-        disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
-        disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
-        disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+        if (!this.disposed) {
+            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+            this.disposed = true;
+        }
     }
 
 }

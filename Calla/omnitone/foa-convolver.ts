@@ -115,31 +115,36 @@ export class FOAConvolver implements IDisposable {
         this.output = this._summingBus;
     }
 
+
+    private disposed = false;
     dispose(): void {
-        if (this._active) {
-            this.disable();
+        if (!this.disposed) {
+            if (this._active) {
+                this.disable();
+            }
+
+            // Group W and Y, then Z and X.
+            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
+
+            // Create a network of convolvers using splitter/merger.
+            disconnect(this._mergerWY, this._convolverWY);
+            disconnect(this._mergerZX, this._convolverZX);
+            disconnect(this._convolverWY, this._splitterWY);
+            disconnect(this._convolverZX, this._splitterZX);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterWY, this._inverter, 1, 0);
+            disconnect(this._inverter, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
+            this.disposed = true;
         }
-
-        // Group W and Y, then Z and X.
-        disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
-        disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
-        disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
-        disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
-
-        // Create a network of convolvers using splitter/merger.
-        disconnect(this._mergerWY, this._convolverWY);
-        disconnect(this._mergerZX, this._convolverZX);
-        disconnect(this._convolverWY, this._splitterWY);
-        disconnect(this._convolverZX, this._splitterZX);
-        disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
-        disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
-        disconnect(this._splitterWY, this._inverter, 1, 0);
-        disconnect(this._inverter, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
-        disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
-        disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
-        disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
     }
 
 

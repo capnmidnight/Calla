@@ -6,5 +6,6 @@ export declare class AudioElementSource extends BaseAudioSource<MediaElementAudi
     isPlaying: boolean;
     play(): Promise<void>;
     stop(): void;
+    private disposed3;
     dispose(): void;
 }

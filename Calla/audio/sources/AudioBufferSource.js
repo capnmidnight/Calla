@@ -4,6 +4,7 @@ export class AudioBufferSource extends BaseAudioBufferSource {
     constructor(id, audioContext, source, spatializer) {
         super(id, audioContext, source, spatializer);
         this.isPlaying = false;
+        this.disposed3 = false;
     }
     async play() {
         this.source.start();
@@ -14,8 +15,11 @@ export class AudioBufferSource extends BaseAudioBufferSource {
         this.source.stop();
     }
     dispose() {
-        this.stop();
-        super.dispose();
+        if (!this.disposed3) {
+            this.stop();
+            super.dispose();
+            this.disposed3 = true;
+        }
     }
 }
 //# sourceMappingURL=AudioBufferSource.js.map

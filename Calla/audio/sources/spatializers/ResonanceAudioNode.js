@@ -1,3 +1,4 @@
+import { connect } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 /**
  * A spatializer that uses Google's Resonance Audio library.
@@ -7,10 +8,12 @@ export class ResonanceAudioNode extends BaseEmitter {
      * Creates a new spatializer that uses Google's Resonance Audio library.
      */
     constructor(audioContext, destination, res) {
-        const resNode = res.createSource(undefined);
-        super(audioContext, resNode.input, resNode.output, destination);
+        super(audioContext, destination);
         this.resScene = res;
-        this.resNode = resNode;
+        this.resNode = res.createSource(undefined);
+        this.input = this.resNode.input;
+        this.output = this.resNode.output;
+        connect(this.output, this.destination);
         Object.seal(this);
     }
     createNew() {

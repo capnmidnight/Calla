@@ -75,10 +75,11 @@ export class ActivityAnalyser
         checkSource();
     }
 
+    private disposed = false;
     dispose(): void {
-        if (this.analyser) {
+        if (!this.disposed) {
             disconnect(this.source.source, this.analyser);
-            this.analyser = null;
+            this.disposed = true;
         }
         this.buffer = null;
     }

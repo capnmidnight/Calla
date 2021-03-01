@@ -4,10 +4,14 @@ export class BaseAudioElement {
         this.audioContext = audioContext;
         this.pose = new InterpolatedPose();
         this._spatializer = null;
+        this.disposed = false;
         this.volumeControl = audioContext.createGain();
     }
     dispose() {
-        this.spatializer = null;
+        if (!this.disposed) {
+            this.spatializer = null;
+            this.disposed = true;
+        }
     }
     get volume() {
         return this.volumeControl.gain.value;

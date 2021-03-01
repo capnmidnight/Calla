@@ -95,6 +95,7 @@ export declare class ResonanceAudio implements IDisposable {
     constructor(context: BaseAudioContext, options?: ResonanceAudioOptions);
     getRenderingMode(): string;
     setRenderingMode(mode: string): void;
+    private disposed;
     dispose(): void;
     /**
      * Create a new source for the scene.

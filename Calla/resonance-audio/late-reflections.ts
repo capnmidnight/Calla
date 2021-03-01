@@ -128,10 +128,14 @@ export class LateReflections implements IDisposable {
         this.setDurations(options.durations);
     }
 
+    private disposed = false;
     dispose(): void {
-        disconnect(this.input, this.predelay);
-        disconnect(this.predelay, this.convolver);
-        disconnect(this.convolver, this.output);
+        if (!this.disposed) {
+            disconnect(this.input, this.predelay);
+            disconnect(this.predelay, this.convolver);
+            disconnect(this.convolver, this.output);
+            this.disposed = true;
+        }
     }
 
 

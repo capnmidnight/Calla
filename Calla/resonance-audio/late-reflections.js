@@ -23,6 +23,7 @@ export class LateReflections {
     * Late-reflections reverberation filter for Ambisonic content.
     */
     constructor(context, options) {
+        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             durations: DEFAULT_REVERB_DURATIONS.slice(),
@@ -53,9 +54,12 @@ export class LateReflections {
         this.setDurations(options.durations);
     }
     dispose() {
-        disconnect(this.input, this.predelay);
-        disconnect(this.predelay, this.convolver);
-        disconnect(this.convolver, this.output);
+        if (!this.disposed) {
+            disconnect(this.input, this.predelay);
+            disconnect(this.predelay, this.convolver);
+            disconnect(this.convolver, this.output);
+            this.disposed = true;
+        }
     }
     /**
      * Re-compute a new impulse response by providing Multiband RT60 durations.

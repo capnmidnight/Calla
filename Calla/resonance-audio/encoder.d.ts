@@ -67,6 +67,7 @@ export declare class Encoder implements IDisposable {
      * @param ambisonicOrder Desired ambisonic order.
      */
     setAmbisonicOrder(ambisonicOrder: number): void;
+    private disposed;
     dispose(): void;
     /**
      * Set the direction of the encoded source signal.

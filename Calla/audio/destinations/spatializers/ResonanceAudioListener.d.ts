@@ -11,6 +11,7 @@ export declare class ResonanceAudioListener extends BaseListener {
      * Creates a new audio positioner that uses Google's Resonance Audio library
      */
     constructor(audioContext: AudioContext);
+    private disposed;
     dispose(): void;
     /**
      * Performs the spatialization operation for the audio source's latest location.

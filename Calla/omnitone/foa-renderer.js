@@ -29,6 +29,7 @@ export class FOARenderer {
      * Omnitone FOA renderer class. Uses the optimized convolution technique.
      */
     constructor(context, options) {
+        this.disposed = false;
         this.context = context;
         this.config = Object.assign({
             channelMap: ChannelMap.Default,
@@ -65,17 +66,20 @@ export class FOARenderer {
         this.input.channelInterpretation = 'discrete';
     }
     dispose() {
-        if (this.getRenderingMode() === RenderingMode.Bypass) {
-            disconnect(this.bypass, this.output);
+        if (!this.disposed) {
+            if (this.getRenderingMode() === RenderingMode.Bypass) {
+                disconnect(this.bypass, this.output);
+            }
+            disconnect(this.input, this.router.input);
+            disconnect(this.input, this.bypass);
+            disconnect(this.router.output, this.rotator.input);
+            disconnect(this.rotator.output, this.convolver.input);
+            disconnect(this.convolver.output, this.output);
+            this.convolver.dispose();
+            this.rotator.dispose();
+            this.router.dispose();
+            this.disposed = true;
         }
-        disconnect(this.input, this.router.input);
-        disconnect(this.input, this.bypass);
-        disconnect(this.router.output, this.rotator.input);
-        disconnect(this.rotator.output, this.convolver.input);
-        disconnect(this.convolver.output, this.output);
-        this.convolver.dispose();
-        this.rotator.dispose();
-        this.router.dispose();
     }
     /**
      * Initializes and loads the resource for the renderer.

@@ -21,6 +21,7 @@ export class Calla extends TypedEventBase {
         this._meta = _meta;
         this.isAudioMuted = null;
         this.isVideoMuted = null;
+        this.disposed = false;
         const fwd = this.dispatchEvent.bind(this);
         this._tele.addEventListener("serverConnected", fwd);
         this._tele.addEventListener("serverDisconnected", fwd);
@@ -156,8 +157,11 @@ export class Calla extends TypedEventBase {
         return await this._tele.getVideoInputDevices(filterDuplicates);
     }
     dispose() {
-        this.leave();
-        this.disconnect();
+        if (!this.disposed) {
+            this.leave();
+            this.disconnect();
+            this.disposed = true;
+        }
     }
     get offsetRadius() {
         return this.audio.offsetRadius;

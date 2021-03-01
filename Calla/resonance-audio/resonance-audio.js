@@ -38,6 +38,7 @@ export class ResonanceAudio {
      * Options for constructing a new ResonanceAudio scene.
      */
     constructor(context, options) {
+        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -82,9 +83,12 @@ export class ResonanceAudio {
         this.listener.setRenderingMode(mode);
     }
     dispose() {
-        disconnect(this.room.output, this.listener.input);
-        disconnect(this.listener.output, this.output);
-        disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+        if (!this.disposed) {
+            disconnect(this.room.output, this.listener.input);
+            disconnect(this.listener.output, this.output);
+            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            this.disposed = true;
+        }
     }
     /**
      * Create a new source for the scene.

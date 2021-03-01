@@ -50,6 +50,7 @@ export declare class FOARenderer implements IDisposable {
      * Builds the internal audio graph.
      */
     private buildAudioGraph;
+    private disposed;
     dispose(): void;
     /**
      * Initializes and loads the resource for the renderer.

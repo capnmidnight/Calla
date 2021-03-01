@@ -168,10 +168,14 @@ export class ResonanceAudio implements IDisposable {
         this.listener.setRenderingMode(mode);
     }
 
+    private disposed = false;
     dispose(): void {
-        disconnect(this.room.output, this.listener.input);
-        disconnect(this.listener.output, this.output);
-        disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+        if (!this.disposed) {
+            disconnect(this.room.output, this.listener.input);
+            disconnect(this.listener.output, this.output);
+            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            this.disposed = true;
+        }
     }
 
 

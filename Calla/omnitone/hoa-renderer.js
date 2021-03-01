@@ -31,6 +31,7 @@ export class HOARenderer {
      * Omnitone HOA renderer class. Uses the optimized convolution technique.
      */
     constructor(context, options) {
+        this.disposed = false;
         this.context = context;
         this.config = Object.assign({
             ambisonicOrder: 3,
@@ -71,15 +72,18 @@ export class HOARenderer {
         this.input.channelInterpretation = 'discrete';
     }
     dispose() {
-        if (this.getRenderingMode() === RenderingMode.Bypass) {
-            disconnect(this.bypass, this.output);
+        if (!this.disposed) {
+            if (this.getRenderingMode() === RenderingMode.Bypass) {
+                disconnect(this.bypass, this.output);
+            }
+            disconnect(this.input, this.rotator.input);
+            disconnect(this.input, this.bypass);
+            disconnect(this.rotator.output, this.convolver.input);
+            disconnect(this.convolver.output, this.output);
+            this.rotator.dispose();
+            this.convolver.dispose();
+            this.disposed = true;
         }
-        disconnect(this.input, this.rotator.input);
-        disconnect(this.input, this.bypass);
-        disconnect(this.rotator.output, this.convolver.input);
-        disconnect(this.convolver.output, this.output);
-        this.rotator.dispose();
-        this.convolver.dispose();
     }
     /**
      * Initializes and loads the resource for the renderer.

@@ -50,6 +50,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     getAudioOutputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
     getAudioInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
     getVideoInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
+    private disposed;
     dispose(): void;
     get offsetRadius(): number;
     set offsetRadius(v: number);

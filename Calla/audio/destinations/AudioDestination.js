@@ -4,15 +4,19 @@ import { NoSpatializationListener } from "./spatializers/NoSpatializationListene
 export class AudioDestination extends BaseAudioElement {
     constructor(audioContext, destination) {
         super(audioContext);
+        this.disposed2 = false;
         this._spatializedInput = audioContext.createGain();
         this._nonSpatializedInput = audioContext.createGain();
         connect(this._nonSpatializedInput, this.volumeControl);
         this.setDestination(destination);
     }
     dispose() {
-        this.setDestination(null);
-        disconnect(this._nonSpatializedInput, this.volumeControl);
-        super.dispose();
+        if (!this.disposed2) {
+            this.setDestination(null);
+            disconnect(this._nonSpatializedInput, this.volumeControl);
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
     get spatialized() {
         return !(this.spatializer instanceof NoSpatializationListener);

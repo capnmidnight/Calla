@@ -7,10 +7,8 @@ export class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext, input, output) {
+    constructor(audioContext) {
         super(audioContext);
-        this.input = input;
-        this.output = output;
     }
     /**
      * Creates a spatialzer for an audio source.

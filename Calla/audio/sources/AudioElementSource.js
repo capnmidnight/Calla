@@ -4,6 +4,7 @@ export class AudioElementSource extends BaseAudioSource {
     constructor(id, audioContext, source, spatializer) {
         super(id, audioContext);
         this.isPlaying = false;
+        this.disposed3 = false;
         this.source = source;
         this.spatializer = spatializer;
     }
@@ -21,10 +22,13 @@ export class AudioElementSource extends BaseAudioSource {
         this.isPlaying = false;
     }
     dispose() {
-        if (this.source.mediaElement.parentElement) {
-            this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+        if (!this.disposed3) {
+            if (this.source.mediaElement.parentElement) {
+                this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+            }
+            super.dispose();
+            this.disposed3 = false;
         }
-        super.dispose();
     }
 }
 //# sourceMappingURL=AudioElementSource.js.map

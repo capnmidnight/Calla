@@ -4,7 +4,8 @@ export class NoSpatializationNode extends BaseEmitter {
      * Creates a new "spatializer" that performs no panning. An anti-spatializer.
      */
     constructor(audioContext, destination) {
-        super(audioContext, destination, destination, destination);
+        super(audioContext, destination);
+        this.input = this.output = destination;
         Object.seal(this);
     }
     createNew() {

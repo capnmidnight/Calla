@@ -104,19 +104,24 @@ export class FOARenderer implements IDisposable {
         this.input.channelInterpretation = 'discrete';
     }
 
-    dispose(): void {
-        if (this.getRenderingMode() === RenderingMode.Bypass) {
-            disconnect(this.bypass, this.output);
-        }
 
-        disconnect(this.input, this.router.input);
-        disconnect(this.input, this.bypass);
-        disconnect(this.router.output, this.rotator.input);
-        disconnect(this.rotator.output, this.convolver.input);
-        disconnect(this.convolver.output, this.output);
-        this.convolver.dispose();
-        this.rotator.dispose();
-        this.router.dispose();
+    private disposed = false;
+    dispose(): void {
+        if (!this.disposed) {
+            if (this.getRenderingMode() === RenderingMode.Bypass) {
+                disconnect(this.bypass, this.output);
+            }
+
+            disconnect(this.input, this.router.input);
+            disconnect(this.input, this.bypass);
+            disconnect(this.router.output, this.rotator.input);
+            disconnect(this.rotator.output, this.convolver.input);
+            disconnect(this.convolver.output, this.output);
+            this.convolver.dispose();
+            this.rotator.dispose();
+            this.router.dispose();
+            this.disposed = true;
+        }
     }
 
     /**

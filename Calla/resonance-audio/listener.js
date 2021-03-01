@@ -30,6 +30,7 @@ export class Listener {
      * Listener model to spatialize sources in an environment.
      */
     constructor(context, options) {
+        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -75,13 +76,16 @@ export class Listener {
         this.setOrientation(options.forward, options.up);
     }
     dispose() {
-        // Connect pre-rotated soundfield to renderer.
-        disconnect(this.input, this.renderer.input);
-        // Connect rotated soundfield to ambisonic output.
-        disconnect(this.renderer.rotator.output, this.ambisonicOutput);
-        // Connect binaurally-rendered soundfield to binaural output.
-        disconnect(this.renderer.output, this.output);
-        this.renderer.dispose();
+        if (!this.disposed) {
+            // Connect pre-rotated soundfield to renderer.
+            disconnect(this.input, this.renderer.input);
+            // Connect rotated soundfield to ambisonic output.
+            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+            // Connect binaurally-rendered soundfield to binaural output.
+            disconnect(this.renderer.output, this.output);
+            this.renderer.dispose();
+            this.disposed = true;
+        }
     }
     getRenderingMode() {
         return this.renderer.getRenderingMode();

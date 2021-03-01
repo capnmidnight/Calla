@@ -62,8 +62,12 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         arrayClear(this.playingSources);
     }
 
-    dispose() {
-        this.stop();
-        super.dispose();
+    private disposed3 = false;
+    dispose(): void {
+        if (!this.disposed3) {
+            this.stop();
+            super.dispose();
+            this.disposed3 = true;
+        }
     }
 }

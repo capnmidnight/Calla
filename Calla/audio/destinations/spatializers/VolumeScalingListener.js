@@ -9,8 +9,9 @@ export class VolumeScalingListener extends BaseListener {
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */
     constructor(audioContext) {
+        super(audioContext);
         const gain = audioContext.createGain();
-        super(audioContext, gain, gain);
+        this.input = this.output = gain;
         this.pose = new Pose();
     }
     /**

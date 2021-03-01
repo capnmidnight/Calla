@@ -20,8 +20,12 @@ export abstract class BaseAudioElement<T extends BaseSpatializer>
         this.volumeControl = audioContext.createGain();
     }
 
+    private disposed = false;
     dispose(): void {
-        this.spatializer = null;
+        if (!this.disposed) {
+            this.spatializer = null;
+            this.disposed = true;
+        }
     }
 
     abstract get spatialized(): boolean;

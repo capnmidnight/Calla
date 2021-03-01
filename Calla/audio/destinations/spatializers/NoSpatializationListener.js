@@ -2,9 +2,10 @@ import { NoSpatializationNode } from "../../sources/spatializers/NoSpatializatio
 import { BaseListener } from "./BaseListener";
 export class NoSpatializationListener extends BaseListener {
     constructor(audioContext) {
+        super(audioContext);
         const gain = audioContext.createGain();
         gain.gain.value = 0.1;
-        super(audioContext, gain, gain);
+        this.input = this.output = gain;
     }
     /**
      * Do nothing

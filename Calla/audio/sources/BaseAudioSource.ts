@@ -11,9 +11,13 @@ export abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElem
         super(audioContext);
     }
 
-    dispose() {
-        this.source = null;
-        super.dispose();
+    private disposed2 = false;
+    dispose(): void {
+        if (!this.disposed2) {
+            this.source = null;
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
 
     get spatialized() {

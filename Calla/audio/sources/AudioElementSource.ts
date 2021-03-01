@@ -33,11 +33,15 @@ export class AudioElementSource
         this.isPlaying = false;
     }
 
-    dispose() {
-        if (this.source.mediaElement.parentElement) {
-            this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
-        }
+    private disposed3 = false;
+    dispose(): void {
+        if (!this.disposed3) {
+            if (this.source.mediaElement.parentElement) {
+                this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+            }
 
-        super.dispose();
+            super.dispose();
+            this.disposed3 = false;
+        }
     }
 }

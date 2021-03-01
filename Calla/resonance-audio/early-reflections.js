@@ -41,6 +41,7 @@ export class EarlyReflections {
             height: 0.5 * DEFAULT_ROOM_DIMENSIONS.height,
             depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
         };
+        this.disposed = false;
         if (options) {
             if (isGoodNumber(options.speedOfSound)) {
                 this.speedOfSound = options.speedOfSound;
@@ -126,32 +127,35 @@ export class EarlyReflections {
         this.setRoomProperties(options && options.dimensions, options && options.coefficients);
     }
     dispose() {
-        // Connect nodes.
-        disconnect(this.input, this.lowpass);
-        for (const property of Object.values(Direction)) {
-            const delay = this.delays[property];
-            const gain = this.gains[property];
-            disconnect(this.lowpass, delay);
-            disconnect(delay, gain);
-            disconnect(gain, this.merger, 0, 0);
+        if (!this.disposed) {
+            // Connect nodes.
+            disconnect(this.input, this.lowpass);
+            for (const property of Object.values(Direction)) {
+                const delay = this.delays[property];
+                const gain = this.gains[property];
+                disconnect(this.lowpass, delay);
+                disconnect(delay, gain);
+                disconnect(gain, this.merger, 0, 0);
+            }
+            // Connect gains to ambisonic channel output.
+            // Left: [1 1 0 0]
+            // Right: [1 -1 0 0]
+            // Up: [1 0 1 0]
+            // Down: [1 0 -1 0]
+            // Front: [1 0 0 1]
+            // Back: [1 0 0 -1]
+            disconnect(this.gains.left, this.merger, 0, 1);
+            disconnect(this.gains.right, this.inverters.right);
+            disconnect(this.inverters.right, this.merger, 0, 1);
+            disconnect(this.gains.up, this.merger, 0, 2);
+            disconnect(this.gains.down, this.inverters.down);
+            disconnect(this.inverters.down, this.merger, 0, 2);
+            disconnect(this.gains.front, this.merger, 0, 3);
+            disconnect(this.gains.back, this.inverters.back);
+            disconnect(this.inverters.back, this.merger, 0, 3);
+            disconnect(this.merger, this.output);
+            this.disposed = true;
         }
-        // Connect gains to ambisonic channel output.
-        // Left: [1 1 0 0]
-        // Right: [1 -1 0 0]
-        // Up: [1 0 1 0]
-        // Down: [1 0 -1 0]
-        // Front: [1 0 0 1]
-        // Back: [1 0 0 -1]
-        disconnect(this.gains.left, this.merger, 0, 1);
-        disconnect(this.gains.right, this.inverters.right);
-        disconnect(this.inverters.right, this.merger, 0, 1);
-        disconnect(this.gains.up, this.merger, 0, 2);
-        disconnect(this.gains.down, this.inverters.down);
-        disconnect(this.inverters.down, this.merger, 0, 2);
-        disconnect(this.gains.front, this.merger, 0, 3);
-        disconnect(this.gains.back, this.inverters.back);
-        disconnect(this.inverters.back, this.merger, 0, 3);
-        disconnect(this.merger, this.output);
     }
     /**
      * Set the room's properties which determines the characteristics of

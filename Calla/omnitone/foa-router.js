@@ -46,6 +46,7 @@ export class FOARouter {
      * @param channelMap - Routing destination array.
      */
     constructor(context, channelMap) {
+        this.disposed = false;
         this._context = context;
         this._splitter = this._context.createChannelSplitter(4);
         this._merger = this._context.createChannelMerger(4);
@@ -71,10 +72,13 @@ export class FOARouter {
         connect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
     dispose() {
-        disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
-        disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
-        disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
-        disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+        if (!this.disposed) {
+            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+            this.disposed = true;
+        }
     }
 }
 //# sourceMappingURL=foa-router.js.map

@@ -136,17 +136,21 @@ export class Listener implements IDisposable {
         this.setOrientation(options.forward, options.up);
     }
 
+    private disposed = false;
     dispose(): void {
-        // Connect pre-rotated soundfield to renderer.
-        disconnect(this.input, this.renderer.input);
+        if (!this.disposed) {
+            // Connect pre-rotated soundfield to renderer.
+            disconnect(this.input, this.renderer.input);
 
-        // Connect rotated soundfield to ambisonic output.
-        disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+            // Connect rotated soundfield to ambisonic output.
+            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
 
-        // Connect binaurally-rendered soundfield to binaural output.
-        disconnect(this.renderer.output, this.output);
+            // Connect binaurally-rendered soundfield to binaural output.
+            disconnect(this.renderer.output, this.output);
 
-        this.renderer.dispose();
+            this.renderer.dispose();
+            this.disposed = true;
+        }
     }
 
     getRenderingMode(): string {

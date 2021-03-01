@@ -146,15 +146,19 @@ export class Encoder implements IDisposable {
         connect(this.merger, this.output);
     }
 
+    private disposed = false;
     dispose(): void {
-        for (let i = 0; i < this.channelGain.length; i++) {
-            disconnect(this.input, this.channelGain[i]);
-            if (this.merger) {
-                disconnect(this.channelGain[i], this.merger, 0, i);
+        if (!this.disposed) {
+            for (let i = 0; i < this.channelGain.length; i++) {
+                disconnect(this.input, this.channelGain[i]);
+                if (this.merger) {
+                    disconnect(this.channelGain[i], this.merger, 0, i);
+                }
             }
-        }
-        if (this.merger) {
-            disconnect(this.merger, this.output);
+            if (this.merger) {
+                disconnect(this.merger, this.output);
+            }
+            this.disposed = true;
         }
     }
 

@@ -5,10 +5,14 @@ export class BaseAudioSource extends BaseAudioElement {
     constructor(id, audioContext) {
         super(audioContext);
         this.id = id;
+        this.disposed2 = false;
     }
     dispose() {
-        this.source = null;
-        super.dispose();
+        if (!this.disposed2) {
+            this.source = null;
+            super.dispose();
+            this.disposed2 = true;
+        }
     }
     get spatialized() {
         return !(this.spatializer instanceof NoSpatializationNode);
