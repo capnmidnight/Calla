@@ -1,36 +1,32 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 
 class GamepadButtonEvent<T extends string> extends TypedEvent<T> {
-    button: number;
-    constructor(type: T, button: number) {
+    constructor(type: T, public button: number) {
         super(type);
-        this.button = button;
     }
 }
 
-export class GamepadButtonUpEvent extends GamepadButtonEvent<"gamepadButtonUp"> {
+export class GamepadButtonUpEvent extends GamepadButtonEvent<"gamepadbuttonup"> {
     constructor(button: number) {
-        super("gamepadButtonUp", button);
+        super("gamepadbuttonup", button);
     }
 }
 
-export class GamepadButtonDownEvent extends GamepadButtonEvent<"gamepadButtonDown"> {
+export class GamepadButtonDownEvent extends GamepadButtonEvent<"gamepadbuttondown"> {
     constructor(button: number) {
-        super("gamepadButtonDown", button);
+        super("gamepadbuttondown", button);
     }
 }
 
 class GamepadAxisEvent<T extends string> extends TypedEvent<T> {
-    axis: number;
-    constructor(type: T, axis: number) {
+    constructor(type: T, public axis: number, public value: number) {
         super(type);
-        this.axis = axis;
     }
 }
 
-export class GamepadAxisMaxedEvent extends GamepadAxisEvent<"gamepadAxisMaxed"> {
-    constructor(axis: number) {
-        super("gamepadAxisMaxed", axis);
+export class GamepadAxisMaxedEvent extends GamepadAxisEvent<"gamepadaxismaxed"> {
+    constructor(axis: number, value: number) {
+        super("gamepadaxismaxed", axis, value);
     }
 }
 
@@ -82,7 +78,7 @@ export class EventedGamepad extends TypedEventBase<EventedGamepadEvents> {
         }
 
         for (let a = 0; a < pad.axes.length; ++a) {
-            this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a);
+            this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a, 0);
             this.axisMaxed[a] = false;
             if (this._isStick(a)) {
                 this.sticks[a / 2] = { x: 0, y: 0 };
@@ -125,12 +121,15 @@ export class EventedGamepad extends TypedEventBase<EventedGamepadEvents> {
                 dir = Math.sign(val),
                 mag = Math.abs(val),
                 maxed = mag >= this.axisThresholdMax,
-                mined = mag <= this.axisThresholdMin;
+                mined = mag <= this.axisThresholdMin,
+                correctedVal = dir * (maxed ? 1 : (mined ? 0 : mag));
             if (maxed && !wasMaxed) {
+                this.axisMaxEvts[a].value = correctedVal;
                 this.dispatchEvent(this.axisMaxEvts[a]);
             }
 
-            this.axes[a] = dir * (maxed ? 1 : (mined ? 0 : mag));
+            this.axisMaxed[a] = maxed;
+            this.axes[a] = correctedVal;
         }
 
         for (let a = 0; a < this.axes.length - 1; a += 2) {

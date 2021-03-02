@@ -3,18 +3,19 @@ declare class GamepadButtonEvent<T extends string> extends TypedEvent<T> {
     button: number;
     constructor(type: T, button: number);
 }
-export declare class GamepadButtonUpEvent extends GamepadButtonEvent<"gamepadButtonUp"> {
+export declare class GamepadButtonUpEvent extends GamepadButtonEvent<"gamepadbuttonup"> {
     constructor(button: number);
 }
-export declare class GamepadButtonDownEvent extends GamepadButtonEvent<"gamepadButtonDown"> {
+export declare class GamepadButtonDownEvent extends GamepadButtonEvent<"gamepadbuttondown"> {
     constructor(button: number);
 }
 declare class GamepadAxisEvent<T extends string> extends TypedEvent<T> {
     axis: number;
-    constructor(type: T, axis: number);
+    value: number;
+    constructor(type: T, axis: number, value: number);
 }
-export declare class GamepadAxisMaxedEvent extends GamepadAxisEvent<"gamepadAxisMaxed"> {
-    constructor(axis: number);
+export declare class GamepadAxisMaxedEvent extends GamepadAxisEvent<"gamepadaxismaxed"> {
+    constructor(axis: number, value: number);
 }
 interface EventedGamepadEvents {
     gamepadbuttonup: GamepadButtonUpEvent;

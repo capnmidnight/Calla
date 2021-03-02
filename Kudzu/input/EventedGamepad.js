@@ -7,23 +7,24 @@ class GamepadButtonEvent extends TypedEvent {
 }
 export class GamepadButtonUpEvent extends GamepadButtonEvent {
     constructor(button) {
-        super("gamepadButtonUp", button);
+        super("gamepadbuttonup", button);
     }
 }
 export class GamepadButtonDownEvent extends GamepadButtonEvent {
     constructor(button) {
-        super("gamepadButtonDown", button);
+        super("gamepadbuttondown", button);
     }
 }
 class GamepadAxisEvent extends TypedEvent {
-    constructor(type, axis) {
+    constructor(type, axis, value) {
         super(type);
         this.axis = axis;
+        this.value = value;
     }
 }
 export class GamepadAxisMaxedEvent extends GamepadAxisEvent {
-    constructor(axis) {
-        super("gamepadAxisMaxed", axis);
+    constructor(axis, value) {
+        super("gamepadaxismaxed", axis, value);
     }
 }
 export class EventedGamepad extends TypedEventBase {
@@ -54,7 +55,7 @@ export class EventedGamepad extends TypedEventBase {
             this.buttons[b] = pad.buttons[b];
         }
         for (let a = 0; a < pad.axes.length; ++a) {
-            this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a);
+            this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a, 0);
             this.axisMaxed[a] = false;
             if (this._isStick(a)) {
                 this.sticks[a / 2] = { x: 0, y: 0 };
@@ -84,11 +85,13 @@ export class EventedGamepad extends TypedEventBase {
             this.buttons[b] = pad.buttons[b];
         }
         for (let a = 0; a < pad.axes.length; ++a) {
-            const wasMaxed = this.axisMaxed[a], val = pad.axes[a], dir = Math.sign(val), mag = Math.abs(val), maxed = mag >= this.axisThresholdMax, mined = mag <= this.axisThresholdMin;
+            const wasMaxed = this.axisMaxed[a], val = pad.axes[a], dir = Math.sign(val), mag = Math.abs(val), maxed = mag >= this.axisThresholdMax, mined = mag <= this.axisThresholdMin, correctedVal = dir * (maxed ? 1 : (mined ? 0 : mag));
             if (maxed && !wasMaxed) {
+                this.axisMaxEvts[a].value = correctedVal;
                 this.dispatchEvent(this.axisMaxEvts[a]);
             }
-            this.axes[a] = dir * (maxed ? 1 : (mined ? 0 : mag));
+            this.axisMaxed[a] = maxed;
+            this.axes[a] = correctedVal;
         }
         for (let a = 0; a < this.axes.length - 1; a += 2) {
             const stick = this.sticks[a / 2];
