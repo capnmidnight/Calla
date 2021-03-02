@@ -23,6 +23,8 @@ export abstract class BaseWebAudioPanner extends BaseEmitter {
         this.panner.coneOuterAngle = 0;
         this.panner.coneOuterGain = 0;
 
+        this.input = this.output = this.panner;
+
         connect(this.output, this.destination);
     }
 

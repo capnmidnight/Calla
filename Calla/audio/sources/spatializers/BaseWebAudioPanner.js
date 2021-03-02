@@ -16,6 +16,7 @@ export class BaseWebAudioPanner extends BaseEmitter {
         this.panner.coneInnerAngle = 360;
         this.panner.coneOuterAngle = 0;
         this.panner.coneOuterGain = 0;
+        this.input = this.output = this.panner;
         connect(this.output, this.destination);
     }
     copyAudioProperties(from) {
