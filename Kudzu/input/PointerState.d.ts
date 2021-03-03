@@ -6,6 +6,7 @@ export declare class PointerState {
     y: number;
     dx: number;
     dy: number;
+    dz: number;
     u: number;
     v: number;
     du: number;

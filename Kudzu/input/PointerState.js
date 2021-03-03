@@ -7,6 +7,7 @@ export class PointerState {
         this.y = 0;
         this.dx = 0;
         this.dy = 0;
+        this.dz = 0;
         this.u = 0;
         this.v = 0;
         this.du = 0;
@@ -27,6 +28,7 @@ export class PointerState {
         this.y = ptr.y;
         this.dx = ptr.dx;
         this.dy = ptr.dy;
+        this.dz = ptr.dz;
         this.u = ptr.u;
         this.v = ptr.v;
         this.du = ptr.du;
@@ -44,6 +46,7 @@ export class PointerState {
         this.y = evt.offsetY;
         this.dx = evt.movementX;
         this.dy = evt.movementY;
+        this.dz = 0;
         this.ctrl = evt.ctrlKey;
         this.alt = evt.altKey;
         this.shift = evt.shiftKey;
