@@ -316,7 +316,7 @@ export class AudioManager extends TypedEventBase {
     /**
      * Creates a new sound effect from a series of fallback paths
      * for media files.
-     * @param name - the name of the sound effect, to reference when executing playback.
+     * @param id - the name of the sound effect, to reference when executing playback.
      * @param looping - whether or not the sound effect should be played on loop.
      * @param autoPlaying - whether or not the sound effect should be played immediately.
      * @param spatialize - whether or not the sound effect should be spatialized.
@@ -324,18 +324,18 @@ export class AudioManager extends TypedEventBase {
      * @param path - a path for loading the media of the sound effect.
      * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
      */
-    async createClip(name, looping, autoPlaying, spatialize, vol, path, onProgress) {
+    async createClip(id, looping, autoPlaying, spatialize, vol, path, onProgress) {
         if (path == null || path.length === 0) {
             throw new Error("No clip source path provided");
         }
         const clip = useElementSourceForClips
-            ? await this.createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress)
-            : await this.createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress);
+            ? await this.createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress)
+            : await this.createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress);
         clip.volume = vol;
-        this.clips.set(name, clip);
+        this.clips.set(id, clip);
         return clip;
     }
-    async createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+    async createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress) {
         if (onProgress) {
             onProgress(0, 1);
         }
@@ -348,9 +348,9 @@ export class AudioManager extends TypedEventBase {
         if (onProgress) {
             onProgress(1, 1);
         }
-        return new AudioElementSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
     }
-    async createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+    async createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress) {
         let goodBlob = null;
         if (!shouldTry(path)) {
             if (onProgress) {
@@ -371,7 +371,7 @@ export class AudioManager extends TypedEventBase {
         const source = this.audioContext.createBufferSource();
         source.buffer = data;
         source.loop = looping;
-        const clip = new AudioBufferSpawningSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+        const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
         if (autoPlaying) {
             clip.play();
         }
@@ -407,6 +407,14 @@ export class AudioManager extends TypedEventBase {
      */
     getClip(id) {
         return this.clips.get(id);
+    }
+    renameClip(id, newID) {
+        const clip = this.clips.get(id);
+        if (clip) {
+            clip.id = "audio-clip-" + id;
+            this.clips.delete(id);
+            this.clips.set(newID, clip);
+        }
     }
     /**
      * Remove an audio source from audio processing.

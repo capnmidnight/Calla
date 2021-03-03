@@ -81,7 +81,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     /**
      * Creates a new sound effect from a series of fallback paths
      * for media files.
-     * @param name - the name of the sound effect, to reference when executing playback.
+     * @param id - the name of the sound effect, to reference when executing playback.
      * @param looping - whether or not the sound effect should be played on loop.
      * @param autoPlaying - whether or not the sound effect should be played immediately.
      * @param spatialize - whether or not the sound effect should be spatialized.
@@ -89,7 +89,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param path - a path for loading the media of the sound effect.
      * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
      */
-    createClip(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource>;
+    createClip(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource>;
     private createAudioElementSource;
     private createAudioBufferSource;
     hasClip(name: string): boolean;
@@ -107,6 +107,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Get an existing audio clip.
      */
     getClip(id: string): IPlayableSource;
+    renameClip(id: string, newID: string): void;
     /**
      * Remove an audio source from audio processing.
      * @param sources - the collection of audio sources from which to remove.

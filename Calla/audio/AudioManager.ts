@@ -406,7 +406,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     /**
      * Creates a new sound effect from a series of fallback paths
      * for media files.
-     * @param name - the name of the sound effect, to reference when executing playback.
+     * @param id - the name of the sound effect, to reference when executing playback.
      * @param looping - whether or not the sound effect should be played on loop.
      * @param autoPlaying - whether or not the sound effect should be played immediately.
      * @param spatialize - whether or not the sound effect should be spatialized.
@@ -414,23 +414,23 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param path - a path for loading the media of the sound effect.
      * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
      */
-    async createClip(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+    async createClip(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
         if (path == null || path.length === 0) {
             throw new Error("No clip source path provided");
         }
 
         const clip = useElementSourceForClips
-            ? await this.createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress)
-            : await this.createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress);
+            ? await this.createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress)
+            : await this.createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress);
 
         clip.volume = vol;
 
-        this.clips.set(name, clip);
+        this.clips.set(id, clip);
 
         return clip;
     }
 
-    private async createAudioElementSource(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+    private async createAudioElementSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
         if (onProgress) {
             onProgress(0, 1);
         }
@@ -444,10 +444,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             onProgress(1, 1);
         }
 
-        return new AudioElementSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
     }
 
-    private async createAudioBufferSource(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+    private async createAudioBufferSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
         let goodBlob: Blob = null;
         if (!shouldTry(path)) {
             if (onProgress) {
@@ -471,7 +471,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         source.buffer = data;
         source.loop = looping;
 
-        const clip = new AudioBufferSpawningSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+        const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
 
         if (autoPlaying) {
             clip.play();
@@ -514,6 +514,15 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      */
     getClip(id: string): IPlayableSource {
         return this.clips.get(id);
+    }
+
+    renameClip(id: string, newID: string): void {
+        const clip = this.clips.get(id);
+        if (clip) {
+            clip.id = "audio-clip-" + id;
+            this.clips.delete(id);
+            this.clips.set(newID, clip);
+        }
     }
 
     /**
