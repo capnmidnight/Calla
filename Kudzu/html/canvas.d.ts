@@ -39,8 +39,6 @@ export declare function isCanvas(obj: any): obj is CanvasTypes;
  * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export declare function setCanvasSize(canv: CanvasTypes, w: number, h: number, superscale?: number): boolean;
-export declare function isCanvasRenderingContext2D(ctx: GraphicsContext): ctx is CanvasRenderingContext2D;
-export declare function isOffscreenCanvasRenderingContext2D(ctx: GraphicsContext): ctx is OffscreenCanvasRenderingContext2D;
 export declare function is2DRenderingContext(ctx: GraphicsContext): ctx is Context2D;
 export declare function setCanvas2DContextSize(ctx: Context2D, w: number, h: number, superscale?: number): boolean;
 /**

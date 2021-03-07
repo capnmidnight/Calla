@@ -1,5 +1,5 @@
 import { openWindow } from "../testing/windowing";
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined, isNullOrUndefined } from "../typeChecks";
 import { height, width } from "./attrs";
 import { Canvas } from "./tags";
 export const hasHTMLCanvas = "HTMLCanvasElement" in globalThis;
@@ -122,15 +122,8 @@ export function setCanvasSize(canv, w, h, superscale = 1) {
     }
     return false;
 }
-export function isCanvasRenderingContext2D(ctx) {
-    return ctx.textBaseline != null;
-}
-export function isOffscreenCanvasRenderingContext2D(ctx) {
-    return ctx.textBaseline != null;
-}
 export function is2DRenderingContext(ctx) {
-    return isCanvasRenderingContext2D(ctx)
-        || isOffscreenCanvasRenderingContext2D(ctx);
+    return isDefined(ctx.textBaseline);
 }
 export function setCanvas2DContextSize(ctx, w, h, superscale = 1) {
     const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled, oldTextBaseline = ctx.textBaseline, oldTextAlign = ctx.textAlign, oldFont = ctx.font, resized = setCanvasSize(ctx.canvas, w, h, superscale);

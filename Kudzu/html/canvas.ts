@@ -1,5 +1,5 @@
 import { openWindow } from "../testing/windowing";
-import { isNullOrUndefined } from "../typeChecks";
+import { isDefined, isNullOrUndefined } from "../typeChecks";
 import { height, width } from "./attrs";
 import { Canvas } from "./tags";
 
@@ -153,17 +153,8 @@ export function setCanvasSize(canv: CanvasTypes, w: number, h: number, superscal
     return false;
 }
 
-export function isCanvasRenderingContext2D(ctx: GraphicsContext): ctx is CanvasRenderingContext2D {
-    return (ctx as CanvasRenderingContext2D).textBaseline != null;
-}
-
-export function isOffscreenCanvasRenderingContext2D(ctx: GraphicsContext): ctx is OffscreenCanvasRenderingContext2D {
-    return (ctx as OffscreenCanvasRenderingContext2D).textBaseline != null;
-}
-
 export function is2DRenderingContext(ctx: GraphicsContext): ctx is Context2D {
-    return isCanvasRenderingContext2D(ctx)
-        || isOffscreenCanvasRenderingContext2D(ctx);
+    return isDefined((ctx as Context2D).textBaseline);
 }
 
 export function setCanvas2DContextSize(ctx: Context2D, w: number, h: number, superscale = 1) {
