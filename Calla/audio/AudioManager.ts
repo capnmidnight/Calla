@@ -209,14 +209,12 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         return this._algorithm;
     }
 
-    addEventListener<K extends string & keyof AudioManagerEvents>(type: K, callback: (evt: Event & AudioManagerEvents[K]) => any, options: AddEventListenerOptions = null): void {
-        if (type === audioReadyEvt.type
-            && this.ready) {
-            callback(audioReadyEvt as AudioManagerEvents[K]);
+    protected checkAddEventListener<T extends Event>(type: string, callback: (evt: T) => any) {
+        if (type === audioReadyEvt.type && this.ready) {
+            callback(audioReadyEvt as any as T);
+            return false;
         }
-        else {
-            super.addEventListener(type, callback, options);
-        }
+        return true;
     }
 
     get ready(): boolean {

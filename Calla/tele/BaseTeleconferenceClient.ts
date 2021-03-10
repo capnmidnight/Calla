@@ -102,7 +102,7 @@ export abstract class BaseTeleconferenceClient
         this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
 
-    dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean {
+    protected onDispatching<T extends Event>(evt: T) {
         if (evt instanceof CallaUserEvent
             && (evt.id == null
                 || evt.id === "local")) {
@@ -113,8 +113,6 @@ export abstract class BaseTeleconferenceClient
                 evt.id = this.localUserID;
             }
         }
-
-        return super.dispatchEvent(evt);
     }
 
     async getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]> {

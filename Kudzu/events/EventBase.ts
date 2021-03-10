@@ -1,11 +1,11 @@
 import { arrayRemoveAt } from "../arrays/arrayRemoveAt";
-import { isFunction } from "../typeChecks";
+import { isBoolean, isDefined, isFunction } from "../typeChecks";
 
 export class EventBase implements EventTarget {
     private listeners = new Map<string, Function[]>();
-    private listenerOptions = new Map<Function, AddEventListenerOptions>();
+    private listenerOptions = new Map<Function, boolean | AddEventListenerOptions>();
 
-    addEventListener(type: string, callback: (evt: Event) => any, options?: AddEventListenerOptions): void {
+    addEventListener(type: string, callback: (evt: Event) => any, options?: boolean | AddEventListenerOptions): void {
         if (isFunction(callback)) {
             let listeners = this.listeners.get(type);
             if (!listeners) {
@@ -47,7 +47,9 @@ export class EventBase implements EventTarget {
         if (listeners) {
             for (const callback of listeners) {
                 const options = this.listenerOptions.get(callback);
-                if (options && options.once) {
+                if (isDefined(options)
+                    && !isBoolean(options)
+                    && options.once) {
                     this.removeListener(listeners, callback);
                 }
 
@@ -58,8 +60,8 @@ export class EventBase implements EventTarget {
     }
 }
 
-export class TypedEvent<T extends string> extends Event {
-    constructor(type: T) {
+export class TypedEvent<T> extends Event {
+    constructor(type: T & string) {
         super(type);
     }
 }
@@ -67,20 +69,33 @@ export class TypedEvent<T extends string> extends Event {
 export class TypedEventBase<EventsT> extends EventBase {
     private mappedCallbacks = new Map<Function, (evt: Event) => any>();
 
-    addEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any, options?: AddEventListenerOptions): void {
-        let mappedCallback = this.mappedCallbacks.get(callback);
-        if (mappedCallback == null) {
-            mappedCallback = (evt: Event) => callback(evt as TypedEvent<K> & EventsT[K]);
-            this.mappedCallbacks.set(callback, mappedCallback);
-        }
+    addEventListener<K extends keyof EventsT, V extends TypedEvent<K> & EventsT[K]>(type: K & string, callback: (evt: V) => any, options?: boolean | AddEventListenerOptions): void {
+        if (this.checkAddEventListener(type, callback)) {
+            let mappedCallback = this.mappedCallbacks.get(callback);
+            if (mappedCallback == null) {
+                mappedCallback = (evt: Event) => callback(evt as V);
+                this.mappedCallbacks.set(callback, mappedCallback);
+            }
 
-        super.addEventListener(type, mappedCallback, options);
+            super.addEventListener(type, mappedCallback, options);
+        }
     }
 
-    removeEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any) {
+    protected checkAddEventListener<T extends Event>(_type: string, _callback: (evt: T) => any): boolean {
+        return true;
+    }
+
+    removeEventListener<K extends keyof EventsT, V extends TypedEvent<K> & EventsT[K]>(type: K & string, callback: (evt: V) => any) {
         const mappedCallback = this.mappedCallbacks.get(callback);
         if (mappedCallback) {
             super.removeEventListener(type, mappedCallback);
         }
     }
+
+    dispatchEvent<T extends Event>(evt: T): boolean {
+        this.onDispatching(evt);
+        return super.dispatchEvent(evt);
+    }
+
+    protected onDispatching<T extends Event>(_evt: T) { }
 }

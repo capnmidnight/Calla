@@ -49,7 +49,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     get offsetRadius(): number;
     set offsetRadius(v: number);
     get algorithm(): string;
-    addEventListener<K extends string & keyof AudioManagerEvents>(type: K, callback: (evt: Event & AudioManagerEvents[K]) => any, options?: AddEventListenerOptions): void;
+    protected checkAddEventListener<T extends Event>(type: string, callback: (evt: T) => any): boolean;
     get ready(): boolean;
     /**
      * Perform the audio system initialization, after a user gesture

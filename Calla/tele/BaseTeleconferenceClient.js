@@ -68,7 +68,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     setConferenceState(state) {
         this._conferenceState = state;
     }
-    dispatchEvent(evt) {
+    onDispatching(evt) {
         if (evt instanceof CallaUserEvent
             && (evt.id == null
                 || evt.id === "local")) {
@@ -79,7 +79,6 @@ export class BaseTeleconferenceClient extends TypedEventBase {
                 evt.id = this.localUserID;
             }
         }
-        return super.dispatchEvent(evt);
     }
     async getNext(evtName, userID) {
         return new Promise((resolve) => {

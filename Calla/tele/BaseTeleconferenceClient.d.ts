@@ -27,7 +27,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     get conferenceState(): ConnectionState;
     private setConferenceState;
     constructor(fetcher: IFetcher, audio: AudioManager, needsAudioDevice?: boolean, needsVideoDevice?: boolean);
-    dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean;
+    protected onDispatching<T extends Event>(evt: T): void;
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
     get preferredAudioInputID(): string;
     set preferredAudioInputID(v: string);

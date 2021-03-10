@@ -148,14 +148,12 @@ export class AudioManager extends TypedEventBase {
     get algorithm() {
         return this._algorithm;
     }
-    addEventListener(type, callback, options = null) {
-        if (type === audioReadyEvt.type
-            && this.ready) {
+    checkAddEventListener(type, callback) {
+        if (type === audioReadyEvt.type && this.ready) {
             callback(audioReadyEvt);
+            return false;
         }
-        else {
-            super.addEventListener(type, callback, options);
-        }
+        return true;
     }
     get ready() {
         return this.audioContext && this.audioContext.state === "running";

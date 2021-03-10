@@ -1,5 +1,5 @@
 import { arrayRemoveAt } from "../arrays/arrayRemoveAt";
-import { isFunction } from "../typeChecks";
+import { isBoolean, isDefined, isFunction } from "../typeChecks";
 export class EventBase {
     constructor() {
         this.listeners = new Map();
@@ -42,7 +42,9 @@ export class EventBase {
         if (listeners) {
             for (const callback of listeners) {
                 const options = this.listenerOptions.get(callback);
-                if (options && options.once) {
+                if (isDefined(options)
+                    && !isBoolean(options)
+                    && options.once) {
                     this.removeListener(listeners, callback);
                 }
                 callback.call(this, evt);
@@ -62,12 +64,17 @@ export class TypedEventBase extends EventBase {
         this.mappedCallbacks = new Map();
     }
     addEventListener(type, callback, options) {
-        let mappedCallback = this.mappedCallbacks.get(callback);
-        if (mappedCallback == null) {
-            mappedCallback = (evt) => callback(evt);
-            this.mappedCallbacks.set(callback, mappedCallback);
+        if (this.checkAddEventListener(type, callback)) {
+            let mappedCallback = this.mappedCallbacks.get(callback);
+            if (mappedCallback == null) {
+                mappedCallback = (evt) => callback(evt);
+                this.mappedCallbacks.set(callback, mappedCallback);
+            }
+            super.addEventListener(type, mappedCallback, options);
         }
-        super.addEventListener(type, mappedCallback, options);
+    }
+    checkAddEventListener(_type, _callback) {
+        return true;
     }
     removeEventListener(type, callback) {
         const mappedCallback = this.mappedCallbacks.get(callback);
@@ -75,5 +82,10 @@ export class TypedEventBase extends EventBase {
             super.removeEventListener(type, mappedCallback);
         }
     }
+    dispatchEvent(evt) {
+        this.onDispatching(evt);
+        return super.dispatchEvent(evt);
+    }
+    onDispatching(_evt) { }
 }
 //# sourceMappingURL=EventBase.js.map
