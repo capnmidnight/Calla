@@ -50,15 +50,15 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForBuffer(path, obj, headers, onProgress);
+            return await super._postObjectForBuffer(path, obj, contentType, headers, onProgress);
         }
     }
 
@@ -74,15 +74,15 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    protected async _postObjectForObject<T, U>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
+    protected async _postObjectForObject<T, U>(path: string, obj: T, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForObject", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForObject(path, obj, headers, onProgress);
+            return await super._postObjectForObject(path, obj, contentType, headers, onProgress);
         }
     }
 
@@ -98,15 +98,15 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    protected async _postObjectForFile<T>(path: string, obj: T, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+    protected async _postObjectForFile<T>(path: string, obj: T, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForFile", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForFile(path, obj, headers, onProgress);
+            return await super._postObjectForFile(path, obj, contentType, headers, onProgress);
         }
     }
 }

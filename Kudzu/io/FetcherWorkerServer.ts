@@ -18,8 +18,8 @@ export class FetcherWorkerServer extends WorkerServer {
 
         this.add(
             "postObjectForBuffer",
-            (path: string, obj: any, headers: Map<string, string>, onProgress: progressCallback) =>
-                fetcher.postObjectForBuffer(path, obj, headers, onProgress),
+            (path: string, obj: any, contentType: string, headers: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForBuffer(path, obj, contentType, headers, onProgress),
             (parts: BufferAndContentType) => [parts.buffer]);
 
         this.add(
@@ -29,8 +29,8 @@ export class FetcherWorkerServer extends WorkerServer {
 
         this.add(
             "postObjectForObject",
-            (path: string, obj: any, headers: Map<string, string>, onProgress: progressCallback) =>
-                fetcher.postObjectForObject(path, obj, headers, onProgress));
+            (path: string, obj: any, contentType: string, headers: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForObject(path, obj, contentType, headers, onProgress));
 
         this.add(
             "getFile",
@@ -39,7 +39,7 @@ export class FetcherWorkerServer extends WorkerServer {
 
         this.add(
             "postObjectForFile",
-            (path: string, obj: any, headers: Map<string, string>, onProgress: progressCallback) =>
-                fetcher.postObjectForFile(path, obj, headers, onProgress));
+            (path: string, obj: any, contentType: string, headers: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForFile(path, obj, contentType, headers, onProgress));
     }
 }

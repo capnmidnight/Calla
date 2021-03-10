@@ -28,14 +28,14 @@ export class FetcherWorkerClient extends Fetcher {
             return await super._getBuffer(path, headers, onProgress);
         }
     }
-    async _postObjectForBuffer(path, obj, headers, onProgress) {
+    async _postObjectForBuffer(path, obj, contentType, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForBuffer(path, obj, headers, onProgress);
+            return await super._postObjectForBuffer(path, obj, contentType, headers, onProgress);
         }
     }
     async _getObject(path, headers, onProgress) {
@@ -48,14 +48,14 @@ export class FetcherWorkerClient extends Fetcher {
             return await super._getObject(path, headers, onProgress);
         }
     }
-    async _postObjectForObject(path, obj, headers, onProgress) {
+    async _postObjectForObject(path, obj, contentType, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForObject", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForObject(path, obj, headers, onProgress);
+            return await super._postObjectForObject(path, obj, contentType, headers, onProgress);
         }
     }
     async _getFile(path, headers, onProgress) {
@@ -68,14 +68,14 @@ export class FetcherWorkerClient extends Fetcher {
             return await super._getFile(path, headers, onProgress);
         }
     }
-    async _postObjectForFile(path, obj, headers, onProgress) {
+    async _postObjectForFile(path, obj, contentType, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
         if (this.worker.enabled && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForFile", [path, obj, headers], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
         }
         else {
-            return await super._postObjectForFile(path, obj, headers, onProgress);
+            return await super._postObjectForFile(path, obj, contentType, headers, onProgress);
         }
     }
 }

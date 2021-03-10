@@ -35,23 +35,23 @@ export class ImageFetcher extends Fetcher {
     async getImage(path, headers, onProgress) {
         return await this._getImage(path, headers, onProgress);
     }
-    async _postObjectForImageBitmap(path, obj, headers, onProgress) {
+    async _postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
-        const blob = await this._postObjectForBlob(path, obj, headers, onProgress);
+        const blob = await this._postObjectForBlob(path, obj, contentType, headers, onProgress);
         return await createImageBitmap(blob);
     }
-    async postObjectForImageBitmap(path, obj, headers, onProgress) {
-        return await this._postObjectForImageBitmap(path, obj, headers, onProgress);
+    async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
+        return await this._postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
     }
-    async _postObjectForImage(path, obj, headers, onProgress) {
+    async _postObjectForImage(path, obj, contentType, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
-        const file = await this._postObjectForFile(path, obj, headers, onProgress);
+        const file = await this._postObjectForFile(path, obj, contentType, headers, onProgress);
         return await this.readFileImage(file);
     }
-    async postObjectForImage(path, obj, headers, onProgress) {
-        return await this._postObjectForImage(path, obj, headers, onProgress);
+    async postObjectForImage(path, obj, contentType, headers, onProgress) {
+        return await this._postObjectForImage(path, obj, contentType, headers, onProgress);
     }
     async _getCanvasViaImageBitmap(path, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
