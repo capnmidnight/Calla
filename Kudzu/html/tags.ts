@@ -1,8 +1,6 @@
 import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
 import { Attr, IAppliable, margin, styles, type } from "./attrs";
 
-export type HTMLValuedElement = HTMLElement & { value: string; };
-
 interface HasNode {
     element: HTMLElement;
 }

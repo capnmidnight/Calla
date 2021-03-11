@@ -1,7 +1,4 @@
 import { IAppliable } from "./attrs";
-export declare type HTMLValuedElement = HTMLElement & {
-    value: string;
-};
 interface HasNode {
     element: HTMLElement;
 }
