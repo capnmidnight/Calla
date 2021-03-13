@@ -1,10 +1,9 @@
-import { IAppliable } from "./attrs";
 declare type EventListenerOpts = boolean | AddEventListenerOptions;
 export declare function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void): (ev: Event) => void;
 /**
  * A setter functor for HTML element events.
  **/
-export declare class HtmlEvt implements IAppliable {
+export declare class HtmlEvt {
     name: string;
     callback: EventListenerOrEventListenerObject;
     opts?: EventListenerOpts;

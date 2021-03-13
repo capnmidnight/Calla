@@ -1,5 +1,6 @@
 import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
-import { Attr, margin, styles, type } from "./attrs";
+import { Attr, type } from "./attrs";
+import { CssPropSet, margin, styles } from "./css";
 function hasNode(obj) {
     return isObject(obj)
         && "element" in obj
@@ -60,7 +61,10 @@ export function tag(name, ...rest) {
     }
     for (let x of rest) {
         if (x != null) {
-            if (isString(x)
+            if (x instanceof CssPropSet) {
+                x.apply(elem.style);
+            }
+            else if (isString(x)
                 || isNumber(x)
                 || isBoolean(x)
                 || x instanceof Date
@@ -198,7 +202,6 @@ export function Small(...rest) { return tag("small", ...rest); }
 export function Source(...rest) { return tag("source", ...rest); }
 export function Span(...rest) { return tag("span", ...rest); }
 export function Strong(...rest) { return tag("strong", ...rest); }
-export function Style(...rest) { return tag("style", ...rest); }
 export function Sub(...rest) { return tag("sub", ...rest); }
 export function Summary(...rest) { return tag("summary", ...rest); }
 export function Sup(...rest) { return tag("sup", ...rest); }
@@ -314,5 +317,13 @@ export function TextNode(txt) {
  */
 export function Run(...rest) {
     return Div(styles(margin("auto")), ...rest);
+}
+export function Style(...rest) {
+    let elem = document.createElement("style");
+    document.head.appendChild(elem);
+    for (let x of rest) {
+        x.apply(elem.sheet);
+    }
+    return elem;
 }
 //# sourceMappingURL=tags.js.map

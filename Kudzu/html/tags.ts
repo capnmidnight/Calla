@@ -1,8 +1,13 @@
 import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
-import { Attr, IAppliable, margin, styles, type } from "./attrs";
+import { Attr, type } from "./attrs";
+import { CSSInJSRule, CssPropSet, margin, styles } from "./css";
 
 interface HasNode {
     element: HTMLElement;
+}
+
+interface IAppliable {
+    apply(x: any): any;
 }
 
 type makesIAppliable = (v: any) => IAppliable;
@@ -15,7 +20,8 @@ export type TagChild = Node
     | string
     | number
     | boolean
-    | Date;
+    | Date
+    | CssPropSet;
 
 function hasNode(obj: any): obj is HasNode {
     return isObject(obj)
@@ -94,7 +100,10 @@ export function tag(name: string, ...rest: TagChild[]) {
 
     for (let x of rest) {
         if (x != null) {
-            if (isString(x)
+            if (x instanceof CssPropSet) {
+                x.apply(elem.style);
+            }
+            else if (isString(x)
                 || isNumber(x)
                 || isBoolean(x)
                 || x instanceof Date
@@ -250,7 +259,6 @@ export function Small(...rest: TagChild[]): HTMLElement { return tag("small", ..
 export function Source(...rest: TagChild[]): HTMLSourceElement { return tag("source", ...rest) as HTMLSourceElement; }
 export function Span(...rest: TagChild[]): HTMLSpanElement { return tag("span", ...rest) as HTMLSpanElement; }
 export function Strong(...rest: TagChild[]): HTMLElement { return tag("strong", ...rest); }
-export function Style(...rest: TagChild[]): HTMLStyleElement { return tag("style", ...rest) as HTMLStyleElement; }
 export function Sub(...rest: TagChild[]): HTMLElement { return tag("sub", ...rest); }
 export function Summary(...rest: TagChild[]): HTMLElement { return tag("summary", ...rest); }
 export function Sup(...rest: TagChild[]): HTMLElement { return tag("sup", ...rest); }
@@ -392,4 +400,15 @@ export function Run(...rest: TagChild[]): HTMLDivElement {
         styles(
             margin("auto")),
         ...rest);
+}
+
+export function Style(...rest: CSSInJSRule[]): HTMLStyleElement {
+    let elem = document.createElement("style");
+    document.head.appendChild(elem);
+
+    for (let x of rest) {
+        x.apply(elem.sheet);
+    }
+
+    return elem;
 }

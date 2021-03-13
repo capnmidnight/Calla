@@ -1,6 +1,6 @@
 import { openWindow } from "../testing/windowing";
 import { isDefined, isNullOrUndefined } from "../typeChecks";
-import { height, width } from "./attrs";
+import { htmlHeight, htmlWidth } from "./attrs";
 import { Canvas } from "./tags";
 
 export type CanvasTypes = HTMLCanvasElement | OffscreenCanvas;
@@ -70,7 +70,7 @@ export function createOffscreenCanvas(width: number, height: number): OffscreenC
 }
 
 export function createCanvas(w: number, h: number): HTMLCanvasElement {
-    return Canvas(width(w), height(h));
+    return Canvas(htmlWidth(w), htmlHeight(h));
 }
 
 export const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D

@@ -1,5 +1,4 @@
 import { isFunction, isHTMLElement } from "../typeChecks";
-import { IAppliable } from "./attrs";
 
 type EventListenerOpts = boolean | AddEventListenerOptions;
 
@@ -19,7 +18,7 @@ export function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void)
 /**
  * A setter functor for HTML element events.
  **/
-export class HtmlEvt implements IAppliable {
+export class HtmlEvt {
     opts?: EventListenerOpts;
 
     /**

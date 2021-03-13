@@ -10,8 +10,8 @@ export class BaseWebAudioListener extends BaseListener {
         super(audioContext);
         this.disposed2 = false;
         const gain = audioContext.createGain();
-        this.input = this.output = gain;
         gain.gain.value = 0.75;
+        this.input = this.output = gain;
         this.listener = audioContext.listener;
     }
     dispose() {

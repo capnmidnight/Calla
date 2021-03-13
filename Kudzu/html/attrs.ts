@@ -1,13 +1,9 @@
-import { isBoolean, isHTMLElement } from "../typeChecks";
-
-export interface IAppliable {
-    apply(elem: HTMLElement | CSSStyleDeclaration): void;
-}
+import { isBoolean } from "../typeChecks";
 
 /**
  * A setter functor for HTML attributes.
  **/
-export class Attr implements IAppliable {
+export class Attr {
     readonly tags: readonly string[];
     /**
      * Creates a new setter functor for HTML Attributes
@@ -27,32 +23,27 @@ export class Attr implements IAppliable {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement | CSSStyleDeclaration) {
-        if (isHTMLElement(elem)) {
-            const isValid = this.tags.length === 0
-                || this.tags.indexOf(elem.tagName) > -1;
+    apply(elem: HTMLElement) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
 
-            if (!isValid) {
-                console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-            }
-            else if (this.key === "style") {
-                Object.assign(elem.style, this.value);
-            }
-            else if (this.key in elem) {
-                (elem as any)[this.key] = this.value;
-            }
-            else if (this.value === false) {
-                elem.removeAttribute(this.key);
-            }
-            else if (this.value === true) {
-                elem.setAttribute(this.key, "");
-            }
-            else {
-                elem.setAttribute(this.key, this.value);
-            }
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem.style, this.value);
+        }
+        else if (this.key in elem) {
+            (elem as any)[this.key] = this.value;
+        }
+        else if (this.value === false) {
+            elem.removeAttribute(this.key);
+        }
+        else if (this.value === true) {
+            elem.setAttribute(this.key, "");
         }
         else {
-            (elem as any)[this.key] = this.value;
+            elem.setAttribute(this.key, this.value);
         }
     }
 }
@@ -537,7 +528,7 @@ export function headers(value: string) { return new Attr("headers", value, "td",
 /**
  * Specifies the height of elements listed here. For all other elements, use the CSS height property.
   **/
-export function height(value: number|string) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+export function htmlHeight(value: number | string) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
 /**
  * Prevents rendering of given element, while keeping child elements, e.g. script elements, active.
@@ -926,445 +917,9 @@ export function useMap(value: boolean) { return new Attr("usemap", value, "img",
 /**
  * For the elements listed here, this establishes the element's width.
   **/
-export function width(value: number|string) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+export function htmlWidth(value: number | string) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
 /**
  * Indicates whether the text should be wrapped.
   **/
 export function wrap(value: boolean) { return new Attr("wrap", value, "textarea"); }
-
-export class CssPropSet implements IAppliable {
-    set: Map<string, string>;
-
-    constructor(...rest: (Attr|CssPropSet)[]) {
-        this.set = new Map<string, string>();
-        const set = (key: string, value: string) => {
-            if (value || isBoolean(value)) {
-                this.set.set(key, value);
-            }
-            else if (this.set.has(key)) {
-                this.set.delete(key);
-            }
-        };
-        for (const prop of rest) {
-            if (prop instanceof Attr) {
-                const { key, value } = prop;
-                set(key, value);
-            }
-            else {
-                for (const [key, value] of prop.set.entries()) {
-                    set(key, value);
-                }
-            }
-        }
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param elem - the element on which to set the attribute.
-     */
-    apply(elem: HTMLElement | CSSStyleDeclaration) {
-        const style = isHTMLElement(elem)
-            ? elem.style
-            : elem;
-
-        for (const prop of this.set.entries()) {
-            const [key, value] = prop;
-            (style as any)[key] = value;
-        }
-    }
-}
-
-/**
- * Combine style properties.
- **/
-export function styles(...rest: (Attr|CssPropSet)[]) {
-    return new CssPropSet(...rest);
-}
-
-export function alignContent(v: string) { return new Attr("alignContent", v); }
-export function alignItems(v: string) { return new Attr("alignItems", v); }
-export function alignSelf(v: string) { return new Attr("alignSelf", v); }
-export function alignmentBaseline(v: string) { return new Attr("alignmentBaseline", v); }
-export function all(v: string) { return new Attr("all", v); }
-export function animation(v: string) { return new Attr("animation", v); }
-export function animationDelay(v: string) { return new Attr("animationDelay", v); }
-export function animationDirection(v: string) { return new Attr("animationDirection", v); }
-export function animationDuration(v: string) { return new Attr("animationDuration", v); }
-export function animationFillMode(v: string) { return new Attr("animationFillMode", v); }
-export function animationIterationCount(v: string) { return new Attr("animationIterationCount", v); }
-export function animationName(v: string) { return new Attr("animationName", v); }
-export function animationPlayState(v: string) { return new Attr("animationPlayState", v); }
-export function animationTimingFunction(v: string) { return new Attr("animationTimingFunction", v); }
-export function appearance(v: string) { return new Attr("appearance", v); }
-export function backdropFilter(v: string) { return new Attr("backdropFilter", v); }
-export function backfaceVisibility(v: string) { return new Attr("backfaceVisibility", v); }
-export function background(v: string) { return new Attr("background", v); }
-export function backgroundAttachment(v: string) { return new Attr("backgroundAttachment", v); }
-export function backgroundBlendMode(v: string) { return new Attr("backgroundBlendMode", v); }
-export function backgroundClip(v: string) { return new Attr("backgroundClip", v); }
-export function backgroundColor(v: string) { return new Attr("backgroundColor", v); }
-export function backgroundImage(v: string) { return new Attr("backgroundImage", v); }
-export function backgroundOrigin(v: string) { return new Attr("backgroundOrigin", v); }
-export function backgroundPosition(v: string) { return new Attr("backgroundPosition", v); }
-export function backgroundPositionX(v: string) { return new Attr("backgroundPositionX", v); }
-export function backgroundPositionY(v: string) { return new Attr("backgroundPositionY", v); }
-export function backgroundRepeat(v: string) { return new Attr("backgroundRepeat", v); }
-export function backgroundRepeatX(v: string) { return new Attr("backgroundRepeatX", v); }
-export function backgroundRepeatY(v: string) { return new Attr("backgroundRepeatY", v); }
-export function backgroundSize(v: string) { return new Attr("backgroundSize", v); }
-export function baselineShift(v: string) { return new Attr("baselineShift", v); }
-export function blockSize(v: string) { return new Attr("blockSize", v); }
-export function border(v: string) { return new Attr("border", v); }
-export function borderBlockEnd(v: string) { return new Attr("borderBlockEnd", v); }
-export function borderBlockEndColor(v: string) { return new Attr("borderBlockEndColor", v); }
-export function borderBlockEndStyle(v: string) { return new Attr("borderBlockEndStyle", v); }
-export function borderBlockEndWidth(v: string) { return new Attr("borderBlockEndWidth", v); }
-export function borderBlockStart(v: string) { return new Attr("borderBlockStart", v); }
-export function borderBlockStartColor(v: string) { return new Attr("borderBlockStartColor", v); }
-export function borderBlockStartStyle(v: string) { return new Attr("borderBlockStartStyle", v); }
-export function borderBlockStartWidth(v: string) { return new Attr("borderBlockStartWidth", v); }
-export function borderBottom(v: string) { return new Attr("borderBottom", v); }
-export function borderBottomColor(v: string) { return new Attr("borderBottomColor", v); }
-export function borderBottomLeftRadius(v: string) { return new Attr("borderBottomLeftRadius", v); }
-export function borderBottomRightRadius(v: string) { return new Attr("borderBottomRightRadius", v); }
-export function borderBottomStyle(v: string) { return new Attr("borderBottomStyle", v); }
-export function borderBottomWidth(v: string) { return new Attr("borderBottomWidth", v); }
-export function borderCollapse(v: string) { return new Attr("borderCollapse", v); }
-export function borderColor(v: string) { return new Attr("borderColor", v); }
-export function borderImage(v: string) { return new Attr("borderImage", v); }
-export function borderImageOutset(v: string) { return new Attr("borderImageOutset", v); }
-export function borderImageRepeat(v: string) { return new Attr("borderImageRepeat", v); }
-export function borderImageSlice(v: string) { return new Attr("borderImageSlice", v); }
-export function borderImageSource(v: string) { return new Attr("borderImageSource", v); }
-export function borderImageWidth(v: string) { return new Attr("borderImageWidth", v); }
-export function borderInlineEnd(v: string) { return new Attr("borderInlineEnd", v); }
-export function borderInlineEndColor(v: string) { return new Attr("borderInlineEndColor", v); }
-export function borderInlineEndStyle(v: string) { return new Attr("borderInlineEndStyle", v); }
-export function borderInlineEndWidth(v: string) { return new Attr("borderInlineEndWidth", v); }
-export function borderInlineStart(v: string) { return new Attr("borderInlineStart", v); }
-export function borderInlineStartColor(v: string) { return new Attr("borderInlineStartColor", v); }
-export function borderInlineStartStyle(v: string) { return new Attr("borderInlineStartStyle", v); }
-export function borderInlineStartWidth(v: string) { return new Attr("borderInlineStartWidth", v); }
-export function borderLeft(v: string) { return new Attr("borderLeft", v); }
-export function borderLeftColor(v: string) { return new Attr("borderLeftColor", v); }
-export function borderLeftStyle(v: string) { return new Attr("borderLeftStyle", v); }
-export function borderLeftWidth(v: string) { return new Attr("borderLeftWidth", v); }
-export function borderRadius(v: string) { return new Attr("borderRadius", v); }
-export function borderRight(v: string) { return new Attr("borderRight", v); }
-export function borderRightColor(v: string) { return new Attr("borderRightColor", v); }
-export function borderRightStyle(v: string) { return new Attr("borderRightStyle", v); }
-export function borderRightWidth(v: string) { return new Attr("borderRightWidth", v); }
-export function borderSpacing(v: string) { return new Attr("borderSpacing", v); }
-export function borderStyle(v: string) { return new Attr("borderStyle", v); }
-export function borderTop(v: string) { return new Attr("borderTop", v); }
-export function borderTopColor(v: string) { return new Attr("borderTopColor", v); }
-export function borderTopLeftRadius(v: string) { return new Attr("borderTopLeftRadius", v); }
-export function borderTopRightRadius(v: string) { return new Attr("borderTopRightRadius", v); }
-export function borderTopStyle(v: string) { return new Attr("borderTopStyle", v); }
-export function borderTopWidth(v: string) { return new Attr("borderTopWidth", v); }
-export function borderWidth(v: string) { return new Attr("borderWidth", v); }
-export function bottom(v: string) { return new Attr("bottom", v); }
-export function boxShadow(v: string) { return new Attr("boxShadow", v); }
-export function boxSizing(v: string) { return new Attr("boxSizing", v); }
-export function breakAfter(v: string) { return new Attr("breakAfter", v); }
-export function breakBefore(v: string) { return new Attr("breakBefore", v); }
-export function breakInside(v: string) { return new Attr("breakInside", v); }
-export function bufferedRendering(v: string) { return new Attr("bufferedRendering", v); }
-export function captionSide(v: string) { return new Attr("captionSide", v); }
-export function caretColor(v: string) { return new Attr("caretColor", v); }
-export function clear(v: string) { return new Attr("clear", v); }
-export function clip(v: string) { return new Attr("clip", v); }
-export function clipPath(v: string) { return new Attr("clipPath", v); }
-export function clipRule(v: string) { return new Attr("clipRule", v); }
-export function color(v: string) { return new Attr("color", v); }
-export function colorInterpolation(v: string) { return new Attr("colorInterpolation", v); }
-export function colorInterpolationFilters(v: string) { return new Attr("colorInterpolationFilters", v); }
-export function colorRendering(v: string) { return new Attr("colorRendering", v); }
-export function colorScheme(v: string) { return new Attr("colorScheme", v); }
-export function columnCount(v: string) { return new Attr("columnCount", v); }
-export function columnFill(v: string) { return new Attr("columnFill", v); }
-export function columnGap(v: string) { return new Attr("columnGap", v); }
-export function columnRule(v: string) { return new Attr("columnRule", v); }
-export function columnRuleColor(v: string) { return new Attr("columnRuleColor", v); }
-export function columnRuleStyle(v: string) { return new Attr("columnRuleStyle", v); }
-export function columnRuleWidth(v: string) { return new Attr("columnRuleWidth", v); }
-export function columnSpan(v: string) { return new Attr("columnSpan", v); }
-export function columnWidth(v: string) { return new Attr("columnWidth", v); }
-export function columns(v: string) { return new Attr("columns", v); }
-export function contain(v: string) { return new Attr("contain", v); }
-export function containIntrinsicSize(v: string) { return new Attr("containIntrinsicSize", v); }
-export function counterIncrement(v: string) { return new Attr("counterIncrement", v); }
-export function counterReset(v: string) { return new Attr("counterReset", v); }
-export function cursor(v: string) { return new Attr("cursor", v); }
-export function cx(v: string) { return new Attr("cx", v); }
-export function cy(v: string) { return new Attr("cy", v); }
-export function d(v: string) { return new Attr("d", v); }
-export function direction(v: string) { return new Attr("direction", v); }
-export function display(v: string) { return new Attr("display", v); }
-export function dominantBaseline(v: string) { return new Attr("dominantBaseline", v); }
-export function emptyCells(v: string) { return new Attr("emptyCells", v); }
-export function fill(v: string) { return new Attr("fill", v); }
-export function fillOpacity(v: string) { return new Attr("fillOpacity", v); }
-export function fillRule(v: string) { return new Attr("fillRule", v); }
-export function filter(v: string) { return new Attr("filter", v); }
-export function flex(v: string) { return new Attr("flex", v); }
-export function flexBasis(v: string) { return new Attr("flexBasis", v); }
-export function flexDirection(v: string) { return new Attr("flexDirection", v); }
-export function flexFlow(v: string) { return new Attr("flexFlow", v); }
-export function flexGrow(v: string) { return new Attr("flexGrow", v); }
-export function flexShrink(v: string) { return new Attr("flexShrink", v); }
-export function flexWrap(v: string) { return new Attr("flexWrap", v); }
-export function float(v: string) { return new Attr("float", v); }
-export function floodColor(v: string) { return new Attr("floodColor", v); }
-export function floodOpacity(v: string) { return new Attr("floodOpacity", v); }
-export function font(v: string) { return new Attr("font", v); }
-export function fontDisplay(v: string) { return new Attr("fontDisplay", v); }
-export function fontFamily(v: string) { return new Attr("fontFamily", v); }
-export function fontFeatureSettings(v: string) { return new Attr("fontFeatureSettings", v); }
-export function fontKerning(v: string) { return new Attr("fontKerning", v); }
-export function fontOpticalSizing(v: string) { return new Attr("fontOpticalSizing", v); }
-export function fontSize(v: string) { return new Attr("fontSize", v); }
-export function fontStretch(v: string) { return new Attr("fontStretch", v); }
-export function fontStyle(v: string) { return new Attr("fontStyle", v); }
-export function fontVariant(v: string) { return new Attr("fontVariant", v); }
-export function fontVariantCaps(v: string) { return new Attr("fontVariantCaps", v); }
-export function fontVariantEastAsian(v: string) { return new Attr("fontVariantEastAsian", v); }
-export function fontVariantLigatures(v: string) { return new Attr("fontVariantLigatures", v); }
-export function fontVariantNumeric(v: string) { return new Attr("fontVariantNumeric", v); }
-export function fontVariationSettings(v: string) { return new Attr("fontVariationSettings", v); }
-export function fontWeight(v: string) { return new Attr("fontWeight", v); }
-export function forcedColorAdjust(v: string) { return new Attr("forcedColorAdjust", v); }
-export function gap(v: string) { return new Attr("gap", v); }
-export function grid(v: string) { return new Attr("grid", v); }
-export function gridArea(v: string) { return new Attr("gridArea", v); }
-export function gridAutoColumns(v: string) { return new Attr("gridAutoColumns", v); }
-export function gridAutoFlow(v: string) { return new Attr("gridAutoFlow", v); }
-export function gridAutoRows(v: string) { return new Attr("gridAutoRows", v); }
-export function gridColumn(v: string) { return new Attr("gridColumn", v); }
-export function gridColumnEnd(v: string) { return new Attr("gridColumnEnd", v); }
-export function gridColumnGap(v: string) { return new Attr("gridColumnGap", v); }
-export function gridColumnStart(v: string) { return new Attr("gridColumnStart", v); }
-export function gridGap(v: string) { return new Attr("gridGap", v); }
-export function gridRow(v: string) { return new Attr("gridRow", v); }
-export function gridRowEnd(v: string) { return new Attr("gridRowEnd", v); }
-export function gridRowGap(v: string) { return new Attr("gridRowGap", v); }
-export function gridRowStart(v: string) { return new Attr("gridRowStart", v); }
-export function gridTemplate(v: string) { return new Attr("gridTemplate", v); }
-export function gridTemplateAreas(v: string) { return new Attr("gridTemplateAreas", v); }
-export function gridTemplateColumns(v: string) { return new Attr("gridTemplateColumns", v); }
-export function gridTemplateRows(v: string) { return new Attr("gridTemplateRows", v); }
-export function hyphens(v: string) { return new Attr("hyphens", v); }
-export function imageOrientation(v: string) { return new Attr("imageOrientation", v); }
-export function imageRendering(v: string) { return new Attr("imageRendering", v); }
-export function inlineSize(v: string) { return new Attr("inlineSize", v); }
-export function isolation(v: string) { return new Attr("isolation", v); }
-export function justifyContent(v: string) { return new Attr("justifyContent", v); }
-export function justifyItems(v: string) { return new Attr("justifyItems", v); }
-export function justifySelf(v: string) { return new Attr("justifySelf", v); }
-export function left(v: string) { return new Attr("left", v); }
-export function letterSpacing(v: string) { return new Attr("letterSpacing", v); }
-export function lightingColor(v: string) { return new Attr("lightingColor", v); }
-export function lineBreak(v: string) { return new Attr("lineBreak", v); }
-export function lineHeight(v: string) { return new Attr("lineHeight", v); }
-export function listStyle(v: string) { return new Attr("listStyle", v); }
-export function listStyleImage(v: string) { return new Attr("listStyleImage", v); }
-export function listStylePosition(v: string) { return new Attr("listStylePosition", v); }
-export function listStyleType(v: string) { return new Attr("listStyleType", v); }
-export function margin(v: string) { return new Attr("margin", v); }
-export function marginBlockEnd(v: string) { return new Attr("marginBlockEnd", v); }
-export function marginBlockStart(v: string) { return new Attr("marginBlockStart", v); }
-export function marginBottom(v: string) { return new Attr("marginBottom", v); }
-export function marginInlineEnd(v: string) { return new Attr("marginInlineEnd", v); }
-export function marginInlineStart(v: string) { return new Attr("marginInlineStart", v); }
-export function marginLeft(v: string) { return new Attr("marginLeft", v); }
-export function marginRight(v: string) { return new Attr("marginRight", v); }
-export function marginTop(v: string) { return new Attr("marginTop", v); }
-export function marker(v: string) { return new Attr("marker", v); }
-export function markerEnd(v: string) { return new Attr("markerEnd", v); }
-export function markerMid(v: string) { return new Attr("markerMid", v); }
-export function markerStart(v: string) { return new Attr("markerStart", v); }
-export function mask(v: string) { return new Attr("mask", v); }
-export function maskType(v: string) { return new Attr("maskType", v); }
-export function maxBlockSize(v: string) { return new Attr("maxBlockSize", v); }
-export function maxHeight(v: string) { return new Attr("maxHeight", v); }
-export function maxInlineSize(v: string) { return new Attr("maxInlineSize", v); }
-export function maxWidth(v: string) { return new Attr("maxWidth", v); }
-export function maxZoom(v: string) { return new Attr("maxZoom", v); }
-export function minBlockSize(v: string) { return new Attr("minBlockSize", v); }
-export function minHeight(v: string) { return new Attr("minHeight", v); }
-export function minInlineSize(v: string) { return new Attr("minInlineSize", v); }
-export function minWidth(v: string) { return new Attr("minWidth", v); }
-export function minZoom(v: string) { return new Attr("minZoom", v); }
-export function mixBlendMode(v: string) { return new Attr("mixBlendMode", v); }
-export function objectFit(v: string) { return new Attr("objectFit", v); }
-export function objectPosition(v: string) { return new Attr("objectPosition", v); }
-export function offset(v: string) { return new Attr("offset", v); }
-export function offsetDistance(v: string) { return new Attr("offsetDistance", v); }
-export function offsetPath(v: string) { return new Attr("offsetPath", v); }
-export function offsetRotate(v: string) { return new Attr("offsetRotate", v); }
-export function opacity(v: string) { return new Attr("opacity", v); }
-export function order(v: string) { return new Attr("order", v); }
-export function orientation(v: string) { return new Attr("orientation", v); }
-export function orphans(v: string) { return new Attr("orphans", v); }
-export function outline(v: string) { return new Attr("outline", v); }
-export function outlineColor(v: string) { return new Attr("outlineColor", v); }
-export function outlineOffset(v: string) { return new Attr("outlineOffset", v); }
-export function outlineStyle(v: string) { return new Attr("outlineStyle", v); }
-export function outlineWidth(v: string) { return new Attr("outlineWidth", v); }
-export function overflow(v: string) { return new Attr("overflow", v); }
-export function overflowAnchor(v: string) { return new Attr("overflowAnchor", v); }
-export function overflowWrap(v: string) { return new Attr("overflowWrap", v); }
-export function overflowX(v: string) { return new Attr("overflowX", v); }
-export function overflowY(v: string) { return new Attr("overflowY", v); }
-export function overscrollBehavior(v: string) { return new Attr("overscrollBehavior", v); }
-export function overscrollBehaviorBlock(v: string) { return new Attr("overscrollBehaviorBlock", v); }
-export function overscrollBehaviorInline(v: string) { return new Attr("overscrollBehaviorInline", v); }
-export function overscrollBehaviorX(v: string) { return new Attr("overscrollBehaviorX", v); }
-export function overscrollBehaviorY(v: string) { return new Attr("overscrollBehaviorY", v); }
-export function padding(v: string) { return new Attr("padding", v); }
-export function paddingBlockEnd(v: string) { return new Attr("paddingBlockEnd", v); }
-export function paddingBlockStart(v: string) { return new Attr("paddingBlockStart", v); }
-export function paddingBottom(v: string) { return new Attr("paddingBottom", v); }
-export function paddingInlineEnd(v: string) { return new Attr("paddingInlineEnd", v); }
-export function paddingInlineStart(v: string) { return new Attr("paddingInlineStart", v); }
-export function paddingLeft(v: string) { return new Attr("paddingLeft", v); }
-export function paddingRight(v: string) { return new Attr("paddingRight", v); }
-export function paddingTop(v: string) { return new Attr("paddingTop", v); }
-export function pageBreakAfter(v: string) { return new Attr("pageBreakAfter", v); }
-export function pageBreakBefore(v: string) { return new Attr("pageBreakBefore", v); }
-export function pageBreakInside(v: string) { return new Attr("pageBreakInside", v); }
-export function paintOrder(v: string) { return new Attr("paintOrder", v); }
-export function perspective(v: string) { return new Attr("perspective", v); }
-export function perspectiveOrigin(v: string) { return new Attr("perspectiveOrigin", v); }
-export function placeContent(v: string) { return new Attr("placeContent", v); }
-export function placeItems(v: string) { return new Attr("placeItems", v); }
-export function placeSelf(v: string) { return new Attr("placeSelf", v); }
-export function pointerEvents(v: string) { return new Attr("pointerEvents", v); }
-export function position(v: string) { return new Attr("position", v); }
-export function quotes(v: string) { return new Attr("quotes", v); }
-export function r(v: string) { return new Attr("r", v); }
-export function resize(v: string) { return new Attr("resize", v); }
-export function right(v: string) { return new Attr("right", v); }
-export function rowGap(v: string) { return new Attr("rowGap", v); }
-export function rubyPosition(v: string) { return new Attr("rubyPosition", v); }
-export function rx(v: string) { return new Attr("rx", v); }
-export function ry(v: string) { return new Attr("ry", v); }
-export function scrollBehavior(v: string) { return new Attr("scrollBehavior", v); }
-export function scrollMargin(v: string) { return new Attr("scrollMargin", v); }
-export function scrollMarginBlock(v: string) { return new Attr("scrollMarginBlock", v); }
-export function scrollMarginBlockEnd(v: string) { return new Attr("scrollMarginBlockEnd", v); }
-export function scrollMarginBlockStart(v: string) { return new Attr("scrollMarginBlockStart", v); }
-export function scrollMarginBottom(v: string) { return new Attr("scrollMarginBottom", v); }
-export function scrollMarginInline(v: string) { return new Attr("scrollMarginInline", v); }
-export function scrollMarginInlineEnd(v: string) { return new Attr("scrollMarginInlineEnd", v); }
-export function scrollMarginInlineStart(v: string) { return new Attr("scrollMarginInlineStart", v); }
-export function scrollMarginLeft(v: string) { return new Attr("scrollMarginLeft", v); }
-export function scrollMarginRight(v: string) { return new Attr("scrollMarginRight", v); }
-export function scrollMarginTop(v: string) { return new Attr("scrollMarginTop", v); }
-export function scrollPadding(v: string) { return new Attr("scrollPadding", v); }
-export function scrollPaddingBlock(v: string) { return new Attr("scrollPaddingBlock", v); }
-export function scrollPaddingBlockEnd(v: string) { return new Attr("scrollPaddingBlockEnd", v); }
-export function scrollPaddingBlockStart(v: string) { return new Attr("scrollPaddingBlockStart", v); }
-export function scrollPaddingBottom(v: string) { return new Attr("scrollPaddingBottom", v); }
-export function scrollPaddingInline(v: string) { return new Attr("scrollPaddingInline", v); }
-export function scrollPaddingInlineEnd(v: string) { return new Attr("scrollPaddingInlineEnd", v); }
-export function scrollPaddingInlineStart(v: string) { return new Attr("scrollPaddingInlineStart", v); }
-export function scrollPaddingLeft(v: string) { return new Attr("scrollPaddingLeft", v); }
-export function scrollPaddingRight(v: string) { return new Attr("scrollPaddingRight", v); }
-export function scrollPaddingTop(v: string) { return new Attr("scrollPaddingTop", v); }
-export function scrollSnapAlign(v: string) { return new Attr("scrollSnapAlign", v); }
-export function scrollSnapStop(v: string) { return new Attr("scrollSnapStop", v); }
-export function scrollSnapType(v: string) { return new Attr("scrollSnapType", v); }
-export function shapeImageThreshold(v: string) { return new Attr("shapeImageThreshold", v); }
-export function shapeMargin(v: string) { return new Attr("shapeMargin", v); }
-export function shapeOutside(v: string) { return new Attr("shapeOutside", v); }
-export function shapeRendering(v: string) { return new Attr("shapeRendering", v); }
-export function speak(v: string) { return new Attr("speak", v); }
-export function stopColor(v: string) { return new Attr("stopColor", v); }
-export function stopOpacity(v: string) { return new Attr("stopOpacity", v); }
-export function stroke(v: string) { return new Attr("stroke", v); }
-export function strokeDasharray(v: string) { return new Attr("strokeDasharray", v); }
-export function strokeDashoffset(v: string) { return new Attr("strokeDashoffset", v); }
-export function strokeLinecap(v: string) { return new Attr("strokeLinecap", v); }
-export function strokeLinejoin(v: string) { return new Attr("strokeLinejoin", v); }
-export function strokeMiterlimit(v: string) { return new Attr("strokeMiterlimit", v); }
-export function strokeOpacity(v: string) { return new Attr("strokeOpacity", v); }
-export function strokeWidth(v: string) { return new Attr("strokeWidth", v); }
-export function tabSize(v: string) { return new Attr("tabSize", v); }
-export function tableLayout(v: string) { return new Attr("tableLayout", v); }
-export function textAlign(v: string) { return new Attr("textAlign", v); }
-export function textAlignLast(v: string) { return new Attr("textAlignLast", v); }
-export function textAnchor(v: string) { return new Attr("textAnchor", v); }
-export function textCombineUpright(v: string) { return new Attr("textCombineUpright", v); }
-export function textDecoration(v: string) { return new Attr("textDecoration", v); }
-export function textDecorationColor(v: string) { return new Attr("textDecorationColor", v); }
-export function textDecorationLine(v: string) { return new Attr("textDecorationLine", v); }
-export function textDecorationSkipInk(v: string) { return new Attr("textDecorationSkipInk", v); }
-export function textDecorationStyle(v: string) { return new Attr("textDecorationStyle", v); }
-export function textIndent(v: string) { return new Attr("textIndent", v); }
-export function textOrientation(v: string) { return new Attr("textOrientation", v); }
-export function textOverflow(v: string) { return new Attr("textOverflow", v); }
-export function textRendering(v: string) { return new Attr("textRendering", v); }
-export function textShadow(v: string) { return new Attr("textShadow", v); }
-export function textSizeAdjust(v: string) { return new Attr("textSizeAdjust", v); }
-export function textTransform(v: string) { return new Attr("textTransform", v); }
-export function textUnderlinePosition(v: string) { return new Attr("textUnderlinePosition", v); }
-export function top(v: string) { return new Attr("top", v); }
-export function touchAction(v: string) { return new Attr("touchAction", v); }
-export function transform(v: string) { return new Attr("transform", v); }
-export function transformBox(v: string) { return new Attr("transformBox", v); }
-export function transformOrigin(v: string) { return new Attr("transformOrigin", v); }
-export function transformStyle(v: string) { return new Attr("transformStyle", v); }
-export function transition(v: string) { return new Attr("transition", v); }
-export function transitionDelay(v: string) { return new Attr("transitionDelay", v); }
-export function transitionDuration(v: string) { return new Attr("transitionDuration", v); }
-export function transitionProperty(v: string) { return new Attr("transitionProperty", v); }
-export function transitionTimingFunction(v: string) { return new Attr("transitionTimingFunction", v); }
-export function unicodeBidi(v: string) { return new Attr("unicodeBidi", v); }
-export function unicodeRange(v: string) { return new Attr("unicodeRange", v); }
-export function userSelect(v: string) { return new Attr("userSelect", v); }
-export function userZoom(v: string) { return new Attr("userZoom", v); }
-export function vectorEffect(v: string) { return new Attr("vectorEffect", v); }
-export function verticalAlign(v: string) { return new Attr("verticalAlign", v); }
-export function visibility(v: string) { return new Attr("visibility", v); }
-export function whiteSpace(v: string) { return new Attr("whiteSpace", v); }
-export function widows(v: string) { return new Attr("widows", v); }
-export function willChange(v: string) { return new Attr("willChange", v); }
-export function wordBreak(v: string) { return new Attr("wordBreak", v); }
-export function wordSpacing(v: string) { return new Attr("wordSpacing", v); }
-export function wordWrap(v: string) { return new Attr("wordWrap", v); }
-export function writingMode(v: string) { return new Attr("writingMode", v); }
-export function x(v: string) { return new Attr("x", v); }
-export function y(v: string) { return new Attr("y", v); }
-export function zIndex(v: number) { return new Attr("zIndex", v); }
-export function zoom(v: number) { return new Attr("zoom", v); }
-
-
-/**
- * A selection of fonts for preferred monospace rendering.
- **/
-export function getMonospaceFonts() {
-    return "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-}
-
-/**
- * A selection of fonts for preferred monospace rendering.
- **/
-export function getMonospaceFamily() {
-    return fontFamily(getMonospaceFonts());
-}
-
-/**
- * A selection of fonts that should match whatever the user's operating system normally uses.
- **/
-export function getSystemFonts() {
-    return "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-}
-
-/**
- * A selection of fonts that should match whatever the user's operating system normally uses.
- **/
-export function getSystemFamily() {
-    return fontFamily(getSystemFonts());
-}

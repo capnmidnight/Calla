@@ -1,9 +1,12 @@
-import { IAppliable } from "./attrs";
+import { CSSInJSRule, CssPropSet } from "./css";
 interface HasNode {
     element: HTMLElement;
 }
+interface IAppliable {
+    apply(x: any): any;
+}
 declare type makesIAppliable = (v: any) => IAppliable;
-export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | string | number | boolean | Date;
+export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | string | number | boolean | Date | CssPropSet;
 export interface IFocusable {
     focus(): void;
 }
@@ -138,7 +141,6 @@ export declare function Small(...rest: TagChild[]): HTMLElement;
 export declare function Source(...rest: TagChild[]): HTMLSourceElement;
 export declare function Span(...rest: TagChild[]): HTMLSpanElement;
 export declare function Strong(...rest: TagChild[]): HTMLElement;
-export declare function Style(...rest: TagChild[]): HTMLStyleElement;
 export declare function Sub(...rest: TagChild[]): HTMLElement;
 export declare function Summary(...rest: TagChild[]): HTMLElement;
 export declare function Sup(...rest: TagChild[]): HTMLElement;
@@ -251,4 +253,5 @@ export declare function TextNode(txt: any): Text;
  * Creates a Div element with margin: auto.
  */
 export declare function Run(...rest: TagChild[]): HTMLDivElement;
+export declare function Style(...rest: CSSInJSRule[]): HTMLStyleElement;
 export {};

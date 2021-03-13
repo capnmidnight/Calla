@@ -1,6 +1,5 @@
 import { isNullOrUndefined } from "../typeChecks";
-import type { Attr, CssPropSet } from "./attrs";
-import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./attrs";
+import { CssProp, CssPropSet, display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./css";
 /**
  * Constructs a CSS grid area definition.
  * @param x - the starting horizontal cell for the element.
@@ -8,7 +7,7 @@ import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTempla
  * @param [w] - the number of cells wide the element should cover.
  * @param [h] - the number of cells tall the element should cover.
  */
-export function gridPos(x: number, y: number, w?: number, h?: number): Attr {
+export function gridPos(x: number, y: number, w?: number, h?: number): CssProp {
     if (isNullOrUndefined(w)) {
         w = 1;
     }
@@ -22,7 +21,7 @@ export function gridPos(x: number, y: number, w?: number, h?: number): Attr {
  * @param x - the starting horizontal cell for the element.
  * @param [w] - the number of cells wide the element should cover.
  */
-export function col(x: number, w?: number): Attr {
+export function col(x: number, w?: number): CssProp {
     if (isNullOrUndefined(w)) {
         w = 1;
     }
@@ -33,7 +32,7 @@ export function col(x: number, w?: number): Attr {
  * @param y - the starting vertical cell for the element.
  * @param [h] - the number of cells tall the element should cover.
  */
-export function row(y: number, h?: number): Attr {
+export function row(y: number, h?: number): CssProp {
     if (isNullOrUndefined(h)) {
         h = 1;
     }
