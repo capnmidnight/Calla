@@ -62,7 +62,7 @@ export class ImageFetcher
         return await this._getImage(path, headers, onProgress);
     }
 
-    protected async _postObjectForImageBitmap<T>(path: string, obj: T, contentType: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
+    protected async _postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback , onProgress?: progressCallback): Promise<ImageBitmap> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
@@ -70,15 +70,15 @@ export class ImageFetcher
         return await createImageBitmap(blob);
     }
 
-    async postObjectForImageBitmap<T>(path: string, obj: T, contentType: string): Promise<ImageBitmap>;
-    async postObjectForImageBitmap<T>(path: string, obj: T, contentType: string, onProgress?: progressCallback): Promise<ImageBitmap>;
-    async postObjectForImageBitmap<T>(path: string, obj: T, contentType: string, headers?: Map<string, string>): Promise<ImageBitmap>;
-    async postObjectForImageBitmap<T>(path: string, obj: T, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap>;
-    async postObjectForImageBitmap<T>(path: string, obj: T, contentType: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
+    async postObjectForImageBitmap(path: string, obj: any, contentType: string): Promise<ImageBitmap>;
+    async postObjectForImageBitmap(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<ImageBitmap>;
+    async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<ImageBitmap>;
+    async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap>;
+    async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
         return await this._postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
     }
 
-    protected async _postObjectForImage<T>(path: string, obj: T, contentType: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement> {
+    protected async _postObjectForImage(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLImageElement> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
@@ -86,15 +86,15 @@ export class ImageFetcher
         return await this.readFileImage(file);
     }
 
-    async postObjectForImage<T>(path: string, obj: T, contentType: string): Promise<HTMLImageElement>;
-    async postObjectForImage<T>(path: string, obj: T, contentType: string, onProgress?: progressCallback): Promise<HTMLImageElement>;
-    async postObjectForImage<T>(path: string, obj: T, contentType: string, headers?: Map<string, string>): Promise<HTMLImageElement>;
-    async postObjectForImage<T>(path: string, obj: T, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement>;
-    async postObjectForImage<T>(path: string, obj: T, contentType: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement> {
+    async postObjectForImage(path: string, obj: any, contentType: string): Promise<HTMLImageElement>;
+    async postObjectForImage(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<HTMLImageElement>;
+    async postObjectForImage(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<HTMLImageElement>;
+    async postObjectForImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement>;
+    async postObjectForImage(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLImageElement> {
         return await this._postObjectForImage(path, obj, contentType, headers, onProgress);
     }
 
-    private async _getCanvasViaImageBitmap(path: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes> {
+    private async _getCanvasViaImageBitmap(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
@@ -103,7 +103,7 @@ export class ImageFetcher
         });
     }
 
-    private async _getCanvasViaImage(path: string, headers?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes> {
+    private async _getCanvasViaImage(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
 
