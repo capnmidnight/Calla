@@ -159,6 +159,7 @@ export class Fetcher implements IFetcher {
             headers = this.normalizeHeaders(headers);
             const task = this.getXHR<Blob>(path, "blob", headers, onProgress);
             this.cache.set(path, task);
+            task.then(() => console.log(path, "cached"));
         }
     }
 

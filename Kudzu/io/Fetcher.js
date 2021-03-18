@@ -126,6 +126,7 @@ export class Fetcher {
             headers = this.normalizeHeaders(headers);
             const task = this.getXHR(path, "blob", headers, onProgress);
             this.cache.set(path, task);
+            task.then(() => console.log(path, "cached"));
         }
     }
     clear() {
