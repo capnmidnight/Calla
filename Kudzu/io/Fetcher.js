@@ -124,6 +124,7 @@ export class Fetcher {
         if (!this.cache.has(path)) {
             const onProgress = this.normalizeOnProgress(headers);
             headers = this.normalizeHeaders(headers);
+            console.log("Prefetching", path);
             const task = this.getXHR(path, "blob", headers, onProgress);
             this.cache.set(path, task);
             task.then(() => console.log(path, "cached"));
@@ -142,9 +143,7 @@ export class Fetcher {
         else {
             onProgress = this.normalizeOnProgress(headers, onProgress);
             headers = this.normalizeHeaders(headers);
-            const blob = await this.getXHR(path, "blob", headers, onProgress);
-            this.cache.set(path, Promise.resolve(blob));
-            return blob;
+            return await this.getXHR(path, "blob", headers, onProgress);
         }
     }
     async getBlob(path, headers, onProgress) {
