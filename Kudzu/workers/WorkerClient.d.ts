@@ -20,6 +20,11 @@ export declare class WorkerClient {
     /**
      * Execute a method on the worker thread.
      * @param methodName - the name of the method to execute.
+     */
+    execute<T>(methodName: string): Promise<T>;
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
      * @param params - the parameters to pass to the method.
      */
     execute<T>(methodName: string, params: any[]): Promise<T>;

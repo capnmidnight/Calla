@@ -38,6 +38,33 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
+    prefetch(path: string, headers?: Map<string, string>): void {
+        if (this.worker.enabled) {
+            this.worker.execute("prefetch", [path, headers]);
+        }
+        else {
+            super.prefetch(path, headers);
+        }
+    }
+
+    clear(): void {
+        if (this.worker.enabled) {
+            this.worker.execute("clear");
+        }
+        else {
+            super.clear();
+        }
+    }
+
+    async isCached(path: string): Promise<boolean> {
+        if (this.worker.enabled) {
+            return await this.worker.execute("isCached", [path]);
+        }
+        else {
+            return await super.isCached(path);
+        }
+    }
+
     protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);

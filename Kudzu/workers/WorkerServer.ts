@@ -25,7 +25,7 @@ export interface WorkerMethodProgressMessage
     extends WorkerMethodMessage<WorkerMethodMessageType.Progress> {
     soFar: number;
     total: number;
-    msg: number;
+    msg: string;
 }
 
 export interface WorkerMethodReturnMessage
@@ -135,7 +135,7 @@ export class WorkerServer {
      * @param asyncFunc - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: workerServerCreateTransferableCallback<T>) {
+    add<T>(methodName: string, asyncFunc: (...args: any[]) => any, transferReturnValue?: workerServerCreateTransferableCallback<T>) {
         this.methods.set(methodName, async (taskID: number, ...params: any[]) => {
 
             // If your invocable functions don't report progress, this can be safely ignored.

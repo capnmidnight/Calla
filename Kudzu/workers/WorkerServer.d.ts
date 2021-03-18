@@ -16,7 +16,7 @@ export interface WorkerMethodErrorMessage extends WorkerMethodMessage<WorkerMeth
 export interface WorkerMethodProgressMessage extends WorkerMethodMessage<WorkerMethodMessageType.Progress> {
     soFar: number;
     total: number;
-    msg: number;
+    msg: string;
 }
 export interface WorkerMethodReturnMessage extends WorkerMethodMessage<WorkerMethodMessageType.Return> {
 }
@@ -64,6 +64,6 @@ export declare class WorkerServer {
      * @param asyncFunc - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: workerServerCreateTransferableCallback<T>): void;
+    add<T>(methodName: string, asyncFunc: (...args: any[]) => any, transferReturnValue?: workerServerCreateTransferableCallback<T>): void;
 }
 export {};

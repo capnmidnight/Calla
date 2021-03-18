@@ -1,3 +1,4 @@
+import { LRUCache } from "../collections/LRUCache";
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress } from "../tasks/progressCallback";
@@ -65,6 +66,9 @@ async function blobToBuffer(blob) {
     };
 }
 export class Fetcher {
+    constructor() {
+        this.cache = new LRUCache(10);
+    }
     normalizeOnProgress(headers, onProgress) {
         if (isNullOrUndefined(onProgress)
             && isFunction(headers)) {
@@ -116,28 +120,31 @@ export class Fetcher {
         await download;
         return xhr.response;
     }
-    async _getBuffer(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this.getXHR(path, "blob", headers, onProgress);
-        return await blobToBuffer(blob);
+    prefetch(path, headers) {
+        if (!this.cache.has(path)) {
+            const onProgress = this.normalizeOnProgress(headers);
+            headers = this.normalizeHeaders(headers);
+            const task = this.getXHR(path, "blob", headers, onProgress);
+            this.cache.set(path, task);
+        }
     }
-    async getBuffer(path, headers, onProgress) {
-        return await this._getBuffer(path, headers, onProgress);
+    clear() {
+        this.cache.clear();
     }
-    async _postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this.postXHR(path, "blob", obj, contentType, headers, onProgress);
-        return await blobToBuffer(blob);
-    }
-    async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForBuffer(path, obj, contentType, headers, onProgress);
+    isCached(path) {
+        return Promise.resolve(this.cache.has(path));
     }
     async _getBlob(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        return await this.getXHR(path, "blob", headers, onProgress);
+        if (this.cache.has(path)) {
+            return await this.cache.get(path);
+        }
+        else {
+            onProgress = this.normalizeOnProgress(headers, onProgress);
+            headers = this.normalizeHeaders(headers);
+            const blob = await this.getXHR(path, "blob", headers, onProgress);
+            this.cache.set(path, Promise.resolve(blob));
+            return blob;
+        }
     }
     async getBlob(path, headers, onProgress) {
         return this._getBlob(path, headers, onProgress);
@@ -149,6 +156,24 @@ export class Fetcher {
     }
     async postObjectForBlob(path, obj, contentType, headers, onProgress) {
         return this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+    }
+    async _getBuffer(path, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const blob = await this._getBlob(path, headers, onProgress);
+        return await blobToBuffer(blob);
+    }
+    async getBuffer(path, headers, onProgress) {
+        return await this._getBuffer(path, headers, onProgress);
+    }
+    async _postObjectForBuffer(path, obj, contentType, headers, onProgress) {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        const blob = await this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+        return await blobToBuffer(blob);
+    }
+    async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
+        return await this._postObjectForBuffer(path, obj, contentType, headers, onProgress);
     }
     async _getFile(path, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);

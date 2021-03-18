@@ -1,3 +1,4 @@
+import { LRUCache } from "../collections/LRUCache";
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
@@ -150,43 +151,37 @@ export class Fetcher implements IFetcher {
         return xhr.response as T;
     }
 
-    protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    private cache = new LRUCache<string, Promise<Blob>>(10);
 
-        const blob = await this.getXHR<Blob>(path, "blob", headers, onProgress);
-        return await blobToBuffer(blob);
+    prefetch(path: string, headers?: Map<string, string>): void {
+        if (!this.cache.has(path)) {
+            const onProgress = this.normalizeOnProgress(headers);
+            headers = this.normalizeHeaders(headers);
+            const task = this.getXHR<Blob>(path, "blob", headers, onProgress);
+            this.cache.set(path, task);
+        }
     }
 
-    async getBuffer(path: string): Promise<BufferAndContentType>;
-    async getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this._getBuffer(path, headers, onProgress);
+    clear(): void {
+        this.cache.clear();
     }
 
-    protected async _postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-
-        const blob = await this.postXHR<Blob>(path, "blob", obj, contentType, headers, onProgress);
-        return await blobToBuffer(blob);
-    }
-
-    async postObjectForBuffer(path: string, obj: any, contentType: string): Promise<BufferAndContentType>;
-    async postObjectForBuffer(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
-    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this._postObjectForBuffer(path, obj, contentType, headers, onProgress);
+    isCached(path: string): Promise<boolean> {
+        return Promise.resolve(this.cache.has(path));
     }
 
     protected async _getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+        if (this.cache.has(path)) {
+            return await this.cache.get(path);
+        }
+        else {
+            onProgress = this.normalizeOnProgress(headers, onProgress);
+            headers = this.normalizeHeaders(headers);
 
-        return await this.getXHR<Blob>(path, "blob", headers, onProgress);
+            const blob = await this.getXHR<Blob>(path, "blob", headers, onProgress);
+            this.cache.set(path, Promise.resolve(blob));
+            return blob;
+        }
     }
 
     async getBlob(path: string): Promise<Blob>;
@@ -210,6 +205,38 @@ export class Fetcher implements IFetcher {
     async postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
     async postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
         return this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+    }
+
+    protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+
+        const blob = await this._getBlob(path, headers, onProgress);
+        return await blobToBuffer(blob);
+    }
+
+    async getBuffer(path: string): Promise<BufferAndContentType>;
+    async getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        return await this._getBuffer(path, headers, onProgress);
+    }
+
+    protected async _postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+
+        const blob = await this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+        return await blobToBuffer(blob);
+    }
+
+    async postObjectForBuffer(path: string, obj: any, contentType: string): Promise<BufferAndContentType>;
+    async postObjectForBuffer(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
+        return await this._postObjectForBuffer(path, obj, contentType, headers, onProgress);
     }
 
     protected async _getFile(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {

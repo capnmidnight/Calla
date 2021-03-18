@@ -14,6 +14,9 @@ export declare class FetcherWorkerClient extends Fetcher {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+    prefetch(path: string, headers?: Map<string, string>): void;
+    clear(): void;
+    isCached(path: string): Promise<boolean>;
     protected _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
     protected _postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
     protected _getObject<T>(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T>;

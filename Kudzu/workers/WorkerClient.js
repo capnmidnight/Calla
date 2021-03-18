@@ -37,7 +37,7 @@ export class WorkerClient {
      * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
-    execute(methodName, params, transferables = null, onProgress = null) {
+    execute(methodName, params = null, transferables = null, onProgress = null) {
         if (!WorkerClient.isSupported) {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }

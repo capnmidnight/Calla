@@ -1,14 +1,9 @@
 import type { progressCallback } from "../tasks/progressCallback";
 import type { BufferAndContentType } from "./BufferAndContentType";
 export interface IFetcher {
-    getBuffer(path: string): Promise<BufferAndContentType>;
-    getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    getBuffer(path: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
-    getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    postObjectForBuffer(path: string, obj: any, contentType: string): Promise<BufferAndContentType>;
-    postObjectForBuffer(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
-    postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
-    postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    prefetch(path: string, headers?: Map<string, string>): void;
+    clear(): void;
+    isCached(path: string): Promise<boolean>;
     getBlob(path: string): Promise<Blob>;
     getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;
     getBlob(path: string, headers?: Map<string, string>): Promise<Blob>;
@@ -17,6 +12,14 @@ export interface IFetcher {
     postObjectForBlob(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<Blob>;
     postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<Blob>;
     postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
+    getBuffer(path: string): Promise<BufferAndContentType>;
+    getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    getBuffer(path: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer(path: string, obj: any, contentType: string): Promise<BufferAndContentType>;
+    postObjectForBuffer(path: string, obj: any, contentType: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>): Promise<BufferAndContentType>;
+    postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
     getFile(path: string): Promise<string>;
     getFile(path: string, onProgress?: progressCallback): Promise<string>;
     getFile(path: string, headers?: Map<string, string>): Promise<string>;

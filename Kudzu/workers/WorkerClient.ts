@@ -57,6 +57,11 @@ export class WorkerClient {
 
         this.workers = new Array(workerPoolSize);
     }
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     */
+    execute<T>(methodName: string): Promise<T>;
 
     /**
      * Execute a method on the worker thread.
@@ -88,7 +93,7 @@ export class WorkerClient {
      * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
-    execute<T>(methodName: string, params: any[], transferables: any = null, onProgress: any = null): Promise<T | undefined> {
+    execute<T>(methodName: string, params: any[] = null, transferables: any = null, onProgress: progressCallback = null): Promise<T | undefined> {
         if (!WorkerClient.isSupported) {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }
