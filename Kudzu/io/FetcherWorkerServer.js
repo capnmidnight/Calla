@@ -8,7 +8,7 @@ export class FetcherWorkerServer extends WorkerServer {
     }
 }
 export function addFetcherMethods(server, fetcher) {
-    server.add("prefetch", (path, headers) => fetcher.prefetch(path, headers));
+    server.add("prefetch", (path, headers, onProgress) => fetcher.prefetch(path, headers, onProgress));
     server.add("clear", () => fetcher.clear());
     server.add("isCached", (path) => fetcher.isCached(path));
     server.add("getBuffer", (path, headers, onProgress) => fetcher.getBuffer(path, headers, onProgress), (parts) => [parts.buffer]);

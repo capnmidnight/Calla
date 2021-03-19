@@ -19,12 +19,12 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
             this.worker = new WorkerClient(scriptPath, workerPoolSize);
         }
     }
-    prefetch(path, headers) {
+    async prefetch(path, headers, onProgress) {
         if (this.worker.enabled) {
-            this.worker.executeOnAll("prefetch", [path, headers]);
+            await this.worker.executeOnAll("prefetch", [path, headers], onProgress);
         }
         else {
-            super.prefetch(path, headers);
+            await super.prefetch(path, headers, onProgress);
         }
     }
     clear() {

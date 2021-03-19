@@ -39,12 +39,12 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    prefetch(path: string, headers?: Map<string, string>): void {
+    async prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
         if (this.worker.enabled) {
-            this.worker.executeOnAll("prefetch", [path, headers]);
+            await this.worker.executeOnAll("prefetch", [path, headers], onProgress);
         }
         else {
-            super.prefetch(path, headers);
+            await super.prefetch(path, headers, onProgress);
         }
     }
 

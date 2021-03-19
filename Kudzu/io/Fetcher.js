@@ -120,12 +120,13 @@ export class Fetcher {
         await download;
         return xhr.response;
     }
-    prefetch(path, headers) {
+    async prefetch(path, headers, onProgress) {
         if (!this.cache.has(path)) {
-            const onProgress = this.normalizeOnProgress(headers);
+            onProgress = this.normalizeOnProgress(headers, onProgress);
             headers = this.normalizeHeaders(headers);
             const task = this.getXHR(path, "blob", headers, onProgress);
             this.cache.set(path, task);
+            await task;
         }
     }
     clear() {

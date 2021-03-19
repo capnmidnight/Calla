@@ -153,12 +153,13 @@ export class Fetcher implements IFetcher {
 
     private cache = new LRUCache<string, Promise<Blob>>(10);
 
-    prefetch(path: string, headers?: Map<string, string>): void {
+    async prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
         if (!this.cache.has(path)) {
-            const onProgress = this.normalizeOnProgress(headers);
+            onProgress = this.normalizeOnProgress(headers, onProgress);
             headers = this.normalizeHeaders(headers);
             const task = this.getXHR<Blob>(path, "blob", headers, onProgress);
             this.cache.set(path, task);
+            await task;
         }
     }
 

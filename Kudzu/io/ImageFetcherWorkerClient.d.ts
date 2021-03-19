@@ -14,7 +14,7 @@ export declare class ImageFetcherWorkerClient extends ImageFetcher {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    prefetch(path: string, headers?: Map<string, string>): void;
+    prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
     clear(): void;
     isCached(path: string): Promise<boolean>;
     protected _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;

@@ -2,7 +2,7 @@ import type { progressCallback } from "../tasks/progressCallback";
 import type { BufferAndContentType } from "./BufferAndContentType";
 
 export interface IFetcher {
-    prefetch(path: string, headers?: Map<string, string>): void;
+    prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
     clear(): void;
     isCached(path: string): Promise<boolean>;
 

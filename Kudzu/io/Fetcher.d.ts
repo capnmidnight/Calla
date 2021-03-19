@@ -7,7 +7,7 @@ export declare class Fetcher implements IFetcher {
     private getXHR;
     private postXHR;
     private cache;
-    prefetch(path: string, headers?: Map<string, string>): void;
+    prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
     clear(): void;
     isCached(path: string): Promise<boolean>;
     protected _getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob>;
