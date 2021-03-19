@@ -33,7 +33,7 @@ export class WorkerClient {
             this.workers[i] = new Worker(this._script);
         }
     }
-    get script() {
+    get scriptPath() {
         return this._script;
     }
     executeOnWorker(worker, taskID, methodName, params, transferables, onProgress) {

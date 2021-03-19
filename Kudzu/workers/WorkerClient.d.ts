@@ -17,7 +17,7 @@ export declare class WorkerClient {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    get script(): string;
+    get scriptPath(): string;
     private executeOnWorker;
     /**
      * Execute a method on the worker thread.
