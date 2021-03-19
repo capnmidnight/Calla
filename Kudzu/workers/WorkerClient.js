@@ -94,19 +94,35 @@ export class WorkerClient {
                 }
             };
             worker.addEventListener("message", dispatchMessageResponse);
-            if (transferables) {
-                worker.postMessage({
-                    taskID,
-                    methodName,
-                    params
-                }, transferables);
+            if (params) {
+                if (transferables) {
+                    worker.postMessage({
+                        taskID,
+                        methodName,
+                        params
+                    }, transferables);
+                }
+                else {
+                    worker.postMessage({
+                        taskID,
+                        methodName,
+                        params
+                    });
+                }
             }
             else {
-                worker.postMessage({
-                    taskID,
-                    methodName,
-                    params
-                });
+                if (transferables) {
+                    worker.postMessage({
+                        taskID,
+                        methodName
+                    }, transferables);
+                }
+                else {
+                    worker.postMessage({
+                        taskID,
+                        methodName
+                    });
+                }
             }
         });
     }

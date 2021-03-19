@@ -16,7 +16,8 @@ export class FetcherWorkerServer extends WorkerServer {
 export function addFetcherMethods(server: WorkerServer, fetcher: Fetcher) {
     server.add(
         "prefetch",
-        (path: string, headers: Map<string, string>) => fetcher.prefetch(path, headers));
+        (path: string, headers: Map<string, string>) =>
+            fetcher.prefetch(path, headers));
 
     server.add(
         "clear",
@@ -24,7 +25,8 @@ export function addFetcherMethods(server: WorkerServer, fetcher: Fetcher) {
 
     server.add(
         "isCached",
-        (path: string) => fetcher.isCached(path));
+        (path: string) =>
+            fetcher.isCached(path));
 
     server.add(
         "getBuffer",

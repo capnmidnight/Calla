@@ -17,7 +17,17 @@ export class WorkerServer {
             const data = evt.data;
             const method = this.methods.get(data.methodName);
             if (method) {
-                method(data.taskID, ...data.params);
+                try {
+                    if (data.params) {
+                        method(data.taskID, ...data.params);
+                    }
+                    else {
+                        method(data.taskID);
+                    }
+                }
+                catch (exp) {
+                    this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
+                }
             }
             else {
                 this.onError(data.taskID, "method not found: " + data.methodName);
