@@ -10,7 +10,7 @@ export class WorkerClient {
 
     private taskCounter: number = 0;
     private workers: Worker[];
-    private script: string;
+    private _script: string;
     private methodExists = new Map<string, boolean>();
 
     enabled: boolean = true;
@@ -49,16 +49,20 @@ export class WorkerClient {
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
             || !isString(minScriptPath)) {
-            this.script = scriptPath;
+            this._script = scriptPath;
         }
         else {
-            this.script = minScriptPath;
+            this._script = minScriptPath;
         }
 
         this.workers = new Array(workerPoolSize);
         for (let i = 0; i < workerPoolSize; ++i) {
-            this.workers[i] = new Worker(this.script);
+            this.workers[i] = new Worker(this._script);
         }
+    }
+
+    get scriptPath() {
+        return this._script;
     }
 
     private executeOnWorker<T>(worker: Worker, taskID: number, methodName: string, params: any[], transferables: any, onProgress: progressCallback): Promise<T> {

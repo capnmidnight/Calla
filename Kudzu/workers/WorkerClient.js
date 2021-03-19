@@ -23,15 +23,18 @@ export class WorkerClient {
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
             || !isString(minScriptPath)) {
-            this.script = scriptPath;
+            this._script = scriptPath;
         }
         else {
-            this.script = minScriptPath;
+            this._script = minScriptPath;
         }
         this.workers = new Array(workerPoolSize);
         for (let i = 0; i < workerPoolSize; ++i) {
-            this.workers[i] = new Worker(this.script);
+            this.workers[i] = new Worker(this._script);
         }
+    }
+    get script() {
+        return this._script;
     }
     executeOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
         return new Promise((resolve, reject) => {

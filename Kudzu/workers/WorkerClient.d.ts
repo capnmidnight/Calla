@@ -4,7 +4,7 @@ export declare class WorkerClient {
     static isSupported: boolean;
     private taskCounter;
     private workers;
-    private script;
+    private _script;
     private methodExists;
     enabled: boolean;
     /**
@@ -17,6 +17,7 @@ export declare class WorkerClient {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+    get script(): string;
     private executeOnWorker;
     /**
      * Execute a method on the worker thread.
