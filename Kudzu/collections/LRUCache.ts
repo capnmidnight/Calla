@@ -20,9 +20,6 @@ export class LRUCache<KeyT, ValueT> {
             }
         }
         arrayRemove(removed, key);
-        if (removed.length > 0) {
-            console.log("removing", removed.join(", "));
-        }
         return this.map.set(key, value);
     }
 
