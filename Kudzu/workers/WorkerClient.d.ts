@@ -17,6 +17,7 @@ export declare class WorkerClient {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+    private executeOnWorker;
     /**
      * Execute a method on the worker thread.
      * @param methodName - the name of the method to execute.
@@ -42,6 +43,31 @@ export declare class WorkerClient {
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
     execute<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T>;
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     */
+    executeOnAll<T>(methodName: string): Promise<T[]>;
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     */
+    executeOnAll<T>(methodName: string, params: any[]): Promise<T[]>;
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
+     */
+    executeOnAll<T>(methodName: string, params: any[], transferables: Transferable[]): Promise<T[]>;
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     * @param onProgress - a callback for receiving progress reports on long-running invocations.
+     */
+    executeOnAll<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T[]>;
     /**
      * Creates a function that can optionally choose to invoke either the provided
      * worker method, or a UI-thread fallback, if this worker dispatcher is not enabled.

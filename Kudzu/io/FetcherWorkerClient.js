@@ -20,7 +20,7 @@ export class FetcherWorkerClient extends Fetcher {
     }
     prefetch(path, headers) {
         if (this.worker.enabled) {
-            this.worker.execute("prefetch", [path, headers]);
+            this.worker.executeOnAll("prefetch", [path, headers]);
         }
         else {
             super.prefetch(path, headers);
@@ -28,7 +28,7 @@ export class FetcherWorkerClient extends Fetcher {
     }
     clear() {
         if (this.worker.enabled) {
-            this.worker.execute("clear");
+            this.worker.executeOnAll("clear");
         }
         else {
             super.clear();
@@ -36,7 +36,8 @@ export class FetcherWorkerClient extends Fetcher {
     }
     async isCached(path) {
         if (this.worker.enabled) {
-            return await this.worker.execute("isCached", [path]);
+            return (await this.worker.executeOnAll("isCached", [path]))
+                .reduce((a, b) => a || b, false);
         }
         else {
             return await super.isCached(path);

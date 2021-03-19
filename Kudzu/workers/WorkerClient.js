@@ -29,37 +29,11 @@ export class WorkerClient {
             this.script = minScriptPath;
         }
         this.workers = new Array(workerPoolSize);
+        for (let i = 0; i < workerPoolSize; ++i) {
+            this.workers[i] = new Worker(this.script);
+        }
     }
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
-     * @param onProgress - a callback for receiving progress reports on long-running invocations.
-     */
-    execute(methodName, params = null, transferables = null, onProgress = null) {
-        if (!WorkerClient.isSupported) {
-            return Promise.reject(new Error("Workers are not supported on this system."));
-        }
-        if (!this.enabled) {
-            console.warn("Workers invocations have been disabled.");
-            return Promise.resolve(undefined);
-        }
-        // Normalize method parameters.
-        if (isFunction(transferables)
-            && !onProgress) {
-            onProgress = transferables;
-            transferables = null;
-        }
-        // taskIDs help us keep track of return values.
-        const taskID = this.taskCounter++;
-        // Workers are pooled, so the modulus selects them in a round-robin fashion.
-        const workerID = taskID % this.workers.length;
-        // Workers are lazily created
-        if (!this.workers[workerID]) {
-            this.workers[workerID] = new Worker(this.script);
-        }
-        const worker = this.workers[workerID];
+    executeOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
         return new Promise((resolve, reject) => {
             // When the invocation is complete, we want to stop listening to the worker
             // message channel so we don't eat up processing messages that have no chance
@@ -125,6 +99,59 @@ export class WorkerClient {
                 }
             }
         });
+    }
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
+     * @param onProgress - a callback for receiving progress reports on long-running invocations.
+     */
+    execute(methodName, params = null, transferables = null, onProgress = null) {
+        if (!WorkerClient.isSupported) {
+            return Promise.reject(new Error("Workers are not supported on this system."));
+        }
+        if (!this.enabled) {
+            console.warn("Workers invocations have been disabled.");
+            return Promise.resolve(undefined);
+        }
+        // Normalize method parameters.
+        if (isFunction(transferables)
+            && !onProgress) {
+            onProgress = transferables;
+            transferables = null;
+        }
+        // taskIDs help us keep track of return values.
+        const taskID = this.taskCounter++;
+        // Workers are pooled, so the modulus selects them in a round-robin fashion.
+        const workerID = taskID % this.workers.length;
+        const worker = this.workers[workerID];
+        return this.executeOnWorker(worker, taskID, methodName, params, transferables, onProgress);
+    }
+    /**
+     * Execute a method on the worker thread.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
+     * @param onProgress - a callback for receiving progress reports on long-running invocations.
+     */
+    executeOnAll(methodName, params = null, transferables = null, onProgress = null) {
+        if (!WorkerClient.isSupported) {
+            return Promise.reject(new Error("Workers are not supported on this system."));
+        }
+        if (!this.enabled) {
+            console.warn("Workers invocations have been disabled.");
+            return Promise.resolve(undefined);
+        }
+        // Normalize method parameters.
+        if (isFunction(transferables)
+            && !onProgress) {
+            onProgress = transferables;
+            transferables = null;
+        }
+        // taskIDs help us keep track of return values.
+        const taskID = this.taskCounter++;
+        return Promise.all(this.workers.map((worker) => this.executeOnWorker(worker, taskID, methodName, params, transferables, onProgress)));
     }
     /**
      * Creates a function that can optionally choose to invoke either the provided

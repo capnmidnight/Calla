@@ -19,6 +19,31 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
             this.worker = new WorkerClient(scriptPath, workerPoolSize);
         }
     }
+    prefetch(path, headers) {
+        if (this.worker.enabled) {
+            this.worker.executeOnAll("prefetch", [path, headers]);
+        }
+        else {
+            super.prefetch(path, headers);
+        }
+    }
+    clear() {
+        if (this.worker.enabled) {
+            this.worker.executeOnAll("clear");
+        }
+        else {
+            super.clear();
+        }
+    }
+    async isCached(path) {
+        if (this.worker.enabled) {
+            return (await this.worker.executeOnAll("isCached", [path]))
+                .reduce((a, b) => a || b, false);
+        }
+        else {
+            return await super.isCached(path);
+        }
+    }
     async _getBuffer(path, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
