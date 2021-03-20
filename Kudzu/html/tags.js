@@ -15,13 +15,6 @@ export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
 export function elementIsDisplayed(elem) {
     return elem.style.display !== "none";
 }
-export function nodeList2Array(list) {
-    const arr = new Array(list.length);
-    for (let i = 0; i < list.length; ++i) {
-        arr[i] = list[i];
-    }
-    return arr;
-}
 export function getElement(selector) {
     return document.querySelector(selector);
 }

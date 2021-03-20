@@ -13,7 +13,6 @@ export interface IFocusable {
 export declare function isFocusable(elem: any): elem is IFocusable;
 export declare function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType?: string): void;
 export declare function elementIsDisplayed(elem: HTMLElement): boolean;
-export declare function nodeList2Array<T extends Element>(list: NodeListOf<T> | HTMLCollectionOf<T>): Array<T>;
 export declare function getElement<T extends HTMLElement>(selector: string): T;
 export declare function getButton(selector: string): HTMLButtonElement;
 export declare function getInput(selector: string): HTMLInputElement;
