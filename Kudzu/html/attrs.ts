@@ -723,7 +723,7 @@ export function poster(value: string) { return new Attr("poster", value, "video"
 /**
  * Indicates whether the whole resource, parts of it or nothing should be preloaded.
   **/
-export function preload(value: boolean) { return new Attr("preload", value, "audio", "video"); }
+export function preload(value: boolean|string) { return new Attr("preload", value, "audio", "video"); }
 
 /**
  * Indicates whether the element can be edited.

@@ -558,7 +558,7 @@ export declare function poster(value: string): Attr;
 /**
  * Indicates whether the whole resource, parts of it or nothing should be preloaded.
   **/
-export declare function preload(value: boolean): Attr;
+export declare function preload(value: boolean | string): Attr;
 /**
  * Indicates whether the element can be edited.
   **/
