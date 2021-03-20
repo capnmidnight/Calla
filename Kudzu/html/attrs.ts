@@ -438,7 +438,7 @@ export function decoding(value: string) { return new Attr("decoding", value, "im
 /**
  * Indicates that the track should be enabled unless the user's preferences indicate something different.
   **/
-export function defaultValue(value: string) { return new Attr("default", value, "track"); }
+export function htmlDefault(value: boolean|string) { return new Attr("default", value, "track"); }
 
 /**
  * Indicates that the script should be executed after the page has been parsed.

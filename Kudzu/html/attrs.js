@@ -354,7 +354,7 @@ export function decoding(value) { return new Attr("decoding", value, "img"); }
 /**
  * Indicates that the track should be enabled unless the user's preferences indicate something different.
   **/
-export function defaultValue(value) { return new Attr("default", value, "track"); }
+export function htmlDefault(value) { return new Attr("default", value, "track"); }
 /**
  * Indicates that the script should be executed after the page has been parsed.
   **/

@@ -330,7 +330,7 @@ export declare function decoding(value: string): Attr;
 /**
  * Indicates that the track should be enabled unless the user's preferences indicate something different.
   **/
-export declare function defaultValue(value: string): Attr;
+export declare function htmlDefault(value: boolean | string): Attr;
 /**
  * Indicates that the script should be executed after the page has been parsed.
   **/
