@@ -19,6 +19,16 @@ export const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (funct
         return false;
     }
 })();
+export const hasOffscreenCanvasRenderingContext3D = hasOffscreenCanvas && (function () {
+    try {
+        const canv = new OffscreenCanvas(1, 1);
+        const g = canv.getContext("webgl2");
+        return g != null;
+    }
+    catch (exp) {
+        return false;
+    }
+})();
 export const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
     try {
         const canv = hasOffscreenCanvas
