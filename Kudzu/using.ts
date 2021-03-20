@@ -30,7 +30,7 @@ export function isCloneable(obj: any): obj is ICloneable {
         && isFunction((obj as ICloneable).clone);
 }
 
-export function dispose<T extends IDisposable | IClosable>(val: T): void {
+export function dispose(val: any): void {
     if (isDisposable(val)) {
         val.dispose();
     }

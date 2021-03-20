@@ -1,6 +1,7 @@
 import { arrayClear } from "../arrays/arrayClear";
 import { arrayRemove } from "../arrays/arrayRemove";
 import { isDefined } from "../typeChecks";
+import { dispose } from "../using";
 export class LRUCache {
     constructor(size) {
         this.size = size;
@@ -14,6 +15,13 @@ export class LRUCache {
             const toDelete = this.usage.shift();
             if (isDefined(toDelete)) {
                 removed.push(toDelete);
+                const value = this.map.get(toDelete);
+                try {
+                    dispose(value);
+                }
+                catch (exp) {
+                    console.warn("Error disposing %s: %s -> %o", toDelete, exp.message, value);
+                }
                 this.map.delete(toDelete);
             }
         }
