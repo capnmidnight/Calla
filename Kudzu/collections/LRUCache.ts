@@ -1,33 +1,42 @@
 import { arrayClear } from "../arrays/arrayClear";
 import { arrayRemove } from "../arrays/arrayRemove";
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { isDefined } from "../typeChecks";
-import { dispose } from "../using";
 
-export class LRUCache<KeyT, ValueT> {
+export class LRUCacheItemEvicted<KeyT, ValueT> extends TypedEvent<"itemevicted">
+{
+    constructor(public readonly key: KeyT, public readonly value: ValueT) {
+        super("itemevicted");
+    }
+}
+
+export class LRUCache<KeyT, ValueT> extends TypedEventBase<{
+    itemevicted: LRUCacheItemEvicted<KeyT, ValueT>;
+}>{
     map = new Map<KeyT, ValueT>();
     usage = new Array<KeyT>();
 
+    private removed = new Map<KeyT, ValueT>();
+
     constructor(public size: number) {
+        super();
     }
 
     set(key: KeyT, value: ValueT) {
         this.usage.push(key);
-        const removed = [];
         while (this.usage.length > this.size) {
             const toDelete = this.usage.shift();
             if (isDefined(toDelete)) {
-                removed.push(toDelete);
-                const value = this.map.get(toDelete);
-                try {
-                    dispose(value);
-                }
-                catch (exp) {
-                    console.warn("Error disposing %s: %s -> %o", toDelete, exp.message, value);
-                }
+                this.removed.set(toDelete, this.map.get(toDelete));
                 this.map.delete(toDelete);
             }
         }
-        arrayRemove(removed, key);
+        this.removed.delete(key);
+        for (const [key, value] of this.removed) {
+            this.dispatchEvent(new LRUCacheItemEvicted(key, value));
+        }
+        this.removed.clear();
+
         return this.map.set(key, value);
     }
 
@@ -40,6 +49,10 @@ export class LRUCache<KeyT, ValueT> {
     }
 
     delete(key: KeyT) {
+        if (!this.map.has(key)) {
+            return false;
+        }
+
         arrayRemove(this.usage, key);
         return this.map.delete(key);
     }

@@ -1,31 +1,36 @@
 import { arrayClear } from "../arrays/arrayClear";
 import { arrayRemove } from "../arrays/arrayRemove";
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { isDefined } from "../typeChecks";
-import { dispose } from "../using";
-export class LRUCache {
+export class LRUCacheItemEvicted extends TypedEvent {
+    constructor(key, value) {
+        super("itemevicted");
+        this.key = key;
+        this.value = value;
+    }
+}
+export class LRUCache extends TypedEventBase {
     constructor(size) {
+        super();
         this.size = size;
         this.map = new Map();
         this.usage = new Array();
+        this.removed = new Map();
     }
     set(key, value) {
         this.usage.push(key);
-        const removed = [];
         while (this.usage.length > this.size) {
             const toDelete = this.usage.shift();
             if (isDefined(toDelete)) {
-                removed.push(toDelete);
-                const value = this.map.get(toDelete);
-                try {
-                    dispose(value);
-                }
-                catch (exp) {
-                    console.warn("Error disposing %s: %s -> %o", toDelete, exp.message, value);
-                }
+                this.removed.set(toDelete, this.map.get(toDelete));
                 this.map.delete(toDelete);
             }
         }
-        arrayRemove(removed, key);
+        this.removed.delete(key);
+        for (const [key, value] of this.removed) {
+            this.dispatchEvent(new LRUCacheItemEvicted(key, value));
+        }
+        this.removed.clear();
         return this.map.set(key, value);
     }
     has(key) {
@@ -35,6 +40,9 @@ export class LRUCache {
         return this.map.get(key);
     }
     delete(key) {
+        if (!this.map.has(key)) {
+            return false;
+        }
         arrayRemove(this.usage, key);
         return this.map.delete(key);
     }
