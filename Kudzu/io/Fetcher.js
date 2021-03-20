@@ -1,4 +1,3 @@
-import { LRUCache } from "../collections/LRUCache";
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress } from "../tasks/progressCallback";
@@ -66,9 +65,6 @@ async function blobToBuffer(blob) {
     };
 }
 export class Fetcher {
-    constructor() {
-        this.cache = new LRUCache(10);
-    }
     normalizeOnProgress(headers, onProgress) {
         if (isNullOrUndefined(onProgress)
             && isFunction(headers)) {
@@ -120,30 +116,10 @@ export class Fetcher {
         await download;
         return xhr.response;
     }
-    async prefetch(path, headers, onProgress) {
-        if (!this.cache.has(path)) {
-            onProgress = this.normalizeOnProgress(headers, onProgress);
-            headers = this.normalizeHeaders(headers);
-            const task = this.getXHR(path, "blob", headers, onProgress);
-            this.cache.set(path, task);
-            await task;
-        }
-    }
-    clear() {
-        this.cache.clear();
-    }
-    isCached(path) {
-        return Promise.resolve(this.cache.has(path));
-    }
     async _getBlob(path, headers, onProgress) {
-        if (this.cache.has(path)) {
-            return await this.cache.get(path);
-        }
-        else {
-            onProgress = this.normalizeOnProgress(headers, onProgress);
-            headers = this.normalizeHeaders(headers);
-            return await this.getXHR(path, "blob", headers, onProgress);
-        }
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
+        return await this.getXHR(path, "blob", headers, onProgress);
     }
     async getBlob(path, headers, onProgress) {
         return this._getBlob(path, headers, onProgress);

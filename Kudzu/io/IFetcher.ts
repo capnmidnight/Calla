@@ -2,10 +2,6 @@ import type { progressCallback } from "../tasks/progressCallback";
 import type { BufferAndContentType } from "./BufferAndContentType";
 
 export interface IFetcher {
-    prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
-    clear(): void;
-    isCached(path: string): Promise<boolean>;
-
     getBlob(path: string): Promise<Blob>;
     getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;
     getBlob(path: string, headers?: Map<string, string>): Promise<Blob>;

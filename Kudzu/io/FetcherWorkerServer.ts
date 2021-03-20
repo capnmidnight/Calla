@@ -15,20 +15,6 @@ export class FetcherWorkerServer extends WorkerServer {
 
 export function addFetcherMethods(server: WorkerServer, fetcher: Fetcher) {
     server.add(
-        "prefetch",
-        (path: string, headers: Map<string, string>, onProgress?: progressCallback) =>
-            fetcher.prefetch(path, headers, onProgress));
-
-    server.add(
-        "clear",
-        () => fetcher.clear());
-
-    server.add(
-        "isCached",
-        (path: string) =>
-            fetcher.isCached(path));
-
-    server.add(
         "getBuffer",
         (path: string, headers: Map<string, string>, onProgress: progressCallback) => fetcher.getBuffer(path, headers, onProgress),
         (parts: BufferAndContentType) => [parts.buffer]);

@@ -1,4 +1,3 @@
-import { LRUCache } from "../collections/LRUCache";
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
@@ -151,36 +150,11 @@ export class Fetcher implements IFetcher {
         return xhr.response as T;
     }
 
-    private cache = new LRUCache<string, Promise<Blob>>(10);
-
-    async prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
-        if (!this.cache.has(path)) {
-            onProgress = this.normalizeOnProgress(headers, onProgress);
-            headers = this.normalizeHeaders(headers);
-            const task = this.getXHR<Blob>(path, "blob", headers, onProgress);
-            this.cache.set(path, task);
-            await task;
-        }
-    }
-
-    clear(): void {
-        this.cache.clear();
-    }
-
-    isCached(path: string): Promise<boolean> {
-        return Promise.resolve(this.cache.has(path));
-    }
-
     protected async _getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        if (this.cache.has(path)) {
-            return await this.cache.get(path);
-        }
-        else {
-            onProgress = this.normalizeOnProgress(headers, onProgress);
-            headers = this.normalizeHeaders(headers);
+        onProgress = this.normalizeOnProgress(headers, onProgress);
+        headers = this.normalizeHeaders(headers);
 
-            return await this.getXHR<Blob>(path, "blob", headers, onProgress);
-        }
+        return await this.getXHR<Blob>(path, "blob", headers, onProgress);
     }
 
     async getBlob(path: string): Promise<Blob>;

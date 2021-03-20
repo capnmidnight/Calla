@@ -6,10 +6,6 @@ export declare class Fetcher implements IFetcher {
     protected normalizeHeaders(headers?: Map<string, string> | progressCallback): Map<string, string> | undefined;
     private getXHR;
     private postXHR;
-    private cache;
-    prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
-    clear(): void;
-    isCached(path: string): Promise<boolean>;
     protected _getBlob(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob>;
     getBlob(path: string): Promise<Blob>;
     getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;

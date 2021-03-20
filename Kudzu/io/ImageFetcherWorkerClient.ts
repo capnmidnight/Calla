@@ -39,34 +39,6 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    async prefetch(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
-        if (this.worker.enabled) {
-            await this.worker.executeOnAll("prefetch", [path, headers], onProgress);
-        }
-        else {
-            await super.prefetch(path, headers, onProgress);
-        }
-    }
-
-    clear(): void {
-        if (this.worker.enabled) {
-            this.worker.executeOnAll("clear");
-        }
-        else {
-            super.clear();
-        }
-    }
-
-    async isCached(path: string): Promise<boolean> {
-        if (this.worker.enabled) {
-            return (await this.worker.executeOnAll<boolean>("isCached", [path]))
-                .reduce((a, b) => a || b, false);
-        }
-        else {
-            return await super.isCached(path);
-        }
-    }
-
     protected async _getBuffer(path: string, headers?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);

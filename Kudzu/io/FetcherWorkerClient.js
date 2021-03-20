@@ -18,31 +18,6 @@ export class FetcherWorkerClient extends Fetcher {
             this.worker = new WorkerClient(scriptPath, workerPoolSize);
         }
     }
-    async prefetch(path, headers, onProgress) {
-        if (this.worker.enabled) {
-            await this.worker.executeOnAll("prefetch", [path, headers], onProgress);
-        }
-        else {
-            await super.prefetch(path, headers, onProgress);
-        }
-    }
-    clear() {
-        if (this.worker.enabled) {
-            this.worker.executeOnAll("clear");
-        }
-        else {
-            super.clear();
-        }
-    }
-    async isCached(path) {
-        if (this.worker.enabled) {
-            return (await this.worker.executeOnAll("isCached", [path]))
-                .reduce((a, b) => a || b, false);
-        }
-        else {
-            return await super.isCached(path);
-        }
-    }
     async _getBuffer(path, headers, onProgress) {
         onProgress = this.normalizeOnProgress(headers, onProgress);
         headers = this.normalizeHeaders(headers);
