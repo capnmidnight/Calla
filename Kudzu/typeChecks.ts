@@ -29,7 +29,8 @@ export function isGoodNumber(obj: any): obj is number {
 }
 
 export function isObject(obj: any): obj is object {
-    return t(obj, "object", Object);
+    return isDefined(obj)
+        && t(obj, "object", Object);
 }
 
 export function isDate(obj: any): obj is Date {

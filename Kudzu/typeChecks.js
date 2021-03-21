@@ -23,7 +23,8 @@ export function isGoodNumber(obj) {
         && !Number.isNaN(obj);
 }
 export function isObject(obj) {
-    return t(obj, "object", Object);
+    return isDefined(obj)
+        && t(obj, "object", Object);
 }
 export function isDate(obj) {
     return obj instanceof Date;
