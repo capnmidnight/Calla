@@ -10,7 +10,7 @@ export interface ICloneable {
 export declare function isDisposable(obj: any): obj is IDisposable;
 export declare function isClosable(obj: any): obj is IClosable;
 export declare function isCloneable(obj: any): obj is ICloneable;
-export declare function dispose<T extends IDisposable | IClosable>(val: T): void;
+export declare function dispose(val: any): void;
 export declare function using<T extends IDisposable | IClosable, U>(val: T, thunk: (val: T) => U): U;
 export declare function usingArray<T extends IDisposable | IClosable, U>(vals: T[], thunk: (val: T[]) => U): U;
 export declare function usingAsync<T extends IDisposable | IClosable, U>(val: T, thunk: (val: T) => Promise<U>): Promise<U>;
