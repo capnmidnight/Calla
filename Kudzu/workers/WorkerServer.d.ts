@@ -1,5 +1,5 @@
 export declare type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
-export declare type workerServerCreateTransferableCallback<T> = (returnValue: T) => Transferable[];
+export declare type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 export declare enum WorkerMethodMessageType {
     Error = "error",
     Progress = "progress",
@@ -44,7 +44,8 @@ export declare class WorkerServer {
      */
     private onError;
     /**
-     * Report progress through long-running invocations.
+     * Report progress through long-running invocations. If your invocable
+     * functions don't report progress, this can be safely ignored.
      * @param taskID - the invocation ID of the method that is updating.
      * @param soFar - how much of the process we've gone through.
      * @param total - the total amount we need to go through.
@@ -64,6 +65,6 @@ export declare class WorkerServer {
      * @param asyncFunc - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    add<T>(methodName: string, asyncFunc: (...args: any[]) => any, transferReturnValue?: workerServerCreateTransferableCallback<T>): void;
+    add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void;
 }
 export {};

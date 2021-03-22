@@ -1,8 +1,7 @@
-import type { progressCallback } from "../tasks/progressCallback";
 
 export type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
 
-export type workerServerCreateTransferableCallback<T> = (returnValue: T) => Transferable[];
+export type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 
 export enum WorkerMethodMessageType {
     Error = "error",
@@ -94,7 +93,8 @@ export class WorkerServer {
     }
 
     /**
-     * Report progress through long-running invocations.
+     * Report progress through long-running invocations. If your invocable
+     * functions don't report progress, this can be safely ignored.
      * @param taskID - the invocation ID of the method that is updating.
      * @param soFar - how much of the process we've gone through.
      * @param total - the total amount we need to go through.
@@ -145,18 +145,9 @@ export class WorkerServer {
      * @param asyncFunc - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    add<T>(methodName: string, asyncFunc: (...args: any[]) => any, transferReturnValue?: workerServerCreateTransferableCallback<T>) {
+    add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>) {
         this.methods.set(methodName, async (taskID: number, ...params: any[]) => {
-
-            // If your invocable functions don't report progress, this can be safely ignored.
-            const onProgress: progressCallback = (soFar: number, total: number, msg?: string) => {
-                this.onProgress(
-                    taskID,
-                    soFar,
-                    total,
-                    msg
-                );
-            };
+            const onProgress = this.onProgress.bind(this, taskID);
 
             try {
                 // Even functions returning void and functions returning bare, unPromised values, can be awaited.

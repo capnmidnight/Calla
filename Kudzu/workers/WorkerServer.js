@@ -48,7 +48,8 @@ export class WorkerServer {
         });
     }
     /**
-     * Report progress through long-running invocations.
+     * Report progress through long-running invocations. If your invocable
+     * functions don't report progress, this can be safely ignored.
      * @param taskID - the invocation ID of the method that is updating.
      * @param soFar - how much of the process we've gone through.
      * @param total - the total amount we need to go through.
@@ -99,10 +100,7 @@ export class WorkerServer {
      */
     add(methodName, asyncFunc, transferReturnValue) {
         this.methods.set(methodName, async (taskID, ...params) => {
-            // If your invocable functions don't report progress, this can be safely ignored.
-            const onProgress = (soFar, total, msg) => {
-                this.onProgress(taskID, soFar, total, msg);
-            };
+            const onProgress = this.onProgress.bind(this, taskID);
             try {
                 // Even functions returning void and functions returning bare, unPromised values, can be awaited.
                 // This creates a convenient fallback where we don't have to consider the exact return type of the function.
