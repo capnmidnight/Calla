@@ -201,6 +201,10 @@ export declare function InputImage(...rest: TagChild[]): HTMLInputElement;
  */
 export declare function InputMonth(...rest: TagChild[]): HTMLInputElement;
 /**
+ * creates an HTML Input tag that is a month picker.
+ */
+export declare function InputNumber(...rest: TagChild[]): HTMLInputElement;
+/**
  * creates an HTML Input tag that is a password entry field.
  */
 export declare function InputPassword(...rest: TagChild[]): HTMLInputElement;

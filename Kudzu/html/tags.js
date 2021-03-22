@@ -256,6 +256,10 @@ export function InputImage(...rest) { return Input(type("image"), ...rest); }
  */
 export function InputMonth(...rest) { return Input(type("month"), ...rest); }
 /**
+ * creates an HTML Input tag that is a month picker.
+ */
+export function InputNumber(...rest) { return Input(type("number"), ...rest); }
+/**
  * creates an HTML Input tag that is a password entry field.
  */
 export function InputPassword(...rest) { return Input(type("password"), ...rest); }

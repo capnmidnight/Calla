@@ -323,6 +323,11 @@ export function InputImage(...rest: TagChild[]): HTMLInputElement { return Input
 export function InputMonth(...rest: TagChild[]): HTMLInputElement { return Input(type("month"), ...rest); }
 
 /**
+ * creates an HTML Input tag that is a month picker.
+ */
+export function InputNumber(...rest: TagChild[]): HTMLInputElement { return Input(type("number"), ...rest); }
+
+/**
  * creates an HTML Input tag that is a password entry field.
  */
 export function InputPassword(...rest: TagChild[]): HTMLInputElement { return Input(type("password"), ...rest); }
