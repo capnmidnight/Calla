@@ -205,21 +205,4 @@ export async function canvasToBlob(canvas, type, quality) {
         });
     }
 }
-if (hasHTMLCanvas) {
-    HTMLCanvasElement.prototype.view = async function () {
-        return await canvasView(this);
-    };
-    HTMLCanvasElement.prototype.convertToBlob = async function (opts) {
-        return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
-    };
-}
-if (hasOffscreenCanvas) {
-    OffscreenCanvas.prototype.view = async function () {
-        return await canvasView(this);
-    };
-    OffscreenCanvas.prototype.toBlob = function (callback, type, quality) {
-        canvasToBlob(this, type, quality)
-            .then(callback);
-    };
-}
 //# sourceMappingURL=canvas.js.map

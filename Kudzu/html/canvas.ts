@@ -264,22 +264,3 @@ export async function canvasToBlob(canvas: CanvasTypes, type?: string, quality?:
         });
     }
 }
-
-if (hasHTMLCanvas) {
-    (HTMLCanvasElement.prototype as any).view = async function (this: HTMLCanvasElement) {
-        return await canvasView(this);
-    };
-    (HTMLCanvasElement.prototype as any).convertToBlob = async function (this: HTMLCanvasElement, opts?: ImageEncodeOptions) {
-        return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
-    };
-}
-
-if (hasOffscreenCanvas) {
-    (OffscreenCanvas.prototype as any).view = async function (this: OffscreenCanvas) {
-        return await canvasView(this);
-    };
-    (OffscreenCanvas.prototype as any).toBlob = function (this: OffscreenCanvas, callback: (blob: Blob | null) => void, type?: string, quality?: number) {
-        canvasToBlob(this, type, quality)
-            .then(callback);
-    };
-}
