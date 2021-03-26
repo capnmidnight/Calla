@@ -2,7 +2,7 @@ import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import { dumpProgress } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { isDefined, isFunction, isNullOrUndefined, isString, isXHRBodyInit } from "../typeChecks";
+import { isDefined, isNullOrUndefined, isString, isXHRBodyInit } from "../typeChecks";
 function normalizeMap(map, key, value) {
     if (isNullOrUndefined(map)) {
         map = new Map();
@@ -65,22 +65,6 @@ async function blobToBuffer(blob) {
     };
 }
 export class Fetcher {
-    normalizeOnProgress(headers, onProgress) {
-        if (isNullOrUndefined(onProgress)
-            && isFunction(headers)) {
-            onProgress = headers;
-        }
-        if (!isFunction(onProgress)) {
-            onProgress = dumpProgress;
-        }
-        return onProgress;
-    }
-    normalizeHeaders(headers) {
-        if (headers instanceof Map) {
-            return headers;
-        }
-        return undefined;
-    }
     async getXHR(path, xhrType, headers, onProgress) {
         const xhr = new XMLHttpRequest();
         const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
@@ -90,6 +74,7 @@ export class Fetcher {
         return xhr.response;
     }
     async postXHR(path, xhrType, obj, contentType, headers, onProgress) {
+        onProgress = onProgress || dumpProgress;
         const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
         const xhr = new XMLHttpRequest();
         const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
@@ -116,130 +101,69 @@ export class Fetcher {
         await download;
         return xhr.response;
     }
-    async _getBlob(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async getBlob(path, headers, onProgress) {
         return await this.getXHR(path, "blob", headers, onProgress);
     }
-    async getBlob(path, headers, onProgress) {
-        return this._getBlob(path, headers, onProgress);
-    }
-    async _postObjectForBlob(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async postObjectForBlob(path, obj, contentType, headers, onProgress) {
         return await this.postXHR(path, "blob", obj, contentType, headers, onProgress);
     }
-    async postObjectForBlob(path, obj, contentType, headers, onProgress) {
-        return this._postObjectForBlob(path, obj, contentType, headers, onProgress);
-    }
-    async _getBuffer(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this._getBlob(path, headers, onProgress);
-        return await blobToBuffer(blob);
-    }
     async getBuffer(path, headers, onProgress) {
-        return await this._getBuffer(path, headers, onProgress);
-    }
-    async _postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+        const blob = await this.getBlob(path, headers, onProgress);
         return await blobToBuffer(blob);
     }
     async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForBuffer(path, obj, contentType, headers, onProgress);
-    }
-    async _getFile(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this._getBlob(path, headers, onProgress);
-        return URL.createObjectURL(blob);
+        const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+        return await blobToBuffer(blob);
     }
     async getFile(path, headers, onProgress) {
-        return await this._getFile(path, headers, onProgress);
-    }
-    async _postObjectForFile(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        const blob = await this._postObjectForBlob(path, obj, contentType, headers, onProgress);
+        const blob = await this.getBlob(path, headers, onProgress);
         return URL.createObjectURL(blob);
     }
     async postObjectForFile(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForFile(path, obj, contentType, headers, onProgress);
-    }
-    async _getText(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        return await this.getXHR(path, "text", headers, onProgress);
+        const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+        return URL.createObjectURL(blob);
     }
     async getText(path, headers, onProgress) {
-        return await this._getText(path, headers, onProgress);
-    }
-    async _postObjectForText(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        return this.postXHR(path, "text", obj, contentType, headers, onProgress);
+        return await this.getXHR(path, "text", headers, onProgress);
     }
     async postObjectForText(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForText(path, obj, contentType, headers, onProgress);
+        return this.postXHR(path, "text", obj, contentType, headers, onProgress);
     }
-    setDefaultAcceptType(headers, type) {
+    async getObject(path, headers, onProgress) {
         if (!headers) {
             headers = new Map();
         }
         if (!headers.has("Accept")) {
-            headers.set("Accept", type);
+            headers.set("Accept", "application/json");
         }
-        return headers;
-    }
-    async _getObject(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        headers = this.setDefaultAcceptType(headers, "application/json");
         return await this.getXHR(path, "json", headers, onProgress);
     }
-    async getObject(path, headers, onProgress) {
-        return await this._getObject(path, headers, onProgress);
-    }
-    async _postObjectForObject(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async postObjectForObject(path, obj, contentType, headers, onProgress) {
         return await this.postXHR(path, "json", obj, contentType, headers, onProgress);
     }
-    async postObjectForObject(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForObject(path, obj, contentType, headers, onProgress);
-    }
-    async _postObject(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async postObject(path, obj, contentType, headers, onProgress) {
         await this.postXHR(path, "", obj, contentType, headers, onProgress);
     }
-    async postObject(path, obj, contentType, headers, onProgress) {
-        return await this._postObject(path, obj, contentType, headers, onProgress);
-    }
-    async _getXml(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async getXml(path, headers, onProgress) {
         const doc = await this.getXHR(path, "document", headers, onProgress);
         return doc.documentElement;
     }
-    async getXml(path, headers, onProgress) {
-        return await this._getXml(path, headers, onProgress);
-    }
-    async _postObjectForXml(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
+    async postObjectForXml(path, obj, contentType, headers, onProgress) {
         const doc = await this.postXHR(path, "document", obj, contentType, headers, onProgress);
         return doc.documentElement;
     }
-    async postObjectForXml(path, obj, contentType, headers, onProgress) {
-        return await this._postObjectForXml(path, obj, contentType, headers, onProgress);
+    async getImageBitmap(path, headers, onProgress) {
+        const blob = await this.getBlob(path, headers, onProgress);
+        return await createImageBitmap(blob);
+    }
+    async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
+        const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+        return await createImageBitmap(blob);
     }
     async loadScript(path, test, onProgress) {
         if (!test()) {
             const scriptLoadTask = waitFor(test);
-            const file = await this.getFile(path, onProgress);
+            const file = await this.getFile(path, null, onProgress);
             createScript(file);
             await scriptLoadTask;
         }
@@ -248,7 +172,7 @@ export class Fetcher {
         }
     }
     async getWASM(path, imports, onProgress) {
-        const wasmBuffer = await this.getBuffer(path, onProgress);
+        const wasmBuffer = await this.getBuffer(path, null, onProgress);
         if (wasmBuffer.contentType !== "application/wasm") {
             throw new Error("Server did not respond with WASM file. Was: " + wasmBuffer.contentType);
         }

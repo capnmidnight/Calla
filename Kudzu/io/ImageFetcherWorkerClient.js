@@ -1,4 +1,3 @@
-import { hasImageBitmap } from "../html/canvas";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { ImageFetcher } from "./ImageFetcher";
@@ -77,26 +76,6 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
         else {
             return await super._postObjectForFile(path, obj, contentType, headers, onProgress);
-        }
-    }
-    async _getImageBitmap(path, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        if (this.worker.enabled) {
-            return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
-        }
-        else {
-            return await super._getImageBitmap(path, headers, onProgress);
-        }
-    }
-    async _postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
-        onProgress = this.normalizeOnProgress(headers, onProgress);
-        headers = this.normalizeHeaders(headers);
-        if (this.worker.enabled && hasImageBitmap && !(obj instanceof FormData)) {
-            return await this.worker.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
-        }
-        else {
-            return await super._postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
         }
     }
 }

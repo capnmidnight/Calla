@@ -91,6 +91,7 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
             nodeResolve(),
             commonjs(),
             replace({
+                preventAssignment: true,
                 "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
                 "__filename": function (match) {
                     const curDir = process.cwd().replace('\\', '/');

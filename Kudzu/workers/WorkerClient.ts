@@ -11,9 +11,6 @@ export class WorkerClient {
     private taskCounter: number = 0;
     private workers: Worker[];
     private _script: string;
-    private methodExists = new Map<string, boolean>();
-
-    enabled: boolean = true;
 
     /**
      * Creates a new pooled worker method executor.
@@ -178,11 +175,6 @@ export class WorkerClient {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }
 
-        if (!this.enabled) {
-            console.warn("Workers invocations have been disabled.");
-            return Promise.resolve(undefined);
-        }
-
         // Normalize method parameters.
         if (isFunction(transferables)
             && !onProgress) {
@@ -199,88 +191,5 @@ export class WorkerClient {
         const worker = this.workers[workerID];
 
         return this.executeOnWorker<T>(worker, taskID, methodName, params, transferables, onProgress);
-    }
-
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     */
-    executeOnAll<T>(methodName: string): Promise<T[]>;
-
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     */
-    executeOnAll<T>(methodName: string, params: any[]): Promise<T[]>;
-
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
-     */
-    executeOnAll<T>(methodName: string, params: any[], transferables: Transferable[]): Promise<T[]>;
-
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     * @param onProgress - a callback for receiving progress reports on long-running invocations.
-     */
-    executeOnAll<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T[]>;
-
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
-     * @param onProgress - a callback for receiving progress reports on long-running invocations.
-     */
-    executeOnAll<T>(methodName: string, params: any[] = null, transferables: any = null, onProgress: progressCallback = null): Promise<T[] | undefined> {
-        if (!WorkerClient.isSupported) {
-            return Promise.reject(new Error("Workers are not supported on this system."));
-        }
-
-        if (!this.enabled) {
-            console.warn("Workers invocations have been disabled.");
-            return Promise.resolve(undefined);
-        }
-
-        // Normalize method parameters.
-        if (isFunction(transferables)
-            && !onProgress) {
-            onProgress = transferables;
-            transferables = null;
-        }
-
-        // taskIDs help us keep track of return values.
-        const taskID = this.taskCounter++;
-
-        return Promise.all(this.workers.map((worker) =>
-            this.executeOnWorker<T>(worker, taskID, methodName, params, transferables, onProgress)));
-    }
-
-    /**
-     * Creates a function that can optionally choose to invoke either the provided
-     * worker method, or a UI-thread fallback, if this worker dispatcher is not enabled.
-     * @param workerCall
-     * @param localCall
-     */
-    createExecutor<T>(methodName: string, workerCall: workerClientCallback<T>, localCall: workerClientCallback<T>): workerClientCallback<T> {
-        return async (...params: any[]) => {
-            if (!this.methodExists.has(methodName)) {
-                this.methodExists.set(methodName, await this.execute("methodExists", [methodName]));
-            }
-
-            const exists = this.methodExists.get(methodName);
-
-            if (WorkerClient.isSupported && this.enabled && exists) {
-                return await workerCall(...params);
-            }
-            else {
-                return await localCall(...params);
-            }
-        };
     }
 }

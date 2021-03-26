@@ -33,7 +33,6 @@ export class WorkerServer {
                 this.onError(data.taskID, "method not found: " + data.methodName);
             }
         };
-        this.add("methodExists", async (methodName) => this.methods.has(methodName));
     }
     /**
      * Report an error back to the calling thread.

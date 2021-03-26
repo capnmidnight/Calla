@@ -3,8 +3,6 @@ import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
     constructor(scriptPath, minScriptPath, workerPoolSize) {
         this.taskCounter = 0;
-        this.methodExists = new Map();
-        this.enabled = true;
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
@@ -114,10 +112,6 @@ export class WorkerClient {
         if (!WorkerClient.isSupported) {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }
-        if (!this.enabled) {
-            console.warn("Workers invocations have been disabled.");
-            return Promise.resolve(undefined);
-        }
         // Normalize method parameters.
         if (isFunction(transferables)
             && !onProgress) {
@@ -130,51 +124,6 @@ export class WorkerClient {
         const workerID = taskID % this.workers.length;
         const worker = this.workers[workerID];
         return this.executeOnWorker(worker, taskID, methodName, params, transferables, onProgress);
-    }
-    /**
-     * Execute a method on the worker thread.
-     * @param methodName - the name of the method to execute.
-     * @param params - the parameters to pass to the method.
-     * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
-     * @param onProgress - a callback for receiving progress reports on long-running invocations.
-     */
-    executeOnAll(methodName, params = null, transferables = null, onProgress = null) {
-        if (!WorkerClient.isSupported) {
-            return Promise.reject(new Error("Workers are not supported on this system."));
-        }
-        if (!this.enabled) {
-            console.warn("Workers invocations have been disabled.");
-            return Promise.resolve(undefined);
-        }
-        // Normalize method parameters.
-        if (isFunction(transferables)
-            && !onProgress) {
-            onProgress = transferables;
-            transferables = null;
-        }
-        // taskIDs help us keep track of return values.
-        const taskID = this.taskCounter++;
-        return Promise.all(this.workers.map((worker) => this.executeOnWorker(worker, taskID, methodName, params, transferables, onProgress)));
-    }
-    /**
-     * Creates a function that can optionally choose to invoke either the provided
-     * worker method, or a UI-thread fallback, if this worker dispatcher is not enabled.
-     * @param workerCall
-     * @param localCall
-     */
-    createExecutor(methodName, workerCall, localCall) {
-        return async (...params) => {
-            if (!this.methodExists.has(methodName)) {
-                this.methodExists.set(methodName, await this.execute("methodExists", [methodName]));
-            }
-            const exists = this.methodExists.get(methodName);
-            if (WorkerClient.isSupported && this.enabled && exists) {
-                return await workerCall(...params);
-            }
-            else {
-                return await localCall(...params);
-            }
-        };
     }
 }
 WorkerClient.isSupported = "Worker" in globalThis;

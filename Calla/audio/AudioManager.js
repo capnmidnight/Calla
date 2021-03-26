@@ -341,7 +341,7 @@ export class AudioManager extends TypedEventBase {
         const elem = BackgroundAudio(autoPlaying, false);
         const task = once(elem, "canplaythrough");
         elem.loop = looping;
-        elem.src = await this.fetcher.getFile(path, onProgress);
+        elem.src = await this.fetcher.getFile(path, null, onProgress);
         await task;
         const source = this.audioContext.createMediaElementSource(elem);
         if (onProgress) {
@@ -357,7 +357,7 @@ export class AudioManager extends TypedEventBase {
             }
         }
         else {
-            const blob = await this.fetcher.getBlob(path, onProgress);
+            const blob = await this.fetcher.getBlob(path, null, onProgress);
             if (testAudio.canPlayType(blob.type)) {
                 goodBlob = blob;
             }
