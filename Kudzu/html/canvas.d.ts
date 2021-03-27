@@ -1,4 +1,5 @@
 export declare type CanvasTypes = HTMLCanvasElement | OffscreenCanvas;
+export declare type CanvasImageTypes = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas | ImageBitmap;
 export declare type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 export declare type GraphicsContext = RenderingContext | OffscreenCanvasRenderingContext2D;
 export declare const hasHTMLCanvas: boolean;

@@ -1,7 +1,9 @@
 import { waitFor } from "../events/waitFor";
+import { hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
+import { fileToImage } from "./Fetcher";
 function isDOMParsersSupportedType(type) {
     return type === "application/xhtml+xml"
         || type === "application/xml"
@@ -61,6 +63,15 @@ export class FetcherWorkerClient {
     async getImageBitmap(path, headers, onProgress) {
         return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
     }
+    async getCanvasImage(path, headers, onProgress) {
+        if (hasImageBitmap) {
+            return await this.getImageBitmap(path, headers, onProgress);
+        }
+        else {
+            const file = await this.getFile(path, headers, onProgress);
+            return await fileToImage(file);
+        }
+    }
     async postObject(path, obj, contentType, headers, onProgress) {
         await this.worker.execute("postObject", [path, obj, contentType, headers], onProgress);
     }
@@ -89,6 +100,15 @@ export class FetcherWorkerClient {
     }
     async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
         return await this.worker.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+    }
+    async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
+        if (hasImageBitmap) {
+            return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+        }
+        else {
+            const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+            return await fileToImage(file);
+        }
     }
     async loadScript(path, test, onProgress) {
         if (!test()) {

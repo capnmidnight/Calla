@@ -1,6 +1,5 @@
-import { CanvasTypes, Context2D, createUtilityCanvasFromImageBitmap } from "kudzu/html/canvas";
+import { CanvasImageTypes, Context2D } from "kudzu/html/canvas";
 import { IFetcher } from "kudzu/io/IFetcher";
-import { using } from "kudzu/using";
 
 export class TileSet {
     name: string = null;
@@ -8,7 +7,7 @@ export class TileSet {
     tileHeight = 0;
     tilesPerRow = 0;
     tileCount = 0;
-    image: CanvasTypes = null;
+    image: CanvasImageTypes = null;
     collision = new Map<number, boolean>();
 
     constructor(private url: URL, private fetcher: IFetcher) {
@@ -34,9 +33,7 @@ export class TileSet {
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
 
-        using(await this.fetcher.getImageBitmap(imageURL.href), (img) =>
-            this.image = createUtilityCanvasFromImageBitmap(img));
-
+        this.image = await this.fetcher.getCanvasImage(imageURL.href);
         this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
     }
 

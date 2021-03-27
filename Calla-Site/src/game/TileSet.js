@@ -1,5 +1,3 @@
-import { createUtilityCanvasFromImageBitmap } from "kudzu/html/canvas";
-import { using } from "kudzu/using";
 export class TileSet {
     constructor(url, fetcher) {
         this.url = url;
@@ -29,7 +27,7 @@ export class TileSet {
         this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
-        using(await this.fetcher.getImageBitmap(imageURL.href), (img) => this.image = createUtilityCanvasFromImageBitmap(img));
+        this.image = await this.fetcher.getCanvasImage(imageURL.href);
         this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
     }
     isClear(tile) {

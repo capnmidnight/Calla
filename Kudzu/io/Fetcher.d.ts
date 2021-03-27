@@ -1,6 +1,8 @@
+import { CanvasImageTypes } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
+export declare function fileToImage(file: string): Promise<HTMLImageElement>;
 export declare class Fetcher implements IFetcher {
     private getXHR;
     private postXHR;
@@ -18,7 +20,9 @@ export declare class Fetcher implements IFetcher {
     getXml(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
     postObjectForXml(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
     getImageBitmap(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap>;
+    getCanvasImage(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes>;
     postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap>;
+    postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes>;
     loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void>;
     getWASM<T>(path: string, imports: Record<string, Record<string, WebAssembly.ImportValue>>, onProgress?: progressCallback): Promise<T>;
 }

@@ -1,9 +1,12 @@
 import { waitFor } from "../events/waitFor";
+import type { CanvasImageTypes } from "../html/canvas";
+import { hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
 import type { progressCallback } from "../tasks/progressCallback";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import type { BufferAndContentType } from "./BufferAndContentType";
+import { fileToImage } from "./Fetcher";
 import { IFetcher } from "./IFetcher";
 
 function isDOMParsersSupportedType(type: string): type is DOMParserSupportedType {
@@ -91,6 +94,16 @@ export class FetcherWorkerClient implements IFetcher {
         return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
     }
 
+    async getCanvasImage(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
+        if (hasImageBitmap) {
+            return await this.getImageBitmap(path, headers, onProgress);
+        }
+        else {
+            const file = await this.getFile(path, headers, onProgress);
+            return await fileToImage(file);
+        }
+    }
+
     async postObject(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
         await this.worker.execute("postObject", [path, obj, contentType, headers], onProgress);
     }
@@ -126,6 +139,16 @@ export class FetcherWorkerClient implements IFetcher {
 
     async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
         return await this.worker.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+    }
+
+    async postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
+        if (hasImageBitmap) {
+            return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+        }
+        else {
+            const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+            return await fileToImage(file);
+        }
     }
 
     async loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void> {

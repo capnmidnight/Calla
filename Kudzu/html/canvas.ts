@@ -4,6 +4,7 @@ import { htmlHeight, htmlWidth } from "./attrs";
 import { Canvas } from "./tags";
 
 export type CanvasTypes = HTMLCanvasElement | OffscreenCanvas;
+export type CanvasImageTypes = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas | ImageBitmap;
 export type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 export type GraphicsContext = RenderingContext | OffscreenCanvasRenderingContext2D;
 

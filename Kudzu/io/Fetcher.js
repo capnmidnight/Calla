@@ -1,5 +1,9 @@
+import { once } from "../events/once";
 import { waitFor } from "../events/waitFor";
+import { src } from "../html/attrs";
+import { hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
+import { Img } from "../html/tags";
 import { dumpProgress } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
 import { isDefined, isNullOrUndefined, isString, isXHRBodyInit } from "../typeChecks";
@@ -11,6 +15,11 @@ function normalizeMap(map, key, value) {
         map.set(key, value);
     }
     return map;
+}
+export async function fileToImage(file) {
+    const img = Img(src(file));
+    await once(img, "loaded");
+    return img;
 }
 function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) {
     return new Promise((resolve, reject) => {
@@ -157,9 +166,27 @@ export class Fetcher {
         const blob = await this.getBlob(path, headers, onProgress);
         return await createImageBitmap(blob);
     }
+    async getCanvasImage(path, headers, onProgress) {
+        if (hasImageBitmap) {
+            return await this.getImageBitmap(path, headers, onProgress);
+        }
+        else {
+            const file = await this.getFile(path, headers, onProgress);
+            return await fileToImage(file);
+        }
+    }
     async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
         const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
         return await createImageBitmap(blob);
+    }
+    async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
+        if (hasImageBitmap) {
+            return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+        }
+        else {
+            const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+            return await fileToImage(file);
+        }
     }
     async loadScript(path, test, onProgress) {
         if (!test()) {

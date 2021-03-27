@@ -1,5 +1,9 @@
+import { once } from "../events/once";
 import { waitFor } from "../events/waitFor";
+import { src } from "../html/attrs";
+import { CanvasImageTypes, hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
+import { Img } from "../html/tags";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
 import { isDefined, isNullOrUndefined, isString, isXHRBodyInit } from "../typeChecks";
@@ -14,6 +18,12 @@ function normalizeMap<KeyT, ValueT>(map: Map<KeyT, ValueT>, key: KeyT, value: Va
         map.set(key, value);
     }
     return map;
+}
+
+export async function fileToImage(file: string) {
+    const img = Img(src(file));
+    await once(img, "loaded");
+    return img;
 }
 
 function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
@@ -204,9 +214,29 @@ export class Fetcher implements IFetcher {
         return await createImageBitmap(blob);
     }
 
+    async getCanvasImage(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
+        if (hasImageBitmap) {
+            return await this.getImageBitmap(path, headers, onProgress);
+        }
+        else {
+            const file = await this.getFile(path, headers, onProgress);
+            return await fileToImage(file);
+        }
+    }
+
     async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
         const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
         return await createImageBitmap(blob);
+    }
+
+    async postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
+        if (hasImageBitmap) {
+            return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+        }
+        else {
+            const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+            return await fileToImage(file);
+        }
     }
 
     async loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void> {
