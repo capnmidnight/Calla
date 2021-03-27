@@ -80,6 +80,8 @@ async function blobToBuffer(blob: Blob): Promise<BufferAndContentType> {
 export class Fetcher implements IFetcher {
 
     private async getXHR<T>(path: string, xhrType: XMLHttpRequestResponseType, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
+        onProgress = onProgress || dumpProgress;
+
         const xhr = new XMLHttpRequest();
 
         const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());

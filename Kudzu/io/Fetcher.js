@@ -66,6 +66,7 @@ async function blobToBuffer(blob) {
 }
 export class Fetcher {
     async getXHR(path, xhrType, headers, onProgress) {
+        onProgress = onProgress || dumpProgress;
         const xhr = new XMLHttpRequest();
         const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
         setXHRHeaders(xhr, "GET", path, xhrType, headers);
