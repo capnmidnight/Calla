@@ -1,5 +1,5 @@
 import type { Context2D } from "kudzu/html/canvas";
-import { IImageFetcher } from "kudzu/io/IImageFetcher";
+import { IFetcher } from "kudzu/io/IFetcher";
 import * as astar from "../lib/astar";
 import type { BaseAvatar } from "./avatars/BaseAvatar";
 export declare class TileMap {
@@ -16,7 +16,7 @@ export declare class TileMap {
     private _tileset;
     private _tiles;
     private _graph;
-    constructor(tilemapName: string, fetcher: IImageFetcher);
+    constructor(tilemapName: string, fetcher: IFetcher);
     load(): Promise<void>;
     get width(): number;
     get height(): number;

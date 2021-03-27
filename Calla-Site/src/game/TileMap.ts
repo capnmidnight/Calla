@@ -1,6 +1,6 @@
 import type { CanvasTypes, Context2D } from "kudzu/html/canvas";
 import { createUtilityCanvas } from "kudzu/html/canvas";
-import { IImageFetcher } from "kudzu/io/IImageFetcher";
+import { IFetcher } from "kudzu/io/IFetcher";
 import * as astar from "../lib/astar";
 import type { BaseAvatar } from "./avatars/BaseAvatar";
 import { TileSet } from "./TileSet";
@@ -21,7 +21,7 @@ export class TileMap {
     private _tiles: number[][][] = null;
     private _graph: astar.Graph = null;
 
-    constructor(tilemapName: string, private fetcher: IImageFetcher) {
+    constructor(tilemapName: string, private fetcher: IFetcher) {
         this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
 
@@ -33,7 +33,7 @@ export class TileMap {
             tileHeight = parseInt(map.getAttribute("tileheight"), 10),
             tileset = map.querySelector("tileset"),
             tilesetSource = tileset.getAttribute("source"),
-            layers = map.querySelectorAll("layer > data");
+            layers = Array.from<HTMLElement>(map.querySelectorAll("layer > data"));
 
         this._layers = layers.length;
         this._width = width;

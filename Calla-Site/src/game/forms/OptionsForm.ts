@@ -1,5 +1,6 @@
-import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width as cssWidth, width } from "kudzu/html/attrs";
+import { disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value} from "kudzu/html/attrs";
 import { CanvasTypes } from "kudzu/html/canvas";
+import { width } from "kudzu/html/css";
 import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
 import { gridColsDef } from "kudzu/html/grid";
 import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
@@ -48,8 +49,8 @@ interface OptionsFormEvents extends FormDialogEvents {
     gamepadAxisMaxed: OptionsFormGamepadAxisMaxedEvent;
 }
 
-const keyWidthStyle = cssWidth("7em"),
-    numberWidthStyle = cssWidth("3em"),
+const keyWidthStyle = width("7em"),
+    numberWidthStyle = width("3em"),
     avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(),
     gamepadChangedEvt = new OptionsFormGamepadChangedEvent(),
     selectAvatarEvt = new OptionsFormSelectAvatarEvent(),
@@ -205,8 +206,8 @@ export class OptionsForm
                         "Use video",
                         onClick(_(toggleVideoEvt)))),
                 this.avatarPreview = Canvas(
-                    width(256),
-                    height(256))),
+                    htmlWidth(256),
+                    htmlHeight(256))),
 
             OptionPanel("interface", "Interface",
                 this.fontSizeInput = LabeledInput(
@@ -295,7 +296,7 @@ export class OptionsForm
             panels[i].style.gridColumnStart = (i + 1).toFixed(0);
         }
 
-        gridColsDef(...cols).apply(this.header);
+        gridColsDef(...cols).apply(this.header.style);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));

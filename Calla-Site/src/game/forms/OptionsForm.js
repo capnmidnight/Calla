@@ -1,4 +1,5 @@
-import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width as cssWidth, width } from "kudzu/html/attrs";
+import { disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value } from "kudzu/html/attrs";
+import { width } from "kudzu/html/css";
 import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
 import { gridColsDef } from "kudzu/html/grid";
 import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
@@ -46,7 +47,7 @@ export class OptionsFormGamepadAxisMaxedEvent extends Event {
         this.axis = 0;
     }
 }
-const keyWidthStyle = cssWidth("7em"), numberWidthStyle = cssWidth("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
+const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
 const disabler = disabled(true), enabler = disabled(false);
 export class OptionsForm extends FormDialog {
     constructor() {
@@ -97,7 +98,7 @@ export class OptionsForm extends FormDialog {
             })), this.clearAvatarURLButton = Button(disabled, "Clear", onClick(() => {
                 this.avatarURL = null;
                 this.dispatchEvent(avatarUrlChangedEvt);
-            }))), " or ", Div(Label(htmlFor("videoAvatarButton"), "Video: "), this.useVideoAvatarButton = Button(id("videoAvatarButton"), "Use video", onClick(_(toggleVideoEvt)))), this.avatarPreview = Canvas(width(256), height(256))),
+            }))), " or ", Div(Label(htmlFor("videoAvatarButton"), "Video: "), this.useVideoAvatarButton = Button(id("videoAvatarButton"), "Use video", onClick(_(toggleVideoEvt)))), this.avatarPreview = Canvas(htmlWidth(256), htmlHeight(256))),
             OptionPanel("interface", "Interface", this.fontSizeInput = LabeledInput("fontSize", "number", "Font size: ", value("10"), min(5), max(32), numberWidthStyle, onInput(_(fontSizeChangedEvt))), P(this.drawHearingCheck = LabeledInput("drawHearing", "checkbox", "Draw hearing range: ", onInput(() => {
                 this.drawHearing = !this.drawHearing;
                 this.dispatchEvent(toggleDrawHearingEvt);
@@ -110,7 +111,7 @@ export class OptionsForm extends FormDialog {
             cols[i] = "1fr";
             panels[i].style.gridColumnStart = (i + 1).toFixed(0);
         }
-        gridColsDef(...cols).apply(this.header);
+        gridColsDef(...cols).apply(this.header.style);
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
         const showPanel = (p) => () => {

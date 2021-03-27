@@ -5,7 +5,7 @@ import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeopleGroup as people } from "kudzu/emoji/people";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
-import { ImageFetcher } from "kudzu/io/ImageFetcher";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { TimerTickEvent } from "kudzu/timers/BaseTimer";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
@@ -23,7 +23,7 @@ import { Settings } from "./Settings";
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,
     settings = new Settings(),
-    fetcher = new ImageFetcher(),
+    fetcher = new Fetcher(),
     audio = new AudioManager(fetcher, SpatializerType.High),
     loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC),
     game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
@@ -42,11 +42,11 @@ let waitingForEmoji = false;
 let client: Calla = null;
 
 async function recordJoin(Name: string, Email: string, Room: string) {
-    await fetcher.postObject("/Contacts", { Name, Email, Room });
+    await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
 }
 
 async function recordRoom(roomName: string) {
-    return await fetcher.postObjectForText("/Game/Rooms", roomName);
+    return await fetcher.postObjectForText("/Game/Rooms", roomName, "application/json");
 }
 
 function _showView(view: FormDialog<any>) {

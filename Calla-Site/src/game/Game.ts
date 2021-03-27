@@ -6,7 +6,7 @@ import { id } from "kudzu/html/attrs";
 import { resizeCanvas } from "kudzu/html/canvas";
 import { Canvas } from "kudzu/html/tags";
 import { EventedGamepad } from "kudzu/input/EventedGamepad";
-import { IImageFetcher } from "kudzu/io/IImageFetcher";
+import { IFetcher } from "kudzu/io/IFetcher";
 import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
 import { project } from "kudzu/math/project";
@@ -88,7 +88,7 @@ export class Game extends TypedEventBase<GameEvents> {
     inputBinding: IInputBinding;
     screenControls: ScreenPointerControls;
 
-    constructor(private fetcher: IImageFetcher, public zoomMin: number, public zoomMax: number) {
+    constructor(private fetcher: IFetcher, public zoomMin: number, public zoomMax: number) {
         super();
 
         this.element = Canvas(id("frontBuffer"));

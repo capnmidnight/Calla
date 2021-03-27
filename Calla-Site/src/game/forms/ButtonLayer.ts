@@ -16,7 +16,8 @@ import {
     whiteFlower
 } from "kudzu/emoji/emojis";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { alt, className, height as cssHeight, id, margin, max, min, role, src, step, textAlign, title, value } from "kudzu/html/attrs";
+import { alt, className, id, max, min, role, src, step, title, value } from "kudzu/html/attrs";
+import { height, margin, textAlign } from "kudzu/html/css";
 import { onClick, onInput } from "kudzu/html/evts";
 import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
 import { IOpenable, updateLabel } from "./ops";
@@ -106,7 +107,7 @@ export class ButtonLayer
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    cssHeight("25px"),
+                    height("25px"),
                     margin("2px auto -2px auto")),
                 Run("Tweet")),
 

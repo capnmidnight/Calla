@@ -1,4 +1,5 @@
-import { backgroundColor, height, id, styles, width, zIndex } from "kudzu/html/attrs";
+import { htmlHeight, htmlWidth, id } from "kudzu/html/attrs";
+import { backgroundColor, styles, zIndex } from "kudzu/html/css";
 import { onClick, onMouseOut, onMouseOver } from "kudzu/html/evts";
 import { gridPos, row } from "kudzu/html/grid";
 import { Canvas, Div } from "kudzu/html/tags";
@@ -79,8 +80,8 @@ export class UserDirectoryForm extends FormDialog<UserDirectoryFormEvents> {
             this.avatarGs.set(
                 user.id,
                 Canvas(
-                    width(32),
-                    height(32))
+                    htmlWidth(32),
+                    htmlHeight(32))
                     .getContext("2d"));
         }
 
@@ -119,7 +120,7 @@ export class UserDirectoryForm extends FormDialog<UserDirectoryFormEvents> {
             for (let elems of this.rows.values()) {
                 const r = row(rowCount++);
                 for (let elem of elems) {
-                    r.apply(elem);
+                    r.apply(elem.style);
                 }
             }
         }
