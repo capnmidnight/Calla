@@ -1,15 +1,15 @@
-import { assertNever, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import { assertNever, isArray, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
-    constructor(scriptPath, minScriptPath, workerPoolSize) {
+    constructor(scriptPath, minScriptPathOrWorkers, workerPoolSize) {
         this.taskCounter = 0;
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
         // Normalize constructor parameters.
-        if (isNumber(minScriptPath)) {
-            workerPoolSize = minScriptPath;
-            minScriptPath = undefined;
+        if (isNumber(minScriptPathOrWorkers)) {
+            workerPoolSize = minScriptPathOrWorkers;
+            minScriptPathOrWorkers = undefined;
         }
         if (isNullOrUndefined(workerPoolSize)) {
             workerPoolSize = 1;
@@ -20,15 +20,20 @@ export class WorkerClient {
         }
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || !isString(minScriptPath)) {
+            || !isString(minScriptPathOrWorkers)) {
             this._script = scriptPath;
         }
         else {
-            this._script = minScriptPath;
+            this._script = minScriptPathOrWorkers;
         }
-        this.workers = new Array(workerPoolSize);
-        for (let i = 0; i < workerPoolSize; ++i) {
-            this.workers[i] = new Worker(this._script);
+        if (isArray(minScriptPathOrWorkers)) {
+            this.workers = minScriptPathOrWorkers;
+        }
+        else {
+            this.workers = new Array(workerPoolSize);
+            for (let i = 0; i < workerPoolSize; ++i) {
+                this.workers[i] = new Worker(this._script);
+            }
         }
     }
     get scriptPath() {
@@ -46,58 +51,54 @@ export class WorkerClient {
                 const data = evt.data;
                 // Did this response message match the current invocation?
                 if (data.taskID === taskID) {
-                    switch (data.methodName) {
-                        case WorkerMethodMessageType.Progress:
-                            if (isFunction(onProgress)) {
-                                onProgress(data.soFar, data.total, data.msg);
-                            }
-                            break;
-                        case WorkerMethodMessageType.Return:
-                            cleanup();
+                    if (data.methodName === WorkerMethodMessageType.Progress) {
+                        if (isFunction(onProgress)) {
+                            onProgress(data.soFar, data.total, data.msg);
+                        }
+                    }
+                    else {
+                        cleanup();
+                        if (data.methodName === WorkerMethodMessageType.Return) {
                             resolve(undefined);
-                            break;
-                        case WorkerMethodMessageType.ReturnValue:
-                            cleanup();
+                        }
+                        else if (data.methodName === WorkerMethodMessageType.ReturnValue) {
                             resolve(data.returnValue);
-                            break;
-                        case WorkerMethodMessageType.Error:
-                            cleanup();
+                        }
+                        else if (data.methodName === WorkerMethodMessageType.Error) {
                             reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
-                            break;
-                        default: assertNever(data);
+                        }
+                        else {
+                            assertNever(data);
+                        }
                     }
                 }
             };
             worker.addEventListener("message", dispatchMessageResponse);
-            if (params) {
-                if (transferables) {
-                    worker.postMessage({
-                        taskID,
-                        methodName,
-                        params
-                    }, transferables);
-                }
-                else {
-                    worker.postMessage({
-                        taskID,
-                        methodName,
-                        params
-                    });
-                }
+            if (params && transferables) {
+                worker.postMessage({
+                    taskID,
+                    methodName,
+                    params
+                }, transferables);
+            }
+            else if (params) {
+                worker.postMessage({
+                    taskID,
+                    methodName,
+                    params
+                });
+            }
+            else if (transferables) {
+                worker.postMessage({
+                    taskID,
+                    methodName
+                }, transferables);
             }
             else {
-                if (transferables) {
-                    worker.postMessage({
-                        taskID,
-                        methodName
-                    }, transferables);
-                }
-                else {
-                    worker.postMessage({
-                        taskID,
-                        methodName
-                    });
-                }
+                worker.postMessage({
+                    taskID,
+                    methodName
+                });
             }
         });
     }

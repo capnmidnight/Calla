@@ -3,18 +3,7 @@ import type { progressCallback } from "../tasks/progressCallback";
 import { WorkerClient } from "../workers/WorkerClient";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import { IFetcher } from "./IFetcher";
-export declare class FetcherWorkerClient implements IFetcher {
-    worker: WorkerClient;
-    /**
-     * Creates a new pooled worker method executor.
-     * @param scriptPath - the path to the unminified script to use for the worker
-     * @param minScriptPath - the path to the minified script to use for the worker (optional)
-     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
-     */
-    constructor(scriptPath: string);
-    constructor(scriptPath: string, minScriptPath: string);
-    constructor(scriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+export declare class FetcherWorkerClient extends WorkerClient implements IFetcher {
     getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
     getBlob(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
     getText(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;

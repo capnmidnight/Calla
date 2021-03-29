@@ -3,7 +3,6 @@ import type { CanvasImageTypes } from "../html/canvas";
 import { hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
 import type { progressCallback } from "../tasks/progressCallback";
-import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import { fileToImage } from "./Fetcher";
@@ -29,40 +28,12 @@ function bufferToXml(buffer: BufferAndContentType) {
     return doc.documentElement;
 }
 
-export class FetcherWorkerClient implements IFetcher {
-
-    worker: WorkerClient;
-
-    /**
-     * Creates a new pooled worker method executor.
-     * @param scriptPath - the path to the unminified script to use for the worker
-     * @param minScriptPath - the path to the minified script to use for the worker (optional)
-     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
-     */
-    constructor(scriptPath: string);
-    constructor(scriptPath: string, minScriptPath: string);
-    constructor(scriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize: number = 1) {
-        if (isNumber(minScriptPath)) {
-            workerPoolSize = minScriptPath;
-            minScriptPath = undefined;
-        }
-
-        if (isNullOrUndefined(workerPoolSize)) {
-            workerPoolSize = 1;
-        }
-
-        if (isString(minScriptPath)) {
-            this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
-        }
-        else {
-            this.worker = new WorkerClient(scriptPath, workerPoolSize);
-        }
-    }
+export class FetcherWorkerClient
+    extends WorkerClient
+    implements IFetcher {
 
     async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this.worker.execute("getBuffer", [path, headers], onProgress);
+        return await this.execute("getBuffer", [path, headers], onProgress);
     }
 
     async getBlob(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob> {
@@ -74,7 +45,7 @@ export class FetcherWorkerClient implements IFetcher {
     }
 
     async getText(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.worker.execute("getText", [path, headers], onProgress);
+        return await this.execute("getText", [path, headers], onProgress);
     }
 
     async getXml(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement> {
@@ -83,15 +54,15 @@ export class FetcherWorkerClient implements IFetcher {
     }
 
     async getObject<T>(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
-        return await this.worker.execute("getObject", [path, headers], onProgress);
+        return await this.execute("getObject", [path, headers], onProgress);
     }
 
     async getFile(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.worker.execute("getFile", [path, headers], onProgress);
+        return await this.execute("getFile", [path, headers], onProgress);
     }
 
     async getImageBitmap(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
-        return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
+        return await this.execute("getImageBitmap", [path, headers], onProgress);
     }
 
     async getCanvasImage(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
@@ -105,11 +76,11 @@ export class FetcherWorkerClient implements IFetcher {
     }
 
     async postObject(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
-        await this.worker.execute("postObject", [path, obj, contentType, headers], onProgress);
+        await this.execute("postObject", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this.worker.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob> {
@@ -121,7 +92,7 @@ export class FetcherWorkerClient implements IFetcher {
     }
 
     async postObjectForText(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.worker.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForXml(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement> {
@@ -130,15 +101,15 @@ export class FetcherWorkerClient implements IFetcher {
     }
 
     async postObjectForObject<T>(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
-        return await this.worker.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForFile(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.worker.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
-        return await this.worker.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {

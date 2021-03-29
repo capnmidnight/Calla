@@ -1,5 +1,5 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import { assertNever, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import { assertNever, isArray, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import type { WorkerMethodMessages } from "./WorkerServer";
 import { WorkerMethodMessageType } from "./WorkerServer";
 
@@ -9,8 +9,35 @@ export class WorkerClient {
     static isSupported = "Worker" in globalThis;
 
     private taskCounter: number = 0;
-    private workers: Worker[];
+    protected workers: Worker[];
     private _script: string;
+
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     */
+    constructor(scriptPath: string);
+
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     * @param workers - a set of workers that are already running.
+     */
+    constructor(scriptPath: string, workers: Worker[]);
+
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     * @param minScriptPath - the path to the minified script to use for the worker
+     */
+    constructor(scriptPath: string, minScriptPath: string);
+
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
+     */
+    constructor(scriptPath: string, workerPoolSize: number);
 
     /**
      * Creates a new pooled worker method executor.
@@ -18,20 +45,18 @@ export class WorkerClient {
      * @param minScriptPath - the path to the minified script to use for the worker (optional)
      * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
      */
-    constructor(scriptPath: string);
-    constructor(scriptPath: string, minScriptPath: string);
-    constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize?: number) {
+    constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
+    constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number) {
 
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
 
         // Normalize constructor parameters.
-        if (isNumber(minScriptPath)) {
-            workerPoolSize = minScriptPath;
-            minScriptPath = undefined;
+        if (isNumber(minScriptPathOrWorkers)) {
+            workerPoolSize = minScriptPathOrWorkers;
+            minScriptPathOrWorkers = undefined;
         }
 
         if (isNullOrUndefined(workerPoolSize)) {
@@ -45,16 +70,21 @@ export class WorkerClient {
 
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || !isString(minScriptPath)) {
+            || !isString(minScriptPathOrWorkers)) {
             this._script = scriptPath;
         }
         else {
-            this._script = minScriptPath;
+            this._script = minScriptPathOrWorkers;
         }
 
-        this.workers = new Array(workerPoolSize);
-        for (let i = 0; i < workerPoolSize; ++i) {
-            this.workers[i] = new Worker(this._script);
+        if (isArray(minScriptPathOrWorkers)) {
+            this.workers = minScriptPathOrWorkers;
+        }
+        else {
+            this.workers = new Array(workerPoolSize);
+            for (let i = 0; i < workerPoolSize; ++i) {
+                this.workers[i] = new Worker(this._script);
+            }
         }
     }
 
@@ -76,60 +106,57 @@ export class WorkerClient {
 
                 // Did this response message match the current invocation?
                 if (data.taskID === taskID) {
-                    switch (data.methodName) {
-                        case WorkerMethodMessageType.Progress:
-                            if (isFunction(onProgress)) {
-                                onProgress(data.soFar, data.total, data.msg);
-                            }
-                            break;
-                        case WorkerMethodMessageType.Return:
-                            cleanup();
+                    if (data.methodName === WorkerMethodMessageType.Progress) {
+                        if (isFunction(onProgress)) {
+                            onProgress(data.soFar, data.total, data.msg);
+                        }
+                    }
+                    else {
+                        cleanup();
+
+                        if (data.methodName === WorkerMethodMessageType.Return) {
                             resolve(undefined);
-                            break;
-                        case WorkerMethodMessageType.ReturnValue:
-                            cleanup();
+                        }
+                        else if (data.methodName === WorkerMethodMessageType.ReturnValue) {
                             resolve(data.returnValue);
-                            break;
-                        case WorkerMethodMessageType.Error:
-                            cleanup();
+                        }
+                        else if (data.methodName === WorkerMethodMessageType.Error) {
                             reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
-                            break;
-                        default: assertNever(data);
+                        }
+                        else {
+                            assertNever(data);
+                        }
                     }
                 }
             };
 
             worker.addEventListener("message", dispatchMessageResponse);
 
-            if (params) {
-                if (transferables) {
-                    worker.postMessage({
-                        taskID,
-                        methodName,
-                        params
-                    }, transferables);
-                }
-                else {
-                    worker.postMessage({
-                        taskID,
-                        methodName,
-                        params
-                    });
-                }
+            if (params && transferables) {
+                worker.postMessage({
+                    taskID,
+                    methodName,
+                    params
+                }, transferables);
+            }
+            else if (params) {
+                worker.postMessage({
+                    taskID,
+                    methodName,
+                    params
+                });
+            }
+            else if (transferables) {
+                worker.postMessage({
+                    taskID,
+                    methodName
+                }, transferables);
             }
             else {
-                if (transferables) {
-                    worker.postMessage({
-                        taskID,
-                        methodName
-                    }, transferables);
-                }
-                else {
-                    worker.postMessage({
-                        taskID,
-                        methodName
-                    });
-                }
+                worker.postMessage({
+                    taskID,
+                    methodName
+                });
             }
         });
     }

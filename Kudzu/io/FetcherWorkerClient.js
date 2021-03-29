@@ -1,7 +1,6 @@
 import { waitFor } from "../events/waitFor";
 import { hasImageBitmap } from "../html/canvas";
 import { createScript } from "../html/script";
-import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { fileToImage } from "./Fetcher";
 function isDOMParsersSupportedType(type) {
@@ -21,24 +20,9 @@ function bufferToXml(buffer) {
     const doc = parser.parseFromString(text, buffer.contentType);
     return doc.documentElement;
 }
-export class FetcherWorkerClient {
-    constructor(scriptPath, minScriptPath, workerPoolSize = 1) {
-        if (isNumber(minScriptPath)) {
-            workerPoolSize = minScriptPath;
-            minScriptPath = undefined;
-        }
-        if (isNullOrUndefined(workerPoolSize)) {
-            workerPoolSize = 1;
-        }
-        if (isString(minScriptPath)) {
-            this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
-        }
-        else {
-            this.worker = new WorkerClient(scriptPath, workerPoolSize);
-        }
-    }
+export class FetcherWorkerClient extends WorkerClient {
     async getBuffer(path, headers, onProgress) {
-        return await this.worker.execute("getBuffer", [path, headers], onProgress);
+        return await this.execute("getBuffer", [path, headers], onProgress);
     }
     async getBlob(path, headers, onProgress) {
         const buffer = await this.getBuffer(path, headers, onProgress);
@@ -48,20 +32,20 @@ export class FetcherWorkerClient {
         return blob;
     }
     async getText(path, headers, onProgress) {
-        return await this.worker.execute("getText", [path, headers], onProgress);
+        return await this.execute("getText", [path, headers], onProgress);
     }
     async getXml(path, headers, onProgress) {
         const buffer = await this.getBuffer(path, headers, onProgress);
         return bufferToXml(buffer);
     }
     async getObject(path, headers, onProgress) {
-        return await this.worker.execute("getObject", [path, headers], onProgress);
+        return await this.execute("getObject", [path, headers], onProgress);
     }
     async getFile(path, headers, onProgress) {
-        return await this.worker.execute("getFile", [path, headers], onProgress);
+        return await this.execute("getFile", [path, headers], onProgress);
     }
     async getImageBitmap(path, headers, onProgress) {
-        return await this.worker.execute("getImageBitmap", [path, headers], onProgress);
+        return await this.execute("getImageBitmap", [path, headers], onProgress);
     }
     async getCanvasImage(path, headers, onProgress) {
         if (hasImageBitmap) {
@@ -73,10 +57,10 @@ export class FetcherWorkerClient {
         }
     }
     async postObject(path, obj, contentType, headers, onProgress) {
-        await this.worker.execute("postObject", [path, obj, contentType, headers], onProgress);
+        await this.execute("postObject", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        return await this.worker.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForBlob(path, obj, contentType, headers, onProgress) {
         const buffer = await this.postObjectForBuffer(path, obj, contentType, headers, onProgress);
@@ -86,20 +70,20 @@ export class FetcherWorkerClient {
         return blob;
     }
     async postObjectForText(path, obj, contentType, headers, onProgress) {
-        return await this.worker.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForXml(path, obj, contentType, headers, onProgress) {
         const buffer = await this.postObjectForBuffer(path, obj, contentType, headers, onProgress);
         return bufferToXml(buffer);
     }
     async postObjectForObject(path, obj, contentType, headers, onProgress) {
-        return await this.worker.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForFile(path, obj, contentType, headers, onProgress) {
-        return await this.worker.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
-        return await this.worker.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+        return await this.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
         if (hasImageBitmap) {
