@@ -1,3 +1,4 @@
+export const isWorker = false;
 export const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
 export const isFirefox = "InstallTrigger" in globalThis;
 export const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);

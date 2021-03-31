@@ -1,3 +1,4 @@
+export declare const isWorker = false;
 export declare const isChrome: boolean;
 export declare const isFirefox: boolean;
 export declare const isSafari: boolean;

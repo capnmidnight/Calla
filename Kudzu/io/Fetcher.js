@@ -2,6 +2,7 @@ import { once } from "../events/once";
 import { waitFor } from "../events/waitFor";
 import { src } from "../html/attrs";
 import { hasImageBitmap } from "../html/canvas";
+import { isWorker } from "../html/flags";
 import { createScript } from "../html/script";
 import { Img } from "../html/tags";
 import { dumpProgress } from "../tasks/progressCallback";
@@ -170,6 +171,9 @@ export class Fetcher {
         if (hasImageBitmap) {
             return await this.getImageBitmap(path, headers, onProgress);
         }
+        else if (isWorker) {
+            return null;
+        }
         else {
             const file = await this.getFile(path, headers, onProgress);
             return await fileToImage(file);
@@ -183,12 +187,18 @@ export class Fetcher {
         if (hasImageBitmap) {
             return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
         }
+        else if (isWorker) {
+            return null;
+        }
         else {
             const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
             return await fileToImage(file);
         }
     }
     async loadScript(path, test, onProgress) {
+        if (isWorker) {
+            return;
+        }
         if (!test()) {
             const scriptLoadTask = waitFor(test);
             const file = await this.getFile(path, null, onProgress);

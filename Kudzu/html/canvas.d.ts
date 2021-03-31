@@ -9,15 +9,15 @@ export interface WebXRWebGLRenderingContext extends WebGLRenderingContext {
     makeXRCompatible(): Promise<void>;
 }
 export declare function isWebXRWebGLRenderingContext(ctx: any): ctx is WebXRWebGLRenderingContext;
-export declare const hasOffscreenCanvasRenderingContext2D: boolean;
-export declare const hasOffscreenCanvasRenderingContext3D: boolean;
-export declare const hasImageBitmapRenderingContext: boolean;
 export declare function drawImageBitmapToCanvas2D(canv: CanvasTypes, img: ImageBitmap): void;
 export declare function copyImageBitmapToCanvas(canv: CanvasTypes, img: ImageBitmap): void;
+export declare const hasOffscreenCanvasRenderingContext2D: boolean;
+export declare const createUtilityCanvas: typeof createOffscreenCanvas | typeof createCanvas;
+export declare const hasOffscreenCanvasRenderingContext3D: boolean;
+export declare const hasImageBitmapRenderingContext: boolean;
 export declare const drawImageBitmapToCanvas: typeof copyImageBitmapToCanvas;
 export declare function createOffscreenCanvas(width: number, height: number): OffscreenCanvas;
 export declare function createCanvas(w: number, h: number): HTMLCanvasElement;
-export declare const createUtilityCanvas: typeof createOffscreenCanvas | typeof createCanvas;
 export declare function createOffscreenCanvasFromImageBitmap(img: ImageBitmap): OffscreenCanvas;
 export declare function createCanvasFromImageBitmap(img: ImageBitmap): HTMLCanvasElement;
 export declare const createUtilityCanvasFromImageBitmap: typeof createOffscreenCanvasFromImageBitmap | typeof createCanvasFromImageBitmap;

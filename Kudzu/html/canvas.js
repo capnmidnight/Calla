@@ -1,46 +1,15 @@
 import { openWindow } from "../testing/windowing";
 import { isDefined, isNullOrUndefined } from "../typeChecks";
 import { htmlHeight, htmlWidth } from "./attrs";
+import { isWorker } from "./flags";
 import { Canvas } from "./tags";
-export const hasHTMLCanvas = "HTMLCanvasElement" in globalThis;
+export const hasHTMLCanvas = !isWorker && "HTMLCanvasElement" in globalThis;
 export const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
 export const hasImageBitmap = "createImageBitmap" in globalThis;
 export function isWebXRWebGLRenderingContext(ctx) {
     return "makeXRCompatible" in ctx
         && ctx.makeXRCompatible instanceof Function;
 }
-export const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
-    try {
-        const canv = new OffscreenCanvas(1, 1);
-        const g = canv.getContext("2d");
-        return g != null;
-    }
-    catch (exp) {
-        return false;
-    }
-})();
-export const hasOffscreenCanvasRenderingContext3D = hasOffscreenCanvas && (function () {
-    try {
-        const canv = new OffscreenCanvas(1, 1);
-        const g = canv.getContext("webgl2");
-        return g != null;
-    }
-    catch (exp) {
-        return false;
-    }
-})();
-export const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
-    try {
-        const canv = hasOffscreenCanvas
-            ? new OffscreenCanvas(1, 1)
-            : Canvas();
-        const g = canv.getContext("bitmaprenderer");
-        return g != null;
-    }
-    catch (exp) {
-        return false;
-    }
-})();
 export function drawImageBitmapToCanvas2D(canv, img) {
     const g = canv.getContext("2d");
     if (isNullOrUndefined(g)) {
@@ -55,6 +24,47 @@ export function copyImageBitmapToCanvas(canv, img) {
     }
     g.transferFromImageBitmap(img);
 }
+function testOffscreen2D() {
+    try {
+        const canv = new OffscreenCanvas(1, 1);
+        const g = canv.getContext("2d");
+        return g != null;
+    }
+    catch (exp) {
+        return false;
+    }
+}
+export const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && testOffscreen2D();
+export const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
+    ? createOffscreenCanvas
+    : isWorker
+        ? null
+        : createCanvas;
+function testOffscreen3D() {
+    try {
+        const canv = new OffscreenCanvas(1, 1);
+        const g = canv.getContext("webgl2");
+        return g != null;
+    }
+    catch (exp) {
+        return false;
+    }
+}
+export const hasOffscreenCanvasRenderingContext3D = hasOffscreenCanvas && testOffscreen3D();
+function testBitmapRenderer() {
+    if (isWorker && !hasOffscreenCanvas) {
+        return false;
+    }
+    try {
+        const canv = createUtilityCanvas(1, 1);
+        const g = canv.getContext("bitmaprenderer");
+        return g != null;
+    }
+    catch (exp) {
+        return false;
+    }
+}
+export const hasImageBitmapRenderingContext = hasImageBitmap && testBitmapRenderer();
 export const drawImageBitmapToCanvas = hasImageBitmapRenderingContext
     ? copyImageBitmapToCanvas
     : drawImageBitmapToCanvas2D;
@@ -64,9 +74,6 @@ export function createOffscreenCanvas(width, height) {
 export function createCanvas(w, h) {
     return Canvas(htmlWidth(w), htmlHeight(h));
 }
-export const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
-    ? createOffscreenCanvas
-    : createCanvas;
 export function createOffscreenCanvasFromImageBitmap(img) {
     const canv = createOffscreenCanvas(img.width, img.height);
     drawImageBitmapToCanvas(canv, img);
@@ -79,7 +86,9 @@ export function createCanvasFromImageBitmap(img) {
 }
 export const createUtilityCanvasFromImageBitmap = hasOffscreenCanvasRenderingContext2D
     ? createOffscreenCanvasFromImageBitmap
-    : createCanvasFromImageBitmap;
+    : isWorker
+        ? null
+        : createCanvasFromImageBitmap;
 export function drawImageToCanvas(canv, img) {
     const g = canv.getContext("2d");
     if (isNullOrUndefined(g)) {
@@ -99,7 +108,9 @@ export function createCanvasFromImage(img) {
 }
 export const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
     ? createOffscreenCanvasFromImage
-    : createCanvasFromImage;
+    : isWorker
+        ? null
+        : createCanvasFromImage;
 export function isHTMLCanvas(obj) {
     return hasHTMLCanvas && obj instanceof HTMLCanvasElement;
 }
@@ -185,6 +196,9 @@ export function resizeContext(ctx, superscale = 1) {
     return setContextSize(ctx, ctx.canvas.clientWidth, ctx.canvas.clientHeight, superscale);
 }
 export async function canvasView(canvas) {
+    if (isWorker) {
+        return;
+    }
     let url;
     if (isOffscreenCanvas(canvas)) {
         const blob = await canvas.convertToBlob();
@@ -198,6 +212,9 @@ export async function canvasView(canvas) {
 export async function canvasToBlob(canvas, type, quality) {
     if (isOffscreenCanvas(canvas)) {
         return await canvas.convertToBlob({ type, quality });
+    }
+    else if (isWorker) {
+        return null;
     }
     else {
         return await new Promise((resolve) => {

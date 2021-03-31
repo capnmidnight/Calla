@@ -75,6 +75,18 @@ function clean(name, input, outputDir) {
 function makeBundle(name, input, outputDir, format, isProduction, options) {
     options = coallesceOptions(options, isProduction);
 
+    const replaceOpts = Object.assign({
+        preventAssignment: true,
+        "const isWorker = false": options.isWorker ? "const isWorker = true" : "const isWorker = false",
+        "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
+        "__filename": function (match) {
+            const curDir = process.cwd().replace('\\', '/');
+            let path = match.replace('\\', '/');
+            path = path.substring(curDir.length);
+            return JSON.stringify(path);
+        }
+    }, options.replace);
+
     const opts = {
         input,
         plugins: [
@@ -90,16 +102,7 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
             }),
             nodeResolve(),
             commonjs(),
-            replace({
-                preventAssignment: true,
-                "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
-                "__filename": function (match) {
-                    const curDir = process.cwd().replace('\\', '/');
-                    let path = match.replace('\\', '/');
-                    path = path.substring(curDir.length);
-                    return JSON.stringify(path);
-                }
-            }),
+            replace(replaceOpts),
             json()
         ],
         output: {
