@@ -1,0 +1,67 @@
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { Grammar } from "./grammars";
+export interface PrimroseOptions {
+    readOnly: boolean;
+    multiLine: boolean;
+    wordWrap: boolean;
+    scrollBars: boolean;
+    lineNumbers: boolean;
+    padding: number;
+    fontSize: number;
+    language: string | Grammar;
+    scaleFactor: number;
+    element: HTMLElement;
+    width: number;
+    height: number;
+}
+export declare class Primrose extends TypedEventBase<{
+    out: TypedEvent<"out">;
+    over: TypedEvent<"over">;
+    blur: TypedEvent<"blur">;
+    focus: TypedEvent<"focus">;
+    change: TypedEvent<"change">;
+    update: TypedEvent<"update">;
+}> {
+    private elementID;
+    private longPress;
+    private tx;
+    private ty;
+    private pressed;
+    private dragging;
+    private scrolling;
+    private lastScrollDX;
+    private lastScrollDY;
+    private outEvt;
+    private overEvt;
+    private blurEvt;
+    private focusEvt;
+    private changeEvt;
+    private updateEvt;
+    constructor(options: Partial<PrimroseOptions>);
+    private debugEvt;
+    private startSelecting;
+    private pointerDown;
+    private pointerMove;
+    private mouseLikePointerDown;
+    private mouseLikePointerUp;
+    private mouseLikePointerMove;
+    private touchLikePointerDown;
+    private touchLikePointerUp;
+    private touchLikePointerMove;
+    private refreshBuffers;
+    private moveCursor;
+    private dragScroll;
+    blur(): void;
+    focus(): void;
+    resize(): void;
+    setSize(w: number, h: number): void;
+    scrollTo(x: number, y: number): any;
+    scrollBy(dx: number, dy: number): any;
+    static has(key: any): boolean;
+    static get(key: any): Primrose;
+    static add(key: any, control: Primrose): void;
+    static get hoveredControl(): Primrose;
+    static get focusedControl(): Primrose;
+    static get editors(): Primrose[];
+    static get ready(): Promise<void>;
+}
