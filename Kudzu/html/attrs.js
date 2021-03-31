@@ -723,7 +723,7 @@ export function translate(value) { return new Attr("translate", value); }
 /**
  * Defines the type of the element.
   **/
-export function type(value) { return new Attr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+export function type(value) { return new Attr("type", value, "button", "input", "command", "embed", "link", "object", "script", "source", "style", "menu"); }
 /**
  * Defines a default value which will be displayed in the element on page load.
   **/
