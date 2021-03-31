@@ -1,11 +1,8 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { once } from "../events/once";
-import { src } from "../html/attrs";
-import { canvasToBlob, CanvasTypes, Context2D, createUtilityCanvas, createUtilityCanvasFromImage, setContextSize } from "../html/canvas";
-import { Img } from "../html/tags";
+import { CanvasTypes, Context2D, createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
-import { loadFont, makeFont } from "./fonts";
+import { makeFont } from "./fonts";
 
 export interface PaddingRect {
     top: number;
@@ -167,31 +164,6 @@ export class TextImage
         }
 
         this._g = g;
-    }
-
-    async loadFontAndSetText(value: string | null = null) {
-        const font = makeFont(this);
-        await loadFont(font, value);
-        this.value = value;
-    }
-
-    private async makeBlob(value: string): Promise<Blob> {
-        const task = once(this, "redrawn", "notready");
-        this.value = value;
-        await task;
-        return await canvasToBlob(this.canvas);
-    }
-
-    async makeImageBitmap(value: string): Promise<ImageBitmap> {
-        const blob = await this.makeBlob(value);
-        return await createImageBitmap(blob);
-    }
-
-    async makeCanvas(value: string): Promise<CanvasTypes> {
-        const blob = await this.makeBlob(value);
-        const file = URL.createObjectURL(blob);
-        const img = Img(src(file));
-        return createUtilityCanvasFromImage(img);
     }
 
     get scale() {

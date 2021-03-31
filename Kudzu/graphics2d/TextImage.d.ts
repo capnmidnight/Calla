@@ -52,10 +52,6 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     private _canvas;
     private _g;
     constructor(options?: Partial<TextImageOptions>);
-    loadFontAndSetText(value?: string | null): Promise<void>;
-    private makeBlob;
-    makeImageBitmap(value: string): Promise<ImageBitmap>;
-    makeCanvas(value: string): Promise<CanvasTypes>;
     get scale(): number;
     set scale(v: number);
     get minWidth(): number;

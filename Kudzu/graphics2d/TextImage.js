@@ -1,11 +1,8 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { once } from "../events/once";
-import { src } from "../html/attrs";
-import { canvasToBlob, createUtilityCanvas, createUtilityCanvasFromImage, setContextSize } from "../html/canvas";
-import { Img } from "../html/tags";
+import { createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
-import { loadFont, makeFont } from "./fonts";
+import { makeFont } from "./fonts";
 const redrawnEvt = new TypedEvent("redrawn");
 const notReadyEvt = new TypedEvent("notready");
 export class TextImage extends TypedEventBase {
@@ -98,27 +95,6 @@ export class TextImage extends TypedEventBase {
             throw new Error("Couldn't create a graphics context for the TextImage canvas.");
         }
         this._g = g;
-    }
-    async loadFontAndSetText(value = null) {
-        const font = makeFont(this);
-        await loadFont(font, value);
-        this.value = value;
-    }
-    async makeBlob(value) {
-        const task = once(this, "redrawn", "notready");
-        this.value = value;
-        await task;
-        return await canvasToBlob(this.canvas);
-    }
-    async makeImageBitmap(value) {
-        const blob = await this.makeBlob(value);
-        return await createImageBitmap(blob);
-    }
-    async makeCanvas(value) {
-        const blob = await this.makeBlob(value);
-        const file = URL.createObjectURL(blob);
-        const img = Img(src(file));
-        return createUtilityCanvasFromImage(img);
     }
     get scale() {
         return this._scale;
