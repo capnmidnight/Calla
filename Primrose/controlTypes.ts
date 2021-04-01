@@ -1,4 +1,4 @@
-export enum singleLineOutput {
+export const singleLineOutput = [
     "CursorLeft",
     "CursorRight",
     "CursorSkipLeft",
@@ -18,9 +18,9 @@ export enum singleLineOutput {
     "SelectFullEnd",
 
     "SelectAll"
-}
+];
 
-export enum multiLineOutput {
+export const multiLineOutput = [
     "CursorLeft",
     "CursorRight",
     "CursorSkipLeft",
@@ -53,9 +53,9 @@ export enum multiLineOutput {
 
     "ScrollDown",
     "ScrollUp"
-}
+];
 
-enum input {
+const input = [
     "Backspace",
     "Delete",
     "DeleteWordLeft",
@@ -64,16 +64,16 @@ enum input {
 
     "Undo",
     "Redo",
-}
+]
 
-enum appendInput {
+const appendInput = [
     "AppendNewline",
     "PrependNewline"
-}
+]
 
-export type singleLineInput = singleLineOutput
-    | input;
+export const singleLineInput = singleLineOutput
+    .concat(input);
 
-export type multiLineInput = multiLineOutput
-    | input
-    | appendInput;
+export const multiLineInput = multiLineOutput
+    .concat(input)
+    .concat(appendInput);

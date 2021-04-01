@@ -25,8 +25,17 @@
   },
   "homepage": "https://www.primrosevr.com",
   "files": [
-    "src/",
+    "Grammars/",
+    "controlTypes.ts",
+    "Cursor.ts",
+    "grammars.ts",
+    "keys.ts",
+    "os.ts",
+    "Primrose.ts",
     "README.md",
+    "Row.ts",
+    "themes.ts",
+    "TimedEvent.ts",
     "tsconfig.json"
   ],
   "devDependencies": {

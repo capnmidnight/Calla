@@ -1,66 +1,67 @@
-export var singleLineOutput;
-(function (singleLineOutput) {
-    singleLineOutput[singleLineOutput["CursorLeft"] = 0] = "CursorLeft";
-    singleLineOutput[singleLineOutput["CursorRight"] = 1] = "CursorRight";
-    singleLineOutput[singleLineOutput["CursorSkipLeft"] = 2] = "CursorSkipLeft";
-    singleLineOutput[singleLineOutput["CursorSkipRight"] = 3] = "CursorSkipRight";
-    singleLineOutput[singleLineOutput["CursorHome"] = 4] = "CursorHome";
-    singleLineOutput[singleLineOutput["CursorEnd"] = 5] = "CursorEnd";
-    singleLineOutput[singleLineOutput["CursorFullHome"] = 6] = "CursorFullHome";
-    singleLineOutput[singleLineOutput["CursorFullEnd"] = 7] = "CursorFullEnd";
-    singleLineOutput[singleLineOutput["SelectLeft"] = 8] = "SelectLeft";
-    singleLineOutput[singleLineOutput["SelectRight"] = 9] = "SelectRight";
-    singleLineOutput[singleLineOutput["SelectSkipLeft"] = 10] = "SelectSkipLeft";
-    singleLineOutput[singleLineOutput["SelectSkipRight"] = 11] = "SelectSkipRight";
-    singleLineOutput[singleLineOutput["SelectHome"] = 12] = "SelectHome";
-    singleLineOutput[singleLineOutput["SelectEnd"] = 13] = "SelectEnd";
-    singleLineOutput[singleLineOutput["SelectFullHome"] = 14] = "SelectFullHome";
-    singleLineOutput[singleLineOutput["SelectFullEnd"] = 15] = "SelectFullEnd";
-    singleLineOutput[singleLineOutput["SelectAll"] = 16] = "SelectAll";
-})(singleLineOutput || (singleLineOutput = {}));
-export var multiLineOutput;
-(function (multiLineOutput) {
-    multiLineOutput[multiLineOutput["CursorLeft"] = 0] = "CursorLeft";
-    multiLineOutput[multiLineOutput["CursorRight"] = 1] = "CursorRight";
-    multiLineOutput[multiLineOutput["CursorSkipLeft"] = 2] = "CursorSkipLeft";
-    multiLineOutput[multiLineOutput["CursorSkipRight"] = 3] = "CursorSkipRight";
-    multiLineOutput[multiLineOutput["CursorHome"] = 4] = "CursorHome";
-    multiLineOutput[multiLineOutput["CursorEnd"] = 5] = "CursorEnd";
-    multiLineOutput[multiLineOutput["CursorFullHome"] = 6] = "CursorFullHome";
-    multiLineOutput[multiLineOutput["CursorFullEnd"] = 7] = "CursorFullEnd";
-    multiLineOutput[multiLineOutput["SelectLeft"] = 8] = "SelectLeft";
-    multiLineOutput[multiLineOutput["SelectRight"] = 9] = "SelectRight";
-    multiLineOutput[multiLineOutput["SelectSkipLeft"] = 10] = "SelectSkipLeft";
-    multiLineOutput[multiLineOutput["SelectSkipRight"] = 11] = "SelectSkipRight";
-    multiLineOutput[multiLineOutput["SelectHome"] = 12] = "SelectHome";
-    multiLineOutput[multiLineOutput["SelectEnd"] = 13] = "SelectEnd";
-    multiLineOutput[multiLineOutput["SelectFullHome"] = 14] = "SelectFullHome";
-    multiLineOutput[multiLineOutput["SelectFullEnd"] = 15] = "SelectFullEnd";
-    multiLineOutput[multiLineOutput["SelectAll"] = 16] = "SelectAll";
-    multiLineOutput[multiLineOutput["CursorDown"] = 17] = "CursorDown";
-    multiLineOutput[multiLineOutput["CursorUp"] = 18] = "CursorUp";
-    multiLineOutput[multiLineOutput["CursorPageDown"] = 19] = "CursorPageDown";
-    multiLineOutput[multiLineOutput["CursorPageUp"] = 20] = "CursorPageUp";
-    multiLineOutput[multiLineOutput["SelectDown"] = 21] = "SelectDown";
-    multiLineOutput[multiLineOutput["SelectUp"] = 22] = "SelectUp";
-    multiLineOutput[multiLineOutput["SelectPageDown"] = 23] = "SelectPageDown";
-    multiLineOutput[multiLineOutput["SelectPageUp"] = 24] = "SelectPageUp";
-    multiLineOutput[multiLineOutput["ScrollDown"] = 25] = "ScrollDown";
-    multiLineOutput[multiLineOutput["ScrollUp"] = 26] = "ScrollUp";
-})(multiLineOutput || (multiLineOutput = {}));
-var input;
-(function (input) {
-    input[input["Backspace"] = 0] = "Backspace";
-    input[input["Delete"] = 1] = "Delete";
-    input[input["DeleteWordLeft"] = 2] = "DeleteWordLeft";
-    input[input["DeleteWordRight"] = 3] = "DeleteWordRight";
-    input[input["DeleteLine"] = 4] = "DeleteLine";
-    input[input["Undo"] = 5] = "Undo";
-    input[input["Redo"] = 6] = "Redo";
-})(input || (input = {}));
-var appendInput;
-(function (appendInput) {
-    appendInput[appendInput["AppendNewline"] = 0] = "AppendNewline";
-    appendInput[appendInput["PrependNewline"] = 1] = "PrependNewline";
-})(appendInput || (appendInput = {}));
+export const singleLineOutput = [
+    "CursorLeft",
+    "CursorRight",
+    "CursorSkipLeft",
+    "CursorSkipRight",
+    "CursorHome",
+    "CursorEnd",
+    "CursorFullHome",
+    "CursorFullEnd",
+    "SelectLeft",
+    "SelectRight",
+    "SelectSkipLeft",
+    "SelectSkipRight",
+    "SelectHome",
+    "SelectEnd",
+    "SelectFullHome",
+    "SelectFullEnd",
+    "SelectAll"
+];
+export const multiLineOutput = [
+    "CursorLeft",
+    "CursorRight",
+    "CursorSkipLeft",
+    "CursorSkipRight",
+    "CursorHome",
+    "CursorEnd",
+    "CursorFullHome",
+    "CursorFullEnd",
+    "SelectLeft",
+    "SelectRight",
+    "SelectSkipLeft",
+    "SelectSkipRight",
+    "SelectHome",
+    "SelectEnd",
+    "SelectFullHome",
+    "SelectFullEnd",
+    "SelectAll",
+    "CursorDown",
+    "CursorUp",
+    "CursorPageDown",
+    "CursorPageUp",
+    "SelectDown",
+    "SelectUp",
+    "SelectPageDown",
+    "SelectPageUp",
+    "ScrollDown",
+    "ScrollUp"
+];
+const input = [
+    "Backspace",
+    "Delete",
+    "DeleteWordLeft",
+    "DeleteWordRight",
+    "DeleteLine",
+    "Undo",
+    "Redo",
+];
+const appendInput = [
+    "AppendNewline",
+    "PrependNewline"
+];
+export const singleLineInput = singleLineOutput
+    .concat(input);
+export const multiLineInput = multiLineOutput
+    .concat(input)
+    .concat(appendInput);
 //# sourceMappingURL=controlTypes.js.map

@@ -3,11 +3,11 @@ import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
 import { createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
-import { border, display, height, padding, overflow, styles, width, getMonospaceFamily } from "kudzu/html/css";
+import { border, display, getMonospaceFamily, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
 import { isDefined, isString } from "kudzu/typeChecks";
-import { multiLineOutput, singleLineOutput } from "./controlTypes";
+import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } from "./controlTypes";
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
 import { FinalTokenType, isFinalTokenType } from "./Grammars/Token";
@@ -63,11 +63,63 @@ export class Primrose extends TypedEventBase {
         super();
         this.tx = 0;
         this.ty = 0;
+        this.vibX = 0;
+        this.vibY = 0;
         this.pressed = false;
         this.dragging = false;
         this.scrolling = false;
         this.lastScrollDX = null;
         this.lastScrollDY = null;
+        this.canRender = false;
+        this._value = "";
+        this._padding = 0;
+        this._theme = DefaultTheme;
+        this._tabWidth = 2;
+        this.canv = null;
+        this.resized = false;
+        this._hovered = false;
+        this._focused = false;
+        this._fontSize = null;
+        this._scaleFactor = 2;
+        this.tabString = "  ";
+        this._readOnly = false;
+        this._wordWrap = false;
+        this.historyIndex = -1;
+        this._multiLine = false;
+        this.tabPressed = false;
+        this.lineCount = 1;
+        this.lineCountWidth = 0;
+        this._element = null;
+        this._language = JavaScript;
+        this._showScrollBars = false;
+        this._showLineNumbers = false;
+        this.controlType = singleLineOutput;
+        this.maxVerticalScroll = 0;
+        this.lastCharacterHeight = null;
+        this.lastCharacterWidth = null;
+        this.lastFrontCursor = null;
+        this.lastGridBounds = null;
+        this.lastBackCursor = null;
+        this.lastThemeName = null;
+        this.lastPadding = null;
+        this.lastFocused = null;
+        this.lastScrollX = null;
+        this.lastScrollY = null;
+        this.lastFont = null;
+        this.lastText = null;
+        this.history = new Array();
+        this.tokens = new Array();
+        this.rows = [Row.emptyRow(0, 0, 0)];
+        this.scroll = new Point();
+        this.pointer = new Point();
+        this.character = new Rectangle();
+        this.bottomRightGutter = new Size();
+        this.gridBounds = new Rectangle();
+        this.tokenBack = new Cursor();
+        this.tokenFront = new Cursor();
+        this.backCursor = new Cursor();
+        this.frontCursor = new Cursor();
+        this.os = isApple ? MacOS : Windows;
         this.outEvt = new TypedEvent("out");
         this.overEvt = new TypedEvent("over");
         this.blurEvt = new TypedEvent("blur");
@@ -85,659 +137,265 @@ export class Primrose extends TypedEventBase {
         }
         options = Object.assign({}, optionDefaults, options);
         //<<<<<<<<<< VALIDATE PARAMETERS <<<<<<<<<<
-        //>>>>>>>>>> PRIVATE METHODS >>>>>>>>>>
-        //>>>>>>>>>> RENDERING >>>>>>>>>>
-        let render = () => {
-            // do nothing, disabling rendering until the object is fully initialized;
-        };
-        const fillRect = (gfx, fill, x, y, w, h) => {
-            gfx.fillStyle = fill;
-            gfx.fillRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
-        };
-        const strokeRect = (gfx, stroke, x, y, w, h) => {
-            gfx.strokeStyle = stroke;
-            gfx.strokeRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
-        };
-        const renderCanvasBackground = () => {
-            const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-            bgfx.clearRect(0, 0, canv.width, canv.height);
-            if (theme.regular.backColor) {
-                bgfx.fillStyle = theme.regular.backColor;
-                bgfx.fillRect(0, 0, canv.width, canv.height);
-            }
-            bgfx.save();
-            bgfx.scale(scaleFactor, scaleFactor);
-            bgfx.translate((gridBounds.x - scroll.x) * character.width + pad, -scroll.y * character.height + pad);
-            // draw the current row highlighter
-            if (focused) {
-                fillRect(bgfx, theme.currentRowBackColor ||
-                    DefaultTheme.currentRowBackColor, 0, minCursor.y, gridBounds.width, maxCursor.y - minCursor.y + 1);
-            }
-            const minY = scroll.y | 0, maxY = minY + gridBounds.height, minX = scroll.x | 0, maxX = minX + gridBounds.width;
-            tokenFront.setXY(rows, 0, minY);
-            tokenBack.copy(tokenFront);
-            for (let y = minY; y <= maxY && y < rows.length; ++y) {
-                // draw the tokens on this row
-                const row = rows[y].tokens;
-                for (let i = 0; i < row.length; ++i) {
-                    const t = row[i];
-                    tokenBack.x += t.length;
-                    tokenBack.i += t.length;
-                    // skip drawing tokens that aren't in view
-                    if (minX <= tokenBack.x && tokenFront.x <= maxX) {
-                        // draw the selection box
-                        const inSelection = minCursor.i <= tokenBack.i
-                            && tokenFront.i < maxCursor.i;
-                        if (inSelection) {
-                            const selectionFront = Cursor.max(minCursor, tokenFront), selectionBack = Cursor.min(maxCursor, tokenBack), cw = selectionBack.i - selectionFront.i;
-                            fillRect(bgfx, theme.selectedBackColor ||
-                                DefaultTheme.selectedBackColor, selectionFront.x, selectionFront.y, cw, 1);
-                        }
-                    }
-                    tokenFront.copy(tokenBack);
-                }
-                tokenFront.x = 0;
-                ++tokenFront.y;
-                tokenBack.copy(tokenFront);
-            }
-            // draw the cursor caret
-            if (focused) {
-                const cc = theme.cursorColor || DefaultTheme.cursorColor, w = 1 / character.width;
-                fillRect(bgfx, cc, minCursor.x, minCursor.y, w, 1);
-                fillRect(bgfx, cc, maxCursor.x, maxCursor.y, w, 1);
-            }
-            bgfx.restore();
-        };
-        const renderCanvasForeground = () => {
-            fgfx.clearRect(0, 0, canv.width, canv.height);
-            fgfx.save();
-            fgfx.scale(scaleFactor, scaleFactor);
-            fgfx.translate((gridBounds.x - scroll.x) * character.width + pad, pad);
-            const minY = scroll.y | 0, maxY = minY + gridBounds.height, minX = scroll.x | 0, maxX = minX + gridBounds.width;
-            tokenFront.setXY(rows, 0, minY);
-            tokenBack.copy(tokenFront);
-            for (let y = minY; y <= maxY && y < rows.length; ++y) {
-                // draw the tokens on this row
-                const row = rows[y].tokens, textY = (y - scroll.y) * character.height;
-                for (let i = 0; i < row.length; ++i) {
-                    const t = row[i];
-                    tokenBack.x += t.length;
-                    tokenBack.i += t.length;
-                    // skip drawing tokens that aren't in view
-                    if (minX <= tokenBack.x
-                        && tokenFront.x <= maxX) {
-                        // draw the text
-                        const style = isFinalTokenType(t.type) && theme[t.type] || {}, fontWeight = style.fontWeight
-                            || theme.regular.fontWeight
-                            || DefaultTheme.regular.fontWeight
-                            || "", fontStyle = style.fontStyle
-                            || theme.regular.fontStyle
-                            || DefaultTheme.regular.fontStyle
-                            || "", font = `${fontWeight} ${fontStyle} ${context.font}`;
-                        fgfx.font = font.trim();
-                        fgfx.fillStyle = style.foreColor || theme.regular.foreColor;
-                        fgfx.fillText(t.value, tokenFront.x * character.width, textY);
-                    }
-                    tokenFront.copy(tokenBack);
-                }
-                tokenFront.x = 0;
-                ++tokenFront.y;
-                tokenBack.copy(tokenFront);
-            }
-            fgfx.restore();
-        };
-        const renderCanvasTrim = () => {
-            tgfx.clearRect(0, 0, canv.width, canv.height);
-            tgfx.save();
-            tgfx.scale(scaleFactor, scaleFactor);
-            tgfx.translate(pad, pad);
-            if (showLineNumbers) {
-                fillRect(tgfx, theme.selectedBackColor ||
-                    DefaultTheme.selectedBackColor, 0, 0, gridBounds.x, this.width - pad * 2);
-                strokeRect(tgfx, theme.regular.foreColor ||
-                    DefaultTheme.regular.foreColor, 0, 0, gridBounds.x, this.height - pad * 2);
-            }
-            let maxRowWidth = 2;
-            tgfx.save();
-            {
-                tgfx.translate((lineCountWidth - 0.5) * character.width, -scroll.y * character.height);
-                let lastLineNumber = -1;
-                const minY = scroll.y | 0, maxY = minY + gridBounds.height;
-                tokenFront.setXY(rows, 0, minY);
-                tokenBack.copy(tokenFront);
-                for (let y = minY; y <= maxY && y < rows.length; ++y) {
-                    const row = rows[y];
-                    maxRowWidth = Math.max(maxRowWidth, row.stringLength);
-                    if (showLineNumbers) {
-                        // draw the left gutter
-                        if (row.lineNumber > lastLineNumber) {
-                            lastLineNumber = row.lineNumber;
-                            tgfx.font = "bold " + context.font;
-                            tgfx.fillStyle = theme.regular.foreColor;
-                            tgfx.fillText(row.lineNumber.toFixed(0), 0, y * character.height);
-                        }
-                    }
-                }
-            }
-            tgfx.restore();
-            // draw the scrollbars
-            if (showScrollBars) {
-                tgfx.fillStyle = theme.selectedBackColor ||
-                    DefaultTheme.selectedBackColor;
-                // horizontal
-                if (!wordWrap && maxRowWidth > gridBounds.width) {
-                    const drawWidth = gridBounds.width * character.width - pad, scrollX = (scroll.x * drawWidth) / maxRowWidth + gridBounds.x * character.width, scrollBarWidth = drawWidth * (gridBounds.width / maxRowWidth), by = this.height - character.height - pad, bw = Math.max(character.width, scrollBarWidth);
-                    tgfx.fillRect(scrollX, by, bw, character.height);
-                    tgfx.strokeRect(scrollX, by, bw, character.height);
-                }
-                //vertical
-                if (rows.length > gridBounds.height) {
-                    const drawHeight = gridBounds.height * character.height, scrollY = (scroll.y * drawHeight) / rows.length, scrollBarHeight = drawHeight * (gridBounds.height / rows.length), bx = this.width - vScrollWidth * character.width - 2 * pad, bw = vScrollWidth * character.width, bh = Math.max(character.height, scrollBarHeight);
-                    tgfx.fillRect(bx, scrollY, bw, bh);
-                    tgfx.strokeRect(bx, scrollY, bw, bh);
-                }
-            }
-            tgfx.restore();
-            if (!focused) {
-                tgfx.fillStyle = theme.unfocused || DefaultTheme.unfocused;
-                tgfx.fillRect(0, 0, canv.width, canv.height);
-            }
-        };
-        const doRender = () => {
-            if (theme) {
-                const textChanged = lastText !== value, focusChanged = focused !== lastFocused, fontChanged = context.font !== lastFont, paddingChanged = pad !== lastPadding, themeChanged = theme.name !== lastThemeName, boundsChanged = gridBounds.toString() !== lastGridBounds, characterWidthChanged = character.width !== lastCharacterWidth, characterHeightChanged = character.height !== lastCharacterHeight, cursorChanged = frontCursor.i !== lastFrontCursor
-                    || backCursor.i !== lastBackCursor, scrollChanged = scroll.x !== lastScrollX
-                    || scroll.y !== lastScrollY, layoutChanged = resized
-                    || boundsChanged
-                    || textChanged
-                    || characterWidthChanged
-                    || characterHeightChanged
-                    || paddingChanged
-                    || scrollChanged
-                    || themeChanged, backgroundChanged = layoutChanged
-                    || cursorChanged, foregroundChanged = layoutChanged
-                    || fontChanged, trimChanged = layoutChanged
-                    || focusChanged;
-                if (backgroundChanged) {
-                    renderCanvasBackground();
-                }
-                if (foregroundChanged) {
-                    renderCanvasForeground();
-                }
-                if (trimChanged) {
-                    renderCanvasTrim();
-                }
-                context.clearRect(0, 0, canv.width, canv.height);
-                context.save();
-                context.translate(vibX, vibY);
-                context.drawImage(bg, 0, 0);
-                context.drawImage(fg, 0, 0);
-                context.drawImage(tg, 0, 0);
-                context.restore();
-                lastGridBounds = gridBounds.toString();
-                lastText = value;
-                lastCharacterWidth = character.width;
-                lastCharacterHeight = character.height;
-                lastPadding = pad;
-                lastFrontCursor = frontCursor.i;
-                lastBackCursor = backCursor.i;
-                lastFocused = focused;
-                lastFont = context.font;
-                lastThemeName = theme.name;
-                lastScrollX = scroll.x;
-                lastScrollY = scroll.y;
-                resized = false;
-                this.dispatchEvent(this.updateEvt);
-            }
-        };
-        //<<<<<<<<<< RENDERING <<<<<<<<<<
-        const refreshControlType = () => {
-            const lastControlType = controlType;
-            if (readOnly && multiLine) {
-                controlType = multiLineOutput;
-            }
-            else if (readOnly && !multiLine) {
-                controlType = singleLineOutput;
-            }
-            else if (!readOnly && multiLine) {
-                controlType = multiLineInput;
-            }
-            else {
-                controlType = singleLineInput;
-            }
-            if (controlType !== lastControlType) {
-                refreshAllTokens();
-            }
-        };
-        const refreshGutter = () => {
-            if (!showScrollBars) {
-                bottomRightGutter.set(0, 0);
-            }
-            else if (wordWrap) {
-                bottomRightGutter.set(vScrollWidth, 0);
-            }
-            else {
-                bottomRightGutter.set(vScrollWidth, 1);
-            }
-        };
-        const setValue = (txt, setUndo) => {
-            txt = txt || "";
-            txt = txt.replace(/\r\n/g, "\n");
-            if (txt !== value) {
-                value = txt;
-                if (setUndo) {
-                    pushUndo();
-                }
-                refreshAllTokens();
-                this.dispatchEvent(this.changeEvt);
-            }
-        };
-        const setSelectedText = (txt) => {
-            txt = txt || "";
-            txt = txt.replace(/\r\n/g, "\n");
-            if (frontCursor.i !== backCursor.i || txt.length > 0) {
-                const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor), startRow = rows[minCursor.y], endRow = rows[maxCursor.y], unchangedLeft = value.substring(0, startRow.startStringIndex), unchangedRight = value.substring(endRow.endStringIndex), changedStartSubStringIndex = minCursor.i - startRow.startStringIndex, changedLeft = startRow.substring(0, changedStartSubStringIndex), changedEndSubStringIndex = maxCursor.i - endRow.startStringIndex, changedRight = endRow.substring(changedEndSubStringIndex), changedText = changedLeft + txt + changedRight;
-                value = unchangedLeft + changedText + unchangedRight;
-                pushUndo();
-                refreshTokens(minCursor.y, maxCursor.y, changedText);
-                frontCursor.setI(rows, minCursor.i + txt.length);
-                backCursor.copy(frontCursor);
-                scrollIntoView(frontCursor);
-                this.dispatchEvent(this.changeEvt);
-            }
-        };
-        const refreshAllTokens = () => {
-            refreshTokens(0, rows.length - 1, value);
-        };
-        const refreshTokens = (startY, endY, txt) => {
-            while (startY > 0
-                && rows[startY].lineNumber === rows[startY - 1].lineNumber) {
-                --startY;
-                txt = rows[startY].text + txt;
-            }
-            while (endY < rows.length - 1 && rows[endY].lineNumber === rows[endY + 1].lineNumber) {
-                ++endY;
-                txt += rows[endY].text;
-            }
-            const newTokens = language.tokenize(txt), startRow = rows[startY], startTokenIndex = startRow.startTokenIndex, startLineNumber = startRow.lineNumber, startStringIndex = startRow.startStringIndex, endRow = rows[endY], endTokenIndex = endRow.endTokenIndex, tokenRemoveCount = endTokenIndex - startTokenIndex, oldTokens = tokens.splice(startTokenIndex, tokenRemoveCount, ...newTokens);
-            // figure out the width of the line count gutter
-            lineCountWidth = 0;
-            if (showLineNumbers) {
-                for (let token of oldTokens) {
-                    if (token.type === FinalTokenType.newLines) {
-                        --lineCount;
-                    }
-                }
-                for (let token of newTokens) {
-                    if (token.type === FinalTokenType.newLines) {
-                        ++lineCount;
-                    }
-                }
-                lineCountWidth = Math.max(1, Math.ceil(Math.log(lineCount) / Math.LN10)) + 1;
-            }
-            // measure the grid
-            const x = Math.floor(lineCountWidth + pad / character.width), y = Math.floor(pad / character.height), w = Math.floor((this.width - 2 * pad) / character.width) - x - bottomRightGutter.width, h = Math.floor((this.height - 2 * pad) / character.height) - y - bottomRightGutter.height;
-            gridBounds.set(x, y, w, h);
-            // Perform the layout
-            const tokenQueue = newTokens.map(t => t.clone()), rowRemoveCount = endY - startY + 1, newRows = [];
-            let currentString = "", currentTokens = [], currentStringIndex = startStringIndex, currentTokenIndex = startTokenIndex, currentLineNumber = startLineNumber;
-            for (let i = 0; i < tokenQueue.length; ++i) {
-                const t = tokenQueue[i], widthLeft = gridBounds.width - currentString.length, wrap = wordWrap && t.type !== FinalTokenType.newLines && t.length > widthLeft, breakLine = t.type === FinalTokenType.newLines || wrap;
-                if (wrap) {
-                    const split = t.length > gridBounds.width
-                        ? widthLeft
-                        : 0;
-                    tokenQueue.splice(i + 1, 0, t.splitAt(split));
-                }
-                currentTokens.push(t);
-                currentString += t.value;
-                if (breakLine
-                    || i === tokenQueue.length - 1) {
-                    newRows.push(new Row(currentString, currentTokens, currentStringIndex, currentTokenIndex, currentLineNumber));
-                    currentStringIndex += currentString.length;
-                    currentTokenIndex += currentTokens.length;
-                    currentTokens = [];
-                    currentString = "";
-                    if (t.type === FinalTokenType.newLines) {
-                        ++currentLineNumber;
-                    }
-                }
-            }
-            rows.splice(startY, rowRemoveCount, ...newRows);
-            // renumber rows
-            for (let y = startY + newRows.length; y < rows.length; ++y) {
-                const row = rows[y];
-                row.lineNumber = currentLineNumber;
-                row.startStringIndex = currentStringIndex;
-                row.startTokenIndex += currentTokenIndex;
-                currentStringIndex += row.stringLength;
-                currentTokenIndex += row.numTokens;
-                if (row.tokens[row.tokens.length - 1].type === FinalTokenType.newLines) {
-                    ++currentLineNumber;
-                }
-            }
-            // provide editing room at the end of the buffer
-            if (rows.length === 0) {
-                rows.push(Row.emptyRow(0, 0, 0));
-            }
-            else {
-                const lastRow = rows[rows.length - 1];
-                if (lastRow.text.endsWith('\n')) {
-                    rows.push(Row.emptyRow(lastRow.endStringIndex, lastRow.endTokenIndex, lastRow.lineNumber + 1));
-                }
-            }
-            maxVerticalScroll = Math.max(0, rows.length - gridBounds.height);
-            render();
-        };
-        const minDelta = (v, minV, maxV) => {
-            const dvMinV = v - minV, dvMaxV = v - maxV + 5;
-            let dv = 0;
-            if (dvMinV < 0 || dvMaxV >= 0) {
-                // compare the absolute values, so we get the smallest change
-                // regardless of direction.
-                dv = Math.abs(dvMinV) < Math.abs(dvMaxV)
-                    ? dvMinV
-                    : dvMaxV;
-            }
-            return dv;
-        };
-        const clampScroll = () => {
-            const toHigh = scroll.y < 0 || maxVerticalScroll === 0, toLow = scroll.y > maxVerticalScroll;
-            if (toHigh) {
-                scroll.y = 0;
-            }
-            else if (toLow) {
-                scroll.y = maxVerticalScroll;
-            }
-            render();
-            return toHigh || toLow;
-        };
-        const scrollIntoView = (currentCursor) => {
-            const dx = minDelta(currentCursor.x, scroll.x, scroll.x + gridBounds.width), dy = minDelta(currentCursor.y, scroll.y, scroll.y + gridBounds.height);
-            this.scrollBy(dx, dy);
-        };
-        const pushUndo = () => {
-            if (historyIndex < history.length - 1) {
-                history.splice(historyIndex + 1);
-            }
-            history.push({
-                value,
-                frontCursor: frontCursor.i,
-                backCursor: backCursor.i
-            });
-            historyIndex = history.length - 1;
-        };
-        const moveInHistory = (dh) => {
-            const nextHistoryIndex = historyIndex + dh;
-            if (0 <= nextHistoryIndex && nextHistoryIndex < history.length) {
-                const curFrame = history[historyIndex];
-                historyIndex = nextHistoryIndex;
-                const nextFrame = history[historyIndex];
-                setValue(nextFrame.value, false);
-                frontCursor.setI(rows, curFrame.frontCursor);
-                backCursor.setI(rows, curFrame.backCursor);
-            }
-        };
-        //<<<<<<<<<< PRIVATE METHODS <<<<<<<<<<
         //>>>>>>>>>> KEY EVENT HANDLERS >>>>>>>>>>
-        const keyDownCommands = new Map([
+        this.keyDownCommands = new Map([
             ["CursorUp", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-                    minCursor.up(rows);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                    minCursor.up(this.rows);
                     maxCursor.copy(minCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorDown", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-                    maxCursor.down(rows);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                    maxCursor.down(this.rows);
                     minCursor.copy(maxCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorLeft", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
                     if (minCursor.i === maxCursor.i) {
-                        minCursor.left(rows);
+                        minCursor.left(this.rows);
                     }
                     maxCursor.copy(minCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorRight", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
                     if (minCursor.i === maxCursor.i) {
-                        maxCursor.right(rows);
+                        maxCursor.right(this.rows);
                     }
                     minCursor.copy(maxCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorPageUp", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-                    minCursor.incY(rows, -gridBounds.height);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                    minCursor.incY(this.rows, -this.gridBounds.height);
                     maxCursor.copy(minCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorPageDown", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-                    maxCursor.incY(rows, gridBounds.height);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                    maxCursor.incY(this.rows, this.gridBounds.height);
                     minCursor.copy(maxCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorSkipLeft", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
                     if (minCursor.i === maxCursor.i) {
-                        minCursor.skipLeft(rows);
+                        minCursor.skipLeft(this.rows);
                     }
                     maxCursor.copy(minCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorSkipRight", () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
+                    const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
                     if (minCursor.i === maxCursor.i) {
-                        maxCursor.skipRight(rows);
+                        maxCursor.skipRight(this.rows);
                     }
                     minCursor.copy(maxCursor);
-                    scrollIntoView(frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorHome", () => {
-                    frontCursor.home();
-                    backCursor.copy(frontCursor);
-                    scrollIntoView(frontCursor);
+                    this.frontCursor.home();
+                    this.backCursor.copy(this.frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorEnd", () => {
-                    frontCursor.end(rows);
-                    backCursor.copy(frontCursor);
-                    scrollIntoView(frontCursor);
+                    this.frontCursor.end(this.rows);
+                    this.backCursor.copy(this.frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorFullHome", () => {
-                    frontCursor.fullHome();
-                    backCursor.copy(frontCursor);
-                    scrollIntoView(frontCursor);
+                    this.frontCursor.fullHome();
+                    this.backCursor.copy(this.frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["CursorFullEnd", () => {
-                    frontCursor.fullEnd(rows);
-                    backCursor.copy(frontCursor);
-                    scrollIntoView(frontCursor);
+                    this.frontCursor.fullEnd(this.rows);
+                    this.backCursor.copy(this.frontCursor);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["SelectDown", () => {
-                    backCursor.down(rows);
-                    scrollIntoView(frontCursor);
+                    this.backCursor.down(this.rows);
+                    this.scrollIntoView(this.frontCursor);
                 }],
             ["SelectLeft", () => {
-                    backCursor.left(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.left(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectRight", () => {
-                    backCursor.right(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.right(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectUp", () => {
-                    backCursor.up(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.up(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectPageDown", () => {
-                    backCursor.incY(rows, gridBounds.height);
-                    scrollIntoView(backCursor);
+                    this.backCursor.incY(this.rows, this.gridBounds.height);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectPageUp", () => {
-                    backCursor.incY(rows, -gridBounds.height);
-                    scrollIntoView(backCursor);
+                    this.backCursor.incY(this.rows, -this.gridBounds.height);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectSkipLeft", () => {
-                    backCursor.skipLeft(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.skipLeft(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectSkipRight", () => {
-                    backCursor.skipRight(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.skipRight(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectHome", () => {
-                    backCursor.home();
-                    scrollIntoView(backCursor);
+                    this.backCursor.home();
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectEnd", () => {
-                    backCursor.end(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.end(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectFullHome", () => {
-                    backCursor.fullHome();
-                    scrollIntoView(backCursor);
+                    this.backCursor.fullHome();
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectFullEnd", () => {
-                    backCursor.fullEnd(rows);
-                    scrollIntoView(backCursor);
+                    this.backCursor.fullEnd(this.rows);
+                    this.scrollIntoView(this.backCursor);
                 }],
             ["SelectAll", () => {
-                    frontCursor.fullHome();
-                    backCursor.fullEnd(rows);
-                    render();
+                    this.frontCursor.fullHome();
+                    this.backCursor.fullEnd(this.rows);
+                    this.render();
                 }],
             ["ScrollDown", () => {
-                    if (scroll.y < rows.length - gridBounds.height) {
+                    if (this.scroll.y < this.rows.length - this.gridBounds.height) {
                         this.scrollBy(0, 1);
                     }
                 }],
             ["ScrollUp", () => {
-                    if (scroll.y > 0) {
+                    if (this.scroll.y > 0) {
                         this.scrollBy(0, -1);
                     }
                 }],
             ["DeleteLetterLeft", () => {
-                    if (frontCursor.i === backCursor.i) {
-                        backCursor.left(rows);
+                    if (this.frontCursor.i === this.backCursor.i) {
+                        this.backCursor.left(this.rows);
                     }
-                    setSelectedText("");
+                    this.setSelectedText("");
                 }],
             ["DeleteLetterRight", () => {
-                    if (frontCursor.i === backCursor.i) {
-                        backCursor.right(rows);
+                    if (this.frontCursor.i === this.backCursor.i) {
+                        this.backCursor.right(this.rows);
                     }
-                    setSelectedText("");
+                    this.setSelectedText("");
                 }],
             ["DeleteWordLeft", () => {
-                    if (frontCursor.i === backCursor.i) {
-                        frontCursor.skipLeft(rows);
+                    if (this.frontCursor.i === this.backCursor.i) {
+                        this.frontCursor.skipLeft(this.rows);
                     }
-                    setSelectedText("");
+                    this.setSelectedText("");
                 }],
             ["DeleteWordRight", () => {
-                    if (frontCursor.i === backCursor.i) {
-                        backCursor.skipRight(rows);
+                    if (this.frontCursor.i === this.backCursor.i) {
+                        this.backCursor.skipRight(this.rows);
                     }
-                    setSelectedText("");
+                    this.setSelectedText("");
                 }],
             ["DeleteLine", () => {
-                    if (frontCursor.i === backCursor.i) {
-                        frontCursor.home();
-                        backCursor.end(rows);
-                        backCursor.right(rows);
+                    if (this.frontCursor.i === this.backCursor.i) {
+                        this.frontCursor.home();
+                        this.backCursor.end(this.rows);
+                        this.backCursor.right(this.rows);
                     }
-                    setSelectedText("");
+                    this.setSelectedText("");
                 }],
             ["Undo", () => {
-                    moveInHistory(-1);
+                    this.moveInHistory(-1);
                 }],
             ["Redo", () => {
-                    moveInHistory(1);
+                    this.moveInHistory(1);
                 }],
             ["InsertTab", () => {
-                    tabPressed = true;
-                    setSelectedText(tabString);
+                    this.tabPressed = true;
+                    this.setSelectedText(this.tabString);
                 }],
             ["RemoveTab", () => {
-                    const row = rows[frontCursor.y], toDelete = Math.min(frontCursor.x, tabWidth);
-                    for (let i = 0; i < frontCursor.x; ++i) {
+                    const row = this.rows[this.frontCursor.y], toDelete = Math.min(this.frontCursor.x, this.tabWidth);
+                    for (let i = 0; i < this.frontCursor.x; ++i) {
                         if (row.text[i] !== ' ') {
                             // can only remove tabs at the beginning of a row
                             return;
                         }
                     }
-                    backCursor.copy(frontCursor);
-                    backCursor.incX(rows, -toDelete);
-                    setSelectedText("");
+                    this.backCursor.copy(this.frontCursor);
+                    this.backCursor.incX(this.rows, -toDelete);
+                    this.setSelectedText("");
                 }]
         ]);
         this.readKeyDownEvent = this.debugEvt("keydown", (evt) => {
-            const command = os.makeCommand(evt);
-            const func = keyDownCommands.get(command.command);
+            const command = this.os.makeCommand(evt);
+            const func = this.keyDownCommands.get(command.command);
             if (func) {
                 evt.preventDefault();
                 func();
             }
         });
-        const keyPressCommands = new Map([
+        this.keyPressCommands = new Map([
             ["AppendNewline", () => {
-                    if (multiLine) {
+                    if (this.multiLine) {
                         let indent = "";
-                        const row = rows[frontCursor.y].tokens;
+                        const row = this.rows[this.frontCursor.y].tokens;
                         if (row.length > 0
                             && row[0].type === "whitespace") {
                             indent = row[0].value;
                         }
-                        setSelectedText("\n" + indent);
+                        this.setSelectedText("\n" + indent);
                     }
                     else {
                         this.dispatchEvent(this.changeEvt);
                     }
                 }],
             ["PrependNewline", () => {
-                    if (multiLine) {
+                    if (this.multiLine) {
                         let indent = "";
-                        const row = rows[frontCursor.y].tokens;
+                        const row = this.rows[this.frontCursor.y].tokens;
                         if (row.length > 0
                             && row[0].type === "whitespace") {
                             indent = row[0].value;
                         }
-                        frontCursor.home();
-                        backCursor.copy(frontCursor);
-                        setSelectedText(indent + "\n");
+                        this.frontCursor.home();
+                        this.backCursor.copy(this.frontCursor);
+                        this.setSelectedText(indent + "\n");
                     }
                     else {
                         this.dispatchEvent(this.changeEvt);
                     }
                 }],
             ["Undo", () => {
-                    moveInHistory(-1);
+                    this.moveInHistory(-1);
                 }]
         ]);
         this.readKeyPressEvent = this.debugEvt("keypress", (evt) => {
-            const command = os.makeCommand(evt);
+            const command = this.os.makeCommand(evt);
             if (!this.readOnly) {
                 evt.preventDefault();
-                if (keyPressCommands.has(command.command)) {
-                    keyPressCommands.get(command.command)();
+                if (this.keyPressCommands.has(command.command)) {
+                    this.keyPressCommands.get(command.command)();
                 }
                 else if (command.type === "printable"
                     || command.type === "whitespace") {
-                    setSelectedText(command.text);
+                    this.setSelectedText(command.text);
                 }
-                clampScroll();
-                render();
+                this.clampScroll();
+                this.render();
             }
         });
         this.readKeyUpEvent = this.debugEvt("keyup");
         //<<<<<<<<<< KEY EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> CLIPBOARD EVENT HANDLERS >>>>>>>>>>
         const copySelectedText = (evt) => {
-            if (focused && frontCursor.i !== backCursor.i) {
+            if (this.focused && this.frontCursor.i !== this.backCursor.i) {
                 evt.clipboardData.setData("text/plain", this.selectedText);
                 evt.returnValue = false;
                 return true;
@@ -750,32 +408,32 @@ export class Primrose extends TypedEventBase {
         this.readCutEvent = this.debugEvt("cut", (evt) => {
             if (copySelectedText(evt)
                 && !this.readOnly) {
-                setSelectedText("");
+                this.setSelectedText("");
             }
         });
         this.readPasteEvent = this.debugEvt("paste", (evt) => {
-            if (focused && !this.readOnly) {
+            if (this.focused && !this.readOnly) {
                 evt.returnValue = false;
                 const oldClipboard = window.clipboardData;
                 const clipboard = evt.clipboardData || oldClipboard, str = clipboard.getData(oldClipboard ? "Text" : "text/plain");
                 if (str) {
-                    setSelectedText(str);
+                    this.setSelectedText(str);
                 }
             }
         });
         //<<<<<<<<<< CLIPBOARD EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> POINTER EVENT HANDLERS >>>>>>>>>>
         const pointerOver = () => {
-            hovered = true;
+            this._hovered = true;
             this.dispatchEvent(this.overEvt);
         };
         const pointerOut = () => {
-            hovered = false;
+            this._hovered = false;
             this.dispatchEvent(this.outEvt);
         };
         //>>>>>>>>>> MOUSE EVENT HANDLERS >>>>>>>>>> 
         const setMousePointer = (evt) => {
-            pointer.set(evt.offsetX, evt.offsetY);
+            this.pointer.set(evt.offsetX, evt.offsetY);
         };
         this.readMouseOverEvent = this.debugEvt("mouseover", pointerOver);
         this.readMouseOutEvent = this.debugEvt("mouseout", pointerOut);
@@ -783,13 +441,13 @@ export class Primrose extends TypedEventBase {
         this.readMouseUpEvent = this.debugEvt("mouseup", this.mouseLikePointerUp);
         this.readMouseMoveEvent = this.debugEvt("mousemove", this.mouseLikePointerMove(setMousePointer));
         this.readWheelEvent = this.debugEvt("wheel", (evt) => {
-            if (hovered || focused) {
+            if (this.hovered || this.focused) {
                 if (!evt.ctrlKey
                     && !evt.altKey
                     && !evt.shiftKey
                     && !evt.metaKey) {
                     const dy = Math.floor(evt.deltaY * wheelScrollSpeed / scrollScale);
-                    if (!this.scrollBy(0, dy) || focused) {
+                    if (!this.scrollBy(0, dy) || this.focused) {
                         evt.preventDefault();
                     }
                 }
@@ -799,32 +457,31 @@ export class Primrose extends TypedEventBase {
                     evt.preventDefault();
                     this.fontSize += -evt.deltaY / scrollScale;
                 }
-                render();
+                this.render();
             }
         });
         //<<<<<<<<<< MOUSE EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> TOUCH EVENT HANDLERS >>>>>>>>>>
-        let vibX = 0, vibY = 0;
         const vibrate = (len) => {
             this.longPress.cancel();
             if (len > 0) {
-                vibX = (Math.random() - 0.5) * 10;
-                vibY = (Math.random() - 0.5) * 10;
+                this.vibX = (Math.random() - 0.5) * 10;
+                this.vibY = (Math.random() - 0.5) * 10;
                 setTimeout(() => vibrate(len - 10), 10);
             }
             else {
-                vibX = 0;
-                vibY = 0;
+                this.vibX = 0;
+                this.vibY = 0;
             }
-            render();
+            this.render();
         };
         this.longPress = new TimedEvent(1000);
         this.longPress.addEventListener("tick", () => {
             this.startSelecting();
-            backCursor.copy(frontCursor);
-            frontCursor.skipLeft(rows);
-            backCursor.skipRight(rows);
-            render();
+            this.backCursor.copy(this.frontCursor);
+            this.frontCursor.skipLeft(this.rows);
+            this.backCursor.skipRight(this.rows);
+            this.render();
             navigator.vibrate(20);
             vibrate(320);
         });
@@ -846,9 +503,9 @@ export class Primrose extends TypedEventBase {
             };
         };
         const setTouchPointer = (touch) => {
-            if (isHTMLCanvas(canv)) {
-                const cb = canv.getBoundingClientRect();
-                pointer.set(touch.clientX - cb.left, touch.clientY - cb.top);
+            if (isHTMLCanvas(this.canv)) {
+                const cb = this.canv.getBoundingClientRect();
+                this.pointer.set(touch.clientX - cb.left, touch.clientY - cb.top);
             }
         };
         this.readTouchStartEvent = this.debugEvt("touchstart", withPrimaryTouch(this.touchLikePointerDown(setTouchPointer)));
@@ -857,7 +514,7 @@ export class Primrose extends TypedEventBase {
         //<<<<<<<<<< TOUCH EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> UV POINTER EVENT HANDLERS >>>>>>>>>>
         const setUVPointer = (evt) => {
-            pointer.set(evt.uv.x * this.width, (1 - evt.uv.y) * this.height);
+            this.pointer.set(evt.uv.x * this.width, (1 - evt.uv.y) * this.height);
         };
         this.mouse = Object.freeze({
             /// <summary>
@@ -905,292 +562,10 @@ export class Primrose extends TypedEventBase {
         });
         //<<<<<<<<<< UV POINTER EVENT HANDLERS <<<<<<<<<<
         //<<<<<<<<<< POINTER EVENT HANDLERS <<<<<<<<<<
-        //>>>>>>>>>> PUBLIC PROPERTIES >>>>>>>>>>
-        Object.defineProperties(this, {
-            /// <summary>
-            /// The DOM element that was used to construct the `Primrose` control out of the document tree.If the Control was not constructed from the document tree, this value will be`null`.
-            /// </summary>
-            element: {
-                get: () => element
-            },
-            /// <summary>
-            /// Returns `false` if `element` is null. Returns `true` otherwise.
-            /// </summary>
-            isInDocument: {
-                get: () => isHTMLCanvas(canv)
-                    && document.body.contains(canv)
-            },
-            /// <summary>
-            /// The canvas to which the editor is rendering text. If the `options.element` value was set to a canvas, that canvas will be returned. Otherwise, the canvas will be the canvas that Primrose created for the control. If `OffscreenCanvas` is not available, the canvas will be an `HTMLCanvasElement`.
-            /// </summary>
-            canvas: {
-                get: () => canv
-            },
-            /// <summary>
-            /// Returns `true` when the control has a pointer hovering over it.
-            /// </summary>
-            hovered: {
-                get: () => hovered
-            },
-            /// <summary>
-            /// Returns `true` when the control has been selected.Writing to this value will change the focus state of the control.
-            /// If the control is already focused and`focused` is set to`true`, or the control is not focused and`focus` is set to`false`, nothing happens.
-            /// If the control is focused and`focused` is set to`false`, the control is blurred, just as if `blur()` was called.
-            /// If the control is not focused and`focused` is set to`true`, the control is blurred, just as if `focus()` was called.
-            /// </summary>
-            focused: {
-                get: () => focused,
-                set: (f) => {
-                    if (f !== focused) {
-                        if (f) {
-                            this.focus();
-                        }
-                        else {
-                            this.blur();
-                        }
-                    }
-                }
-            },
-            /// <summary>
-            /// Indicates whether or not the text in the editor control can be modified.
-            /// </summary>
-            readOnly: {
-                get: () => readOnly,
-                set: (r) => {
-                    r = !!r;
-                    if (r !== readOnly) {
-                        readOnly = r;
-                        refreshControlType();
-                    }
-                }
-            },
-            multiLine: {
-                get: () => multiLine,
-                set: (m) => {
-                    m = !!m;
-                    if (m !== multiLine) {
-                        if (!m && wordWrap) {
-                            this.wordWrap = false;
-                        }
-                        multiLine = m;
-                        refreshControlType();
-                        refreshGutter();
-                    }
-                }
-            },
-            /// <summary>
-            /// Indicates whether or not the text in the editor control will be broken across lines when it reaches the right edge of the editor control.
-            /// </summary>
-            wordWrap: {
-                get: () => wordWrap,
-                set: (w) => {
-                    w = !!w;
-                    if (w !== wordWrap
-                        && (multiLine
-                            || !w)) {
-                        wordWrap = w;
-                        refreshGutter();
-                        render();
-                    }
-                }
-            },
-            /// <summary>
-            /// The text value contained in the control. NOTE: if the text value was set with Windows-style newline characters (`\r\n`), the newline characters will be normalized to Unix-style newline characters (`\n`).
-            /// </summary>
-            value: {
-                get: () => value,
-                set: (txt) => setValue(txt, true)
-            },
-            /// <summary>
-            /// A synonymn for `value`
-            /// </summary>
-            text: {
-                get: () => value,
-                set: (txt) => setValue(txt, true)
-            },
-            /// <summary>
-            /// The range of text that is currently selected by the cursor. If no text is selected, reading `selectedText` returns the empty string (`""`) and writing to it inserts text at the current cursor location. 
-            /// If text is selected, reading `selectedText` returns the text between the front and back cursors, writing to it overwrites the selected text, inserting the provided value.
-            /// </summary>
-            selectedText: {
-                get: () => {
-                    const minCursor = Cursor.min(frontCursor, backCursor), maxCursor = Cursor.max(frontCursor, backCursor);
-                    return value.substring(minCursor.i, maxCursor.i);
-                },
-                set: (txt) => {
-                    setSelectedText(txt);
-                }
-            },
-            /// <summary>
-            /// The string index at which the front cursor is located. NOTE: the "front cursor" is the main cursor, but does not necessarily represent the beginning of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
-            /// </summary>
-            selectionStart: {
-                get: () => frontCursor.i,
-                set: (i) => {
-                    i = i | 0;
-                    if (i !== frontCursor.i) {
-                        frontCursor.setI(rows, i);
-                        render();
-                    }
-                }
-            },
-            /// <summary>
-            /// The string index at which the back cursor is located. NOTE: the "back cursor" is the selection range cursor, but does not necessarily represent the end of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
-            /// </summary>
-            selectionEnd: {
-                get: () => backCursor.i,
-                set: (i) => {
-                    i = i | 0;
-                    if (i !== backCursor.i) {
-                        backCursor.setI(rows, i);
-                        render();
-                    }
-                }
-            },
-            /// <summary>
-            /// If the back cursor is behind the front cursor, this value returns `"backward"`. Otherwise, `"forward"` is returned.
-            /// </summary>
-            selectionDirection: {
-                get: () => frontCursor.i <= backCursor.i
-                    ? "forward"
-                    : "backward"
-            },
-            /// <summary>
-            /// The number of spaces to insert when the <kbd>Tab</kbd> key is pressed. Changing this value does not convert existing tabs, it only changes future tabs that get inserted.
-            /// </summary>
-            tabWidth: {
-                get: () => tabWidth,
-                set: (tw) => {
-                    tabWidth = tw || 2;
-                    tabString = "";
-                    for (let i = 0; i < tabWidth; ++i) {
-                        tabString += " ";
-                    }
-                }
-            },
-            /// <summary>
-            /// A JavaScript object that defines the color and style values for rendering different UI and text elements.
-            /// </summary>
-            theme: {
-                get: () => theme,
-                set: (t) => {
-                    if (t !== theme) {
-                        theme = t;
-                        render();
-                    }
-                }
-            },
-            /// <summary>
-            /// Set or get the language pack used to tokenize the control text for syntax highlighting.
-            /// </summary>
-            language: {
-                get: () => language,
-                set: (l) => {
-                    if (l !== language) {
-                        language = l;
-                        refreshAllTokens();
-                    }
-                }
-            },
-            /// <summary>
-            /// The `Number` of pixels to inset the control rendering from the edge of the canvas. This is useful for texturing objects where the texture edge cannot be precisely controlled. This value is scale-independent.
-            /// </summary>
-            padding: {
-                get: () => padding,
-                set: (p) => {
-                    p = p | 0;
-                    if (p !== padding) {
-                        pad = p;
-                        render();
-                    }
-                }
-            },
-            /// <summary>
-            /// Indicates whether or not line numbers should be rendered on the left side of the control.
-            /// </summary>
-            showLineNumbers: {
-                get: () => showLineNumbers,
-                set: (s) => {
-                    s = s || false;
-                    if (s !== showLineNumbers) {
-                        showLineNumbers = s;
-                        refreshGutter();
-                    }
-                }
-            },
-            /// <summary>
-            /// Indicates whether or not scroll bars should be rendered at the right and bottom in the control. If wordWrap is enabled, the bottom, horizontal scrollbar will not be rendered.
-            /// </summary>
-            showScrollBars: {
-                get: () => showScrollBars,
-                set: (s) => {
-                    s = s || false;
-                    if (s !== showScrollBars) {
-                        showScrollBars = s;
-                        refreshGutter();
-                    }
-                }
-            },
-            /// <summary>
-            /// The `Number` of pixels tall to draw characters. This value is scale-independent.
-            /// </summary>
-            fontSize: {
-                get: () => fontSize,
-                set: (s) => {
-                    s = Math.max(1, s || 0);
-                    if (s !== fontSize) {
-                        fontSize = s;
-                        context.font = `${fontSize}px ${getMonospaceFamily()}`;
-                        character.height = fontSize;
-                        // measure 100 letter M's, then divide by 100, to get the width of an M
-                        // to two decimal places on systems that return integer values from
-                        // measureText.
-                        character.width = context.measureText("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
-                            .width /
-                            100;
-                        refreshAllTokens();
-                    }
-                }
-            },
-            /// <summary>
-            /// The value by which pixel values are scaled before being used by the editor control.
-            /// With THREE.js, it's best to set this value to 1 and change the width, height, and fontSize manually.
-            /// </summary>
-            scaleFactor: {
-                get: () => scaleFactor,
-                set: (s) => {
-                    s = Math.max(0.25, Math.min(4, s || 0));
-                    if (s !== scaleFactor) {
-                        const lastWidth = this.width, lastHeight = this.height;
-                        scaleFactor = s;
-                        this.setSize(lastWidth, lastHeight);
-                    }
-                }
-            },
-            /// <summary>
-            /// The scale-independent width of the editor control.
-            /// </summary>
-            width: {
-                get: () => canv.width / scaleFactor,
-                set: (w) => this.setSize(w, this.height)
-            },
-            /// <summary>
-            /// The scale-independent height of the editor control.
-            /// </summary>
-            height: {
-                get: () => canv.height / scaleFactor,
-                set: (h) => this.setSize(this.width, h)
-            }
-        });
-        //<<<<<<<<<< PUBLIC PROPERTIES <<<<<<<<<<
-        //>>>>>>>>>> PRIVATE MUTABLE FIELDS >>>>>>>>>>
         this.elementID = ++elementCounter;
-        let value = "", pad = 0, theme = DefaultTheme, tabWidth = 2, canv = null, resized = false, hovered = false, focused = false, fontSize = null, scaleFactor = 2, tabString = "  ", readOnly = false, wordWrap = false, historyIndex = -1, multiLine = false, tabPressed = false, lineCount = 1, lineCountWidth = 0, element = null, language = JavaScript, showScrollBars = false, showLineNumbers = false, controlType = singleLineOutput, maxVerticalScroll = 0, lastCharacterHeight = null, lastCharacterWidth = null, lastFrontCursor = null, lastGridBounds = null, lastBackCursor = null, lastThemeName = null, lastPadding = null, lastFocused = null, lastScrollX = null, lastScrollY = null, lastFont = null, lastText = null;
-        const history = new Array(), tokens = new Array(), rows = [Row.emptyRow(0, 0, 0)], scroll = new Point(), pointer = new Point(), character = new Rectangle(), bottomRightGutter = new Size(), gridBounds = new Rectangle(), tokenBack = new Cursor(), tokenFront = new Cursor(), backCursor = new Cursor(), frontCursor = new Cursor(), os = isApple ? MacOS : Windows;
-        //<<<<<<<<<< PRIVATE MUTABLE FIELDS <<<<<<<<<<
         //>>>>>>>>>> SETUP CANVAS >>>>>>>>>>
         let currentValue = "", currentTabIndex = -1;
-        if (options.element !== null) {
+        if (isHTMLCanvas(options.element)) {
             const elem = options.element, width = elem.width, height = elem.height;
             currentTabIndex = elem.tabIndex;
             const optionsStr = elem.dataset.options || "", entries = optionsStr.trim().split(','), optionUser = {};
@@ -1216,64 +591,71 @@ export class Primrose extends TypedEventBase {
             options = Object.assign(options, { width, height }, optionUser);
         }
         if (options.element === null) {
-            canv = createUtilityCanvas(options.width, options.height);
+            this.canv = createUtilityCanvas(options.width, options.height);
         }
         else if (isHTMLCanvas(options.element)) {
-            element = canv = options.element;
-            elementClearChildren(canv);
+            this._element = this.canv = options.element;
+            elementClearChildren(this.canv);
         }
         else {
-            element = options.element;
-            elementClearChildren(element);
-            canv = Canvas(styles(width("100%"), height("100%")));
-            element.appendChild(canv);
-            element.removeAttribute("tabindex");
+            this._element = options.element;
+            elementClearChildren(this.element);
+            this.canv = Canvas(styles(width("100%"), height("100%")));
+            this.element.appendChild(this.canv);
+            this.element.removeAttribute("tabindex");
             styles(display("block"), padding("none"), border("2px inset #c0c0c0"), overflow("unset"))
-                .apply(element);
+                .apply(this.element.style);
         }
-        if (canv.parentElement !== null
+        if (isHTMLCanvas(this.canv)
+            && this.canv.parentElement !== null
             && currentTabIndex === -1) {
-            const tabbableElements = document.querySelectorAll("[tabindex]");
+            const tabbableElements = Array.from(document.querySelectorAll("[tabindex]"));
             for (let tabbableElement of tabbableElements) {
                 currentTabIndex = Math.max(currentTabIndex, tabbableElement.tabIndex);
             }
             ++currentTabIndex;
         }
-        if (canv instanceof HTMLCanvasElement
+        if (isHTMLCanvas(this.canv)
             && this.isInDocument) {
-            canv.tabIndex = currentTabIndex;
-            canv.style.touchAction = "none";
-            canv.addEventListener("focus", () => this.focus());
-            canv.addEventListener("blur", () => this.blur());
-            canv.addEventListener("mouseover", this.readMouseOverEvent);
-            canv.addEventListener("mouseout", this.readMouseOutEvent);
-            canv.addEventListener("mousedown", this.readMouseDownEvent);
-            canv.addEventListener("mouseup", this.readMouseUpEvent);
-            canv.addEventListener("mousemove", this.readMouseMoveEvent);
-            canv.addEventListener("touchstart", this.readTouchStartEvent);
-            canv.addEventListener("touchend", this.readTouchEndEvent);
-            canv.addEventListener("touchmove", this.readTouchMoveEvent);
+            this.canv.tabIndex = currentTabIndex;
+            this.canv.style.touchAction = "none";
+            this.canv.addEventListener("focus", () => this.focus());
+            this.canv.addEventListener("blur", () => this.blur());
+            this.canv.addEventListener("mouseover", this.readMouseOverEvent);
+            this.canv.addEventListener("mouseout", this.readMouseOutEvent);
+            this.canv.addEventListener("mousedown", this.readMouseDownEvent);
+            this.canv.addEventListener("mouseup", this.readMouseUpEvent);
+            this.canv.addEventListener("mousemove", this.readMouseMoveEvent);
+            this.canv.addEventListener("touchstart", this.readTouchStartEvent);
+            this.canv.addEventListener("touchend", this.readTouchEndEvent);
+            this.canv.addEventListener("touchmove", this.readTouchMoveEvent);
         }
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
         //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
-        const context = canv.getContext("2d"), fg = createUtilityCanvas(canv.width, canv.height), fgfx = fg.getContext("2d"), bg = createUtilityCanvas(canv.width, canv.height), bgfx = bg.getContext("2d"), tg = createUtilityCanvas(canv.width, canv.height), tgfx = tg.getContext("2d");
-        context.imageSmoothingEnabled
-            = fgfx.imageSmoothingEnabled
-                = bgfx.imageSmoothingEnabled
-                    = tgfx.imageSmoothingEnabled
+        this.context = this.canv.getContext("2d");
+        this.fg = createUtilityCanvas(this.canv.width, this.canv.height);
+        this.fgfx = this.fg.getContext("2d");
+        this.bg = createUtilityCanvas(this.canv.width, this.canv.height);
+        this.bgfx = this.bg.getContext("2d");
+        this.tg = createUtilityCanvas(this.canv.width, this.canv.height);
+        this.tgfx = this.tg.getContext("2d");
+        this.context.imageSmoothingEnabled
+            = this.fgfx.imageSmoothingEnabled
+                = this.bgfx.imageSmoothingEnabled
+                    = this.tgfx.imageSmoothingEnabled
                         = true;
-        context.textBaseline
-            = fgfx.textBaseline
-                = bgfx.textBaseline
-                    = tgfx.textBaseline
+        this.context.textBaseline
+            = this.fgfx.textBaseline
+                = this.bgfx.textBaseline
+                    = this.tgfx.textBaseline
                         = "top";
-        tgfx.textAlign = "right";
-        fgfx.textAlign = "left";
+        this.tgfx.textAlign = "right";
+        this.fgfx.textAlign = "left";
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
         this.addEventListener("blur", () => {
-            if (tabPressed) {
-                tabPressed = false;
+            if (this.tabPressed) {
+                this.tabPressed = false;
                 this.focus();
             }
         });
@@ -1287,6 +669,9 @@ export class Primrose extends TypedEventBase {
             }
         }
         Object.seal(this);
+        if (!isString(options.language)) {
+            this.language = options.language;
+        }
         this.readOnly = options.readOnly;
         this.multiLine = options.multiLine;
         this.wordWrap = options.wordWrap;
@@ -1294,18 +679,20 @@ export class Primrose extends TypedEventBase {
         this.showLineNumbers = options.lineNumbers;
         this.padding = options.padding;
         this.fontSize = options.fontSize;
-        this.language = options.language;
         this.scaleFactor = options.scaleFactor;
         this.value = currentValue;
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
-        render = () => {
-            requestAnimationFrame(doRender);
-        };
-        doRender();
+        this.doRender();
         // This is done last so that controls that have errored 
         // out during their setup don't get added to the control
         // manager.
-        Primrose.add(element, this);
+        Primrose.add(this.element, this);
+        this.canRender = true;
+    }
+    render() {
+        if (this.canRender) {
+            requestAnimationFrame(this.doRender);
+        }
     }
     debugEvt(name, callback, debugLocal = false) {
         return (evt) => {
@@ -1432,7 +819,396 @@ export class Primrose extends TypedEventBase {
         this.lastScrollDX = this.pointer.x;
         this.lastScrollDY = this.pointer.y;
     }
-    ;
+    refreshControlType() {
+        const lastControlType = this.controlType;
+        if (this.readOnly && this.multiLine) {
+            this.controlType = multiLineOutput;
+        }
+        else if (this.readOnly && !this.multiLine) {
+            this.controlType = singleLineOutput;
+        }
+        else if (!this.readOnly && this.multiLine) {
+            this.controlType = multiLineInput;
+        }
+        else {
+            this.controlType = singleLineInput;
+        }
+        if (this.controlType !== lastControlType) {
+            this.refreshAllTokens();
+        }
+    }
+    refreshGutter() {
+        if (!this.showScrollBars) {
+            this.bottomRightGutter.set(0, 0);
+        }
+        else if (this.wordWrap) {
+            this.bottomRightGutter.set(vScrollWidth, 0);
+        }
+        else {
+            this.bottomRightGutter.set(vScrollWidth, 1);
+        }
+    }
+    //>>>>>>>>>> RENDERING >>>>>>>>>>
+    fillRect(gfx, fill, x, y, w, h) {
+        gfx.fillStyle = fill;
+        gfx.fillRect(x * this.character.width, y * this.character.height, w * this.character.width + 1, h * this.character.height + 1);
+    }
+    strokeRect(gfx, stroke, x, y, w, h) {
+        gfx.strokeStyle = stroke;
+        gfx.strokeRect(x * this.character.width, y * this.character.height, w * this.character.width + 1, h * this.character.height + 1);
+    }
+    renderCanvasBackground() {
+        const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+        this.bgfx.clearRect(0, 0, this.canv.width, this.canv.height);
+        if (this.theme.regular.backColor) {
+            this.bgfx.fillStyle = this.theme.regular.backColor;
+            this.bgfx.fillRect(0, 0, this.canv.width, this.canv.height);
+        }
+        this.bgfx.save();
+        this.bgfx.scale(this.scaleFactor, this.scaleFactor);
+        this.bgfx.translate((this.gridBounds.x - this.scroll.x) * this.character.width + this.padding, -this.scroll.y * this.character.height + this.padding);
+        // draw the current row highlighter
+        if (this.focused) {
+            this.fillRect(this.bgfx, this.theme.currentRowBackColor ||
+                DefaultTheme.currentRowBackColor, 0, minCursor.y, this.gridBounds.width, maxCursor.y - minCursor.y + 1);
+        }
+        const minY = this.scroll.y | 0, maxY = minY + this.gridBounds.height, minX = this.scroll.x | 0, maxX = minX + this.gridBounds.width;
+        this.tokenFront.setXY(this.rows, 0, minY);
+        this.tokenBack.copy(this.tokenFront);
+        for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
+            // draw the tokens on this row
+            const row = this.rows[y].tokens;
+            for (let i = 0; i < row.length; ++i) {
+                const t = row[i];
+                this.tokenBack.x += t.length;
+                this.tokenBack.i += t.length;
+                // skip drawing tokens that aren't in view
+                if (minX <= this.tokenBack.x && this.tokenFront.x <= maxX) {
+                    // draw the selection box
+                    const inSelection = minCursor.i <= this.tokenBack.i
+                        && this.tokenFront.i < maxCursor.i;
+                    if (inSelection) {
+                        const selectionFront = Cursor.max(minCursor, this.tokenFront), selectionBack = Cursor.min(maxCursor, this.tokenBack), cw = selectionBack.i - selectionFront.i;
+                        this.fillRect(this.bgfx, this.theme.selectedBackColor ||
+                            DefaultTheme.selectedBackColor, selectionFront.x, selectionFront.y, cw, 1);
+                    }
+                }
+                this.tokenFront.copy(this.tokenBack);
+            }
+            this.tokenFront.x = 0;
+            ++this.tokenFront.y;
+            this.tokenBack.copy(this.tokenFront);
+        }
+        // draw the cursor caret
+        if (this.focused) {
+            const cc = this.theme.cursorColor || DefaultTheme.cursorColor, w = 1 / this.character.width;
+            this.fillRect(this.bgfx, cc, minCursor.x, minCursor.y, w, 1);
+            this.fillRect(this.bgfx, cc, maxCursor.x, maxCursor.y, w, 1);
+        }
+        this.bgfx.restore();
+    }
+    renderCanvasForeground() {
+        this.fgfx.clearRect(0, 0, this.canv.width, this.canv.height);
+        this.fgfx.save();
+        this.fgfx.scale(this.scaleFactor, this.scaleFactor);
+        this.fgfx.translate((this.gridBounds.x - this.scroll.x) * this.character.width + this.padding, this.padding);
+        const minY = this.scroll.y | 0, maxY = minY + this.gridBounds.height, minX = this.scroll.x | 0, maxX = minX + this.gridBounds.width;
+        this.tokenFront.setXY(this.rows, 0, minY);
+        this.tokenBack.copy(this.tokenFront);
+        for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
+            // draw the tokens on this row
+            const row = this.rows[y].tokens, textY = (y - this.scroll.y) * this.character.height;
+            for (let i = 0; i < row.length; ++i) {
+                const t = row[i];
+                this.tokenBack.x += t.length;
+                this.tokenBack.i += t.length;
+                // skip drawing tokens that aren't in view
+                if (minX <= this.tokenBack.x
+                    && this.tokenFront.x <= maxX) {
+                    // draw the text
+                    const style = isFinalTokenType(t.type) && this.theme[t.type] || {}, fontWeight = style.fontWeight
+                        || this.theme.regular.fontWeight
+                        || DefaultTheme.regular.fontWeight
+                        || "", fontStyle = style.fontStyle
+                        || this.theme.regular.fontStyle
+                        || DefaultTheme.regular.fontStyle
+                        || "", font = `${fontWeight} ${fontStyle} ${this.context.font}`;
+                    this.fgfx.font = font.trim();
+                    this.fgfx.fillStyle = style.foreColor || this.theme.regular.foreColor;
+                    this.fgfx.fillText(t.value, this.tokenFront.x * this.character.width, textY);
+                }
+                this.tokenFront.copy(this.tokenBack);
+            }
+            this.tokenFront.x = 0;
+            ++this.tokenFront.y;
+            this.tokenBack.copy(this.tokenFront);
+        }
+        this.fgfx.restore();
+    }
+    renderCanvasTrim() {
+        this.tgfx.clearRect(0, 0, this.canv.width, this.canv.height);
+        this.tgfx.save();
+        this.tgfx.scale(this.scaleFactor, this.scaleFactor);
+        this.tgfx.translate(this.padding, this.padding);
+        if (this.showLineNumbers) {
+            this.fillRect(this.tgfx, this.theme.selectedBackColor ||
+                DefaultTheme.selectedBackColor, 0, 0, this.gridBounds.x, this.width - this.padding * 2);
+            this.strokeRect(this.tgfx, this.theme.regular.foreColor ||
+                DefaultTheme.regular.foreColor, 0, 0, this.gridBounds.x, this.height - this.padding * 2);
+        }
+        let maxRowWidth = 2;
+        this.tgfx.save();
+        {
+            this.tgfx.translate((this.lineCountWidth - 0.5) * this.character.width, -this.scroll.y * this.character.height);
+            let lastLineNumber = -1;
+            const minY = this.scroll.y | 0, maxY = minY + this.gridBounds.height;
+            this.tokenFront.setXY(this.rows, 0, minY);
+            this.tokenBack.copy(this.tokenFront);
+            for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
+                const row = this.rows[y];
+                maxRowWidth = Math.max(maxRowWidth, row.stringLength);
+                if (this.showLineNumbers) {
+                    // draw the left gutter
+                    if (row.lineNumber > lastLineNumber) {
+                        lastLineNumber = row.lineNumber;
+                        this.tgfx.font = "bold " + this.context.font;
+                        this.tgfx.fillStyle = this.theme.regular.foreColor;
+                        this.tgfx.fillText(row.lineNumber.toFixed(0), 0, y * this.character.height);
+                    }
+                }
+            }
+        }
+        this.tgfx.restore();
+        // draw the scrollbars
+        if (this.showScrollBars) {
+            this.tgfx.fillStyle = this.theme.selectedBackColor ||
+                DefaultTheme.selectedBackColor;
+            // horizontal
+            if (!this.wordWrap && maxRowWidth > this.gridBounds.width) {
+                const drawWidth = this.gridBounds.width * this.character.width - this.padding, scrollX = (this.scroll.x * drawWidth) / maxRowWidth + this.gridBounds.x * this.character.width, scrollBarWidth = drawWidth * (this.gridBounds.width / maxRowWidth), by = this.height - this.character.height - this.padding, bw = Math.max(this.character.width, scrollBarWidth);
+                this.tgfx.fillRect(scrollX, by, bw, this.character.height);
+                this.tgfx.strokeRect(scrollX, by, bw, this.character.height);
+            }
+            //vertical
+            if (this.rows.length > this.gridBounds.height) {
+                const drawHeight = this.gridBounds.height * this.character.height, scrollY = (this.scroll.y * drawHeight) / this.rows.length, scrollBarHeight = drawHeight * (this.gridBounds.height / this.rows.length), bx = this.width - vScrollWidth * this.character.width - 2 * this.padding, bw = vScrollWidth * this.character.width, bh = Math.max(this.character.height, scrollBarHeight);
+                this.tgfx.fillRect(bx, scrollY, bw, bh);
+                this.tgfx.strokeRect(bx, scrollY, bw, bh);
+            }
+        }
+        this.tgfx.restore();
+        if (!this.focused) {
+            this.tgfx.fillStyle = this.theme.unfocused || DefaultTheme.unfocused;
+            this.tgfx.fillRect(0, 0, this.canv.width, this.canv.height);
+        }
+    }
+    doRender() {
+        if (this.theme) {
+            const textChanged = this.lastText !== this.value, focusChanged = this.focused !== this.lastFocused, fontChanged = this.context.font !== this.lastFont, paddingChanged = this.padding !== this.lastPadding, themeChanged = this.theme.name !== this.lastThemeName, boundsChanged = this.gridBounds.toString() !== this.lastGridBounds, characterWidthChanged = this.character.width !== this.lastCharacterWidth, characterHeightChanged = this.character.height !== this.lastCharacterHeight, cursorChanged = this.frontCursor.i !== this.lastFrontCursor
+                || this.backCursor.i !== this.lastBackCursor, scrollChanged = this.scroll.x !== this.lastScrollX
+                || this.scroll.y !== this.lastScrollY, layoutChanged = this.resized
+                || boundsChanged
+                || textChanged
+                || characterWidthChanged
+                || characterHeightChanged
+                || paddingChanged
+                || scrollChanged
+                || themeChanged, backgroundChanged = layoutChanged
+                || cursorChanged, foregroundChanged = layoutChanged
+                || fontChanged, trimChanged = layoutChanged
+                || focusChanged;
+            if (backgroundChanged) {
+                this.renderCanvasBackground();
+            }
+            if (foregroundChanged) {
+                this.renderCanvasForeground();
+            }
+            if (trimChanged) {
+                this.renderCanvasTrim();
+            }
+            this.context.clearRect(0, 0, this.canv.width, this.canv.height);
+            this.context.save();
+            this.context.translate(this.vibX, this.vibY);
+            this.context.drawImage(this.bg, 0, 0);
+            this.context.drawImage(this.fg, 0, 0);
+            this.context.drawImage(this.tg, 0, 0);
+            this.context.restore();
+            this.lastGridBounds = this.gridBounds.toString();
+            this.lastText = this.value;
+            this.lastCharacterWidth = this.character.width;
+            this.lastCharacterHeight = this.character.height;
+            this.lastPadding = this.padding;
+            this.lastFrontCursor = this.frontCursor.i;
+            this.lastBackCursor = this.backCursor.i;
+            this.lastFocused = this.focused;
+            this.lastFont = this.context.font;
+            this.lastThemeName = this.theme.name;
+            this.lastScrollX = this.scroll.x;
+            this.lastScrollY = this.scroll.y;
+            this.resized = false;
+            this.dispatchEvent(this.updateEvt);
+        }
+    }
+    //<<<<<<<<<< RENDERING <<<<<<<<<<
+    setValue(txt, setUndo) {
+        txt = txt || "";
+        txt = txt.replace(/\r\n/g, "\n");
+        if (txt !== this.value) {
+            this.value = txt;
+            if (setUndo) {
+                this.pushUndo();
+            }
+            this.refreshAllTokens();
+            this.dispatchEvent(this.changeEvt);
+        }
+    }
+    setSelectedText(txt) {
+        txt = txt || "";
+        txt = txt.replace(/\r\n/g, "\n");
+        if (this.frontCursor.i !== this.backCursor.i || txt.length > 0) {
+            const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor), startRow = this.rows[minCursor.y], endRow = this.rows[maxCursor.y], unchangedLeft = this.value.substring(0, startRow.startStringIndex), unchangedRight = this.value.substring(endRow.endStringIndex), changedStartSubStringIndex = minCursor.i - startRow.startStringIndex, changedLeft = startRow.substring(0, changedStartSubStringIndex), changedEndSubStringIndex = maxCursor.i - endRow.startStringIndex, changedRight = endRow.substring(changedEndSubStringIndex), changedText = changedLeft + txt + changedRight;
+            this.value = unchangedLeft + changedText + unchangedRight;
+            this.pushUndo();
+            this.refreshTokens(minCursor.y, maxCursor.y, changedText);
+            this.frontCursor.setI(this.rows, minCursor.i + txt.length);
+            this.backCursor.copy(this.frontCursor);
+            this.scrollIntoView(this.frontCursor);
+            this.dispatchEvent(this.changeEvt);
+        }
+    }
+    refreshAllTokens() {
+        this.refreshTokens(0, this.rows.length - 1, this.value);
+    }
+    refreshTokens(startY, endY, txt) {
+        while (startY > 0
+            && this.rows[startY].lineNumber === this.rows[startY - 1].lineNumber) {
+            --startY;
+            txt = this.rows[startY].text + txt;
+        }
+        while (endY < this.rows.length - 1
+            && this.rows[endY].lineNumber === this.rows[endY + 1].lineNumber) {
+            ++endY;
+            txt += this.rows[endY].text;
+        }
+        const newTokens = this.language.tokenize(txt), startRow = this.rows[startY], startTokenIndex = startRow.startTokenIndex, startLineNumber = startRow.lineNumber, startStringIndex = startRow.startStringIndex, endRow = this.rows[endY], endTokenIndex = endRow.endTokenIndex, tokenRemoveCount = endTokenIndex - startTokenIndex, oldTokens = this.tokens.splice(startTokenIndex, tokenRemoveCount, ...newTokens);
+        // figure out the width of the line count gutter
+        this.lineCountWidth = 0;
+        if (this.showLineNumbers) {
+            for (let token of oldTokens) {
+                if (token.type === FinalTokenType.newLines) {
+                    --this.lineCount;
+                }
+            }
+            for (let token of newTokens) {
+                if (token.type === FinalTokenType.newLines) {
+                    ++this.lineCount;
+                }
+            }
+            this.lineCountWidth = Math.max(1, Math.ceil(Math.log(this.lineCount) / Math.LN10)) + 1;
+        }
+        // measure the grid
+        const x = Math.floor(this.lineCountWidth + this.padding / this.character.width), y = Math.floor(this.padding / this.character.height), w = Math.floor((this.width - 2 * this.padding) / this.character.width) - x - this.bottomRightGutter.width, h = Math.floor((this.height - 2 * this.padding) / this.character.height) - y - this.bottomRightGutter.height;
+        this.gridBounds.set(x, y, w, h);
+        // Perform the layout
+        const tokenQueue = newTokens.map(t => t.clone()), rowRemoveCount = endY - startY + 1, newRows = [];
+        let currentString = "", currentTokens = [], currentStringIndex = startStringIndex, currentTokenIndex = startTokenIndex, currentLineNumber = startLineNumber;
+        for (let i = 0; i < tokenQueue.length; ++i) {
+            const t = tokenQueue[i], widthLeft = this.gridBounds.width - currentString.length, wrap = this.wordWrap && t.type !== FinalTokenType.newLines && t.length > widthLeft, breakLine = t.type === FinalTokenType.newLines || wrap;
+            if (wrap) {
+                const split = t.length > this.gridBounds.width
+                    ? widthLeft
+                    : 0;
+                tokenQueue.splice(i + 1, 0, t.splitAt(split));
+            }
+            currentTokens.push(t);
+            currentString += t.value;
+            if (breakLine
+                || i === tokenQueue.length - 1) {
+                newRows.push(new Row(currentString, currentTokens, currentStringIndex, currentTokenIndex, currentLineNumber));
+                currentStringIndex += currentString.length;
+                currentTokenIndex += currentTokens.length;
+                currentTokens = [];
+                currentString = "";
+                if (t.type === FinalTokenType.newLines) {
+                    ++currentLineNumber;
+                }
+            }
+        }
+        this.rows.splice(startY, rowRemoveCount, ...newRows);
+        // renumber rows
+        for (let y = startY + newRows.length; y < this.rows.length; ++y) {
+            const row = this.rows[y];
+            row.lineNumber = currentLineNumber;
+            row.startStringIndex = currentStringIndex;
+            row.startTokenIndex += currentTokenIndex;
+            currentStringIndex += row.stringLength;
+            currentTokenIndex += row.numTokens;
+            if (row.tokens[row.tokens.length - 1].type === FinalTokenType.newLines) {
+                ++currentLineNumber;
+            }
+        }
+        // provide editing room at the end of the buffer
+        if (this.rows.length === 0) {
+            this.rows.push(Row.emptyRow(0, 0, 0));
+        }
+        else {
+            const lastRow = this.rows[this.rows.length - 1];
+            if (lastRow.text.endsWith('\n')) {
+                this.rows.push(Row.emptyRow(lastRow.endStringIndex, lastRow.endTokenIndex, lastRow.lineNumber + 1));
+            }
+        }
+        this.maxVerticalScroll = Math.max(0, this.rows.length - this.gridBounds.height);
+        this.render();
+    }
+    minDelta(v, minV, maxV) {
+        const dvMinV = v - minV, dvMaxV = v - maxV + 5;
+        let dv = 0;
+        if (dvMinV < 0 || dvMaxV >= 0) {
+            // compare the absolute values, so we get the smallest change
+            // regardless of direction.
+            dv = Math.abs(dvMinV) < Math.abs(dvMaxV)
+                ? dvMinV
+                : dvMaxV;
+        }
+        return dv;
+    }
+    clampScroll() {
+        const toHigh = this.scroll.y < 0 || this.maxVerticalScroll === 0, toLow = this.scroll.y > this.maxVerticalScroll;
+        if (toHigh) {
+            this.scroll.y = 0;
+        }
+        else if (toLow) {
+            this.scroll.y = this.maxVerticalScroll;
+        }
+        this.render();
+        return toHigh || toLow;
+    }
+    scrollIntoView(currentCursor) {
+        const dx = this.minDelta(currentCursor.x, this.scroll.x, this.scroll.x + this.gridBounds.width), dy = this.minDelta(currentCursor.y, this.scroll.y, this.scroll.y + this.gridBounds.height);
+        this.scrollBy(dx, dy);
+    }
+    pushUndo() {
+        if (this.historyIndex < this.history.length - 1) {
+            this.history.splice(this.historyIndex + 1);
+        }
+        this.history.push({
+            value: this.value,
+            frontCursor: this.frontCursor.i,
+            backCursor: this.backCursor.i
+        });
+        this.historyIndex = this.history.length - 1;
+    }
+    moveInHistory(dh) {
+        const nextHistoryIndex = this.historyIndex + dh;
+        if (0 <= nextHistoryIndex && nextHistoryIndex < this.history.length) {
+            const curFrame = this.history[this.historyIndex];
+            this.historyIndex = nextHistoryIndex;
+            const nextFrame = this.history[this.historyIndex];
+            this.setValue(nextFrame.value, false);
+            this.frontCursor.setI(this.rows, curFrame.frontCursor);
+            this.backCursor.setI(this.rows, curFrame.backCursor);
+        }
+    }
     /// <summary>
     /// Removes focus from the control.
     /// </summary>
@@ -1456,11 +1232,13 @@ export class Primrose extends TypedEventBase {
     /// <summary>
     /// </summary>
     resize() {
-        if (!this.isInDocument) {
-            console.warn("Can't automatically resize a canvas that is not in the DOM tree");
-        }
-        else if (resizeContext(this.context, this.scaleFactor)) {
-            this.refreshBuffers();
+        if (isHTMLCanvas(this.canv)) {
+            if (!this.isInDocument) {
+                console.warn("Can't automatically resize a canvas that is not in the DOM tree");
+            }
+            else if (setContextSize(this.context, this.canv.clientWidth, this.canv.clientHeight, this.scaleFactor)) {
+                this.refreshBuffers();
+            }
         }
     }
     /// <summary>
@@ -1486,6 +1264,279 @@ export class Primrose extends TypedEventBase {
     /// </summary>
     scrollBy(dx, dy) {
         return this.scrollTo(this.scroll.x + dx, this.scroll.y + dy);
+    }
+    /// <summary>
+    /// The DOM element that was used to construct the `Primrose` control out of the document tree.If the Control was not constructed from the document tree, this value will be`null`.
+    /// </summary>
+    get element() { return this._element; }
+    /// <summary>
+    /// Returns `false` if `element` is null. Returns `true` otherwise.
+    /// </summary>
+    get isInDocument() {
+        return isHTMLCanvas(this.canv)
+            && document.body.contains(this.canv);
+    }
+    /// <summary>
+    /// The canvas to which the editor is rendering text. If the `options.element` value was set to a canvas, that canvas will be returned. Otherwise, the canvas will be the canvas that Primrose created for the control. If `OffscreenCanvas` is not available, the canvas will be an `HTMLCanvasElement`.
+    /// </summary>
+    get canvas() {
+        return this.canv;
+    }
+    /// <summary>
+    /// Returns `true` when the control has a pointer hovering over it.
+    /// </summary>
+    get hovered() {
+        return this._hovered;
+    }
+    /// <summary>
+    /// Returns `true` when the control has been selected.Writing to this value will change the focus state of the control.
+    /// If the control is already focused and`focused` is set to`true`, or the control is not focused and`focus` is set to`false`, nothing happens.
+    /// If the control is focused and`focused` is set to`false`, the control is blurred, just as if `blur()` was called.
+    /// If the control is not focused and`focused` is set to`true`, the control is blurred, just as if `focus()` was called.
+    /// </summary>
+    get focused() {
+        return this._focused;
+    }
+    set focused(f) {
+        if (f !== this.focused) {
+            if (f) {
+                this.focus();
+            }
+            else {
+                this.blur();
+            }
+        }
+    }
+    /// <summary>
+    /// Indicates whether or not the text in the editor control can be modified.
+    /// </summary>
+    get readOnly() {
+        return this._readOnly;
+    }
+    set readOnly(r) {
+        if (r !== this.readOnly) {
+            this._readOnly = r;
+            this.refreshControlType();
+        }
+    }
+    get multiLine() {
+        return this._multiLine;
+    }
+    set multiLine(m) {
+        if (m !== this.multiLine) {
+            if (!m && this.wordWrap) {
+                this.wordWrap = false;
+            }
+            this._multiLine = m;
+            this.refreshControlType();
+            this.refreshGutter();
+        }
+    }
+    /// <summary>
+    /// Indicates whether or not the text in the editor control will be broken across lines when it reaches the right edge of the editor control.
+    /// </summary>
+    get wordWrap() {
+        return this._wordWrap;
+    }
+    set wordWrap(w) {
+        if (w !== this.wordWrap
+            && (this.multiLine
+                || !w)) {
+            this._wordWrap = w;
+            this.refreshGutter();
+            this.render();
+        }
+    }
+    /// <summary>
+    /// The text value contained in the control. NOTE: if the text value was set with Windows-style newline characters (`\r\n`), the newline characters will be normalized to Unix-style newline characters (`\n`).
+    /// </summary>
+    get value() {
+        return this._value;
+    }
+    set value(txt) {
+        this.setValue(txt, true);
+    }
+    /// <summary>
+    /// A synonymn for `value`
+    /// </summary>
+    get text() {
+        return this.value;
+    }
+    set text(txt) {
+        this.value = txt;
+    }
+    /// <summary>
+    /// The range of text that is currently selected by the cursor. If no text is selected, reading `selectedText` returns the empty string (`""`) and writing to it inserts text at the current cursor location. 
+    /// If text is selected, reading `selectedText` returns the text between the front and back cursors, writing to it overwrites the selected text, inserting the provided value.
+    /// </summary>
+    get selectedText() {
+        const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+        return this.value.substring(minCursor.i, maxCursor.i);
+    }
+    set selectedText(txt) {
+        this.setSelectedText(txt);
+    }
+    /// <summary>
+    /// The string index at which the front cursor is located. NOTE: the "front cursor" is the main cursor, but does not necessarily represent the beginning of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
+    /// </summary>
+    get selectionStart() {
+        return this.frontCursor.i;
+    }
+    set selectionStart(i) {
+        i = i | 0;
+        if (i !== this.frontCursor.i) {
+            this.frontCursor.setI(this.rows, i);
+            this.render();
+        }
+    }
+    /// <summary>
+    /// The string index at which the back cursor is located. NOTE: the "back cursor" is the selection range cursor, but does not necessarily represent the end of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
+    /// </summary>
+    get selectionEnd() {
+        return this.backCursor.i;
+    }
+    set selectionEnd(i) {
+        i = i | 0;
+        if (i !== this.backCursor.i) {
+            this.backCursor.setI(this.rows, i);
+            this.render();
+        }
+    }
+    /// <summary>
+    /// If the back cursor is behind the front cursor, this value returns `"backward"`. Otherwise, `"forward"` is returned.
+    /// </summary>
+    get selectionDirection() {
+        return this.frontCursor.i <= this.backCursor.i
+            ? "forward"
+            : "backward";
+    }
+    /// <summary>
+    /// The number of spaces to insert when the <kbd>Tab</kbd> key is pressed. Changing this value does not convert existing tabs, it only changes future tabs that get inserted.
+    /// </summary>
+    get tabWidth() {
+        return this._tabWidth;
+    }
+    set tabWidth(tw) {
+        this._tabWidth = tw || 2;
+        this.tabString = "";
+        for (let i = 0; i < this.tabWidth; ++i) {
+            this.tabString += " ";
+        }
+    }
+    /// <summary>
+    /// A JavaScript object that defines the color and style values for rendering different UI and text elements.
+    /// </summary>
+    get theme() {
+        return this._theme;
+    }
+    set theme(t) {
+        if (t !== this.theme) {
+            this._theme = t;
+            this.render();
+        }
+    }
+    /// <summary>
+    /// Set or get the language pack used to tokenize the control text for syntax highlighting.
+    /// </summary>
+    get language() {
+        return this._language;
+    }
+    set language(l) {
+        if (l !== this.language) {
+            this._language = l;
+            this.refreshAllTokens();
+        }
+    }
+    /// <summary>
+    /// The `Number` of pixels to inset the control rendering from the edge of the canvas. This is useful for texturing objects where the texture edge cannot be precisely controlled. This value is scale-independent.
+    /// </summary>
+    get padding() {
+        return this._padding;
+    }
+    set padding(p) {
+        p = p | 0;
+        if (p !== this.padding) {
+            this._padding = p;
+            this.render();
+        }
+    }
+    /// <summary>
+    /// Indicates whether or not line numbers should be rendered on the left side of the control.
+    /// </summary>
+    get showLineNumbers() {
+        return this._showLineNumbers;
+    }
+    set showLineNumbers(s) {
+        if (s !== this.showLineNumbers) {
+            this._showLineNumbers = s;
+            this.refreshGutter();
+        }
+    }
+    /// <summary>
+    /// Indicates whether or not scroll bars should be rendered at the right and bottom in the control. If wordWrap is enabled, the bottom, horizontal scrollbar will not be rendered.
+    /// </summary>
+    get showScrollBars() {
+        return this._showScrollBars;
+    }
+    set showScrollBars(s) {
+        if (s !== this.showScrollBars) {
+            this._showScrollBars = s;
+            this.refreshGutter();
+        }
+    }
+    /// <summary>
+    /// The `Number` of pixels tall to draw characters. This value is scale-independent.
+    /// </summary>
+    get fontSize() {
+        return this._fontSize;
+    }
+    set fontSize(s) {
+        s = Math.max(1, s || 0);
+        if (s !== this.fontSize) {
+            this._fontSize = s;
+            this.context.font = `${this.fontSize}px ${getMonospaceFamily()}`;
+            this.character.height = this.fontSize;
+            // measure 100 letter M's, then divide by 100, to get the width of an M
+            // to two decimal places on systems that return integer values from
+            // measureText.
+            this.character.width = this.context.measureText("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+                .width /
+                100;
+            this.refreshAllTokens();
+        }
+    }
+    /// <summary>
+    /// The value by which pixel values are scaled before being used by the editor control.
+    /// With THREE.js, it's best to set this value to 1 and change the width, height, and fontSize manually.
+    /// </summary>
+    get scaleFactor() {
+        return this._scaleFactor;
+    }
+    set scaleFactor(s) {
+        s = Math.max(0.25, Math.min(4, s || 0));
+        if (s !== this.scaleFactor) {
+            const lastWidth = this.width, lastHeight = this.height;
+            this._scaleFactor = s;
+            this.setSize(lastWidth, lastHeight);
+        }
+    }
+    /// <summary>
+    /// The scale-independent width of the editor control.
+    /// </summary>
+    get width() {
+        return this.canv.width / this.scaleFactor;
+    }
+    set width(w) {
+        this.setSize(w, this.height);
+    }
+    /// <summary>
+    /// The scale-independent height of the editor control.
+    /// </summary>
+    get height() {
+        return this.canv.height / this.scaleFactor;
+    }
+    set height(h) {
+        this.setSize(this.width, h);
     }
     /// <summary>
     /// Checks for the existence of a control, by the key that the user supplied when calling `Primrose.add()`
@@ -1574,19 +1625,19 @@ requestAnimationFrame(function update() {
             }
             else {
                 controls.splice(i, 1);
-                publicControls = Object.freeze(controls.slice());
+                publicControls = controls.slice();
             }
         }
     }
 });
-const withCurrentControl = (name) => {
+function withCurrentControl(name) {
     const evtName = name.toLocaleLowerCase(), funcName = `read${name}Event`;
     window.addEventListener(evtName, (evt) => {
         if (focusedControl !== null) {
             focusedControl[funcName](evt);
         }
     }, { passive: false });
-};
+}
 withCurrentControl("KeyDown");
 withCurrentControl("KeyPress");
 withCurrentControl("KeyUp");
@@ -1599,4 +1650,4 @@ window.addEventListener("wheel", (evt) => {
         control.readWheelEvent(evt);
     }
 }, { passive: false });
-//# sourceMappingURL=primrose.js.map
+//# sourceMappingURL=Primrose.js.map
