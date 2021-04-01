@@ -1,3 +1,4 @@
+import { documentReady } from "kudzu/events/documentReady";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
@@ -6,7 +7,7 @@ import { createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/ca
 import { border, display, getMonospaceFamily, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
-import { isDefined, isString } from "kudzu/typeChecks";
+import { isDefined, isFunction, isString } from "kudzu/typeChecks";
 import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } from "./controlTypes";
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
@@ -30,7 +31,6 @@ function isPrimroseOption(key) {
         || key === "height";
 }
 //>>>>>>>>>> PRIVATE STATIC FIELDS >>>>>>>>>>
-let elementCounter = 0, focusedControl = null, hoveredControl = null, publicControls = new Array();
 const wheelScrollSpeed = 4, vScrollWidth = 2, scrollScale = isFirefox ? 3 : 100, optionDefaults = Object.freeze({
     readOnly: false,
     multiLine: true,
@@ -41,15 +41,7 @@ const wheelScrollSpeed = 4, vScrollWidth = 2, scrollScale = isFirefox ? 3 : 100,
     fontSize: 16,
     language: "JavaScript",
     scaleFactor: devicePixelRatio
-}), controls = new Array(), elements = new WeakMap(), ready = (document.readyState === "complete"
-    ? Promise.resolve("already")
-    : new Promise((resolve) => {
-        document.addEventListener("readystatechange", () => {
-            if (document.readyState === "complete") {
-                resolve("had to wait for it");
-            }
-        }, false);
-    }))
+}), controls = new Array(), elements = new WeakMap(), ready = documentReady
     .then(() => {
     for (const element of Array.from(document.getElementsByTagName("primrose"))) {
         new Primrose({
@@ -57,7 +49,6 @@ const wheelScrollSpeed = 4, vScrollWidth = 2, scrollScale = isFirefox ? 3 : 100,
         });
     }
 });
-//<<<<<<<<<< PRIVATE STATIC FIELDS <<<<<<<<<<
 export class Primrose extends TypedEventBase {
     constructor(options) {
         super();
@@ -333,14 +324,6 @@ export class Primrose extends TypedEventBase {
                     this.setSelectedText("");
                 }]
         ]);
-        this.readKeyDownEvent = this.debugEvt("keydown", (evt) => {
-            const command = this.os.makeCommand(evt);
-            const func = this.keyDownCommands.get(command.command);
-            if (func) {
-                evt.preventDefault();
-                func();
-            }
-        });
         this.keyPressCommands = new Map([
             ["AppendNewline", () => {
                     if (this.multiLine) {
@@ -376,52 +359,7 @@ export class Primrose extends TypedEventBase {
                     this.moveInHistory(-1);
                 }]
         ]);
-        this.readKeyPressEvent = this.debugEvt("keypress", (evt) => {
-            const command = this.os.makeCommand(evt);
-            if (!this.readOnly) {
-                evt.preventDefault();
-                if (this.keyPressCommands.has(command.command)) {
-                    this.keyPressCommands.get(command.command)();
-                }
-                else if (command.type === "printable"
-                    || command.type === "whitespace") {
-                    this.setSelectedText(command.text);
-                }
-                this.clampScroll();
-                this.render();
-            }
-        });
-        this.readKeyUpEvent = this.debugEvt("keyup");
         //<<<<<<<<<< KEY EVENT HANDLERS <<<<<<<<<<
-        //>>>>>>>>>> CLIPBOARD EVENT HANDLERS >>>>>>>>>>
-        const copySelectedText = (evt) => {
-            if (this.focused && this.frontCursor.i !== this.backCursor.i) {
-                evt.clipboardData.setData("text/plain", this.selectedText);
-                evt.returnValue = false;
-                return true;
-            }
-            return false;
-        };
-        this.readCopyEvent = this.debugEvt("copy", (evt) => {
-            copySelectedText(evt);
-        });
-        this.readCutEvent = this.debugEvt("cut", (evt) => {
-            if (copySelectedText(evt)
-                && !this.readOnly) {
-                this.setSelectedText("");
-            }
-        });
-        this.readPasteEvent = this.debugEvt("paste", (evt) => {
-            if (this.focused && !this.readOnly) {
-                evt.returnValue = false;
-                const oldClipboard = window.clipboardData;
-                const clipboard = evt.clipboardData || oldClipboard, str = clipboard.getData(oldClipboard ? "Text" : "text/plain");
-                if (str) {
-                    this.setSelectedText(str);
-                }
-            }
-        });
-        //<<<<<<<<<< CLIPBOARD EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> POINTER EVENT HANDLERS >>>>>>>>>>
         const pointerOver = () => {
             this._hovered = true;
@@ -435,31 +373,11 @@ export class Primrose extends TypedEventBase {
         const setMousePointer = (evt) => {
             this.pointer.set(evt.offsetX, evt.offsetY);
         };
-        this.readMouseOverEvent = this.debugEvt("mouseover", pointerOver);
-        this.readMouseOutEvent = this.debugEvt("mouseout", pointerOut);
-        this.readMouseDownEvent = this.debugEvt("mousedown", this.mouseLikePointerDown(setMousePointer));
-        this.readMouseUpEvent = this.debugEvt("mouseup", this.mouseLikePointerUp);
-        this.readMouseMoveEvent = this.debugEvt("mousemove", this.mouseLikePointerMove(setMousePointer));
-        this.readWheelEvent = this.debugEvt("wheel", (evt) => {
-            if (this.hovered || this.focused) {
-                if (!evt.ctrlKey
-                    && !evt.altKey
-                    && !evt.shiftKey
-                    && !evt.metaKey) {
-                    const dy = Math.floor(evt.deltaY * wheelScrollSpeed / scrollScale);
-                    if (!this.scrollBy(0, dy) || this.focused) {
-                        evt.preventDefault();
-                    }
-                }
-                else if (!evt.ctrlKey
-                    && !evt.altKey
-                    && !evt.metaKey) {
-                    evt.preventDefault();
-                    this.fontSize += -evt.deltaY / scrollScale;
-                }
-                this.render();
-            }
-        });
+        const readMouseOverEvent = pointerOver;
+        const readMouseOutEvent = pointerOut;
+        const readMouseDownEvent = this.mouseLikePointerDown(setMousePointer);
+        const readMouseUpEvent = this.mouseLikePointerUp;
+        const readMouseMoveEvent = this.mouseLikePointerMove(setMousePointer);
         //<<<<<<<<<< MOUSE EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> TOUCH EVENT HANDLERS >>>>>>>>>>
         const vibrate = (len) => {
@@ -508,61 +426,60 @@ export class Primrose extends TypedEventBase {
                 this.pointer.set(touch.clientX - cb.left, touch.clientY - cb.top);
             }
         };
-        this.readTouchStartEvent = this.debugEvt("touchstart", withPrimaryTouch(this.touchLikePointerDown(setTouchPointer)));
-        this.readTouchMoveEvent = this.debugEvt("touchmove", withPrimaryTouch(this.touchLikePointerMove(setTouchPointer)));
-        this.readTouchEndEvent = this.debugEvt("touchend", withPrimaryTouch(this.touchLikePointerUp));
+        const readTouchStartEvent = withPrimaryTouch(this.touchLikePointerDown(setTouchPointer));
+        const readTouchMoveEvent = withPrimaryTouch(this.touchLikePointerMove(setTouchPointer));
+        const readTouchEndEvent = withPrimaryTouch(this.touchLikePointerUp);
         //<<<<<<<<<< TOUCH EVENT HANDLERS <<<<<<<<<<
         //>>>>>>>>>> UV POINTER EVENT HANDLERS >>>>>>>>>>
         const setUVPointer = (evt) => {
             this.pointer.set(evt.uv.x * this.width, (1 - evt.uv.y) * this.height);
         };
-        this.mouse = Object.freeze({
+        this.mouse = {
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform the hover gestures.
             // </summary>
-            readOverEventUV: this.debugEvt("mouseuvover", pointerOver),
+            readOverEventUV: pointerOver,
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform the end of the hover gesture.
             // </summary>
-            readOutEventUV: this.debugEvt("mouseuvout", pointerOut),
+            readOutEventUV: pointerOut,
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform mouse-like behavior for primary-button-down gesture.
             // </summary>
-            readDownEventUV: this.debugEvt("mouseuvdown", this.mouseLikePointerDown(setUVPointer)),
+            readDownEventUV: this.mouseLikePointerDown(setUVPointer),
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform mouse-like behavior for primary-button-up gesture.
             // </summary>
-            readUpEventUV: this.debugEvt("mouseuvup", this.mouseLikePointerUp),
+            readUpEventUV: this.mouseLikePointerUp,
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform mouse-like behavior for move gesture, whether the primary button is pressed or not.
             // </summary>
-            readMoveEventUV: this.debugEvt("mouseuvmove", this.mouseLikePointerMove(setUVPointer))
-        });
-        this.touch = Object.freeze({
+            readMoveEventUV: this.mouseLikePointerMove(setUVPointer)
+        };
+        this.touch = {
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform the end of the hover gesture. This is the same as mouse.readOverEventUV, included for completeness.
             // </summary>
-            readOverEventUV: this.debugEvt("touchuvover", pointerOver),
+            readOverEventUV: pointerOver,
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform the end of the hover gesture. This is the same as mouse.readOutEventUV, included for completeness.
             // </summary>
-            readOutEventUV: this.debugEvt("touchuvout", pointerOut),
+            readOutEventUV: pointerOut,
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform touch-like behavior for the first finger touching down gesture.
             // </summary>
-            readDownEventUV: this.debugEvt("touchuvdown", this.touchLikePointerDown(setUVPointer)),
+            readDownEventUV: this.touchLikePointerDown(setUVPointer),
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform touch-like behavior for the first finger raising up gesture.
             // </summary>
-            readMoveEventUV: this.debugEvt("touchuvmove", this.touchLikePointerMove(setUVPointer)),
+            readMoveEventUV: this.touchLikePointerMove(setUVPointer),
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform touch-like behavior for the first finger moving gesture.
             // </summary>
-            readUpEventUV: this.debugEvt("touchuvup", this.touchLikePointerUp)
-        });
+            readUpEventUV: this.touchLikePointerUp
+        };
         //<<<<<<<<<< UV POINTER EVENT HANDLERS <<<<<<<<<<
         //<<<<<<<<<< POINTER EVENT HANDLERS <<<<<<<<<<
-        this.elementID = ++elementCounter;
         //>>>>>>>>>> SETUP CANVAS >>>>>>>>>>
         let currentValue = "", currentTabIndex = -1;
         if (isHTMLCanvas(options.element)) {
@@ -621,14 +538,14 @@ export class Primrose extends TypedEventBase {
             this.canv.style.touchAction = "none";
             this.canv.addEventListener("focus", () => this.focus());
             this.canv.addEventListener("blur", () => this.blur());
-            this.canv.addEventListener("mouseover", this.readMouseOverEvent);
-            this.canv.addEventListener("mouseout", this.readMouseOutEvent);
-            this.canv.addEventListener("mousedown", this.readMouseDownEvent);
-            this.canv.addEventListener("mouseup", this.readMouseUpEvent);
-            this.canv.addEventListener("mousemove", this.readMouseMoveEvent);
-            this.canv.addEventListener("touchstart", this.readTouchStartEvent);
-            this.canv.addEventListener("touchend", this.readTouchEndEvent);
-            this.canv.addEventListener("touchmove", this.readTouchMoveEvent);
+            this.canv.addEventListener("mouseover", readMouseOverEvent);
+            this.canv.addEventListener("mouseout", readMouseOutEvent);
+            this.canv.addEventListener("mousedown", readMouseDownEvent);
+            this.canv.addEventListener("mouseup", readMouseUpEvent);
+            this.canv.addEventListener("mousemove", readMouseMoveEvent);
+            this.canv.addEventListener("touchstart", readTouchStartEvent);
+            this.canv.addEventListener("touchend", readTouchEndEvent);
+            this.canv.addEventListener("touchmove", readTouchMoveEvent);
         }
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
         //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
@@ -693,16 +610,6 @@ export class Primrose extends TypedEventBase {
         if (this.canRender) {
             requestAnimationFrame(this.doRender);
         }
-    }
-    debugEvt(name, callback, debugLocal = false) {
-        return (evt) => {
-            if (debugLocal) {
-                console.log(`Primrose #${this.elementID}`, name, evt);
-            }
-            if (isDefined(callback)) {
-                callback(evt);
-            }
-        };
     }
     startSelecting() {
         this.dragging = true;
@@ -1265,6 +1172,78 @@ export class Primrose extends TypedEventBase {
     scrollBy(dx, dy) {
         return this.scrollTo(this.scroll.x + dx, this.scroll.y + dy);
     }
+    readKeyDownEvent(evt) {
+        const command = this.os.makeCommand(evt);
+        const func = this.keyDownCommands.get(command.command);
+        if (func) {
+            evt.preventDefault();
+            func();
+        }
+    }
+    readKeyPressEvent(evt) {
+        const command = this.os.makeCommand(evt);
+        if (!this.readOnly) {
+            evt.preventDefault();
+            if (this.keyPressCommands.has(command.command)) {
+                this.keyPressCommands.get(command.command)();
+            }
+            else if (command.type === "printable"
+                || command.type === "whitespace") {
+                this.setSelectedText(command.text);
+            }
+            this.clampScroll();
+            this.render();
+        }
+    }
+    //>>>>>>>>>> CLIPBOARD EVENT HANDLERS >>>>>>>>>>
+    copySelectedText(evt) {
+        if (this.focused && this.frontCursor.i !== this.backCursor.i) {
+            evt.clipboardData.setData("text/plain", this.selectedText);
+            evt.returnValue = false;
+            return true;
+        }
+        return false;
+    }
+    readCopyEvent(evt) {
+        this.copySelectedText(evt);
+    }
+    readCutEvent(evt) {
+        if (this.copySelectedText(evt)
+            && !this.readOnly) {
+            this.setSelectedText("");
+        }
+    }
+    readPasteEvent(evt) {
+        if (this.focused && !this.readOnly) {
+            evt.returnValue = false;
+            const oldClipboard = window.clipboardData;
+            const clipboard = evt.clipboardData || oldClipboard, str = clipboard.getData(oldClipboard ? "Text" : "text/plain");
+            if (str) {
+                this.setSelectedText(str);
+            }
+        }
+    }
+    //<<<<<<<<<< CLIPBOARD EVENT HANDLERS <<<<<<<<<<
+    readWheelEvent(evt) {
+        if (this.hovered || this.focused) {
+            if (!evt.ctrlKey
+                && !evt.altKey
+                && !evt.shiftKey
+                && !evt.metaKey) {
+                const dy = Math.floor(evt.deltaY * wheelScrollSpeed / scrollScale);
+                if (!this.scrollBy(0, dy) || this.focused) {
+                    evt.preventDefault();
+                }
+            }
+            else if (!evt.ctrlKey
+                && !evt.altKey
+                && !evt.metaKey) {
+                evt.preventDefault();
+                this.fontSize += -evt.deltaY / scrollScale;
+            }
+            this.render();
+        }
+    }
     /// <summary>
     /// The DOM element that was used to construct the `Primrose` control out of the document tree.If the Control was not constructed from the document tree, this value will be`null`.
     /// </summary>
@@ -1614,7 +1593,7 @@ export class Primrose extends TypedEventBase {
         return ready;
     }
 }
-Object.freeze(Primrose);
+let focusedControl = null, hoveredControl = null, publicControls = new Array();
 requestAnimationFrame(function update() {
     requestAnimationFrame(update);
     for (let i = controls.length - 1; i >= 0; --i) {
@@ -1630,23 +1609,27 @@ requestAnimationFrame(function update() {
         }
     }
 });
-function withCurrentControl(name) {
-    const evtName = name.toLocaleLowerCase(), funcName = `read${name}Event`;
+function withCurrentControl(funcName) {
+    const evtName = funcName
+        .match(/ read(\w +)Event/name)[1]
+        .toLocaleLowerCase();
     window.addEventListener(evtName, (evt) => {
-        if (focusedControl !== null) {
-            focusedControl[funcName](evt);
+        if (isDefined(focusedControl)) {
+            const func = focusedControl[funcName];
+            if (isFunction(func)) {
+                func(evt);
+            }
         }
     }, { passive: false });
 }
-withCurrentControl("KeyDown");
-withCurrentControl("KeyPress");
-withCurrentControl("KeyUp");
-withCurrentControl("Copy");
-withCurrentControl("Cut");
-withCurrentControl("Paste");
+withCurrentControl("readKeyDownEvent");
+withCurrentControl("readKeyPressEvent");
+withCurrentControl("readCopyEvent");
+withCurrentControl("readCutEvent");
+withCurrentControl("readPasteEvent");
 window.addEventListener("wheel", (evt) => {
     const control = focusedControl || hoveredControl;
-    if (control !== null) {
+    if (isDefined(control)) {
         control.readWheelEvent(evt);
     }
 }, { passive: false });

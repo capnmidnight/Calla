@@ -1,6 +1,20 @@
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { CanvasTypes } from "kudzu/html/canvas";
 import { Grammar } from "./grammars";
+interface PointXY {
+    x: number;
+    y: number;
+}
+interface PointerUVEvent {
+    uv: PointXY;
+}
+interface PointerEventCollection {
+    readOverEventUV: () => void;
+    readOutEventUV: () => void;
+    readDownEventUV: (evt: PointerUVEvent) => void;
+    readUpEventUV: (evt: PointerUVEvent) => void;
+    readMoveEventUV: (evt: PointerUVEvent) => void;
+}
 export interface PrimroseOptions {
     readOnly: boolean;
     multiLine: boolean;
@@ -23,7 +37,6 @@ export declare class Primrose extends TypedEventBase<{
     change: TypedEvent<"change">;
     update: TypedEvent<"update">;
 }> {
-    private elementID;
     private longPress;
     private tx;
     private ty;
@@ -99,9 +112,10 @@ export declare class Primrose extends TypedEventBase<{
     private tgfx;
     private keyDownCommands;
     private keyPressCommands;
+    mouse: PointerEventCollection;
+    touch: PointerEventCollection;
     constructor(options: Partial<PrimroseOptions>);
     private render;
-    private debugEvt;
     private startSelecting;
     private pointerDown;
     private pointerMove;
@@ -137,6 +151,13 @@ export declare class Primrose extends TypedEventBase<{
     setSize(w: number, h: number): void;
     scrollTo(x: number, y: number): boolean;
     scrollBy(dx: number, dy: number): boolean;
+    readKeyDownEvent(evt: KeyboardEvent): void;
+    readKeyPressEvent(evt: KeyboardEvent): void;
+    private copySelectedText;
+    readCopyEvent(evt: ClipboardEvent): void;
+    readCutEvent(evt: ClipboardEvent): void;
+    readPasteEvent(evt: ClipboardEvent): void;
+    readWheelEvent(evt: WheelEvent): void;
     get element(): HTMLElement;
     get isInDocument(): boolean;
     get canvas(): CanvasTypes;
@@ -188,3 +209,4 @@ export declare class Primrose extends TypedEventBase<{
     static get editors(): Primrose[];
     static get ready(): Promise<void>;
 }
+export {};
