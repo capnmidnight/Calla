@@ -6,5 +6,5 @@ import type { IRow } from "../Row";
 import type { Theme } from "../themes";
 import { Layer } from "./Layer";
 export declare class BackgroundLayer extends Layer {
-    render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[]): Promise<void>;
+    render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], _fontFamily: string, _fontSize: number): Promise<void>;
 }

@@ -12,8 +12,9 @@ import { isDefined, isFunction, isString } from "kudzu/typeChecks";
 import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } from "./controlTypes";
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
-import { FinalTokenType, isFinalTokenType } from "./Grammars/Token";
+import { FinalTokenType } from "./Grammars/Token";
 import { BackgroundLayer } from "./Layers/BackgroundLayer";
+import { ForegroundLayer } from "./Layers/ForegroundLayer";
 import { MacOS, Windows } from "./os";
 import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
@@ -556,21 +557,17 @@ export class Primrose extends TypedEventBase {
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
         //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
         this.context = this.canv.getContext("2d");
-        this.fg = createUtilityCanvas(this.canv.width, this.canv.height);
-        this.fgfx = this.fg.getContext("2d");
+        this.fg = new ForegroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
         this.bg = new BackgroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
         this.tg = createUtilityCanvas(this.canv.width, this.canv.height);
         this.tgfx = this.tg.getContext("2d");
         this.context.imageSmoothingEnabled
-            = this.fgfx.imageSmoothingEnabled
-                = this.tgfx.imageSmoothingEnabled
-                    = true;
+            = this.tgfx.imageSmoothingEnabled
+                = true;
         this.context.textBaseline
-            = this.fgfx.textBaseline
-                = this.tgfx.textBaseline
-                    = "top";
+            = this.tgfx.textBaseline
+                = "top";
         this.tgfx.textAlign = "right";
-        this.fgfx.textAlign = "left";
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
         this.addEventListener("blur", () => {
@@ -682,7 +679,7 @@ export class Primrose extends TypedEventBase {
     }
     refreshBuffers() {
         this.resized = true;
-        setContextSize(this.fgfx, this.canv.width, this.canv.height);
+        this.fg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
         this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
         setContextSize(this.tgfx, this.canv.width, this.canv.height);
         this.refreshAllTokens();
@@ -768,49 +765,6 @@ export class Primrose extends TypedEventBase {
         gfx.strokeStyle = stroke;
         gfx.strokeRect(x * this.character.width, y * this.character.height, w * this.character.width + 1, h * this.character.height + 1);
     }
-    renderCanvasForeground() {
-        this.fgfx.clearRect(0, 0, this.canv.width, this.canv.height);
-        this.fgfx.save();
-        this.fgfx.scale(this.scaleFactor, this.scaleFactor);
-        this.fgfx.translate((this.gridBounds.x - this.scroll.x) * this.character.width + this.padding, this.padding);
-        const minY = this.scroll.y | 0, maxY = minY + this.gridBounds.height, minX = this.scroll.x | 0, maxX = minX + this.gridBounds.width;
-        this.tokenFront.setXY(this.rows, 0, minY);
-        this.tokenBack.copy(this.tokenFront);
-        for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
-            // draw the tokens on this row
-            const row = this.rows[y].tokens, textY = (y - this.scroll.y) * this.character.height;
-            for (let i = 0; i < row.length; ++i) {
-                const t = row[i];
-                this.tokenBack.x += t.length;
-                this.tokenBack.i += t.length;
-                // skip drawing tokens that aren't in view
-                if (minX <= this.tokenBack.x
-                    && this.tokenFront.x <= maxX) {
-                    // draw the text
-                    const style = isFinalTokenType(t.type) && this.theme[t.type] || {}, fontWeight = style.fontWeight
-                        || this.theme.regular.fontWeight
-                        || DefaultTheme.regular.fontWeight
-                        || "", fontStyle = style.fontStyle
-                        || this.theme.regular.fontStyle
-                        || DefaultTheme.regular.fontStyle
-                        || "";
-                    this.fgfx.font = makeFont({
-                        fontFamily: this.fontFamily,
-                        fontSize: this.fontSize,
-                        fontWeight,
-                        fontStyle
-                    });
-                    this.fgfx.fillStyle = style.foreColor || this.theme.regular.foreColor;
-                    this.fgfx.fillText(t.value, this.tokenFront.x * this.character.width, textY);
-                }
-                this.tokenFront.copy(this.tokenBack);
-            }
-            this.tokenFront.x = 0;
-            ++this.tokenFront.y;
-            this.tokenBack.copy(this.tokenFront);
-        }
-        this.fgfx.restore();
-    }
     renderCanvasTrim() {
         this.tgfx.clearRect(0, 0, this.canv.width, this.canv.height);
         this.tgfx.save();
@@ -889,10 +843,10 @@ export class Primrose extends TypedEventBase {
                 || focusChanged;
             const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
             if (backgroundChanged) {
-                this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows);
+                this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize);
             }
             if (foregroundChanged) {
-                this.renderCanvasForeground();
+                this.fg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize);
             }
             if (trimChanged) {
                 this.renderCanvasTrim();
@@ -901,7 +855,7 @@ export class Primrose extends TypedEventBase {
             this.context.save();
             this.context.translate(this.vibX, this.vibY);
             this.context.drawImage(this.bg.canvas, 0, 0);
-            this.context.drawImage(this.fg, 0, 0);
+            this.context.drawImage(this.fg.canvas, 0, 0);
             this.context.drawImage(this.tg, 0, 0);
             this.context.restore();
             this.lastGridBounds = this.gridBounds.toString();

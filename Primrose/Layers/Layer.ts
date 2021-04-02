@@ -40,5 +40,7 @@ export abstract class Layer {
         character: ISize,
         padding: number,
         focused: boolean,
-        rows: IRow[]): Promise<void>;
+        rows: IRow[],
+        fontFamily: string,
+        fontSize: number): Promise<void>;
 }

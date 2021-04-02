@@ -14,5 +14,5 @@ export declare abstract class Layer {
     constructor(canvas: CanvasTypes);
     protected fillRect(character: ISize, fill: string, x: number, y: number, w: number, h: number): void;
     setSize(w: number, h: number, scaleFactor: number): void;
-    abstract render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[]): Promise<void>;
+    abstract render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], fontFamily: string, fontSize: number): Promise<void>;
 }

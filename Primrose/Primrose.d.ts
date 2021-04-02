@@ -107,7 +107,6 @@ export declare class Primrose extends TypedEventBase<{
     private updateEvt;
     private context;
     private fg;
-    private fgfx;
     private bg;
     private tg;
     private tgfx;
@@ -133,7 +132,6 @@ export declare class Primrose extends TypedEventBase<{
     private refreshGutter;
     private fillRect;
     private strokeRect;
-    private renderCanvasForeground;
     private renderCanvasTrim;
     private doRender;
     private setValue;

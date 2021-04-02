@@ -18,7 +18,9 @@ export class BackgroundLayer extends Layer {
         character: ISize,
         padding: number,
         focused: boolean,
-        rows: IRow[]) {
+        rows: IRow[],
+        _fontFamily: string,
+        _fontSize: number) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (theme.regular.backColor) {
             this.g.fillStyle = theme.regular.backColor;
