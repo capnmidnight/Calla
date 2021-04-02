@@ -1,47 +1,22 @@
-import { IPoint } from "kudzu/graphics2d/Point";
-import { IRectangle } from "kudzu/graphics2d/Rectangle";
-import { ISize } from "kudzu/graphics2d/Size";
-import { CanvasTypes, Context2D, setContextSize } from "kudzu/html/canvas";
-import { Cursor, ICursor } from "../Cursor";
-import { IRow } from "../Row";
-import { Theme } from "../themes";
+import type { IPoint } from "kudzu/graphics2d/Point";
+import type { IRectangle } from "kudzu/graphics2d/Rectangle";
+import type { ISize } from "kudzu/graphics2d/Size";
+import type { CanvasTypes } from "kudzu/html/canvas";
+import { assertNever } from "kudzu/typeChecks";
+import type { ICursor } from "../Cursor";
+import type { IRow } from "../Row";
+import type { Theme } from "../themes";
+import { BackgroundLayer } from "./BackgroundLayer";
+import type { BaseLayer } from "./BaseLayer";
+import { LayerType } from "./BaseLayer";
+import { ForegroundLayer } from "./ForegroundLayer";
+import { TrimLayer } from "./TrimLayer";
 
-export abstract class Layer {
-    protected scaleFactor: number = 1;
-    protected tokenFront = new Cursor();
-    protected tokenBack = new Cursor();
-    protected g: Context2D;
-
-    constructor(public canvas: CanvasTypes) {
-        this.g = this.canvas.getContext("2d");
-        this.g.imageSmoothingEnabled = true;
-        this.g.textBaseline = "top";
-    }
-
-    protected fillRect(character: ISize, fill: string, x: number, y: number, w: number, h: number) {
-        this.g.fillStyle = fill;
-        this.g.fillRect(
-            x * character.width,
-            y * character.height,
-            w * character.width + 1,
-            h * character.height + 1);
-    }
-
-    protected strokeRect(character: ISize, stroke: string, x: number, y: number, w: number, h: number) {
-        this.g.strokeStyle = stroke;
-        this.g.strokeRect(
-            x * character.width,
-            y * character.height,
-            w * character.width + 1,
-            h * character.height + 1);
-    }
-
-    setSize(w: number, h: number, scaleFactor: number) {
-        this.scaleFactor = scaleFactor;
-        setContextSize(this.g, w, h, scaleFactor);
-    }
-
-    abstract render(theme: Theme,
+export interface ILayer {
+    canvas: CanvasTypes;
+    createLayer(canvas: CanvasTypes, type: LayerType): Promise<void>;
+    setSize(w: number, h: number, scaleFactor: number): Promise<void>;
+    render(theme: Theme,
         minCursor: ICursor,
         maxCursor: ICursor,
         gridBounds: IRectangle,
@@ -57,4 +32,71 @@ export abstract class Layer {
         showScrollBars: boolean,
         vScrollWidth: number,
         wordWrap: boolean): Promise<void>;
+}
+
+export class Layer implements ILayer {
+    private layer: BaseLayer = null;
+
+    private _canvas: CanvasTypes = null;
+    get canvas() {
+        return this._canvas;
+    }
+
+    createLayer(canvas: CanvasTypes, type: LayerType): Promise<void> {
+        this._canvas = canvas;
+        switch (type) {
+            case LayerType.background:
+                this.layer = new BackgroundLayer(canvas);
+                break;
+            case LayerType.foreground:
+                this.layer = new ForegroundLayer(canvas);
+                break;
+            case LayerType.trim:
+                this.layer = new TrimLayer(canvas);
+                break;
+            default:
+                assertNever(type);
+        }
+
+        return Promise.resolve();
+    }
+
+    setSize(w: number, h: number, scaleFactor: number): Promise<void> {
+        return this.layer.setSize(w, h, scaleFactor);
+    }
+
+    render(theme: Theme,
+        minCursor: ICursor,
+        maxCursor: ICursor,
+        gridBounds: IRectangle,
+        scroll: IPoint,
+        character: ISize,
+        padding: number,
+        focused: boolean,
+        rows: IRow[],
+        fontFamily: string,
+        fontSize: number,
+        showLineNumbers: boolean,
+        lineCountWidth: number,
+        showScrollBars: boolean,
+        vScrollWidth: number,
+        wordWrap: boolean): Promise<void> {
+        return this.layer.render(
+            theme,
+            minCursor,
+            maxCursor,
+            gridBounds,
+            scroll,
+            character,
+            padding,
+            focused,
+            rows,
+            fontFamily,
+            fontSize,
+            showLineNumbers,
+            lineCountWidth,
+            showScrollBars,
+            vScrollWidth,
+            wordWrap);
+    }
 }

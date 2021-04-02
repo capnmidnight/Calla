@@ -7,9 +7,9 @@ import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
 import { Dark as DefaultTheme } from "../themes";
-import { Layer } from "./Layer";
+import { BaseLayer } from "./BaseLayer";
 
-export class TrimLayer extends Layer {
+export class TrimLayer extends BaseLayer {
 
     constructor(canvas: CanvasTypes) {
         super(canvas);

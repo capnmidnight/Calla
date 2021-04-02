@@ -1,26 +1,38 @@
-import { setContextSize } from "kudzu/html/canvas";
-import { Cursor } from "../Cursor";
+import { assertNever } from "kudzu/typeChecks";
+import { BackgroundLayer } from "./BackgroundLayer";
+import { LayerType } from "./BaseLayer";
+import { ForegroundLayer } from "./ForegroundLayer";
+import { TrimLayer } from "./TrimLayer";
 export class Layer {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.scaleFactor = 1;
-        this.tokenFront = new Cursor();
-        this.tokenBack = new Cursor();
-        this.g = this.canvas.getContext("2d");
-        this.g.imageSmoothingEnabled = true;
-        this.g.textBaseline = "top";
+    constructor() {
+        this.layer = null;
+        this._canvas = null;
     }
-    fillRect(character, fill, x, y, w, h) {
-        this.g.fillStyle = fill;
-        this.g.fillRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
+    get canvas() {
+        return this._canvas;
     }
-    strokeRect(character, stroke, x, y, w, h) {
-        this.g.strokeStyle = stroke;
-        this.g.strokeRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
+    createLayer(canvas, type) {
+        this._canvas = canvas;
+        switch (type) {
+            case LayerType.background:
+                this.layer = new BackgroundLayer(canvas);
+                break;
+            case LayerType.foreground:
+                this.layer = new ForegroundLayer(canvas);
+                break;
+            case LayerType.trim:
+                this.layer = new TrimLayer(canvas);
+                break;
+            default:
+                assertNever(type);
+        }
+        return Promise.resolve();
     }
     setSize(w, h, scaleFactor) {
-        this.scaleFactor = scaleFactor;
-        setContextSize(this.g, w, h, scaleFactor);
+        return this.layer.setSize(w, h, scaleFactor);
+    }
+    render(theme, minCursor, maxCursor, gridBounds, scroll, character, padding, focused, rows, fontFamily, fontSize, showLineNumbers, lineCountWidth, showScrollBars, vScrollWidth, wordWrap) {
+        return this.layer.render(theme, minCursor, maxCursor, gridBounds, scroll, character, padding, focused, rows, fontFamily, fontSize, showLineNumbers, lineCountWidth, showScrollBars, vScrollWidth, wordWrap);
     }
 }
 //# sourceMappingURL=Layer.js.map

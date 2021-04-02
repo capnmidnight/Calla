@@ -112,7 +112,6 @@ export declare class Primrose extends TypedEventBase<{
     mouse: PointerEventCollection;
     touch: PointerEventCollection;
     constructor(options: Partial<PrimroseOptions>);
-    private render;
     private startSelecting;
     private pointerDown;
     private pointerMove;
@@ -127,6 +126,7 @@ export declare class Primrose extends TypedEventBase<{
     private dragScroll;
     private refreshControlType;
     private refreshGutter;
+    private render;
     private doRender;
     private setValue;
     private setSelectedText;

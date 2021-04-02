@@ -1,8 +1,8 @@
 import { makeFont } from "kudzu/graphics2d/fonts";
 import { isFinalTokenType } from "../Grammars/Token";
 import { Dark as DefaultTheme } from "../themes";
-import { Layer } from "./Layer";
-export class ForegroundLayer extends Layer {
+import { BaseLayer } from "./BaseLayer";
+export class ForegroundLayer extends BaseLayer {
     constructor(canvas) {
         super(canvas);
         this.g.textAlign = "left";

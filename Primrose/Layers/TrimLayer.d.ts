@@ -5,8 +5,8 @@ import { CanvasTypes } from "kudzu/html/canvas";
 import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
-import { Layer } from "./Layer";
-export declare class TrimLayer extends Layer {
+import { BaseLayer } from "./BaseLayer";
+export declare class TrimLayer extends BaseLayer {
     constructor(canvas: CanvasTypes);
     render(theme: Theme, _minCursor: ICursor, _maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], fontFamily: string, fontSize: number, showLineNumbers: boolean, lineCountWidth: number, showScrollBars: boolean, vScrollWidth: number, wordWrap: boolean): Promise<void>;
 }

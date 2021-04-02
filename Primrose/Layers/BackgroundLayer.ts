@@ -6,9 +6,9 @@ import { Cursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
 import { Dark as DefaultTheme } from "../themes";
-import { Layer } from "./Layer";
+import { BaseLayer } from "./BaseLayer";
 
-export class BackgroundLayer extends Layer {
+export class BackgroundLayer extends BaseLayer {
 
     render(theme: Theme,
         minCursor: ICursor,

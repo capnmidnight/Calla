@@ -13,9 +13,8 @@ import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } fr
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
 import { FinalTokenType } from "./Grammars/Token";
-import { BackgroundLayer } from "./Layers/BackgroundLayer";
-import { ForegroundLayer } from "./Layers/ForegroundLayer";
-import { TrimLayer } from "./Layers/TrimLayer";
+import { LayerType } from "./Layers/BaseLayer";
+import { Layer } from "./Layers/Layer";
 import { MacOS, Windows } from "./os";
 import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
@@ -122,6 +121,9 @@ export class Primrose extends TypedEventBase {
         this.focusEvt = new TypedEvent("focus");
         this.changeEvt = new TypedEvent("change");
         this.updateEvt = new TypedEvent("update");
+        this.fg = new Layer();
+        this.bg = new Layer();
+        this.trim = new Layer();
         //>>>>>>>>>> VALIDATE PARAMETERS >>>>>>>>>>
         options = options || {};
         if (options.element === undefined) {
@@ -556,13 +558,13 @@ export class Primrose extends TypedEventBase {
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
         //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
         this.context = this.canv.getContext("2d");
-        this.fg = new ForegroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
-        this.bg = new BackgroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
-        this.trim = new TrimLayer(createUtilityCanvas(this.canv.width, this.canv.height));
-        this.context.imageSmoothingEnabled
-            = true;
-        this.context.textBaseline
-            = "top";
+        this.context.imageSmoothingEnabled = true;
+        this.context.textBaseline = "top";
+        const task = Promise.all([
+            this.fg.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.foreground),
+            this.bg.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.background),
+            this.trim.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.trim)
+        ]);
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
         this.addEventListener("blur", () => {
@@ -595,17 +597,14 @@ export class Primrose extends TypedEventBase {
         this.scaleFactor = options.scaleFactor;
         this.value = currentValue;
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
-        this.doRender();
         // This is done last so that controls that have errored 
         // out during their setup don't get added to the control
         // manager.
         Primrose.add(this.element, this);
-        this.canRender = true;
-    }
-    render() {
-        if (this.canRender) {
-            requestAnimationFrame(() => this.doRender());
-        }
+        task.then(() => {
+            this.canRender = true;
+            this.doRender();
+        });
     }
     startSelecting() {
         this.dragging = true;
@@ -672,11 +671,13 @@ export class Primrose extends TypedEventBase {
             }
         };
     }
-    refreshBuffers() {
+    async refreshBuffers() {
         this.resized = true;
-        this.fg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
-        this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
-        this.trim.setSize(this.canv.width, this.canv.height, this.scaleFactor);
+        await Promise.all([
+            this.fg.setSize(this.canv.width, this.canv.height, this.scaleFactor),
+            this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor),
+            this.trim.setSize(this.canv.width, this.canv.height, this.scaleFactor)
+        ]);
         this.refreshAllTokens();
     }
     moveCursor(cursor) {
@@ -752,7 +753,12 @@ export class Primrose extends TypedEventBase {
         }
     }
     //>>>>>>>>>> RENDERING >>>>>>>>>>
-    doRender() {
+    render() {
+        if (this.canRender) {
+            requestAnimationFrame(() => this.doRender());
+        }
+    }
+    async doRender() {
         if (this.theme) {
             const textChanged = this.lastText !== this.value, focusChanged = this.focused !== this.lastFocused, fontChanged = this.context.font !== this.lastFont, paddingChanged = this.padding !== this.lastPadding, themeChanged = this.theme.name !== this.lastThemeName, boundsChanged = this.gridBounds.toString() !== this.lastGridBounds, characterWidthChanged = this.character.width !== this.lastCharacterWidth, characterHeightChanged = this.character.height !== this.lastCharacterHeight, cursorChanged = this.frontCursor.i !== this.lastFrontCursor
                 || this.backCursor.i !== this.lastBackCursor, scrollChanged = this.scroll.x !== this.lastScrollX
@@ -767,16 +773,17 @@ export class Primrose extends TypedEventBase {
                 || cursorChanged, foregroundChanged = layoutChanged
                 || fontChanged, trimChanged = layoutChanged
                 || focusChanged;
-            const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+            const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor), tasks = new Array();
             if (backgroundChanged) {
-                this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap);
+                tasks.push(this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
             }
             if (foregroundChanged) {
-                this.fg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap);
+                tasks.push(this.fg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
             }
             if (trimChanged) {
-                this.trim.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap);
+                tasks.push(this.trim.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
             }
+            await Promise.all(tasks);
             this.context.clearRect(0, 0, this.canv.width, this.canv.height);
             this.context.save();
             this.context.translate(this.vibX, this.vibY);

@@ -1,7 +1,7 @@
 import { Cursor } from "../Cursor";
 import { Dark as DefaultTheme } from "../themes";
-import { Layer } from "./Layer";
-export class BackgroundLayer extends Layer {
+import { BaseLayer } from "./BaseLayer";
+export class BackgroundLayer extends BaseLayer {
     render(theme, minCursor, maxCursor, gridBounds, scroll, character, padding, focused, rows, _fontFamily, _fontSize, _showLineNumbers, _lineCountWidth, _showScrollBars, _vScrollWidth, _wordWrap) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (theme.regular.backColor) {
