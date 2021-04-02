@@ -6,6 +6,7 @@ export interface IRow {
     leftCorrections: number[];
     rightCorrections: number[];
     text: string;
+    lineNumber: number;
 }
 
 export class Row implements IRow {

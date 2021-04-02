@@ -94,8 +94,6 @@ export declare class Primrose extends TypedEventBase<{
     private character;
     private bottomRightGutter;
     private gridBounds;
-    private tokenBack;
-    private tokenFront;
     private backCursor;
     private frontCursor;
     private os;
@@ -108,8 +106,7 @@ export declare class Primrose extends TypedEventBase<{
     private context;
     private fg;
     private bg;
-    private tg;
-    private tgfx;
+    private trim;
     private keyDownCommands;
     private keyPressCommands;
     mouse: PointerEventCollection;
@@ -130,9 +127,6 @@ export declare class Primrose extends TypedEventBase<{
     private dragScroll;
     private refreshControlType;
     private refreshGutter;
-    private fillRect;
-    private strokeRect;
-    private renderCanvasTrim;
     private doRender;
     private setValue;
     private setSelectedText;

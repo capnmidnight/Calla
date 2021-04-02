@@ -20,7 +20,12 @@ export class BackgroundLayer extends Layer {
         focused: boolean,
         rows: IRow[],
         _fontFamily: string,
-        _fontSize: number) {
+        _fontSize: number,
+        _showLineNumbers: boolean,
+        _lineCountWidth: number,
+        _showScrollBars: boolean,
+        _vScrollWidth: number,
+        _wordWrap: boolean) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (theme.regular.backColor) {
             this.g.fillStyle = theme.regular.backColor;

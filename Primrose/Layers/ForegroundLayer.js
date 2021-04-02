@@ -7,7 +7,7 @@ export class ForegroundLayer extends Layer {
         super(canvas);
         this.g.textAlign = "left";
     }
-    render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, _focused, rows, fontFamily, fontSize) {
+    render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, _focused, rows, fontFamily, fontSize, _showLineNumbers, _lineCountWidth, _showScrollBars, _vScrollWidth, _wordWrap) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);

@@ -13,6 +13,7 @@ export declare abstract class Layer {
     protected g: Context2D;
     constructor(canvas: CanvasTypes);
     protected fillRect(character: ISize, fill: string, x: number, y: number, w: number, h: number): void;
+    protected strokeRect(character: ISize, stroke: string, x: number, y: number, w: number, h: number): void;
     setSize(w: number, h: number, scaleFactor: number): void;
-    abstract render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], fontFamily: string, fontSize: number): Promise<void>;
+    abstract render(theme: Theme, minCursor: ICursor, maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], fontFamily: string, fontSize: number, showLineNumbers: boolean, lineCountWidth: number, showScrollBars: boolean, vScrollWidth: number, wordWrap: boolean): Promise<void>;
 }

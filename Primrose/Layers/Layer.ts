@@ -27,6 +27,15 @@ export abstract class Layer {
             h * character.height + 1);
     }
 
+    protected strokeRect(character: ISize, stroke: string, x: number, y: number, w: number, h: number) {
+        this.g.strokeStyle = stroke;
+        this.g.strokeRect(
+            x * character.width,
+            y * character.height,
+            w * character.width + 1,
+            h * character.height + 1);
+    }
+
     setSize(w: number, h: number, scaleFactor: number) {
         this.scaleFactor = scaleFactor;
         setContextSize(this.g, w, h, scaleFactor);
@@ -42,5 +51,10 @@ export abstract class Layer {
         focused: boolean,
         rows: IRow[],
         fontFamily: string,
-        fontSize: number): Promise<void>;
+        fontSize: number,
+        showLineNumbers: boolean,
+        lineCountWidth: number,
+        showScrollBars: boolean,
+        vScrollWidth: number,
+        wordWrap: boolean): Promise<void>;
 }

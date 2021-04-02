@@ -27,7 +27,12 @@ export class ForegroundLayer extends Layer {
         _focused: boolean,
         rows: IRow[],
         fontFamily: string,
-        fontSize: number) {
+        fontSize: number,
+        _showLineNumbers: boolean,
+        _lineCountWidth: number,
+        _showScrollBars: boolean,
+        _vScrollWidth: number,
+        _wordWrap: boolean) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);

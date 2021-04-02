@@ -5,6 +5,7 @@ export interface IRow {
     leftCorrections: number[];
     rightCorrections: number[];
     text: string;
+    lineNumber: number;
 }
 export declare class Row implements IRow {
     text: string;

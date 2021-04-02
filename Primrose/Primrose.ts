@@ -4,7 +4,7 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
-import { CanvasTypes, Context2D, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import { CanvasTypes, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -18,6 +18,7 @@ import {
 import { FinalTokenType, Token } from "./Grammars/Token";
 import { BackgroundLayer } from "./Layers/BackgroundLayer";
 import { ForegroundLayer } from "./Layers/ForegroundLayer";
+import { TrimLayer } from "./Layers/TrimLayer";
 import {
     MacOS, Windows
 } from "./os";
@@ -192,8 +193,6 @@ export class Primrose extends TypedEventBase<{
     private character = new Rectangle();
     private bottomRightGutter = new Size();
     private gridBounds = new Rectangle();
-    private tokenBack = new Cursor();
-    private tokenFront = new Cursor();
     private backCursor = new Cursor();
     private frontCursor = new Cursor();
     private os = isApple ? MacOS : Windows;
@@ -207,8 +206,7 @@ export class Primrose extends TypedEventBase<{
     private context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
     private fg: ForegroundLayer;
     private bg: BackgroundLayer;
-    private tg: CanvasTypes;
-    private tgfx: any;
+    private trim: TrimLayer;
     private keyDownCommands: Map<string, () => void>;
     private keyPressCommands: Map<string, () => void>;
 
@@ -775,17 +773,13 @@ export class Primrose extends TypedEventBase<{
         this.context = this.canv.getContext("2d");
         this.fg = new ForegroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
         this.bg = new BackgroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
-        this.tg = createUtilityCanvas(this.canv.width, this.canv.height);
-        this.tgfx = this.tg.getContext("2d");
+        this.trim = new TrimLayer(createUtilityCanvas(this.canv.width, this.canv.height));
 
         this.context.imageSmoothingEnabled
-            = this.tgfx.imageSmoothingEnabled
             = true;
         this.context.textBaseline
-            = this.tgfx.textBaseline
             = "top";
 
-        this.tgfx.textAlign = "right";
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
 
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
@@ -921,7 +915,7 @@ export class Primrose extends TypedEventBase<{
         this.resized = true;
         this.fg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
         this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
-        setContextSize(this.tgfx, this.canv.width, this.canv.height);
+        this.trim.setSize(this.canv.width, this.canv.height, this.scaleFactor);
         this.refreshAllTokens();
     }
 
@@ -1012,109 +1006,6 @@ export class Primrose extends TypedEventBase<{
     }
 
     //>>>>>>>>>> RENDERING >>>>>>>>>>
-    private fillRect(gfx: Context2D, fill: string, x: number, y: number, w: number, h: number) {
-        gfx.fillStyle = fill;
-        gfx.fillRect(
-            x * this.character.width,
-            y * this.character.height,
-            w * this.character.width + 1,
-            h * this.character.height + 1);
-    }
-
-    private strokeRect(gfx: Context2D, stroke: string, x: number, y: number, w: number, h: number) {
-        gfx.strokeStyle = stroke;
-        gfx.strokeRect(
-            x * this.character.width,
-            y * this.character.height,
-            w * this.character.width + 1,
-            h * this.character.height + 1);
-    }
-
-    private renderCanvasTrim() {
-        this.tgfx.clearRect(0, 0, this.canv.width, this.canv.height);
-        this.tgfx.save();
-        this.tgfx.scale(this.scaleFactor, this.scaleFactor);
-        this.tgfx.translate(this.padding, this.padding);
-
-        if (this.showLineNumbers) {
-            this.fillRect(this.tgfx,
-                this.theme.selectedBackColor ||
-                DefaultTheme.selectedBackColor,
-                0, 0,
-                this.gridBounds.x, this.width - this.padding * 2);
-            this.strokeRect(this.tgfx,
-                this.theme.regular.foreColor ||
-                DefaultTheme.regular.foreColor,
-                0, 0,
-                this.gridBounds.x, this.height - this.padding * 2);
-        }
-
-        let maxRowWidth = 2;
-        this.tgfx.save();
-        {
-            this.tgfx.translate((this.lineCountWidth - 0.5) * this.character.width, -this.scroll.y * this.character.height);
-            let lastLineNumber = -1;
-            const minY = this.scroll.y | 0,
-                maxY = minY + this.gridBounds.height;
-            this.tokenFront.setXY(this.rows, 0, minY);
-            this.tokenBack.copy(this.tokenFront);
-            for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
-                const row = this.rows[y];
-                maxRowWidth = Math.max(maxRowWidth, row.stringLength);
-                if (this.showLineNumbers) {
-                    // draw the left gutter
-                    if (row.lineNumber > lastLineNumber) {
-                        lastLineNumber = row.lineNumber;
-                        this.tgfx.font = makeFont({
-                            fontFamily: this.fontFamily,
-                            fontSize: this.fontSize,
-                            fontWeight: "bold"
-                        });
-                        this.tgfx.fillStyle = this.theme.regular.foreColor;
-                        this.tgfx.fillText(
-                            (row.lineNumber + 1).toFixed(0),
-                            0, y * this.character.height);
-                    }
-                }
-            }
-        }
-        this.tgfx.restore();
-
-        // draw the scrollbars
-        if (this.showScrollBars) {
-            this.tgfx.fillStyle = this.theme.selectedBackColor ||
-                DefaultTheme.selectedBackColor;
-
-            // horizontal
-            if (!this.wordWrap && maxRowWidth > this.gridBounds.width) {
-                const drawWidth = this.gridBounds.width * this.character.width - this.padding,
-                    scrollX = (this.scroll.x * drawWidth) / maxRowWidth + this.gridBounds.x * this.character.width,
-                    scrollBarWidth = drawWidth * (this.gridBounds.width / maxRowWidth),
-                    by = this.height - this.character.height - this.padding,
-                    bw = Math.max(this.character.width, scrollBarWidth);
-                this.tgfx.fillRect(scrollX, by, bw, this.character.height);
-                this.tgfx.strokeRect(scrollX, by, bw, this.character.height);
-            }
-
-            //vertical
-            if (this.rows.length > this.gridBounds.height) {
-                const drawHeight = this.gridBounds.height * this.character.height,
-                    scrollY = (this.scroll.y * drawHeight) / this.rows.length,
-                    scrollBarHeight = drawHeight * (this.gridBounds.height / this.rows.length),
-                    bx = this.width - vScrollWidth * this.character.width - 2 * this.padding,
-                    bw = vScrollWidth * this.character.width,
-                    bh = Math.max(this.character.height, scrollBarHeight);
-                this.tgfx.fillRect(bx, scrollY, bw, bh);
-                this.tgfx.strokeRect(bx, scrollY, bw, bh);
-            }
-        }
-
-        this.tgfx.restore();
-        if (!this.focused) {
-            this.tgfx.fillStyle = this.theme.unfocused || DefaultTheme.unfocused;
-            this.tgfx.fillRect(0, 0, this.canv.width, this.canv.height);
-        }
-    }
 
     private doRender() {
         if (this.theme) {
@@ -1166,7 +1057,12 @@ export class Primrose extends TypedEventBase<{
                     this.focused,
                     this.rows,
                     this.fontFamily,
-                    this.fontSize);
+                    this.fontSize,
+                    this.showLineNumbers,
+                    this.lineCountWidth,
+                    this.showScrollBars,
+                    vScrollWidth,
+                    this.wordWrap);
             }
             if (foregroundChanged) {
                 this.fg.render(
@@ -1180,10 +1076,31 @@ export class Primrose extends TypedEventBase<{
                     this.focused,
                     this.rows,
                     this.fontFamily,
-                    this.fontSize);
+                    this.fontSize,
+                    this.showLineNumbers,
+                    this.lineCountWidth,
+                    this.showScrollBars,
+                    vScrollWidth,
+                    this.wordWrap);
             }
             if (trimChanged) {
-                this.renderCanvasTrim();
+                this.trim.render(
+                    this.theme,
+                    minCursor,
+                    maxCursor,
+                    this.gridBounds,
+                    this.scroll,
+                    this.character,
+                    this.padding,
+                    this.focused,
+                    this.rows,
+                    this.fontFamily,
+                    this.fontSize,
+                    this.showLineNumbers,
+                    this.lineCountWidth,
+                    this.showScrollBars,
+                    vScrollWidth,
+                    this.wordWrap);
             }
 
             this.context.clearRect(0, 0, this.canv.width, this.canv.height);
@@ -1191,7 +1108,7 @@ export class Primrose extends TypedEventBase<{
             this.context.translate(this.vibX, this.vibY);
             this.context.drawImage(this.bg.canvas, 0, 0);
             this.context.drawImage(this.fg.canvas, 0, 0);
-            this.context.drawImage(this.tg, 0, 0);
+            this.context.drawImage(this.trim.canvas, 0, 0);
             this.context.restore();
 
             this.lastGridBounds = this.gridBounds.toString();

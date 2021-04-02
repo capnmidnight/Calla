@@ -6,7 +6,7 @@ import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
 import { Layer } from "./Layer";
-export declare class ForegroundLayer extends Layer {
+export declare class TrimLayer extends Layer {
     constructor(canvas: CanvasTypes);
-    render(theme: Theme, _minCursor: ICursor, _maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, _focused: boolean, rows: IRow[], fontFamily: string, fontSize: number, _showLineNumbers: boolean, _lineCountWidth: number, _showScrollBars: boolean, _vScrollWidth: number, _wordWrap: boolean): Promise<void>;
+    render(theme: Theme, _minCursor: ICursor, _maxCursor: ICursor, gridBounds: IRectangle, scroll: IPoint, character: ISize, padding: number, focused: boolean, rows: IRow[], fontFamily: string, fontSize: number, showLineNumbers: boolean, lineCountWidth: number, showScrollBars: boolean, vScrollWidth: number, wordWrap: boolean): Promise<void>;
 }

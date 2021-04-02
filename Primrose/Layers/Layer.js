@@ -14,6 +14,10 @@ export class Layer {
         this.g.fillStyle = fill;
         this.g.fillRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
     }
+    strokeRect(character, stroke, x, y, w, h) {
+        this.g.strokeStyle = stroke;
+        this.g.strokeRect(x * character.width, y * character.height, w * character.width + 1, h * character.height + 1);
+    }
     setSize(w, h, scaleFactor) {
         this.scaleFactor = scaleFactor;
         setContextSize(this.g, w, h, scaleFactor);
