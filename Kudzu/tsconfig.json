@@ -10,7 +10,6 @@
     "bin",
     "dist",
     "obj"
-
   ],
   "compileOnSave": true,
   "compilerOptions": {

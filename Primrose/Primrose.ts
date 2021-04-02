@@ -1,10 +1,11 @@
 import { documentReady } from "kudzu/events/documentReady";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
 import { CanvasTypes, Context2D, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
-import { border, display, getMonospaceFamily, height, overflow, padding, styles, width } from "kudzu/html/css";
+import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
 import { isDefined, isFunction, isString } from "kudzu/typeChecks";
@@ -69,6 +70,7 @@ export interface PrimroseOptions {
     lineNumbers: boolean;
     padding: number;
     fontSize: number;
+    fontFamily: string;
     language: string | Grammar;
     scaleFactor: number;
     element: HTMLElement;
@@ -84,6 +86,7 @@ function isPrimroseOption(key: string): key is keyof PrimroseOptions {
         || key === "lineNumbers"
         || key === "padding"
         || key === "fontSize"
+        || key === "fontFamily"
         || key === "language"
         || key === "scaleFactor"
         || key === "element"
@@ -103,6 +106,7 @@ const wheelScrollSpeed = 4,
         lineNumbers: true,
         padding: 0,
         fontSize: 16,
+        fontFamily: "monospace",
         language: "JavaScript",
         scaleFactor: devicePixelRatio
     }),
@@ -148,6 +152,7 @@ export class Primrose extends TypedEventBase<{
     private _hovered = false;
     private _focused = false;
     private _fontSize: number = null;
+    private _fontFamily: string = null;
     private _scaleFactor = 2;
     private tabString = "  ";
     private _readOnly = false;
@@ -534,7 +539,7 @@ export class Primrose extends TypedEventBase<{
         const readMouseOverEvent = pointerOver;
         const readMouseOutEvent = pointerOut;
         const readMouseDownEvent = this.mouseLikePointerDown(setMousePointer);
-        const readMouseUpEvent = this.mouseLikePointerUp;
+        const readMouseUpEvent = this.mouseLikePointerUp.bind(this);
         const readMouseMoveEvent = this.mouseLikePointerMove(setMousePointer);
 
 
@@ -598,7 +603,8 @@ export class Primrose extends TypedEventBase<{
 
         const readTouchStartEvent = withPrimaryTouch(this.touchLikePointerDown(setTouchPointer));
         const readTouchMoveEvent = withPrimaryTouch(this.touchLikePointerMove(setTouchPointer));
-        const readTouchEndEvent = withPrimaryTouch(this.touchLikePointerUp);
+        const readTouchUpEvent = this.touchLikePointerUp.bind(this);
+        const readTouchEndEvent = withPrimaryTouch(readTouchUpEvent);
         //<<<<<<<<<< TOUCH EVENT HANDLERS <<<<<<<<<<
 
 
@@ -629,7 +635,7 @@ export class Primrose extends TypedEventBase<{
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform mouse-like behavior for primary-button-up gesture.
             // </summary>
-            readUpEventUV: this.mouseLikePointerUp,
+            readUpEventUV: readMouseUpEvent,
 
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform mouse-like behavior for move gesture, whether the primary button is pressed or not.
@@ -662,7 +668,7 @@ export class Primrose extends TypedEventBase<{
             /// <summary>
             /// Read's a THREE.js Raycast intersection to perform touch-like behavior for the first finger moving gesture.
             // </summary>
-            readUpEventUV: this.touchLikePointerUp
+            readUpEventUV: readTouchUpEvent
         };
         //<<<<<<<<<< UV POINTER EVENT HANDLERS <<<<<<<<<<
         //<<<<<<<<<< POINTER EVENT HANDLERS <<<<<<<<<<
@@ -820,6 +826,7 @@ export class Primrose extends TypedEventBase<{
         this.showLineNumbers = options.lineNumbers;
         this.padding = options.padding;
         this.fontSize = options.fontSize;
+        this.fontFamily = options.fontFamily;
         this.scaleFactor = options.scaleFactor;
         this.value = currentValue;
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
@@ -835,7 +842,7 @@ export class Primrose extends TypedEventBase<{
 
     private render() {
         if (this.canRender) {
-            requestAnimationFrame(this.doRender);
+            requestAnimationFrame(() => this.doRender());
         }
     }
 
@@ -1141,9 +1148,13 @@ export class Primrose extends TypedEventBase<{
                         fontStyle = style.fontStyle
                             || this.theme.regular.fontStyle
                             || DefaultTheme.regular.fontStyle
-                            || "",
-                        font = `${fontWeight} ${fontStyle} ${this.context.font}`;
-                    this.fgfx.font = font.trim();
+                            || "";
+                    this.fgfx.font = makeFont({
+                        fontFamily: this.fontFamily,
+                        fontSize: this.fontSize,
+                        fontWeight,
+                        fontStyle
+                    });
                     this.fgfx.fillStyle = style.foreColor || this.theme.regular.foreColor;
                     this.fgfx.fillText(
                         t.value,
@@ -1197,10 +1208,14 @@ export class Primrose extends TypedEventBase<{
                     // draw the left gutter
                     if (row.lineNumber > lastLineNumber) {
                         lastLineNumber = row.lineNumber;
-                        this.tgfx.font = "bold " + this.context.font;
+                        this.tgfx.font = makeFont({
+                            fontFamily: this.fontFamily,
+                            fontSize: this.fontSize,
+                            fontWeight: "bold"
+                        });
                         this.tgfx.fillStyle = this.theme.regular.foreColor;
                         this.tgfx.fillText(
-                            row.lineNumber.toFixed(0),
+                            (row.lineNumber + 1).toFixed(0),
                             0, y * this.character.height);
                     }
                 }
@@ -1319,7 +1334,7 @@ export class Primrose extends TypedEventBase<{
         txt = txt || "";
         txt = txt.replace(/\r\n/g, "\n");
         if (txt !== this.value) {
-            this.value = txt;
+            this._value = txt;
             if (setUndo) {
                 this.pushUndo();
             }
@@ -1351,8 +1366,7 @@ export class Primrose extends TypedEventBase<{
 
             this.value = unchangedLeft + changedText + unchangedRight;
             this.pushUndo();
-
-            this.refreshTokens(minCursor.y, maxCursor.y, changedText);
+            this.refreshAllTokens();
             this.frontCursor.setI(this.rows, minCursor.i + txt.length);
             this.backCursor.copy(this.frontCursor);
             this.scrollIntoView(this.frontCursor);
@@ -1365,6 +1379,16 @@ export class Primrose extends TypedEventBase<{
     }
 
     private refreshTokens(startY: number, endY: number, txt: string) {
+
+        // Guessing at where to retokenize
+        if (startY < 0) {
+            startY = 0;
+        }
+
+        if (endY >= this.rows.length) {
+            endY = this.rows.length - 1;
+        }
+
         while (startY > 0
             && this.rows[startY].lineNumber === this.rows[startY - 1].lineNumber) {
             --startY;
@@ -1376,7 +1400,6 @@ export class Primrose extends TypedEventBase<{
             ++endY;
             txt += this.rows[endY].text;
         }
-
 
         const newTokens = this.language.tokenize(txt),
             startRow = this.rows[startY],
@@ -1467,8 +1490,11 @@ export class Primrose extends TypedEventBase<{
             currentStringIndex += row.stringLength;
             currentTokenIndex += row.numTokens;
 
-            if (row.tokens[row.tokens.length - 1].type === FinalTokenType.newLines) {
-                ++currentLineNumber;
+            if (row.tokens.length > 0) {
+                const lastToken = row.tokens[row.tokens.length - 1];
+                if (lastToken.type === FinalTokenType.newLines) {
+                    ++currentLineNumber;
+                }
             }
         }
 
@@ -1503,7 +1529,7 @@ export class Primrose extends TypedEventBase<{
         return dv;
     }
 
-    clampScroll() {
+    private clampScroll() {
         const toHigh = this.scroll.y < 0 || this.maxVerticalScroll === 0,
             toLow = this.scroll.y > this.maxVerticalScroll;
 
@@ -1554,7 +1580,7 @@ export class Primrose extends TypedEventBase<{
     /// </summary>
     blur() {
         if (this.focused) {
-            this.focused = false;
+            this._focused = false;
             this.dispatchEvent(this.blurEvt);
             this.render();
         }
@@ -1565,7 +1591,7 @@ export class Primrose extends TypedEventBase<{
     /// </summary>
     focus() {
         if (!this.focused) {
-            this.focused = true;
+            this._focused = true;
             this.dispatchEvent(this.focusEvt);
             this.render();
         }
@@ -1610,7 +1636,6 @@ export class Primrose extends TypedEventBase<{
     scrollBy(dx: number, dy: number) {
         return this.scrollTo(this.scroll.x + dx, this.scroll.y + dy);
     }
-
 
     readKeyDownEvent(evt: KeyboardEvent) {
         const command = this.os.makeCommand(evt);
@@ -1960,17 +1985,35 @@ export class Primrose extends TypedEventBase<{
         s = Math.max(1, s || 0);
         if (s !== this.fontSize) {
             this._fontSize = s;
-            this.context.font = `${this.fontSize}px ${getMonospaceFamily()}`;
-            this.character.height = this.fontSize;
-            // measure 100 letter M's, then divide by 100, to get the width of an M
-            // to two decimal places on systems that return integer values from
-            // measureText.
-            this.character.width = this.context.measureText(
-                "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
-                .width /
-                100;
-            this.refreshAllTokens();
+            this.refreshFont();
         }
+    }
+
+    get fontFamily() {
+        return this._fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (v !== this.fontFamily) {
+            this._fontFamily = v;
+            this.refreshFont();
+        }
+    }
+
+    private refreshFont() {
+        this.context.font = makeFont({
+            fontFamily: this.fontFamily,
+            fontSize: this.fontSize
+        });
+        this.character.height = this.fontSize;
+        // measure 100 letter M's, then divide by 100, to get the width of an M
+        // to two decimal places on systems that return integer values from
+        // measureText.
+        this.character.width = this.context.measureText(
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+            .width /
+            100;
+        this.refreshAllTokens();
     }
 
     /// <summary>
@@ -2122,15 +2165,14 @@ requestAnimationFrame(function update() {
 
 function withCurrentControl(funcName: keyof Primrose) {
     const evtName = funcName
-        .match(/ read(\w +)Event/name)
-    [1]
+        .match(/read(\w+)Event/)[1]
         .toLocaleLowerCase();
 
     window.addEventListener(evtName, (evt: Event) => {
         if (isDefined(focusedControl)) {
             const func: any = focusedControl[funcName];
             if (isFunction(func)) {
-                func(evt);
+                func.call(focusedControl, evt);
             }
         }
     }, { passive: false });

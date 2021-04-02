@@ -18,7 +18,7 @@ export class TimedEvent extends TypedEventBase {
         };
         this.start = () => {
             this.cancel();
-            this.handle = setInterval(tick, timeout);
+            this.handle = setTimeout(tick, timeout);
         };
         Object.freeze(this);
     }
@@ -26,4 +26,4 @@ export class TimedEvent extends TypedEventBase {
         return this.handle !== null;
     }
 }
-//# sourceMappingURL=timedEvent.js.map
+//# sourceMappingURL=TimedEvent.js.map

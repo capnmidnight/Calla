@@ -12,7 +12,7 @@ export interface FontDescription {
     fontWeight?: string;
 }
 
-export function makeFont(style: FontDescription) {
+export function makeFont(style: FontDescription): string {
     const fontParts = [];
     if (style.fontStyle && style.fontStyle !== "normal") {
         fontParts.push(style.fontStyle);
@@ -29,7 +29,8 @@ export function makeFont(style: FontDescription) {
     fontParts.push(style.fontSize + "px");
     fontParts.push(style.fontFamily);
 
-    return fontParts.join(" ");
+    const font = fontParts.join(" ");
+    return font;
 }
 
 interface FontFace {

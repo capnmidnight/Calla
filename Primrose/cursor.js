@@ -227,4 +227,4 @@ export class Cursor {
         rows[this.y].adjust(this, dir);
     }
 }
-//# sourceMappingURL=cursor.js.map
+//# sourceMappingURL=Cursor.js.map

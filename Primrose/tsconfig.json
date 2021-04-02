@@ -1,15 +1,10 @@
 {
   "include": [
     "**/*.ts",
-    "**/*.glsl",
-    "**/*.frag",
-    "**/*.vert",
     "package.json"
   ],
   "exclude": [
     "bin",
-    "dist",
-    "doc",
     "obj"
   ],
   "compileOnSave": true,

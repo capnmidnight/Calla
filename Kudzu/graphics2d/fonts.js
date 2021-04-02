@@ -13,7 +13,8 @@ export function makeFont(style) {
     }
     fontParts.push(style.fontSize + "px");
     fontParts.push(style.fontFamily);
-    return fontParts.join(" ");
+    const font = fontParts.join(" ");
+    return font;
 }
 ;
 export async function loadFont(font, testString = null, onProgress) {

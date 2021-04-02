@@ -23,6 +23,7 @@ export interface PrimroseOptions {
     lineNumbers: boolean;
     padding: number;
     fontSize: number;
+    fontFamily: string;
     language: string | Grammar;
     scaleFactor: number;
     element: HTMLElement;
@@ -57,6 +58,7 @@ export declare class Primrose extends TypedEventBase<{
     private _hovered;
     private _focused;
     private _fontSize;
+    private _fontFamily;
     private _scaleFactor;
     private tabString;
     private _readOnly;
@@ -141,7 +143,7 @@ export declare class Primrose extends TypedEventBase<{
     private refreshAllTokens;
     private refreshTokens;
     private minDelta;
-    clampScroll(): boolean;
+    private clampScroll;
     private scrollIntoView;
     private pushUndo;
     private moveInHistory;
@@ -195,6 +197,9 @@ export declare class Primrose extends TypedEventBase<{
     set showScrollBars(s: boolean);
     get fontSize(): number;
     set fontSize(s: number);
+    get fontFamily(): string;
+    set fontFamily(v: string);
+    private refreshFont;
     get scaleFactor(): number;
     set scaleFactor(s: number);
     get width(): number;

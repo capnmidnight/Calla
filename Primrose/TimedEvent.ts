@@ -30,7 +30,7 @@ export class TimedEvent extends TypedEventBase<{
 
         this.start = () => {
             this.cancel();
-            this.handle = setInterval(tick, timeout);
+            this.handle = setTimeout(tick, timeout);
         };
 
         Object.freeze(this);

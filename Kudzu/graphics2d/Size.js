@@ -22,4 +22,4 @@ export class Size {
         return `<w:${this.width}, h:${this.height}>`;
     }
 }
-//# sourceMappingURL=size.js.map
+//# sourceMappingURL=Size.js.map

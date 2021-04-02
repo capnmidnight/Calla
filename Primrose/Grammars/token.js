@@ -54,4 +54,4 @@ export class Token {
     }
 }
 ;
-//# sourceMappingURL=token.js.map
+//# sourceMappingURL=Token.js.map
