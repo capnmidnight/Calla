@@ -7,7 +7,7 @@ export class ForegroundLayer extends BaseLayer {
         super(width, height);
         this.g.textAlign = "left";
     }
-    render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, _focused, rows, fontFamily, fontSize, _showLineNumbers, _lineCountWidth, _showScrollBars, _vScrollWidth, _wordWrap) {
+    render(theme, gridBounds, scroll, character, padding, rows, fontFamily, fontSize) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);

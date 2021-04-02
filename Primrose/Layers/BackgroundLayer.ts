@@ -18,14 +18,7 @@ export class BackgroundLayer extends BaseLayer {
         character: ISize,
         padding: number,
         focused: boolean,
-        rows: IRow[],
-        _fontFamily: string,
-        _fontSize: number,
-        _showLineNumbers: boolean,
-        _lineCountWidth: number,
-        _showScrollBars: boolean,
-        _vScrollWidth: number,
-        _wordWrap: boolean) {
+        rows: IRow[]) {
 
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (theme.regular.backColor) {

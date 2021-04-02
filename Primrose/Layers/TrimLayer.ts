@@ -2,7 +2,6 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import type { IPoint } from "kudzu/graphics2d/Point";
 import type { IRectangle } from "kudzu/graphics2d/Rectangle";
 import type { ISize } from "kudzu/graphics2d/Size";
-import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
 import { Dark as DefaultTheme } from "../themes";
@@ -16,8 +15,6 @@ export class TrimLayer extends BaseLayer {
     }
 
     render(theme: Theme,
-        _minCursor: ICursor,
-        _maxCursor: ICursor,
         gridBounds: IRectangle,
         scroll: IPoint,
         character: ISize,

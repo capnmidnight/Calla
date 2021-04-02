@@ -776,15 +776,15 @@ export class Primrose extends TypedEventBase {
             || cursorChanged, foregroundChanged = layoutChanged
             || fontChanged, trimChanged = layoutChanged
             || focusChanged;
-        const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor), tasks = new Array();
+        const tasks = new Array();
         if (backgroundChanged) {
-            tasks.push(this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
+            tasks.push(this.bg.render(this.theme, Cursor.min(this.frontCursor, this.backCursor), Cursor.max(this.frontCursor, this.backCursor), this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows));
         }
         if (foregroundChanged) {
-            tasks.push(this.fg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
+            tasks.push(this.fg.render(this.theme, this.gridBounds, this.scroll, this.character, this.padding, this.rows, this.fontFamily, this.fontSize));
         }
         if (trimChanged) {
-            tasks.push(this.trim.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
+            tasks.push(this.trim.render(this.theme, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows, this.fontFamily, this.fontSize, this.showLineNumbers, this.lineCountWidth, this.showScrollBars, vScrollWidth, this.wordWrap));
         }
         await Promise.all(tasks);
         this.context.clearRect(0, 0, this.canv.width, this.canv.height);

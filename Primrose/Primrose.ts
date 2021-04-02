@@ -1041,53 +1041,36 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             trimChanged = layoutChanged
                 || focusChanged;
 
-        const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-            maxCursor = Cursor.max(this.frontCursor, this.backCursor),
-            tasks = new Array<Promise<void>>();
+        const tasks = new Array<Promise<void>>();
 
         if (backgroundChanged) {
             tasks.push(this.bg.render(
                 this.theme,
-                minCursor,
-                maxCursor,
+                Cursor.min(this.frontCursor, this.backCursor),
+                Cursor.max(this.frontCursor, this.backCursor),
                 this.gridBounds,
                 this.scroll,
                 this.character,
                 this.padding,
                 this.focused,
-                this.rows,
-                this.fontFamily,
-                this.fontSize,
-                this.showLineNumbers,
-                this.lineCountWidth,
-                this.showScrollBars,
-                vScrollWidth,
-                this.wordWrap));
+                this.rows));
         }
+        
         if (foregroundChanged) {
             tasks.push(this.fg.render(
                 this.theme,
-                minCursor,
-                maxCursor,
                 this.gridBounds,
                 this.scroll,
                 this.character,
                 this.padding,
-                this.focused,
                 this.rows,
                 this.fontFamily,
-                this.fontSize,
-                this.showLineNumbers,
-                this.lineCountWidth,
-                this.showScrollBars,
-                vScrollWidth,
-                this.wordWrap));
+                this.fontSize));
         }
+
         if (trimChanged) {
             tasks.push(this.trim.render(
                 this.theme,
-                minCursor,
-                maxCursor,
                 this.gridBounds,
                 this.scroll,
                 this.character,
@@ -1131,7 +1114,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.resized = false;
         this.dispatchEvent(this.updateEvt);
     }
-    
+
     private setValue(txt: string, setUndo: boolean) {
         txt = txt || "";
         txt = txt.replace(/\r\n/g, "\n");

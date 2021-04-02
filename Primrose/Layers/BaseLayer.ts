@@ -1,10 +1,6 @@
-import { IPoint } from "kudzu/graphics2d/Point";
-import { IRectangle } from "kudzu/graphics2d/Rectangle";
 import { ISize } from "kudzu/graphics2d/Size";
 import { CanvasTypes, Context2D, createUtilityCanvas, setContextSize } from "kudzu/html/canvas";
-import { Cursor, ICursor } from "../Cursor";
-import { IRow } from "../Row";
-import { Theme } from "../themes";
+import { Cursor } from "../Cursor";
 
 export enum LayerType {
     "background",
@@ -51,22 +47,5 @@ export abstract class BaseLayer {
         setContextSize(this.g, w, h, scaleFactor);
         return Promise.resolve();
     }
-
-    abstract render(theme: Theme,
-        minCursor: ICursor,
-        maxCursor: ICursor,
-        gridBounds: IRectangle,
-        scroll: IPoint,
-        character: ISize,
-        padding: number,
-        focused: boolean,
-        rows: IRow[],
-        fontFamily: string,
-        fontSize: number,
-        showLineNumbers: boolean,
-        lineCountWidth: number,
-        showScrollBars: boolean,
-        vScrollWidth: number,
-        wordWrap: boolean): Promise<void>;
 }
 

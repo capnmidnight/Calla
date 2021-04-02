@@ -6,7 +6,7 @@ export class TrimLayer extends BaseLayer {
         super(width, height);
         this.g.textAlign = "right";
     }
-    render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, focused, rows, fontFamily, fontSize, showLineNumbers, lineCountWidth, showScrollBars, vScrollWidth, wordWrap) {
+    render(theme, gridBounds, scroll, character, padding, focused, rows, fontFamily, fontSize, showLineNumbers, lineCountWidth, showScrollBars, vScrollWidth, wordWrap) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);

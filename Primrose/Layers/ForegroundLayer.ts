@@ -2,7 +2,6 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import type { IPoint } from "kudzu/graphics2d/Point";
 import type { IRectangle } from "kudzu/graphics2d/Rectangle";
 import type { ISize } from "kudzu/graphics2d/Size";
-import type { ICursor } from "../Cursor";
 import { isFinalTokenType } from "../Grammars/Token";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
@@ -17,21 +16,13 @@ export class ForegroundLayer extends BaseLayer {
     }
 
     render(theme: Theme,
-        _minCursor: ICursor,
-        _maxCursor: ICursor,
         gridBounds: IRectangle,
         scroll: IPoint,
         character: ISize,
         padding: number,
-        _focused: boolean,
         rows: IRow[],
         fontFamily: string,
-        fontSize: number,
-        _showLineNumbers: boolean,
-        _lineCountWidth: number,
-        _showScrollBars: boolean,
-        _vScrollWidth: number,
-        _wordWrap: boolean) {
+        fontSize: number) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);
