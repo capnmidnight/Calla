@@ -138,8 +138,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private longPress: TimedEvent = null;
     private tx = 0;
     private ty = 0;
-    private vibX = 0;
-    private vibY = 0;
 
     private pressed = false;
     private dragging = false;
@@ -543,20 +541,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
 
         //>>>>>>>>>> TOUCH EVENT HANDLERS >>>>>>>>>>
-        const vibrate = (len: number) => {
-            this.longPress.cancel();
-            if (len > 0) {
-                this.vibX = (Math.random() - 0.5) * 10;
-                this.vibY = (Math.random() - 0.5) * 10;
-                setTimeout(() => vibrate(len - 10), 10);
-            }
-            else {
-                this.vibX = 0;
-                this.vibY = 0;
-            }
-            this.render();
-        };
-
         this.longPress = new TimedEvent(1000);
 
         this.longPress.addEventListener("tick", () => {
@@ -566,7 +550,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             this.backCursor.skipRight(this.rows);
             this.render();
             navigator.vibrate(20);
-            vibrate(320);
         });
 
         let currentTouchID: number = null;
@@ -1089,12 +1072,9 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         await Promise.all(tasks);
 
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.context.save();
-        this.context.translate(this.vibX, this.vibY);
         this.context.drawImage(this.bg.canvas, 0, 0);
         this.context.drawImage(this.fg.canvas, 0, 0);
         this.context.drawImage(this.trim.canvas, 0, 0);
-        this.context.restore();
 
         this.lastGridBoundsX = this.gridBounds.x;
         this.lastGridBoundsY = this.gridBounds.y;
