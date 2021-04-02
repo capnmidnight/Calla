@@ -1,10 +1,13 @@
+import { TypedEventBase } from "../events/EventBase";
 import type { progressCallback } from "../tasks/progressCallback";
 export declare type workerClientCallback<T> = (...params: any[]) => Promise<T>;
-export declare class WorkerClient {
+export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported: boolean;
-    private taskCounter;
-    protected workers: Worker[];
     private _script;
+    private workers;
+    private taskCounter;
+    private messageHandlers;
+    private dispatchMessageResponse;
     /**
      * Creates a new pooled worker method executor.
      * @param scriptPath - the path to the unminified script to use for the worker
@@ -36,6 +39,7 @@ export declare class WorkerClient {
      */
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
+    popWorker(): Worker;
     get scriptPath(): string;
     private executeOnWorker;
     /**

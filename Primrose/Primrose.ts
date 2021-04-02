@@ -4,7 +4,8 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
-import { CanvasTypes, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import type { CanvasTypes } from "kudzu/html/canvas";
+import { createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -124,15 +125,16 @@ const wheelScrollSpeed = 4,
             }
         });
 
-
-export class Primrose extends TypedEventBase<{
+export interface PrimroseEvents {
     out: TypedEvent<"out">;
     over: TypedEvent<"over">;
     blur: TypedEvent<"blur">;
     focus: TypedEvent<"focus">;
     change: TypedEvent<"change">;
     update: TypedEvent<"update">;
-}> {
+}
+
+export class Primrose extends TypedEventBase<PrimroseEvents> {
     private longPress: TimedEvent = null;
     private tx = 0;
     private ty = 0;
@@ -232,7 +234,6 @@ export class Primrose extends TypedEventBase<{
 
         options = Object.assign({}, optionDefaults, options);
         //<<<<<<<<<< VALIDATE PARAMETERS <<<<<<<<<<
-
 
         //>>>>>>>>>> KEY EVENT HANDLERS >>>>>>>>>>
         this.keyDownCommands = new Map([
@@ -515,9 +516,6 @@ export class Primrose extends TypedEventBase<{
         ]);
         //<<<<<<<<<< KEY EVENT HANDLERS <<<<<<<<<<
 
-
-
-
         //>>>>>>>>>> POINTER EVENT HANDLERS >>>>>>>>>>
         const pointerOver = () => {
             this._hovered = true;
@@ -541,8 +539,6 @@ export class Primrose extends TypedEventBase<{
         const readMouseDownEvent = this.mouseLikePointerDown(setMousePointer);
         const readMouseUpEvent = this.mouseLikePointerUp.bind(this);
         const readMouseMoveEvent = this.mouseLikePointerMove(setMousePointer);
-
-
         //<<<<<<<<<< MOUSE EVENT HANDLERS <<<<<<<<<<
 
 
@@ -775,7 +771,6 @@ export class Primrose extends TypedEventBase<{
         this.context = this.canv.getContext("2d");
         this.context.imageSmoothingEnabled = true;
         this.context.textBaseline = "top";
-
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
 
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
@@ -797,7 +792,6 @@ export class Primrose extends TypedEventBase<{
         }
 
         Object.seal(this);
-
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
 
         // This is done last so that controls that have errored 
@@ -904,7 +898,6 @@ export class Primrose extends TypedEventBase<{
         };
     }
 
-
     private async refreshBuffers() {
         this.resized = true;
         await Promise.all([
@@ -967,7 +960,6 @@ export class Primrose extends TypedEventBase<{
         this.lastScrollDY = this.pointer.y;
     }
 
-
     private refreshControlType() {
         const lastControlType = this.controlType;
 
@@ -1000,8 +992,6 @@ export class Primrose extends TypedEventBase<{
             this.bottomRightGutter.set(vScrollWidth, 1);
         }
     }
-
-    //>>>>>>>>>> RENDERING >>>>>>>>>>
 
     private render() {
         this.doRender();
@@ -1141,8 +1131,7 @@ export class Primrose extends TypedEventBase<{
         this.resized = false;
         this.dispatchEvent(this.updateEvt);
     }
-    //<<<<<<<<<< RENDERING <<<<<<<<<<
-
+    
     private setValue(txt: string, setUndo: boolean) {
         txt = txt || "";
         txt = txt.replace(/\r\n/g, "\n");
@@ -1387,7 +1376,6 @@ export class Primrose extends TypedEventBase<{
         }
     }
 
-
     /// <summary>
     /// Removes focus from the control.
     /// </summary>
@@ -1479,7 +1467,7 @@ export class Primrose extends TypedEventBase<{
             this.render();
         }
     }
-    //>>>>>>>>>> CLIPBOARD EVENT HANDLERS >>>>>>>>>>
+
     private copySelectedText(evt: ClipboardEvent) {
         if (this.focused && this.frontCursor.i !== this.backCursor.i) {
             evt.clipboardData.setData("text/plain", this.selectedText);
@@ -1512,7 +1500,7 @@ export class Primrose extends TypedEventBase<{
             }
         }
     }
-    //<<<<<<<<<< CLIPBOARD EVENT HANDLERS <<<<<<<<<<
+
     readWheelEvent(evt: WheelEvent) {
         if (this.hovered || this.focused) {
             if (!evt.ctrlKey
@@ -1738,6 +1726,7 @@ export class Primrose extends TypedEventBase<{
     get language() {
         return this._language;
     }
+
     set language(l) {
         if (l !== this.language) {
             this._language = l;
@@ -1748,7 +1737,6 @@ export class Primrose extends TypedEventBase<{
     /// <summary>
     /// The `Number` of pixels to inset the control rendering from the edge of the canvas. This is useful for texturing objects where the texture edge cannot be precisely controlled. This value is scale-independent.
     /// </summary>
-
     get padding() {
         return this._padding;
     }
@@ -1764,7 +1752,6 @@ export class Primrose extends TypedEventBase<{
     /// <summary>
     /// Indicates whether or not line numbers should be rendered on the left side of the control.
     /// </summary>
-
     get showLineNumbers() {
         return this._showLineNumbers;
     }
@@ -1839,6 +1826,7 @@ export class Primrose extends TypedEventBase<{
     get scaleFactor() {
         return this._scaleFactor;
     }
+
     set scaleFactor(s) {
         s = Math.max(0.25, Math.min(4, s || 0));
         if (s !== this.scaleFactor) {
@@ -1855,6 +1843,7 @@ export class Primrose extends TypedEventBase<{
     get width() {
         return this.canv.width / this.scaleFactor;
     }
+
     set width(w) {
         this.setSize(w, this.height);
     }
@@ -1865,6 +1854,7 @@ export class Primrose extends TypedEventBase<{
     get height() {
         return this.canv.height / this.scaleFactor;
     }
+
     set height(h) {
         this.setSize(this.width, h);
     }
@@ -1884,7 +1874,6 @@ export class Primrose extends TypedEventBase<{
             ? elements.get(key)
             : null;
     }
-
 
     /// <summary>
     /// Registers a new Primrose editor control with the Event Manager, to wire-up key, clipboard, and mouse wheel events, and to manage the currently focused element.
@@ -1925,7 +1914,6 @@ export class Primrose extends TypedEventBase<{
             });
         }
     }
-
 
     /// <summary>
     /// The current `Primrose` control that has the mouse hovered over it. In 2D contexts, you probably don't need to check this value, but in WebGL contexts, this is useful for helping Primrose manage events.

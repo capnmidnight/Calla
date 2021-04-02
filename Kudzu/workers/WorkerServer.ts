@@ -1,45 +1,57 @@
+import { EventBase } from "../events/EventBase";
 
 export type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
 
 export type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 
-export enum WorkerMethodMessageType {
+export enum WorkerServerMessageType {
     Error = "error",
     Progress = "progress",
     Return = "return",
-    ReturnValue = "returnValue"
+    ReturnValue = "returnValue",
+    Event = "event"
 }
 
-interface WorkerMethodMessage<T extends WorkerMethodMessageType> {
-    taskID: number;
+interface WorkerServerMessage<T extends WorkerServerMessageType> {
     methodName: T;
 }
 
-export interface WorkerMethodErrorMessage
-    extends WorkerMethodMessage<WorkerMethodMessageType.Error> {
+export interface WorkerServerErrorMessage
+    extends WorkerServerMessage<WorkerServerMessageType.Error> {
+    taskID: number;
     errorMessage: string;
 }
 
-export interface WorkerMethodProgressMessage
-    extends WorkerMethodMessage<WorkerMethodMessageType.Progress> {
+export interface WorkerServerProgressMessage
+    extends WorkerServerMessage<WorkerServerMessageType.Progress> {
+    taskID: number;
     soFar: number;
     total: number;
     msg: string;
 }
 
-export interface WorkerMethodReturnMessage
-    extends WorkerMethodMessage<WorkerMethodMessageType.Return> {
+export interface WorkerServerReturnMessage
+    extends WorkerServerMessage<WorkerServerMessageType.Return> {
+    taskID: number;
 }
 
-export interface WorkerMethodReturnValueMessage
-    extends WorkerMethodMessage<WorkerMethodMessageType.ReturnValue> {
-    returnValue: any
+export interface WorkerServerReturnValueMessage
+    extends WorkerServerMessage<WorkerServerMessageType.ReturnValue> {
+    taskID: number;
+    returnValue: any;
 }
 
-export type WorkerMethodMessages = WorkerMethodErrorMessage
-    | WorkerMethodProgressMessage
-    | WorkerMethodReturnMessage
-    | WorkerMethodReturnValueMessage;
+export interface WorkerServerEventMessage
+    extends WorkerServerMessage<WorkerServerMessageType.Event> {
+    type: string;
+    data: any;
+}
+
+export type WorkerServerMessages = WorkerServerErrorMessage
+    | WorkerServerProgressMessage
+    | WorkerServerReturnMessage
+    | WorkerServerReturnValueMessage
+    | WorkerServerEventMessage;
 
 export interface WorkerMethodCallMessage {
     taskID: number;
@@ -77,6 +89,35 @@ export class WorkerServer {
         };
     }
 
+    handle<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>) {
+        object.addEventListener(type, (evt: Event) => {
+            if (!makePayload) {
+                this.self.postMessage({
+                    type,
+                    methodName: WorkerServerMessageType.Event
+                });
+            }
+            else {
+                const data = makePayload(evt);
+                if (transferReturnValue) {
+                    const transferables = transferReturnValue(data);
+                    this.self.postMessage({
+                        type,
+                        methodName: WorkerServerMessageType.Event,
+                        data
+                    }, transferables);
+                }
+                else {
+                    this.self.postMessage({
+                        type,
+                        methodName: WorkerServerMessageType.Event,
+                        data
+                    });
+                }
+            }
+        });
+    }
+
     /**
      * Report an error back to the calling thread.
      * @param taskID - the invocation ID of the method that errored.
@@ -85,7 +126,7 @@ export class WorkerServer {
     private onError(taskID: number, errorMessage: string): void {
         this.self.postMessage({
             taskID,
-            methodName: WorkerMethodMessageType.Error,
+            methodName: WorkerServerMessageType.Error,
             errorMessage
         });
     }
@@ -101,7 +142,7 @@ export class WorkerServer {
     private onProgress(taskID: number, soFar: number, total: number, msg?: string): void {
         this.self.postMessage({
             taskID,
-            methodName: WorkerMethodMessageType.Progress,
+            methodName: WorkerServerMessageType.Progress,
             soFar,
             total,
             msg
@@ -118,20 +159,20 @@ export class WorkerServer {
         if (returnValue === undefined) {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.Return
+                methodName: WorkerServerMessageType.Return
             });
         }
         else if (transferables === undefined) {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.ReturnValue,
+                methodName: WorkerServerMessageType.ReturnValue,
                 returnValue
             });
         }
         else {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.ReturnValue,
+                methodName: WorkerServerMessageType.ReturnValue,
                 returnValue
             }, transferables);
         }

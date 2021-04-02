@@ -1,16 +1,26 @@
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import type { progressCallback } from "../tasks/progressCallback";
 import { assertNever, isArray, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import type { WorkerMethodMessages } from "./WorkerServer";
-import { WorkerMethodMessageType } from "./WorkerServer";
+import type { WorkerServerMessages } from "./WorkerServer";
+import { WorkerServerMessageType } from "./WorkerServer";
 
 export type workerClientCallback<T> = (...params: any[]) => Promise<T>;
 
-export class WorkerClient {
+interface WorkerClientMessageHandler {
+    onProgress: progressCallback;
+    resolve: (value: any) => void;
+    reject: (reason?: any) => void;
+    methodName: string;
+}
+
+export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported = "Worker" in globalThis;
 
-    private taskCounter: number = 0;
-    protected workers: Worker[];
     private _script: string;
+    private workers: Worker[];
+    private taskCounter: number = 0;
+    private messageHandlers = new Map<number, WorkerClientMessageHandler>();
+    private dispatchMessageResponse: (evt: MessageEvent<WorkerServerMessages>) => void;
 
     /**
      * Creates a new pooled worker method executor.
@@ -48,6 +58,7 @@ export class WorkerClient {
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
     constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number) {
+        super();
 
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
@@ -86,6 +97,54 @@ export class WorkerClient {
                 this.workers[i] = new Worker(this._script);
             }
         }
+
+        this.dispatchMessageResponse = (evt: MessageEvent<WorkerServerMessages>) => {
+            const data = evt.data;
+
+            // Did this response message match the current invocation?
+            if (data.methodName === WorkerServerMessageType.Event) {
+                const evt = new TypedEvent(data.type);
+                this.dispatchEvent(Object.assign(evt, data.data));
+            }
+            else {
+                const messageHandler = this.messageHandlers.get(data.taskID);
+                const { onProgress, resolve, reject, methodName } = messageHandler;
+                if (data.methodName === WorkerServerMessageType.Progress) {
+                    if (isFunction(onProgress)) {
+                        onProgress(data.soFar, data.total, data.msg);
+                    }
+                }
+                else {
+                    // When the invocation is complete, we want to stop listening to the worker
+                    // message channel so we don't eat up processing messages that have no chance
+                    // over pertaining to the invocation.
+                    this.messageHandlers.delete(data.taskID);
+
+                    if (data.methodName === WorkerServerMessageType.Return) {
+                        resolve(undefined);
+                    }
+                    else if (data.methodName === WorkerServerMessageType.ReturnValue) {
+                        resolve(data.returnValue);
+                    }
+                    else if (data.methodName === WorkerServerMessageType.Error) {
+                        reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
+                    }
+                    else {
+                        assertNever(data);
+                    }
+                }
+            }
+        };
+
+        for (const worker of this.workers) {
+            worker.addEventListener("message", this.dispatchMessageResponse);
+        }
+    }
+
+    popWorker() {
+        const worker = this.workers.pop();
+        worker.removeEventListener("message", this.dispatchMessageResponse);
+        return worker;
     }
 
     get scriptPath() {
@@ -94,43 +153,12 @@ export class WorkerClient {
 
     private executeOnWorker<T>(worker: Worker, taskID: number, methodName: string, params: any[], transferables: any, onProgress: progressCallback): Promise<T> {
         return new Promise((resolve, reject) => {
-            // When the invocation is complete, we want to stop listening to the worker
-            // message channel so we don't eat up processing messages that have no chance
-            // over pertaining to the invocation.
-            const cleanup = () => {
-                worker.removeEventListener("message", dispatchMessageResponse);
-            };
-
-            const dispatchMessageResponse = (evt: MessageEvent<WorkerMethodMessages>) => {
-                const data = evt.data;
-
-                // Did this response message match the current invocation?
-                if (data.taskID === taskID) {
-                    if (data.methodName === WorkerMethodMessageType.Progress) {
-                        if (isFunction(onProgress)) {
-                            onProgress(data.soFar, data.total, data.msg);
-                        }
-                    }
-                    else {
-                        cleanup();
-
-                        if (data.methodName === WorkerMethodMessageType.Return) {
-                            resolve(undefined);
-                        }
-                        else if (data.methodName === WorkerMethodMessageType.ReturnValue) {
-                            resolve(data.returnValue);
-                        }
-                        else if (data.methodName === WorkerMethodMessageType.Error) {
-                            reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
-                        }
-                        else {
-                            assertNever(data);
-                        }
-                    }
-                }
-            };
-
-            worker.addEventListener("message", dispatchMessageResponse);
+            this.messageHandlers.set(taskID, {
+                onProgress,
+                resolve,
+                reject,
+                methodName
+            });
 
             if (params && transferables) {
                 worker.postMessage({

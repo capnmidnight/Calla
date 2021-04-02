@@ -756,7 +756,6 @@ export class Primrose extends TypedEventBase {
             this.bottomRightGutter.set(vScrollWidth, 1);
         }
     }
-    //>>>>>>>>>> RENDERING >>>>>>>>>>
     render() {
         this.doRender();
     }
@@ -813,7 +812,6 @@ export class Primrose extends TypedEventBase {
         this.resized = false;
         this.dispatchEvent(this.updateEvt);
     }
-    //<<<<<<<<<< RENDERING <<<<<<<<<<
     setValue(txt, setUndo) {
         txt = txt || "";
         txt = txt.replace(/\r\n/g, "\n");
@@ -1065,7 +1063,6 @@ export class Primrose extends TypedEventBase {
             this.render();
         }
     }
-    //>>>>>>>>>> CLIPBOARD EVENT HANDLERS >>>>>>>>>>
     copySelectedText(evt) {
         if (this.focused && this.frontCursor.i !== this.backCursor.i) {
             evt.clipboardData.setData("text/plain", this.selectedText);
@@ -1093,7 +1090,6 @@ export class Primrose extends TypedEventBase {
             }
         }
     }
-    //<<<<<<<<<< CLIPBOARD EVENT HANDLERS <<<<<<<<<<
     readWheelEvent(evt) {
         if (this.hovered || this.focused) {
             if (!evt.ctrlKey

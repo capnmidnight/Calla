@@ -1,5 +1,5 @@
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { CanvasTypes } from "kudzu/html/canvas";
+import type { CanvasTypes } from "kudzu/html/canvas";
 import { Grammar } from "./grammars";
 interface PointXY {
     x: number;
@@ -30,14 +30,15 @@ export interface PrimroseOptions {
     width: number;
     height: number;
 }
-export declare class Primrose extends TypedEventBase<{
+export interface PrimroseEvents {
     out: TypedEvent<"out">;
     over: TypedEvent<"over">;
     blur: TypedEvent<"blur">;
     focus: TypedEvent<"focus">;
     change: TypedEvent<"change">;
     update: TypedEvent<"update">;
-}> {
+}
+export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private longPress;
     private tx;
     private ty;

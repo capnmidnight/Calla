@@ -20,7 +20,7 @@ function bufferToXml(buffer) {
     const doc = parser.parseFromString(text, buffer.contentType);
     return doc.documentElement;
 }
-export class FetcherWorkerClient extends WorkerClient {
+export class BaseFetcherWorkerClient extends WorkerClient {
     async getBuffer(path, headers, onProgress) {
         return await this.execute("getBuffer", [path, headers], onProgress);
     }
@@ -113,5 +113,7 @@ export class FetcherWorkerClient extends WorkerClient {
         const wasmModule = await WebAssembly.instantiate(wasmBuffer.buffer, imports);
         return wasmModule.instance.exports;
     }
+}
+export class FetcherWorkerClient extends BaseFetcherWorkerClient {
 }
 //# sourceMappingURL=FetcherWorkerClient.js.map

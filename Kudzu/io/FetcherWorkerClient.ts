@@ -28,8 +28,8 @@ function bufferToXml(buffer: BufferAndContentType) {
     return doc.documentElement;
 }
 
-export class FetcherWorkerClient
-    extends WorkerClient
+export abstract class BaseFetcherWorkerClient<EventsT>
+    extends WorkerClient<EventsT>
     implements IFetcher {
 
     async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType> {
@@ -142,4 +142,7 @@ export class FetcherWorkerClient
         const wasmModule = await WebAssembly.instantiate(wasmBuffer.buffer, imports);
         return (wasmModule.instance.exports as any) as T;
     }
+}
+
+export class FetcherWorkerClient extends BaseFetcherWorkerClient<void>{
 }

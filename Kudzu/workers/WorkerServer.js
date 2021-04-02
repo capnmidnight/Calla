@@ -1,10 +1,11 @@
-export var WorkerMethodMessageType;
-(function (WorkerMethodMessageType) {
-    WorkerMethodMessageType["Error"] = "error";
-    WorkerMethodMessageType["Progress"] = "progress";
-    WorkerMethodMessageType["Return"] = "return";
-    WorkerMethodMessageType["ReturnValue"] = "returnValue";
-})(WorkerMethodMessageType || (WorkerMethodMessageType = {}));
+export var WorkerServerMessageType;
+(function (WorkerServerMessageType) {
+    WorkerServerMessageType["Error"] = "error";
+    WorkerServerMessageType["Progress"] = "progress";
+    WorkerServerMessageType["Return"] = "return";
+    WorkerServerMessageType["ReturnValue"] = "returnValue";
+    WorkerServerMessageType["Event"] = "event";
+})(WorkerServerMessageType || (WorkerServerMessageType = {}));
 export class WorkerServer {
     /**
      * Creates a new worker thread method call listener.
@@ -34,6 +35,34 @@ export class WorkerServer {
             }
         };
     }
+    handle(object, type, makePayload, transferReturnValue) {
+        object.addEventListener(type, (evt) => {
+            if (!makePayload) {
+                this.self.postMessage({
+                    type,
+                    methodName: WorkerServerMessageType.Event
+                });
+            }
+            else {
+                const data = makePayload(evt);
+                if (transferReturnValue) {
+                    const transferables = transferReturnValue(data);
+                    this.self.postMessage({
+                        type,
+                        methodName: WorkerServerMessageType.Event,
+                        data
+                    }, transferables);
+                }
+                else {
+                    this.self.postMessage({
+                        type,
+                        methodName: WorkerServerMessageType.Event,
+                        data
+                    });
+                }
+            }
+        });
+    }
     /**
      * Report an error back to the calling thread.
      * @param taskID - the invocation ID of the method that errored.
@@ -42,7 +71,7 @@ export class WorkerServer {
     onError(taskID, errorMessage) {
         this.self.postMessage({
             taskID,
-            methodName: WorkerMethodMessageType.Error,
+            methodName: WorkerServerMessageType.Error,
             errorMessage
         });
     }
@@ -57,7 +86,7 @@ export class WorkerServer {
     onProgress(taskID, soFar, total, msg) {
         this.self.postMessage({
             taskID,
-            methodName: WorkerMethodMessageType.Progress,
+            methodName: WorkerServerMessageType.Progress,
             soFar,
             total,
             msg
@@ -73,20 +102,20 @@ export class WorkerServer {
         if (returnValue === undefined) {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.Return
+                methodName: WorkerServerMessageType.Return
             });
         }
         else if (transferables === undefined) {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.ReturnValue,
+                methodName: WorkerServerMessageType.ReturnValue,
                 returnValue
             });
         }
         else {
             this.self.postMessage({
                 taskID,
-                methodName: WorkerMethodMessageType.ReturnValue,
+                methodName: WorkerServerMessageType.ReturnValue,
                 returnValue
             }, transferables);
         }

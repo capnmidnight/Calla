@@ -3,7 +3,7 @@ import type { progressCallback } from "../tasks/progressCallback";
 import { WorkerClient } from "../workers/WorkerClient";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import { IFetcher } from "./IFetcher";
-export declare class FetcherWorkerClient extends WorkerClient implements IFetcher {
+export declare abstract class BaseFetcherWorkerClient<EventsT> extends WorkerClient<EventsT> implements IFetcher {
     getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
     getBlob(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
     getText(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
@@ -23,4 +23,6 @@ export declare class FetcherWorkerClient extends WorkerClient implements IFetche
     postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes>;
     loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void>;
     getWASM<T>(path: string, imports: Record<string, Record<string, WebAssembly.ImportValue>>, onProgress?: progressCallback): Promise<T>;
+}
+export declare class FetcherWorkerClient extends BaseFetcherWorkerClient<void> {
 }
