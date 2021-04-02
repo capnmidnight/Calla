@@ -16,7 +16,7 @@ export declare abstract class BaseLayer {
     protected tokenFront: Cursor;
     protected tokenBack: Cursor;
     protected g: Context2D;
-    constructor(canvas: CanvasTypes);
+    constructor(width: number, height: number);
     protected fillRect(character: ISize, fill: string, x: number, y: number, w: number, h: number): void;
     protected strokeRect(character: ISize, stroke: string, x: number, y: number, w: number, h: number): void;
     setSize(w: number, h: number, scaleFactor: number): Promise<void>;

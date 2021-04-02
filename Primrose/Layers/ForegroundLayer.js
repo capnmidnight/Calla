@@ -3,8 +3,8 @@ import { isFinalTokenType } from "../Grammars/Token";
 import { Dark as DefaultTheme } from "../themes";
 import { BaseLayer } from "./BaseLayer";
 export class ForegroundLayer extends BaseLayer {
-    constructor(canvas) {
-        super(canvas);
+    constructor(width, height) {
+        super(width, height);
         this.g.textAlign = "left";
     }
     render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, _focused, rows, fontFamily, fontSize, _showLineNumbers, _lineCountWidth, _showScrollBars, _vScrollWidth, _wordWrap) {

@@ -4,7 +4,7 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
-import { createCanvas, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import { createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -13,9 +13,9 @@ import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } fr
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
 import { FinalTokenType } from "./Grammars/Token";
-import { LayerType } from "./Layers/BaseLayer";
-import { Layer } from "./Layers/Layer";
-import { LayerWorkerClient } from "./Layers/LayerWorkerClient";
+import { BackgroundLayer } from "./Layers/BackgroundLayer";
+import { ForegroundLayer } from "./Layers/ForegroundLayer";
+import { TrimLayer } from "./Layers/TrimLayer";
 import { MacOS, Windows } from "./os";
 import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
@@ -33,9 +33,7 @@ function isPrimroseOption(key) {
         || key === "scaleFactor"
         || key === "element"
         || key === "width"
-        || key === "height"
-        || key === "workerScript"
-        || key === "minWorkerScript";
+        || key === "height";
 }
 //>>>>>>>>>> PRIVATE STATIC FIELDS >>>>>>>>>>
 const wheelScrollSpeed = 4, vScrollWidth = 2, scrollScale = isFirefox ? 3 : 100, optionDefaults = Object.freeze({
@@ -594,36 +592,23 @@ export class Primrose extends TypedEventBase {
         // out during their setup don't get added to the control
         // manager.
         Primrose.add(this.element, this);
-        if (options.workerScript || options.minWorkerScript) {
-            this.fg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
-            this.bg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
-            this.trim = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
+        this.fg = new ForegroundLayer(this.canv.width, this.canv.height);
+        this.bg = new BackgroundLayer(this.canv.width, this.canv.height);
+        this.trim = new TrimLayer(this.canv.width, this.canv.height);
+        if (!isString(options.language)) {
+            this.language = options.language;
         }
-        else {
-            this.fg = new Layer();
-            this.bg = new Layer();
-            this.trim = new Layer();
-        }
-        Promise.all([
-            this.fg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.foreground),
-            this.bg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.background),
-            this.trim.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.trim)
-        ]).then(() => {
-            if (!isString(options.language)) {
-                this.language = options.language;
-            }
-            this.readOnly = options.readOnly;
-            this.multiLine = options.multiLine;
-            this.wordWrap = options.wordWrap;
-            this.showScrollBars = options.scrollBars;
-            this.showLineNumbers = options.lineNumbers;
-            this.padding = options.padding;
-            this.fontSize = options.fontSize;
-            this.fontFamily = options.fontFamily;
-            this.scaleFactor = options.scaleFactor;
-            this.value = currentValue;
-            this.render();
-        });
+        this.readOnly = options.readOnly;
+        this.multiLine = options.multiLine;
+        this.wordWrap = options.wordWrap;
+        this.showScrollBars = options.scrollBars;
+        this.showLineNumbers = options.lineNumbers;
+        this.padding = options.padding;
+        this.fontSize = options.fontSize;
+        this.fontFamily = options.fontFamily;
+        this.scaleFactor = options.scaleFactor;
+        this.value = currentValue;
+        this.render();
     }
     startSelecting() {
         this.dragging = true;

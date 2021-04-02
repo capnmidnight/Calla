@@ -1,7 +1,7 @@
 import { IPoint } from "kudzu/graphics2d/Point";
 import { IRectangle } from "kudzu/graphics2d/Rectangle";
 import { ISize } from "kudzu/graphics2d/Size";
-import { CanvasTypes, Context2D, setContextSize } from "kudzu/html/canvas";
+import { CanvasTypes, Context2D, createUtilityCanvas, setContextSize } from "kudzu/html/canvas";
 import { Cursor, ICursor } from "../Cursor";
 import { IRow } from "../Row";
 import { Theme } from "../themes";
@@ -13,12 +13,16 @@ export enum LayerType {
 }
 
 export abstract class BaseLayer {
+
+    canvas: CanvasTypes;
+
     protected scaleFactor: number = 1;
     protected tokenFront = new Cursor();
     protected tokenBack = new Cursor();
     protected g: Context2D;
 
-    constructor(public canvas: CanvasTypes) {
+    constructor(width: number, height: number) {
+        this.canvas = createUtilityCanvas(width, height);
         this.g = this.canvas.getContext("2d");
         this.g.imageSmoothingEnabled = true;
         this.g.textBaseline = "top";

@@ -2,8 +2,8 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Dark as DefaultTheme } from "../themes";
 import { BaseLayer } from "./BaseLayer";
 export class TrimLayer extends BaseLayer {
-    constructor(canvas) {
-        super(canvas);
+    constructor(width, height) {
+        super(width, height);
         this.g.textAlign = "right";
     }
     render(theme, _minCursor, _maxCursor, gridBounds, scroll, character, padding, focused, rows, fontFamily, fontSize, showLineNumbers, lineCountWidth, showScrollBars, vScrollWidth, wordWrap) {

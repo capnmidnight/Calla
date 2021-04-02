@@ -29,8 +29,6 @@ export interface PrimroseOptions {
     element: HTMLElement;
     width: number;
     height: number;
-    workerScript: string;
-    minWorkerScript: string;
 }
 export declare class Primrose extends TypedEventBase<{
     out: TypedEvent<"out">;

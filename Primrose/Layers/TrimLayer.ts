@@ -2,7 +2,6 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import type { IPoint } from "kudzu/graphics2d/Point";
 import type { IRectangle } from "kudzu/graphics2d/Rectangle";
 import type { ISize } from "kudzu/graphics2d/Size";
-import { CanvasTypes } from "kudzu/html/canvas";
 import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";
@@ -11,8 +10,8 @@ import { BaseLayer } from "./BaseLayer";
 
 export class TrimLayer extends BaseLayer {
 
-    constructor(canvas: CanvasTypes) {
-        super(canvas);
+    constructor(width: number, height: number) {
+        super(width, height);
         this.g.textAlign = "right";
     }
 

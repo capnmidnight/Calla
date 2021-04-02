@@ -4,7 +4,7 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
-import { CanvasTypes, createCanvas, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import { CanvasTypes, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -16,9 +16,9 @@ import {
     grammars, JavaScript
 } from "./grammars";
 import { FinalTokenType, Token } from "./Grammars/Token";
-import { LayerType } from "./Layers/BaseLayer";
-import { ILayer, Layer } from "./Layers/Layer";
-import { LayerWorkerClient } from "./Layers/LayerWorkerClient";
+import { BackgroundLayer } from "./Layers/BackgroundLayer";
+import { ForegroundLayer } from "./Layers/ForegroundLayer";
+import { TrimLayer } from "./Layers/TrimLayer";
 import {
     MacOS, Windows
 } from "./os";
@@ -79,8 +79,6 @@ export interface PrimroseOptions {
     element: HTMLElement;
     width: number;
     height: number;
-    workerScript: string;
-    minWorkerScript: string;
 }
 
 function isPrimroseOption(key: string): key is keyof PrimroseOptions {
@@ -96,9 +94,7 @@ function isPrimroseOption(key: string): key is keyof PrimroseOptions {
         || key === "scaleFactor"
         || key === "element"
         || key === "width"
-        || key === "height"
-        || key === "workerScript"
-        || key === "minWorkerScript";
+        || key === "height";
 }
 
 //>>>>>>>>>> PRIVATE STATIC FIELDS >>>>>>>>>>
@@ -210,9 +206,9 @@ export class Primrose extends TypedEventBase<{
     private changeEvt = new TypedEvent("change");
     private updateEvt = new TypedEvent("update");
     private context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D = null;
-    private fg: ILayer = null;
-    private bg: ILayer = null;
-    private trim: ILayer = null;
+    private fg: ForegroundLayer = null;
+    private bg: BackgroundLayer = null;
+    private trim: TrimLayer = null;
     private keyDownCommands: Map<string, () => void> = null;
     private keyPressCommands: Map<string, () => void> = null;
 
@@ -809,39 +805,26 @@ export class Primrose extends TypedEventBase<{
         // manager.
         Primrose.add(this.element, this);
 
-        if (options.workerScript || options.minWorkerScript) {
-            this.fg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
-            this.bg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
-            this.trim = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
-        }
-        else {
-            this.fg = new Layer();
-            this.bg = new Layer();
-            this.trim = new Layer();
+        this.fg = new ForegroundLayer(this.canv.width, this.canv.height);
+        this.bg = new BackgroundLayer(this.canv.width, this.canv.height);
+        this.trim = new TrimLayer(this.canv.width, this.canv.height);
+
+        if (!isString(options.language)) {
+            this.language = options.language;
         }
 
-        Promise.all([
-            this.fg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.foreground),
-            this.bg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.background),
-            this.trim.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.trim)
-        ]).then(() => {
-            if (!isString(options.language)) {
-                this.language = options.language;
-            }
+        this.readOnly = options.readOnly;
+        this.multiLine = options.multiLine;
+        this.wordWrap = options.wordWrap;
+        this.showScrollBars = options.scrollBars;
+        this.showLineNumbers = options.lineNumbers;
+        this.padding = options.padding;
+        this.fontSize = options.fontSize;
+        this.fontFamily = options.fontFamily;
+        this.scaleFactor = options.scaleFactor;
+        this.value = currentValue;
 
-            this.readOnly = options.readOnly;
-            this.multiLine = options.multiLine;
-            this.wordWrap = options.wordWrap;
-            this.showScrollBars = options.scrollBars;
-            this.showLineNumbers = options.lineNumbers;
-            this.padding = options.padding;
-            this.fontSize = options.fontSize;
-            this.fontFamily = options.fontFamily;
-            this.scaleFactor = options.scaleFactor;
-            this.value = currentValue;
-
-            this.render();
-        });
+        this.render();
     }
 
     private startSelecting() {

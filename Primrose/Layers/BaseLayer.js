@@ -1,4 +1,4 @@
-import { setContextSize } from "kudzu/html/canvas";
+import { createUtilityCanvas, setContextSize } from "kudzu/html/canvas";
 import { Cursor } from "../Cursor";
 export var LayerType;
 (function (LayerType) {
@@ -7,11 +7,11 @@ export var LayerType;
     LayerType[LayerType["trim"] = 2] = "trim";
 })(LayerType || (LayerType = {}));
 export class BaseLayer {
-    constructor(canvas) {
-        this.canvas = canvas;
+    constructor(width, height) {
         this.scaleFactor = 1;
         this.tokenFront = new Cursor();
         this.tokenBack = new Cursor();
+        this.canvas = createUtilityCanvas(width, height);
         this.g = this.canvas.getContext("2d");
         this.g.imageSmoothingEnabled = true;
         this.g.textBaseline = "top";
