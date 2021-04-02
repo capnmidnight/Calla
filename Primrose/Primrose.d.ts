@@ -42,8 +42,6 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private longPress;
     private tx;
     private ty;
-    private vibX;
-    private vibY;
     private pressed;
     private dragging;
     private scrolling;
@@ -106,10 +104,7 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private focusEvt;
     private changeEvt;
     private updateEvt;
-    private context;
-    private fg;
-    private bg;
-    private trim;
+    private renderer;
     private keyDownCommands;
     private keyPressCommands;
     mouse: PointerEventCollection;
@@ -124,7 +119,6 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private touchLikePointerDown;
     private touchLikePointerUp;
     private touchLikePointerMove;
-    private refreshBuffers;
     private moveCursor;
     private dragScroll;
     private refreshControlType;
@@ -140,8 +134,6 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private scrollIntoView;
     private pushUndo;
     private moveInHistory;
-    resize(): void;
-    setSize(w: number, h: number): void;
     scrollTo(x: number, y: number): boolean;
     scrollBy(dx: number, dy: number): boolean;
     readKeyDownEvent(evt: KeyboardEvent): void;
@@ -199,6 +191,8 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     set width(w: number);
     get height(): number;
     set height(h: number);
+    resize(): void;
+    setSize(w: number, h: number, scaleFactor: number): void;
     static has(key: any): boolean;
     static get(key: any): Primrose;
     static add(key: any, control: Primrose): void;

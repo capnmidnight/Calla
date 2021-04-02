@@ -5,7 +5,7 @@ import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
 import type { CanvasTypes } from "kudzu/html/canvas";
-import { createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import { createUtilityCanvas, isHTMLCanvas } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -17,12 +17,10 @@ import {
     grammars, JavaScript
 } from "./grammars";
 import { FinalTokenType, Token } from "./Grammars/Token";
-import { BackgroundLayer } from "./Layers/BackgroundLayer";
-import { ForegroundLayer } from "./Layers/ForegroundLayer";
-import { TrimLayer } from "./Layers/TrimLayer";
 import {
     MacOS, Windows
 } from "./os";
+import { IPrimroseRenderer, PrimroseRenderer } from "./Renderers/PrimroseRenderer";
 import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
 import { TimedEvent } from "./TimedEvent";
@@ -155,7 +153,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private _focused = false;
     private _fontSize: number = null;
     private _fontFamily: string = null;
-    private _scaleFactor = 2;
+    private _scaleFactor: number = null;
     private tabString = "  ";
     private _readOnly = false;
     private _wordWrap = false;
@@ -205,10 +203,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private focusEvt = new TypedEvent("focus");
     private changeEvt = new TypedEvent("change");
     private updateEvt = new TypedEvent("update");
-    private context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D = null;
-    private fg: ForegroundLayer = null;
-    private bg: BackgroundLayer = null;
-    private trim: TrimLayer = null;
+    private renderer: IPrimroseRenderer;
     private keyDownCommands: Map<string, () => void> = null;
     private keyPressCommands: Map<string, () => void> = null;
 
@@ -750,11 +745,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
 
-        //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
-        this.context = this.canvas.getContext("2d");
-        this.context.imageSmoothingEnabled = true;
-        this.context.textBaseline = "top";
-        //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
+        this.renderer = new PrimroseRenderer(this.canvas);
 
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
         this.addEventListener("blur", () => {
@@ -782,14 +773,11 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         // manager.
         Primrose.add(this.element, this);
 
-        this.fg = new ForegroundLayer(this.canvas.width, this.canvas.height);
-        this.bg = new BackgroundLayer(this.canvas.width, this.canvas.height);
-        this.trim = new TrimLayer(this.canvas.width, this.canvas.height);
-
         if (!isString(options.language)) {
             this.language = options.language;
         }
 
+        this._scaleFactor = options.scaleFactor;
         this.readOnly = options.readOnly;
         this.multiLine = options.multiLine;
         this.wordWrap = options.wordWrap;
@@ -798,7 +786,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.padding = options.padding;
         this.fontSize = options.fontSize;
         this.fontFamily = options.fontFamily;
-        this.scaleFactor = options.scaleFactor;
         this.value = currentValue;
 
         this.render();
@@ -879,16 +866,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 this.pointerMove();
             }
         };
-    }
-
-    private async refreshBuffers() {
-        this.resized = true;
-        await Promise.all([
-            this.fg.setSize(this.width, this.height, this.scaleFactor),
-            this.bg.setSize(this.width, this.height, this.scaleFactor),
-            this.trim.setSize(this.width, this.height, this.scaleFactor)
-        ]);
-        this.refreshAllTokens();
     }
 
     private moveCursor(cursor: Cursor) {
@@ -983,7 +960,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private async doRender() {
         const textChanged = this.lastText !== this.value,
             focusChanged = this.focused !== this.lastFocused,
-            fontChanged = this.context.font !== this.lastFont,
+            fontChanged = this.renderer.context.font !== this.lastFont,
             paddingChanged = this.padding !== this.lastPadding,
             themeChanged = this.theme.name !== this.lastThemeName,
 
@@ -1027,7 +1004,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         const tasks = new Array<Promise<void>>();
 
         if (backgroundChanged) {
-            tasks.push(this.bg.render(
+            tasks.push(this.renderer.bg.render(
                 this.theme,
                 Cursor.min(this.frontCursor, this.backCursor),
                 Cursor.max(this.frontCursor, this.backCursor),
@@ -1040,7 +1017,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
 
         if (foregroundChanged) {
-            tasks.push(this.fg.render(
+            tasks.push(this.renderer.fg.render(
                 this.theme,
                 this.gridBounds,
                 this.scroll,
@@ -1052,7 +1029,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
 
         if (trimChanged) {
-            tasks.push(this.trim.render(
+            tasks.push(this.renderer.trim.render(
                 this.theme,
                 this.gridBounds,
                 this.scroll,
@@ -1070,11 +1047,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
 
         await Promise.all(tasks);
-
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.context.drawImage(this.bg.canvas, 0, 0);
-        this.context.drawImage(this.fg.canvas, 0, 0);
-        this.context.drawImage(this.trim.canvas, 0, 0);
+        await this.renderer.render();
 
         this.lastGridBoundsX = this.gridBounds.x;
         this.lastGridBoundsY = this.gridBounds.y;
@@ -1087,7 +1060,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.lastFrontCursor = this.frontCursor.i;
         this.lastBackCursor = this.backCursor.i;
         this.lastFocused = this.focused;
-        this.lastFont = this.context.font;
+        this.lastFont = this.renderer.context.font;
         this.lastThemeName = this.theme.name;
         this.lastScrollX = this.scroll.x;
         this.lastScrollY = this.scroll.y;
@@ -1336,31 +1309,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             this.setValue(nextFrame.value, false);
             this.frontCursor.setI(this.rows, curFrame.frontCursor);
             this.backCursor.setI(this.rows, curFrame.backCursor);
-        }
-    }
-
-    /// <summary>
-    /// </summary>
-    resize() {
-        if (isHTMLCanvas(this.canvas)) {
-            if (!this.isInDocument) {
-                console.warn("Can't automatically resize a canvas that is not in the DOM tree");
-            }
-            else {
-                this.scaleFactor = devicePixelRatio;
-                if (setContextSize(this.context, this.canvas.clientWidth, this.canvas.clientHeight, this.scaleFactor)) {
-                    this.refreshBuffers();
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Sets the scale-independent width and height of the editor control.
-    /// </summary>
-    setSize(w: number, h: number) {
-        if (setContextSize(this.context, w, h, this.scaleFactor)) {
-            this.refreshBuffers();
         }
     }
 
@@ -1761,7 +1709,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private refreshFont() {
-        this.context.font = makeFont({
+        this.renderer.context.font = makeFont({
             fontFamily: this.fontFamily,
             fontSize: this.fontSize
         });
@@ -1769,7 +1717,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         // measure 100 letter M's, then divide by 100, to get the width of an M
         // to two decimal places on systems that return integer values from
         // measureText.
-        this.character.width = this.context.measureText(
+        this.character.width = this.renderer.context.measureText(
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
             .width /
             100;
@@ -1786,12 +1734,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
     set scaleFactor(s) {
         s = Math.max(0.25, Math.min(4, s || 0));
-        if (s !== this.scaleFactor) {
-            const lastWidth = this.width,
-                lastHeight = this.height;
-            this._scaleFactor = s;
-            this.setSize(lastWidth, lastHeight);
-        }
+        this.setSize(this.width, this.height, s);
     }
 
     /// <summary>
@@ -1802,7 +1745,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     set width(w) {
-        this.setSize(w, this.height);
+        this.setSize(w, this.height, this.scaleFactor);
     }
 
     /// <summary>
@@ -1813,7 +1756,31 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     set height(h) {
-        this.setSize(this.width, h);
+        this.setSize(this.width, h, this.scaleFactor);
+    }
+
+    /// <summary>
+    /// </summary>
+    resize() {
+        if (!isHTMLCanvas(this.canvas)
+            || !this.isInDocument) {
+            console.warn("Can't automatically resize a canvas that is not in the DOM tree");
+        }
+        else {
+            this.setSize(this.canvas.clientWidth, this.canvas.clientHeight, devicePixelRatio);
+        }
+    }
+
+    /// <summary>
+    /// Sets the scale-independent width and height of the editor control.
+    /// </summary>
+    setSize(w: number, h: number, scaleFactor: number) {
+        this.renderer.setSize(w, h, scaleFactor)
+            .then(() => {
+                this._scaleFactor = scaleFactor;
+                this.resized = true;
+                this.refreshAllTokens();
+            });
     }
 
     /// <summary>
