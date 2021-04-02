@@ -1055,7 +1055,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 this.focused,
                 this.rows));
         }
-        
+
         if (foregroundChanged) {
             tasks.push(this.fg.render(
                 this.theme,
@@ -1360,28 +1360,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     /// <summary>
-    /// Removes focus from the control.
-    /// </summary>
-    blur() {
-        if (this.focused) {
-            this._focused = false;
-            this.dispatchEvent(this.blurEvt);
-            this.render();
-        }
-    }
-
-    /// <summary>
-    /// Sets the control to be the focused control. If all controls in the app have been properly registered with the Event Manager, then any other, currently focused control will first get `blur`red.
-    /// </summary>
-    focus() {
-        if (!this.focused) {
-            this._focused = true;
-            this.dispatchEvent(this.focusEvt);
-            this.render();
-        }
-    }
-
-    /// <summary>
     /// </summary>
     resize() {
         if (isHTMLCanvas(this.canvas)) {
@@ -1544,13 +1522,29 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
     set focused(f) {
         if (f !== this.focused) {
+            this._focused = f;
             if (f) {
-                this.focus();
+                this.dispatchEvent(this.focusEvt);
             }
             else {
-                this.blur();
+                this.dispatchEvent(this.blurEvt);
             }
+            this.render();
         }
+    }
+
+    /// <summary>
+    /// Removes focus from the control.
+    /// </summary>
+    blur() {
+        this.focused = false;
+    }
+
+    /// <summary>
+    /// Sets the control to be the focused control. If all controls in the app have been properly registered with the Event Manager, then any other, currently focused control will first get `blur`red.
+    /// </summary>
+    focus() {
+        this.focused = true;
     }
 
     /// <summary>

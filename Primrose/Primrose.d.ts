@@ -140,8 +140,6 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private scrollIntoView;
     private pushUndo;
     private moveInHistory;
-    blur(): void;
-    focus(): void;
     resize(): void;
     setSize(w: number, h: number): void;
     scrollTo(x: number, y: number): boolean;
@@ -159,6 +157,8 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     get hovered(): boolean;
     get focused(): boolean;
     set focused(f: boolean);
+    blur(): void;
+    focus(): void;
     get readOnly(): boolean;
     set readOnly(r: boolean);
     get multiLine(): boolean;
