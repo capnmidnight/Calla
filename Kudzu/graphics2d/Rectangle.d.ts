@@ -1,6 +1,12 @@
 import { Point } from "./point.js";
 import { Size } from "./Size";
-export declare class Rectangle {
+export interface IRectangle {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+export declare class Rectangle implements IRectangle {
     point: Point;
     size: Size;
     constructor(x?: number, y?: number, width?: number, height?: number);

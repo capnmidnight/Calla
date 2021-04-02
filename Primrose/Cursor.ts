@@ -1,17 +1,23 @@
 import { stringReverse } from "kudzu/strings/stringReverse";
 import { isDefined } from "kudzu/typeChecks";
-import { Row } from "./Row";
+import { IRow, Row } from "./Row";
 
-export class Cursor {
+export interface ICursor {
+    x: number;
+    y: number;
+    i: number;
+}
 
-    static min(a: Cursor, b: Cursor) {
+export class Cursor implements ICursor {
+
+    static min<CursorT extends ICursor>(a: CursorT, b: CursorT) {
         if (a.i <= b.i) {
             return a;
         }
         return b;
     }
 
-    static max(a: Cursor, b: Cursor) {
+    static max<CursorT extends ICursor>(a: CursorT, b: CursorT) {
         if (a.i > b.i) {
             return a;
         }
@@ -38,13 +44,29 @@ export class Cursor {
         }
     }
 
+    adjust(row: IRow, dir: number) {
+        const correction = dir === -1
+            ? row.leftCorrections
+            : row.rightCorrections;
+
+        if (this.x < correction.length) {
+            const delta = correction[this.x];
+            this.x += delta;
+            this.i += delta;
+        }
+        else if (dir === 1
+            && row.text[row.text.length - 1] === '\n') {
+            this.adjust(row, -1);
+        }
+    }
+
     fullHome() {
         this.i = 0;
         this.x = 0;
         this.y = 0;
     }
 
-    fullEnd(rows: readonly Row[]) {
+    fullEnd(rows: readonly IRow[]) {
         this.i = 0;
         let lastLength = 0;
         for (let y = 0; y < rows.length; ++y) {
@@ -56,7 +78,7 @@ export class Cursor {
         this.x = lastLength;
     }
 
-    left(rows: readonly Row[], skipAdjust = false) {
+    left(rows: readonly IRow[], skipAdjust = false) {
         if (this.i > 0) {
             --this.i;
             --this.x;
@@ -66,7 +88,7 @@ export class Cursor {
                 this.x = row.stringLength - 1;
             }
             else if (!skipAdjust) {
-                rows[this.y].adjust(this, -1);
+                this.adjust(rows[this.y], -1);
             }
         }
     }
@@ -85,11 +107,11 @@ export class Cursor {
                     : this.x;
             this.i -= dx;
             this.x -= dx;
-            rows[this.y].adjust(this, -1);
+            this.adjust(rows[this.y], -1);
         }
     }
 
-    right(rows: readonly Row[], skipAdjust = false) {
+    right(rows: readonly IRow[], skipAdjust = false) {
         const row = rows[this.y];
         if (this.y < rows.length - 1
             || this.x < row.stringLength) {
@@ -101,7 +123,7 @@ export class Cursor {
                 ++this.y;
             }
             else if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
@@ -123,7 +145,7 @@ export class Cursor {
                 --this.x;
                 --this.i;
             }
-            rows[this.y].adjust(this, 1);
+            this.adjust(rows[this.y], 1);
         }
         else if (this.y < rows.length - 1) {
             this.right(rows);
@@ -135,7 +157,7 @@ export class Cursor {
         this.x = 0;
     }
 
-    end(rows: readonly Row[]) {
+    end(rows: readonly IRow[]) {
         const row = rows[this.y];
         let dx = row.stringLength - this.x;
         if (this.y < rows.length - 1) {
@@ -145,7 +167,7 @@ export class Cursor {
         this.x += dx;
     }
 
-    up(rows: readonly Row[], skipAdjust = false) {
+    up(rows: readonly IRow[], skipAdjust = false) {
         if (this.y > 0) {
             --this.y;
             const row = rows[this.y],
@@ -153,12 +175,12 @@ export class Cursor {
             this.x += dx;
             this.i -= row.stringLength - dx;
             if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
 
-    down(rows: readonly Row[], skipAdjust = false) {
+    down(rows: readonly IRow[], skipAdjust = false) {
         if (this.y < rows.length - 1) {
             const prevRow = rows[this.y];
             ++this.y;
@@ -174,29 +196,29 @@ export class Cursor {
                 this.x -= dx;
             }
             if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
 
-    incX(rows: readonly Row[], dx: number) {
+    incX(rows: readonly IRow[], dx: number) {
         const dir = Math.sign(dx);
         dx = Math.abs(dx);
         if (dir === -1) {
             for (let i = 0; i < dx; ++i) {
                 this.left(rows, true);
             }
-            rows[this.y].adjust(this, -1);
+            this.adjust(rows[this.y], -1);
         }
         else if (dir === 1) {
             for (let i = 0; i < dx; ++i) {
                 this.right(rows, true);
             }
-            rows[this.y].adjust(this, 1);
+            this.adjust(rows[this.y], 1);
         }
     }
 
-    incY(rows: readonly Row[], dy: number) {
+    incY(rows: readonly IRow[], dy: number) {
         const dir = Math.sign(dy);
         dy = Math.abs(dy);
         if (dir === -1) {
@@ -209,10 +231,10 @@ export class Cursor {
                 this.down(rows, true);
             }
         }
-        rows[this.y].adjust(this, 1);
+        this.adjust(rows[this.y], 1);
     }
 
-    setXY(rows: readonly Row[], x: number, y: number) {
+    setXY(rows: IRow[], x: number, y: number) {
         x = Math.floor(x);
         y = Math.floor(y);
         this.y = Math.max(0, Math.min(rows.length - 1, y));
@@ -228,10 +250,10 @@ export class Cursor {
             --this.x;
             --this.i;
         }
-        rows[this.y].adjust(this, 1);
+        this.adjust(rows[this.y], 1);
     }
 
-    setI(rows: readonly Row[], i: number) {
+    setI(rows: readonly IRow[], i: number) {
         const delta = this.i - i,
             dir = Math.sign(delta);
         this.x = this.i = i;
@@ -256,6 +278,6 @@ export class Cursor {
             ++this.y;
         }
 
-        rows[this.y].adjust(this, dir);
+        this.adjust(rows[this.y], dir);
     }
 }

@@ -109,7 +109,6 @@ export declare class Primrose extends TypedEventBase<{
     private fg;
     private fgfx;
     private bg;
-    private bgfx;
     private tg;
     private tgfx;
     private keyDownCommands;
@@ -134,7 +133,6 @@ export declare class Primrose extends TypedEventBase<{
     private refreshGutter;
     private fillRect;
     private strokeRect;
-    private renderCanvasBackground;
     private renderCanvasForeground;
     private renderCanvasTrim;
     private doRender;

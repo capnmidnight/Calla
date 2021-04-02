@@ -22,7 +22,12 @@ export declare enum FinalTokenType {
 }
 export declare type TokenType = IntermediateTokenType | FinalTokenType;
 export declare function isFinalTokenType(token: TokenType): token is FinalTokenType;
-export declare class Token {
+export interface IToken {
+    length: number;
+    type: TokenType;
+    value: string;
+}
+export declare class Token implements IToken {
     value: string;
     type: TokenType;
     startStringIndex: number;

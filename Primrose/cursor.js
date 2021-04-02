@@ -32,6 +32,20 @@ export class Cursor {
             this.y = c.y;
         }
     }
+    adjust(row, dir) {
+        const correction = dir === -1
+            ? row.leftCorrections
+            : row.rightCorrections;
+        if (this.x < correction.length) {
+            const delta = correction[this.x];
+            this.x += delta;
+            this.i += delta;
+        }
+        else if (dir === 1
+            && row.text[row.text.length - 1] === '\n') {
+            this.adjust(row, -1);
+        }
+    }
     fullHome() {
         this.i = 0;
         this.x = 0;
@@ -58,7 +72,7 @@ export class Cursor {
                 this.x = row.stringLength - 1;
             }
             else if (!skipAdjust) {
-                rows[this.y].adjust(this, -1);
+                this.adjust(rows[this.y], -1);
             }
         }
     }
@@ -72,7 +86,7 @@ export class Cursor {
                 : this.x;
             this.i -= dx;
             this.x -= dx;
-            rows[this.y].adjust(this, -1);
+            this.adjust(rows[this.y], -1);
         }
     }
     right(rows, skipAdjust = false) {
@@ -87,7 +101,7 @@ export class Cursor {
                 ++this.y;
             }
             else if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
@@ -105,7 +119,7 @@ export class Cursor {
                 --this.x;
                 --this.i;
             }
-            rows[this.y].adjust(this, 1);
+            this.adjust(rows[this.y], 1);
         }
         else if (this.y < rows.length - 1) {
             this.right(rows);
@@ -131,7 +145,7 @@ export class Cursor {
             this.x += dx;
             this.i -= row.stringLength - dx;
             if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
@@ -150,7 +164,7 @@ export class Cursor {
                 this.x -= dx;
             }
             if (!skipAdjust) {
-                rows[this.y].adjust(this, 1);
+                this.adjust(rows[this.y], 1);
             }
         }
     }
@@ -161,13 +175,13 @@ export class Cursor {
             for (let i = 0; i < dx; ++i) {
                 this.left(rows, true);
             }
-            rows[this.y].adjust(this, -1);
+            this.adjust(rows[this.y], -1);
         }
         else if (dir === 1) {
             for (let i = 0; i < dx; ++i) {
                 this.right(rows, true);
             }
-            rows[this.y].adjust(this, 1);
+            this.adjust(rows[this.y], 1);
         }
     }
     incY(rows, dy) {
@@ -183,7 +197,7 @@ export class Cursor {
                 this.down(rows, true);
             }
         }
-        rows[this.y].adjust(this, 1);
+        this.adjust(rows[this.y], 1);
     }
     setXY(rows, x, y) {
         x = Math.floor(x);
@@ -201,7 +215,7 @@ export class Cursor {
             --this.x;
             --this.i;
         }
-        rows[this.y].adjust(this, 1);
+        this.adjust(rows[this.y], 1);
     }
     setI(rows, i) {
         const delta = this.i - i, dir = Math.sign(delta);
@@ -224,7 +238,7 @@ export class Cursor {
             this.x = 0;
             ++this.y;
         }
-        rows[this.y].adjust(this, dir);
+        this.adjust(rows[this.y], dir);
     }
 }
 //# sourceMappingURL=Cursor.js.map

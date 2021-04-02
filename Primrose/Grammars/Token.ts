@@ -31,8 +31,14 @@ export function isFinalTokenType(token: TokenType): token is FinalTokenType {
         .indexOf(token as FinalTokenType) > -1;
 }
 
+export interface IToken {
+    length: number;
+    type: TokenType;
+    value: string;
+}
+
 // with fields linking it back to its source.
-export class Token {
+export class Token implements IToken {
     constructor(public value: string,
         public type: TokenType,
         public startStringIndex: number = 0) {

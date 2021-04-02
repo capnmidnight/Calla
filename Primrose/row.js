@@ -20,20 +20,6 @@ export class Row {
         }
         Object.seal(this);
     }
-    adjust(cursor, dir) {
-        const correction = dir === -1
-            ? this.leftCorrections
-            : this.rightCorrections;
-        if (cursor.x < correction.length) {
-            const delta = correction[cursor.x];
-            cursor.x += delta;
-            cursor.i += delta;
-        }
-        else if (dir === 1
-            && this.text[this.text.length - 1] === '\n') {
-            this.adjust(cursor, -1);
-        }
-    }
     toString() {
         return this.text;
     }

@@ -13,6 +13,7 @@ import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } fr
 import { Cursor } from "./Cursor";
 import { grammars, JavaScript } from "./grammars";
 import { FinalTokenType, isFinalTokenType } from "./Grammars/Token";
+import { BackgroundLayer } from "./Layers/BackgroundLayer";
 import { MacOS, Windows } from "./os";
 import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
@@ -557,20 +558,17 @@ export class Primrose extends TypedEventBase {
         this.context = this.canv.getContext("2d");
         this.fg = createUtilityCanvas(this.canv.width, this.canv.height);
         this.fgfx = this.fg.getContext("2d");
-        this.bg = createUtilityCanvas(this.canv.width, this.canv.height);
-        this.bgfx = this.bg.getContext("2d");
+        this.bg = new BackgroundLayer(createUtilityCanvas(this.canv.width, this.canv.height));
         this.tg = createUtilityCanvas(this.canv.width, this.canv.height);
         this.tgfx = this.tg.getContext("2d");
         this.context.imageSmoothingEnabled
             = this.fgfx.imageSmoothingEnabled
-                = this.bgfx.imageSmoothingEnabled
-                    = this.tgfx.imageSmoothingEnabled
-                        = true;
+                = this.tgfx.imageSmoothingEnabled
+                    = true;
         this.context.textBaseline
             = this.fgfx.textBaseline
-                = this.bgfx.textBaseline
-                    = this.tgfx.textBaseline
-                        = "top";
+                = this.tgfx.textBaseline
+                    = "top";
         this.tgfx.textAlign = "right";
         this.fgfx.textAlign = "left";
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
@@ -685,7 +683,7 @@ export class Primrose extends TypedEventBase {
     refreshBuffers() {
         this.resized = true;
         setContextSize(this.fgfx, this.canv.width, this.canv.height);
-        setContextSize(this.bgfx, this.canv.width, this.canv.height);
+        this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor);
         setContextSize(this.tgfx, this.canv.width, this.canv.height);
         this.refreshAllTokens();
     }
@@ -769,56 +767,6 @@ export class Primrose extends TypedEventBase {
     strokeRect(gfx, stroke, x, y, w, h) {
         gfx.strokeStyle = stroke;
         gfx.strokeRect(x * this.character.width, y * this.character.height, w * this.character.width + 1, h * this.character.height + 1);
-    }
-    renderCanvasBackground() {
-        const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
-        this.bgfx.clearRect(0, 0, this.canv.width, this.canv.height);
-        if (this.theme.regular.backColor) {
-            this.bgfx.fillStyle = this.theme.regular.backColor;
-            this.bgfx.fillRect(0, 0, this.canv.width, this.canv.height);
-        }
-        this.bgfx.save();
-        this.bgfx.scale(this.scaleFactor, this.scaleFactor);
-        this.bgfx.translate((this.gridBounds.x - this.scroll.x) * this.character.width + this.padding, -this.scroll.y * this.character.height + this.padding);
-        // draw the current row highlighter
-        if (this.focused) {
-            this.fillRect(this.bgfx, this.theme.currentRowBackColor ||
-                DefaultTheme.currentRowBackColor, 0, minCursor.y, this.gridBounds.width, maxCursor.y - minCursor.y + 1);
-        }
-        const minY = this.scroll.y | 0, maxY = minY + this.gridBounds.height, minX = this.scroll.x | 0, maxX = minX + this.gridBounds.width;
-        this.tokenFront.setXY(this.rows, 0, minY);
-        this.tokenBack.copy(this.tokenFront);
-        for (let y = minY; y <= maxY && y < this.rows.length; ++y) {
-            // draw the tokens on this row
-            const row = this.rows[y].tokens;
-            for (let i = 0; i < row.length; ++i) {
-                const t = row[i];
-                this.tokenBack.x += t.length;
-                this.tokenBack.i += t.length;
-                // skip drawing tokens that aren't in view
-                if (minX <= this.tokenBack.x && this.tokenFront.x <= maxX) {
-                    // draw the selection box
-                    const inSelection = minCursor.i <= this.tokenBack.i
-                        && this.tokenFront.i < maxCursor.i;
-                    if (inSelection) {
-                        const selectionFront = Cursor.max(minCursor, this.tokenFront), selectionBack = Cursor.min(maxCursor, this.tokenBack), cw = selectionBack.i - selectionFront.i;
-                        this.fillRect(this.bgfx, this.theme.selectedBackColor ||
-                            DefaultTheme.selectedBackColor, selectionFront.x, selectionFront.y, cw, 1);
-                    }
-                }
-                this.tokenFront.copy(this.tokenBack);
-            }
-            this.tokenFront.x = 0;
-            ++this.tokenFront.y;
-            this.tokenBack.copy(this.tokenFront);
-        }
-        // draw the cursor caret
-        if (this.focused) {
-            const cc = this.theme.cursorColor || DefaultTheme.cursorColor, w = 1 / this.character.width;
-            this.fillRect(this.bgfx, cc, minCursor.x, minCursor.y, w, 1);
-            this.fillRect(this.bgfx, cc, maxCursor.x, maxCursor.y, w, 1);
-        }
-        this.bgfx.restore();
     }
     renderCanvasForeground() {
         this.fgfx.clearRect(0, 0, this.canv.width, this.canv.height);
@@ -939,8 +887,9 @@ export class Primrose extends TypedEventBase {
                 || cursorChanged, foregroundChanged = layoutChanged
                 || fontChanged, trimChanged = layoutChanged
                 || focusChanged;
+            const minCursor = Cursor.min(this.frontCursor, this.backCursor), maxCursor = Cursor.max(this.frontCursor, this.backCursor);
             if (backgroundChanged) {
-                this.renderCanvasBackground();
+                this.bg.render(this.theme, minCursor, maxCursor, this.gridBounds, this.scroll, this.character, this.padding, this.focused, this.rows);
             }
             if (foregroundChanged) {
                 this.renderCanvasForeground();
@@ -951,7 +900,7 @@ export class Primrose extends TypedEventBase {
             this.context.clearRect(0, 0, this.canv.width, this.canv.height);
             this.context.save();
             this.context.translate(this.vibX, this.vibY);
-            this.context.drawImage(this.bg, 0, 0);
+            this.context.drawImage(this.bg.canvas, 0, 0);
             this.context.drawImage(this.fg, 0, 0);
             this.context.drawImage(this.tg, 0, 0);
             this.context.restore();

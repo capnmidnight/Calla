@@ -1,15 +1,20 @@
-import type { Cursor } from "./Cursor";
-import type { Token } from "./Grammars/Token";
-export declare class Row {
+import type { IToken } from "./Grammars/Token";
+export interface IRow {
+    stringLength: number;
+    tokens: IToken[];
+    leftCorrections: number[];
+    rightCorrections: number[];
     text: string;
-    tokens: Token[];
+}
+export declare class Row implements IRow {
+    text: string;
+    tokens: IToken[];
     startStringIndex: number;
     startTokenIndex: number;
     lineNumber: number;
-    private leftCorrections;
-    private rightCorrections;
-    constructor(text: string, tokens: Token[], startStringIndex: number, startTokenIndex: number, lineNumber: number);
-    adjust(cursor: Cursor, dir: number): void;
+    leftCorrections: number[];
+    rightCorrections: number[];
+    constructor(text: string, tokens: IToken[], startStringIndex: number, startTokenIndex: number, lineNumber: number);
     toString(): string;
     substring(x: number, y?: number): string;
     get stringLength(): number;

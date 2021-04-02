@@ -1,4 +1,8 @@
-export declare class Size {
+export interface ISize {
+    width: number;
+    height: number;
+}
+export declare class Size implements ISize {
     width: number;
     height: number;
     constructor(width?: number, height?: number);

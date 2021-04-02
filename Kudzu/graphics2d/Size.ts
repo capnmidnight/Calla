@@ -1,6 +1,11 @@
 import { isDefined } from "../typeChecks";
 
-export class Size {
+export interface ISize {
+    width: number;
+    height: number;
+}
+
+export class Size implements ISize {
     constructor(public width = 0, public height = 0) {
         Object.seal(this);
     }

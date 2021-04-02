@@ -1,13 +1,20 @@
-import type { Cursor } from "./Cursor";
-import type { Token } from "./Grammars/Token";
+import type { IToken } from "./Grammars/Token";
 
-export class Row {
-    private leftCorrections: number[];
-    private rightCorrections: number[];
+export interface IRow {
+    stringLength: number;
+    tokens: IToken[];
+    leftCorrections: number[];
+    rightCorrections: number[];
+    text: string;
+}
+
+export class Row implements IRow {
+    leftCorrections: number[];
+    rightCorrections: number[];
 
     constructor(
         public text: string,
-        public tokens: Token[],
+        public tokens: IToken[],
         public startStringIndex: number,
         public startTokenIndex: number,
         public lineNumber: number) {
@@ -28,22 +35,6 @@ export class Row {
         }
 
         Object.seal(this);
-    }
-
-    adjust(cursor: Cursor, dir: number) {
-        const correction = dir === -1
-            ? this.leftCorrections
-            : this.rightCorrections;
-
-        if (cursor.x < correction.length) {
-            const delta = correction[cursor.x];
-            cursor.x += delta;
-            cursor.i += delta;
-        }
-        else if (dir === 1
-            && this.text[this.text.length - 1] === '\n') {
-            this.adjust(cursor, -1);
-        }
     }
 
     toString() {

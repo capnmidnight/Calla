@@ -1,7 +1,12 @@
 import { isDefined } from "../typeChecks";
 import type { Rectangle } from "./Rectangle";
 
-export class Point {
+export interface IPoint {
+    x: number;
+    y: number;
+}
+
+export class Point implements IPoint {
     constructor(public x: number = 0, public y: number = 0) {
         Object.seal(this);
     }
