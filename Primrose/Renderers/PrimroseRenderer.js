@@ -1,3 +1,5 @@
+import { makeFont } from "kudzu/graphics2d/fonts";
+import { Size } from "kudzu/graphics2d/Size";
 import { setContextSize } from "kudzu/html/canvas";
 import { BackgroundLayer } from "../Layers/BackgroundLayer";
 import { ForegroundLayer } from "../Layers/ForegroundLayer";
@@ -5,6 +7,7 @@ import { TrimLayer } from "../Layers/TrimLayer";
 export class PrimroseRenderer {
     constructor(canvas) {
         this.canvas = canvas;
+        this.character = new Size();
         this.context = this.canvas.getContext("2d");
         this.fg = new ForegroundLayer(this.canvas.width, this.canvas.height);
         this.bg = new BackgroundLayer(this.canvas.width, this.canvas.height);
@@ -19,6 +22,23 @@ export class PrimroseRenderer {
                 this.bg.setSize(this.width, this.height, this.scaleFactor),
                 this.trim.setSize(this.width, this.height, this.scaleFactor)
             ]);
+        }
+    }
+    async setFont(family, size) {
+        size = Math.max(1, size || 0);
+        const font = makeFont({
+            fontFamily: family,
+            fontSize: size
+        });
+        if (font !== this.context.font) {
+            this.context.font = font;
+            this.character.height = size;
+            // measure 100 letter M's, then divide by 100, to get the width of an M
+            // to two decimal places on systems that return integer values from
+            // measureText.
+            this.character.width = this.context.measureText("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+                .width /
+                100;
         }
     }
     get width() {

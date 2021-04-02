@@ -1,6 +1,5 @@
 import { documentReady } from "kudzu/events/documentReady";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
@@ -17,6 +16,7 @@ import {
     grammars, JavaScript
 } from "./grammars";
 import { FinalTokenType, Token } from "./Grammars/Token";
+import { HistoryFrame } from "./HistoryFrame";
 import {
     MacOS, Windows
 } from "./os";
@@ -184,7 +184,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private rows = [Row.emptyRow(0, 0, 0)];
     private scroll = new Point();
     private pointer = new Point();
-    private character = new Size();
     private bottomRightGutter = new Size();
     private gridBounds = new Rectangle();
     private backCursor = new Cursor();
@@ -863,7 +862,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private moveCursor(cursor: Cursor) {
-        this.pointer.toCell(this.character, this.scroll, this.gridBounds);
+        this.pointer.toCell(this.renderer.character, this.scroll, this.gridBounds);
         const gx = this.pointer.x - this.scroll.x,
             gy = this.pointer.y - this.scroll.y,
             onBottom = gy >= this.gridBounds.height,
@@ -906,8 +905,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private dragScroll() {
         if (this.lastScrollDX !== null
             && this.lastScrollDY !== null) {
-            let dx = (this.lastScrollDX - this.pointer.x) / this.character.width,
-                dy = (this.lastScrollDY - this.pointer.y) / this.character.height;
+            let dx = (this.lastScrollDX - this.pointer.x) / this.renderer.character.width,
+                dy = (this.lastScrollDY - this.pointer.y) / this.renderer.character.height;
             this.scrollBy(dx, dy);
         }
         this.lastScrollDX = this.pointer.x;
@@ -967,8 +966,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 || boundsWidthChanged
                 || boundsHeightChanged,
 
-            characterWidthChanged = this.character.width !== this.lastCharacterWidth,
-            characterHeightChanged = this.character.height !== this.lastCharacterHeight,
+            characterWidthChanged = this.renderer.character.width !== this.lastCharacterWidth,
+            characterHeightChanged = this.renderer.character.height !== this.lastCharacterHeight,
             characterSizeChanged = characterWidthChanged
                 || characterHeightChanged,
 
@@ -1004,7 +1003,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 Cursor.max(this.frontCursor, this.backCursor),
                 this.gridBounds,
                 this.scroll,
-                this.character,
+                this.renderer.character,
                 this.padding,
                 this.focused,
                 this.rows));
@@ -1015,7 +1014,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 this.theme,
                 this.gridBounds,
                 this.scroll,
-                this.character,
+                this.renderer.character,
                 this.padding,
                 this.rows,
                 this.fontFamily,
@@ -1027,7 +1026,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 this.theme,
                 this.gridBounds,
                 this.scroll,
-                this.character,
+                this.renderer.character,
                 this.padding,
                 this.focused,
                 this.rows,
@@ -1048,8 +1047,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.lastGridBoundsWidth = this.gridBounds.width;
         this.lastGridBoundsHeight = this.gridBounds.height;
         this.lastText = this.value;
-        this.lastCharacterWidth = this.character.width;
-        this.lastCharacterHeight = this.character.height;
+        this.lastCharacterWidth = this.renderer.character.width;
+        this.lastCharacterHeight = this.renderer.character.height;
         this.lastPadding = this.padding;
         this.lastFrontCursor = this.frontCursor.i;
         this.lastBackCursor = this.backCursor.i;
@@ -1162,10 +1161,10 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
 
         // measure the grid
-        const x = Math.floor(this.lineCountWidth + this.padding / this.character.width),
-            y = Math.floor(this.padding / this.character.height),
-            w = Math.floor((this.width - 2 * this.padding) / this.character.width) - x - this.bottomRightGutter.width,
-            h = Math.floor((this.height - 2 * this.padding) / this.character.height) - y - this.bottomRightGutter.height;
+        const x = Math.floor(this.lineCountWidth + this.padding / this.renderer.character.width),
+            y = Math.floor(this.padding / this.renderer.character.height),
+            w = Math.floor((this.width - 2 * this.padding) / this.renderer.character.width) - x - this.bottomRightGutter.width,
+            h = Math.floor((this.height - 2 * this.padding) / this.renderer.character.height) - y - this.bottomRightGutter.height;
         this.gridBounds.set(x, y, w, h);
 
         // Perform the layout
@@ -1684,11 +1683,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     set fontSize(s) {
-        s = Math.max(1, s || 0);
-        if (s !== this.fontSize) {
-            this._fontSize = s;
-            this.refreshFont();
-        }
+        this.setFont(this.fontFamily, s);
     }
 
     get fontFamily() {
@@ -1696,26 +1691,19 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     set fontFamily(v) {
-        if (v !== this.fontFamily) {
-            this._fontFamily = v;
-            this.refreshFont();
-        }
+        this.setFont(v, this.fontSize);
     }
 
-    private refreshFont() {
-        this.renderer.context.font = makeFont({
-            fontFamily: this.fontFamily,
-            fontSize: this.fontSize
-        });
-        this.character.height = this.fontSize;
-        // measure 100 letter M's, then divide by 100, to get the width of an M
-        // to two decimal places on systems that return integer values from
-        // measureText.
-        this.character.width = this.renderer.context.measureText(
-            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
-            .width /
-            100;
-        this.refreshAllTokens();
+    private setFont(family: string, size: number) {
+        size = Math.max(1, size || 0);
+        if (family !== this.fontFamily
+            || size !== this.fontSize) {
+            this._fontFamily = family;
+            this._fontSize = size;
+            this.renderer.setFont(this.fontFamily, this.fontSize)
+                .then(() => this.refreshAllTokens());
+            this.refreshAllTokens();
+        }
     }
 
     /// <summary>

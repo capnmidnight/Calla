@@ -1,3 +1,5 @@
+import { makeFont } from "kudzu/graphics2d/fonts";
+import { Size } from "kudzu/graphics2d/Size";
 import { CanvasTypes, Context2D, setContextSize } from "kudzu/html/canvas";
 import { BackgroundLayer } from "../Layers/BackgroundLayer";
 import { ForegroundLayer } from "../Layers/ForegroundLayer";
@@ -8,7 +10,9 @@ export interface IPrimroseRenderer {
     fg: ForegroundLayer;
     bg: BackgroundLayer;
     trim: TrimLayer;
+    character: Size;
     setSize(width: number, height: number, scaleFactor: number): Promise<void>;
+    setFont(family: string, size: number): Promise<void>;
     render(): Promise<void>;
 }
 
@@ -18,6 +22,8 @@ export class PrimroseRenderer implements IPrimroseRenderer {
     fg: ForegroundLayer;
     bg: BackgroundLayer;
     trim: TrimLayer;
+
+    character = new Size();
 
     constructor(private canvas: CanvasTypes) {
         this.context = this.canvas.getContext("2d");
@@ -36,6 +42,25 @@ export class PrimroseRenderer implements IPrimroseRenderer {
                 this.bg.setSize(this.width, this.height, this.scaleFactor),
                 this.trim.setSize(this.width, this.height, this.scaleFactor)
             ]);
+        }
+    }
+
+    async setFont(family: string, size: number): Promise<void> {
+        size = Math.max(1, size || 0);
+        const font = makeFont({
+            fontFamily: family,
+            fontSize: size
+        });
+        if (font !== this.context.font) {
+            this.context.font = font;
+            this.character.height = size;
+            // measure 100 letter M's, then divide by 100, to get the width of an M
+            // to two decimal places on systems that return integer values from
+            // measureText.
+            this.character.width = this.context.measureText(
+                "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+                .width /
+                100;
         }
     }
 

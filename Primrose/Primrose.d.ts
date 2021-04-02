@@ -92,7 +92,6 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private rows;
     private scroll;
     private pointer;
-    private character;
     private bottomRightGutter;
     private gridBounds;
     private backCursor;
@@ -184,7 +183,7 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     set fontSize(s: number);
     get fontFamily(): string;
     set fontFamily(v: string);
-    private refreshFont;
+    private setFont;
     get scaleFactor(): number;
     set scaleFactor(s: number);
     get width(): number;
