@@ -25,12 +25,6 @@ import { Row } from "./Row";
 import { Dark as DefaultTheme } from "./themes";
 import { TimedEvent } from "./TimedEvent";
 
-interface HistoryFrame {
-    value: string,
-    frontCursor: number,
-    backCursor: number;
-}
-
 interface PointXY {
     x: number;
     y: number;
