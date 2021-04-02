@@ -72,6 +72,7 @@ class OperatingSystem {
             [`Shift_Delete`, "DeleteLine"],
 
             ["Normal_Enter", "AppendNewline"],
+            ["Shift_Enter", "AppendNewline"],
             [`${pre2}_Enter`, "PrependNewline"],
 
             ["Normal_Tab", "InsertTab"],
