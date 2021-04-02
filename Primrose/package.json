@@ -26,6 +26,8 @@
   "homepage": "https://www.primrosevr.com",
   "files": [
     "Grammars/",
+    "Layers/",
+    "types/",
     "controlTypes.ts",
     "Cursor.ts",
     "grammars.ts",

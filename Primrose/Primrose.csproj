@@ -12,11 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Layers\Layer.js" />
-    <None Include="Layers\Layer.js.map" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.1.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
