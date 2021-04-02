@@ -1,7 +1,6 @@
 import type { IToken } from "./Grammars/Token";
 
 export interface IRow {
-    stringLength: number;
     tokens: IToken[];
     leftCorrections: number[];
     rightCorrections: number[];
@@ -46,12 +45,8 @@ export class Row implements IRow {
         return this.text.substring(x, y);
     }
 
-    get stringLength() {
-        return this.text.length;
-    }
-
     get endStringIndex() {
-        return this.startStringIndex + this.stringLength;
+        return this.startStringIndex + this.text.length;
     }
 
     get numTokens() {

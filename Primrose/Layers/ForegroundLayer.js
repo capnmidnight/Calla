@@ -11,8 +11,8 @@ export class ForegroundLayer extends BaseLayer {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);
-        this.g.translate((gridBounds.x - scroll.x) * character.width + padding, padding);
-        const minY = scroll.y | 0, maxY = minY + gridBounds.height, minX = scroll.x | 0, maxX = minX + gridBounds.width;
+        this.g.translate((gridBounds.point.x - scroll.x) * character.width + padding, padding);
+        const minY = scroll.y | 0, maxY = minY + gridBounds.size.height, minX = scroll.x | 0, maxX = minX + gridBounds.size.width;
         this.tokenFront.setXY(rows, 0, minY);
         this.tokenBack.copy(this.tokenFront);
         for (let y = minY; y <= maxY && y < rows.length; ++y) {

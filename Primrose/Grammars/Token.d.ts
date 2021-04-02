@@ -31,9 +31,8 @@ export declare class Token implements IToken {
     value: string;
     type: TokenType;
     startStringIndex: number;
+    length: number;
     constructor(value: string, type: TokenType, startStringIndex?: number);
-    get length(): number;
-    get endStringIndex(): number;
     clone(): Token;
     splitAt(i: number): Token;
     toString(): string;

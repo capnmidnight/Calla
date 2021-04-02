@@ -33,13 +33,8 @@ export class Token {
         this.value = value;
         this.type = type;
         this.startStringIndex = startStringIndex;
+        this.length = value.length;
         Object.seal(this);
-    }
-    get length() {
-        return this.value.length;
-    }
-    get endStringIndex() {
-        return this.startStringIndex + this.length;
     }
     clone() {
         return new Token(this.value, this.type, this.startStringIndex);

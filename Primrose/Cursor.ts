@@ -71,7 +71,7 @@ export class Cursor implements ICursor {
         let lastLength = 0;
         for (let y = 0; y < rows.length; ++y) {
             const row = rows[y];
-            lastLength = row.stringLength;
+            lastLength = row.text.length;
             this.i += lastLength;
         }
         this.y = rows.length - 1;
@@ -85,7 +85,7 @@ export class Cursor implements ICursor {
             if (this.x < 0) {
                 --this.y;
                 const row = rows[this.y];
-                this.x = row.stringLength - 1;
+                this.x = row.text.length - 1;
             }
             else if (!skipAdjust) {
                 this.adjust(rows[this.y], -1);
@@ -114,11 +114,11 @@ export class Cursor implements ICursor {
     right(rows: readonly IRow[], skipAdjust = false) {
         const row = rows[this.y];
         if (this.y < rows.length - 1
-            || this.x < row.stringLength) {
+            || this.x < row.text.length) {
             ++this.i;
             ++this.x;
             if (this.y < rows.length - 1
-                && this.x === row.stringLength) {
+                && this.x === row.text.length) {
                 this.x = 0;
                 ++this.y;
             }
@@ -130,17 +130,17 @@ export class Cursor implements ICursor {
 
     skipRight(rows: readonly Row[]) {
         const row = rows[this.y];
-        if (this.x < row.stringLength - 1) {
+        if (this.x < row.text.length - 1) {
             const x = this.x + 1,
                 subrow = row.substring(x),
                 m = subrow.match(/\w+/),
                 dx = m
                     ? (m.index + m[0].length + 1)
-                    : (row.stringLength - this.x);
+                    : (row.text.length - this.x);
             this.i += dx;
             this.x += dx;
             if (this.x > 0
-                && this.x === row.stringLength
+                && this.x === row.text.length
                 && this.y < rows.length - 1) {
                 --this.x;
                 --this.i;
@@ -159,7 +159,7 @@ export class Cursor implements ICursor {
 
     end(rows: readonly IRow[]) {
         const row = rows[this.y];
-        let dx = row.stringLength - this.x;
+        let dx = row.text.length - this.x;
         if (this.y < rows.length - 1) {
             --dx;
         }
@@ -171,9 +171,9 @@ export class Cursor implements ICursor {
         if (this.y > 0) {
             --this.y;
             const row = rows[this.y],
-                dx = Math.min(0, row.stringLength - this.x - 1);
+                dx = Math.min(0, row.text.length - this.x - 1);
             this.x += dx;
-            this.i -= row.stringLength - dx;
+            this.i -= row.text.length - dx;
             if (!skipAdjust) {
                 this.adjust(rows[this.y], 1);
             }
@@ -184,11 +184,11 @@ export class Cursor implements ICursor {
         if (this.y < rows.length - 1) {
             const prevRow = rows[this.y];
             ++this.y;
-            this.i += prevRow.stringLength;
+            this.i += prevRow.text.length;
 
             const row = rows[this.y];
-            if (this.x >= row.stringLength) {
-                let dx = this.x - row.stringLength;
+            if (this.x >= row.text.length) {
+                let dx = this.x - row.text.length;
                 if (this.y < rows.length - 1) {
                     ++dx;
                 }
@@ -239,17 +239,18 @@ export class Cursor implements ICursor {
         y = Math.floor(y);
         this.y = Math.max(0, Math.min(rows.length - 1, y));
         const row = rows[this.y];
-        this.x = Math.max(0, Math.min(row.stringLength, x));
+        this.x = Math.max(0, Math.min(row.text.length, x));
         this.i = this.x;
         for (let i = 0; i < this.y; ++i) {
-            this.i += rows[i].stringLength;
+            this.i += rows[i].text.length;
         }
         if (this.x > 0
-            && this.x === row.stringLength
+            && this.x === row.text.length
             && this.y < rows.length - 1) {
             --this.x;
             --this.i;
         }
+
         this.adjust(rows[this.y], 1);
     }
 
@@ -260,12 +261,12 @@ export class Cursor implements ICursor {
         this.y = 0;
         let total = 0,
             row = rows[this.y];
-        while (this.x > row.stringLength) {
-            this.x -= row.stringLength;
-            total += row.stringLength;
+        while (this.x > row.text.length) {
+            this.x -= row.text.length;
+            total += row.text.length;
             if (this.y >= rows.length - 1) {
                 this.i = total;
-                this.x = row.stringLength;
+                this.x = row.text.length;
                 break;
             }
             ++this.y;
@@ -273,7 +274,7 @@ export class Cursor implements ICursor {
         }
 
         if (this.y < rows.length - 1
-            && this.x === row.stringLength) {
+            && this.x === row.text.length) {
             this.x = 0;
             ++this.y;
         }

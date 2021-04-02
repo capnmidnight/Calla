@@ -4,7 +4,7 @@ import { makeFont } from "kudzu/graphics2d/fonts";
 import { Point } from "kudzu/graphics2d/Point";
 import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
-import { CanvasTypes, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
+import { CanvasTypes, createCanvas, createUtilityCanvas, isHTMLCanvas, setContextSize } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
 import { Canvas, elementClearChildren } from "kudzu/html/tags";
@@ -18,6 +18,7 @@ import {
 import { FinalTokenType, Token } from "./Grammars/Token";
 import { LayerType } from "./Layers/BaseLayer";
 import { ILayer, Layer } from "./Layers/Layer";
+import { LayerWorkerClient } from "./Layers/LayerWorkerClient";
 import {
     MacOS, Windows
 } from "./os";
@@ -78,6 +79,8 @@ export interface PrimroseOptions {
     element: HTMLElement;
     width: number;
     height: number;
+    workerScript: string;
+    minWorkerScript: string;
 }
 
 function isPrimroseOption(key: string): key is keyof PrimroseOptions {
@@ -93,7 +96,9 @@ function isPrimroseOption(key: string): key is keyof PrimroseOptions {
         || key === "scaleFactor"
         || key === "element"
         || key === "width"
-        || key === "height";
+        || key === "height"
+        || key === "workerScript"
+        || key === "minWorkerScript";
 }
 
 //>>>>>>>>>> PRIVATE STATIC FIELDS >>>>>>>>>>
@@ -132,7 +137,7 @@ export class Primrose extends TypedEventBase<{
     change: TypedEvent<"change">;
     update: TypedEvent<"update">;
 }> {
-    private longPress: TimedEvent;
+    private longPress: TimedEvent = null;
     private tx = 0;
     private ty = 0;
     private vibX = 0;
@@ -143,7 +148,6 @@ export class Primrose extends TypedEventBase<{
     private scrolling = false;
     private lastScrollDX: number = null;
     private lastScrollDY: number = null;
-    private canRender = false;
 
     private _value = "";
     private _padding = 0;
@@ -174,7 +178,10 @@ export class Primrose extends TypedEventBase<{
     private lastCharacterHeight: number = null;
     private lastCharacterWidth: number = null;
     private lastFrontCursor: number = null;
-    private lastGridBounds: string = null;
+    private lastGridBoundsX: number = null;
+    private lastGridBoundsY: number = null;
+    private lastGridBoundsWidth: number = null;
+    private lastGridBoundsHeight: number = null;
     private lastBackCursor: number = null;
     private lastThemeName: string = null;
     private lastPadding: number = null;
@@ -189,7 +196,7 @@ export class Primrose extends TypedEventBase<{
     private rows = [Row.emptyRow(0, 0, 0)];
     private scroll = new Point();
     private pointer = new Point();
-    private character = new Rectangle();
+    private character = new Size();
     private bottomRightGutter = new Size();
     private gridBounds = new Rectangle();
     private backCursor = new Cursor();
@@ -202,15 +209,15 @@ export class Primrose extends TypedEventBase<{
     private focusEvt = new TypedEvent("focus");
     private changeEvt = new TypedEvent("change");
     private updateEvt = new TypedEvent("update");
-    private context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
-    private fg: ILayer = new Layer();
-    private bg: ILayer = new Layer();
-    private trim: ILayer = new Layer();
-    private keyDownCommands: Map<string, () => void>;
-    private keyPressCommands: Map<string, () => void>;
+    private context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D = null;
+    private fg: ILayer = null;
+    private bg: ILayer = null;
+    private trim: ILayer = null;
+    private keyDownCommands: Map<string, () => void> = null;
+    private keyPressCommands: Map<string, () => void> = null;
 
-    mouse: PointerEventCollection;
-    touch: PointerEventCollection;
+    mouse: PointerEventCollection = null;
+    touch: PointerEventCollection = null;
 
     constructor(options: Partial<PrimroseOptions>) {
         super();
@@ -773,12 +780,6 @@ export class Primrose extends TypedEventBase<{
         this.context.imageSmoothingEnabled = true;
         this.context.textBaseline = "top";
 
-        const task = Promise.all([
-            this.fg.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.foreground),
-            this.bg.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.background),
-            this.trim.createLayer(createUtilityCanvas(this.canv.width, this.canv.height), LayerType.trim)
-        ]);
-
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
 
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
@@ -801,29 +802,45 @@ export class Primrose extends TypedEventBase<{
 
         Object.seal(this);
 
-        if (!isString(options.language)) {
-            this.language = options.language;
-        }
-
-        this.readOnly = options.readOnly;
-        this.multiLine = options.multiLine;
-        this.wordWrap = options.wordWrap;
-        this.showScrollBars = options.scrollBars;
-        this.showLineNumbers = options.lineNumbers;
-        this.padding = options.padding;
-        this.fontSize = options.fontSize;
-        this.fontFamily = options.fontFamily;
-        this.scaleFactor = options.scaleFactor;
-        this.value = currentValue;
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
 
         // This is done last so that controls that have errored 
         // out during their setup don't get added to the control
         // manager.
         Primrose.add(this.element, this);
-        task.then(() => {
-            this.canRender = true;
-            this.doRender();
+
+        if (options.workerScript || options.minWorkerScript) {
+            this.fg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
+            this.bg = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
+            this.trim = new LayerWorkerClient(options.workerScript, options.minWorkerScript, 1);
+        }
+        else {
+            this.fg = new Layer();
+            this.bg = new Layer();
+            this.trim = new Layer();
+        }
+
+        Promise.all([
+            this.fg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.foreground),
+            this.bg.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.background),
+            this.trim.createLayer(createCanvas(this.canv.width, this.canv.height), LayerType.trim)
+        ]).then(() => {
+            if (!isString(options.language)) {
+                this.language = options.language;
+            }
+
+            this.readOnly = options.readOnly;
+            this.multiLine = options.multiLine;
+            this.wordWrap = options.wordWrap;
+            this.showScrollBars = options.scrollBars;
+            this.showLineNumbers = options.lineNumbers;
+            this.padding = options.padding;
+            this.fontSize = options.fontSize;
+            this.fontFamily = options.fontFamily;
+            this.scaleFactor = options.scaleFactor;
+            this.value = currentValue;
+
+            this.render();
         });
     }
 
@@ -908,9 +925,9 @@ export class Primrose extends TypedEventBase<{
     private async refreshBuffers() {
         this.resized = true;
         await Promise.all([
-            this.fg.setSize(this.canv.width, this.canv.height, this.scaleFactor),
-            this.bg.setSize(this.canv.width, this.canv.height, this.scaleFactor),
-            this.trim.setSize(this.canv.width, this.canv.height, this.scaleFactor)
+            this.fg.setSize(this.width, this.height, this.scaleFactor),
+            this.bg.setSize(this.width, this.height, this.scaleFactor),
+            this.trim.setSize(this.width, this.height, this.scaleFactor)
         ]);
         this.refreshAllTokens();
     }
@@ -938,7 +955,7 @@ export class Primrose extends TypedEventBase<{
         else if (onBottom && !onLeft) {
             let maxWidth = 0;
             for (let dy = 0; dy < this.rows.length; ++dy) {
-                maxWidth = Math.max(maxWidth, this.rows[dy].stringLength);
+                maxWidth = Math.max(maxWidth, this.rows[dy].text.length);
             }
             const scrollWidth = maxWidth - this.gridBounds.width;
             if (gx >= 0 && scrollWidth >= 0) {
@@ -1002,134 +1019,144 @@ export class Primrose extends TypedEventBase<{
     }
 
     //>>>>>>>>>> RENDERING >>>>>>>>>>
+
     private render() {
-        if (this.canRender) {
-            requestAnimationFrame(() => this.doRender());
-        }
+        this.doRender();
     }
 
     private async doRender() {
-        if (this.theme) {
-            const textChanged = this.lastText !== this.value,
-                focusChanged = this.focused !== this.lastFocused,
-                fontChanged = this.context.font !== this.lastFont,
-                paddingChanged = this.padding !== this.lastPadding,
-                themeChanged = this.theme.name !== this.lastThemeName,
-                boundsChanged = this.gridBounds.toString() !== this.lastGridBounds,
-                characterWidthChanged = this.character.width !== this.lastCharacterWidth,
-                characterHeightChanged = this.character.height !== this.lastCharacterHeight,
+        const textChanged = this.lastText !== this.value,
+            focusChanged = this.focused !== this.lastFocused,
+            fontChanged = this.context.font !== this.lastFont,
+            paddingChanged = this.padding !== this.lastPadding,
+            themeChanged = this.theme.name !== this.lastThemeName,
 
-                cursorChanged = this.frontCursor.i !== this.lastFrontCursor
-                    || this.backCursor.i !== this.lastBackCursor,
+            boundsXChanged = this.gridBounds.x !== this.lastGridBoundsX,
+            boundsYChanged = this.gridBounds.y !== this.lastGridBoundsY,
+            boundsWidthChanged = this.gridBounds.width !== this.lastGridBoundsWidth,
+            boundsHeightChanged = this.gridBounds.height !== this.lastGridBoundsHeight,
+            boundsChanged = boundsXChanged
+                || boundsYChanged
+                || boundsWidthChanged
+                || boundsHeightChanged,
 
-                scrollChanged = this.scroll.x !== this.lastScrollX
-                    || this.scroll.y !== this.lastScrollY,
+            characterWidthChanged = this.character.width !== this.lastCharacterWidth,
+            characterHeightChanged = this.character.height !== this.lastCharacterHeight,
+            characterSizeChanged = characterWidthChanged
+                || characterHeightChanged,
 
-                layoutChanged = this.resized
-                    || boundsChanged
-                    || textChanged
-                    || characterWidthChanged
-                    || characterHeightChanged
-                    || paddingChanged
-                    || scrollChanged
-                    || themeChanged,
+            cursorChanged = this.frontCursor.i !== this.lastFrontCursor
+                || this.backCursor.i !== this.lastBackCursor,
 
-                backgroundChanged = layoutChanged
-                    || cursorChanged,
+            scrollChanged = this.scroll.x !== this.lastScrollX
+                || this.scroll.y !== this.lastScrollY,
 
-                foregroundChanged = layoutChanged
-                    || fontChanged,
+            layoutChanged = this.resized
+                || boundsChanged
+                || textChanged
+                || characterSizeChanged
+                || paddingChanged
+                || scrollChanged
+                || themeChanged,
 
-                trimChanged = layoutChanged
-                    || focusChanged;
+            backgroundChanged = layoutChanged
+                || cursorChanged,
 
-            const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                maxCursor = Cursor.max(this.frontCursor, this.backCursor),
-                tasks = new Array<Promise<void>>();
-                
-            if (backgroundChanged) {
-                tasks.push(this.bg.render(
-                    this.theme,
-                    minCursor,
-                    maxCursor,
-                    this.gridBounds,
-                    this.scroll,
-                    this.character,
-                    this.padding,
-                    this.focused,
-                    this.rows,
-                    this.fontFamily,
-                    this.fontSize,
-                    this.showLineNumbers,
-                    this.lineCountWidth,
-                    this.showScrollBars,
-                    vScrollWidth,
-                    this.wordWrap));
-            }
-            if (foregroundChanged) {
-                tasks.push(this.fg.render(
-                    this.theme,
-                    minCursor,
-                    maxCursor,
-                    this.gridBounds,
-                    this.scroll,
-                    this.character,
-                    this.padding,
-                    this.focused,
-                    this.rows,
-                    this.fontFamily,
-                    this.fontSize,
-                    this.showLineNumbers,
-                    this.lineCountWidth,
-                    this.showScrollBars,
-                    vScrollWidth,
-                    this.wordWrap));
-            }
-            if (trimChanged) {
-                tasks.push(this.trim.render(
-                    this.theme,
-                    minCursor,
-                    maxCursor,
-                    this.gridBounds,
-                    this.scroll,
-                    this.character,
-                    this.padding,
-                    this.focused,
-                    this.rows,
-                    this.fontFamily,
-                    this.fontSize,
-                    this.showLineNumbers,
-                    this.lineCountWidth,
-                    this.showScrollBars,
-                    vScrollWidth,
-                    this.wordWrap));
-            }
+            foregroundChanged = layoutChanged
+                || fontChanged,
 
-            await Promise.all(tasks);
+            trimChanged = layoutChanged
+                || focusChanged;
 
-            this.context.clearRect(0, 0, this.canv.width, this.canv.height);
-            this.context.save();
-            this.context.translate(this.vibX, this.vibY);
-            this.context.drawImage(this.bg.canvas, 0, 0);
-            this.context.drawImage(this.fg.canvas, 0, 0);
-            this.context.drawImage(this.trim.canvas, 0, 0);
-            this.context.restore();
+        const minCursor = Cursor.min(this.frontCursor, this.backCursor),
+            maxCursor = Cursor.max(this.frontCursor, this.backCursor),
+            tasks = new Array<Promise<void>>();
 
-            this.lastGridBounds = this.gridBounds.toString();
-            this.lastText = this.value;
-            this.lastCharacterWidth = this.character.width;
-            this.lastCharacterHeight = this.character.height;
-            this.lastPadding = this.padding;
-            this.lastFrontCursor = this.frontCursor.i;
-            this.lastBackCursor = this.backCursor.i;
-            this.lastFocused = this.focused;
-            this.lastFont = this.context.font;
-            this.lastThemeName = this.theme.name;
-            this.lastScrollX = this.scroll.x;
-            this.lastScrollY = this.scroll.y;
-            this.resized = false;
-            this.dispatchEvent(this.updateEvt);
+        if (backgroundChanged) {
+            tasks.push(this.bg.render(
+                this.theme,
+                minCursor,
+                maxCursor,
+                this.gridBounds,
+                this.scroll,
+                this.character,
+                this.padding,
+                this.focused,
+                this.rows,
+                this.fontFamily,
+                this.fontSize,
+                this.showLineNumbers,
+                this.lineCountWidth,
+                this.showScrollBars,
+                vScrollWidth,
+                this.wordWrap));
         }
+        if (foregroundChanged) {
+            tasks.push(this.fg.render(
+                this.theme,
+                minCursor,
+                maxCursor,
+                this.gridBounds,
+                this.scroll,
+                this.character,
+                this.padding,
+                this.focused,
+                this.rows,
+                this.fontFamily,
+                this.fontSize,
+                this.showLineNumbers,
+                this.lineCountWidth,
+                this.showScrollBars,
+                vScrollWidth,
+                this.wordWrap));
+        }
+        if (trimChanged) {
+            tasks.push(this.trim.render(
+                this.theme,
+                minCursor,
+                maxCursor,
+                this.gridBounds,
+                this.scroll,
+                this.character,
+                this.padding,
+                this.focused,
+                this.rows,
+                this.fontFamily,
+                this.fontSize,
+                this.showLineNumbers,
+                this.lineCountWidth,
+                this.showScrollBars,
+                vScrollWidth,
+                this.wordWrap));
+        }
+
+        await Promise.all(tasks);
+
+        this.context.clearRect(0, 0, this.canv.width, this.canv.height);
+        this.context.save();
+        this.context.translate(this.vibX, this.vibY);
+        this.context.drawImage(this.bg.canvas, 0, 0);
+        this.context.drawImage(this.fg.canvas, 0, 0);
+        this.context.drawImage(this.trim.canvas, 0, 0);
+        this.context.restore();
+
+        this.lastGridBoundsX = this.gridBounds.x;
+        this.lastGridBoundsY = this.gridBounds.y;
+        this.lastGridBoundsWidth = this.gridBounds.width;
+        this.lastGridBoundsHeight = this.gridBounds.height;
+        this.lastText = this.value;
+        this.lastCharacterWidth = this.character.width;
+        this.lastCharacterHeight = this.character.height;
+        this.lastPadding = this.padding;
+        this.lastFrontCursor = this.frontCursor.i;
+        this.lastBackCursor = this.backCursor.i;
+        this.lastFocused = this.focused;
+        this.lastFont = this.context.font;
+        this.lastThemeName = this.theme.name;
+        this.lastScrollX = this.scroll.x;
+        this.lastScrollY = this.scroll.y;
+        this.resized = false;
+        this.dispatchEvent(this.updateEvt);
     }
     //<<<<<<<<<< RENDERING <<<<<<<<<<
 
@@ -1290,7 +1317,7 @@ export class Primrose extends TypedEventBase<{
             row.startStringIndex = currentStringIndex;
             row.startTokenIndex += currentTokenIndex;
 
-            currentStringIndex += row.stringLength;
+            currentStringIndex += row.text.length;
             currentTokenIndex += row.numTokens;
 
             if (row.tokens.length > 0) {
@@ -1407,8 +1434,11 @@ export class Primrose extends TypedEventBase<{
             if (!this.isInDocument) {
                 console.warn("Can't automatically resize a canvas that is not in the DOM tree");
             }
-            else if (setContextSize(this.context, this.canv.clientWidth, this.canv.clientHeight, this.scaleFactor)) {
-                this.refreshBuffers();
+            else {
+                this.scaleFactor = devicePixelRatio;
+                if (setContextSize(this.context, this.canv.clientWidth, this.canv.clientHeight, this.scaleFactor)) {
+                    this.refreshBuffers();
+                }
             }
         }
     }

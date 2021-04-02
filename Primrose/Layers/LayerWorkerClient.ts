@@ -13,16 +13,17 @@ export class LayerWorkerClient
     extends WorkerClient
     implements ILayer {
 
-    private _canvas: OffscreenCanvas;
+    private _canvas: CanvasTypes;
     get canvas(): CanvasTypes {
         return this._canvas;
     }
 
     createLayer(canvas: CanvasTypes, type: LayerType): Promise<void> {
-        this._canvas = isOffscreenCanvas(canvas)
+        this._canvas = canvas;
+        const canv = isOffscreenCanvas(canvas)
             ? canvas
             : canvas.transferControlToOffscreen();
-        return this.execute("createLayer", [this._canvas, type], [this._canvas]);
+        return this.execute("createLayer", [canv, type], [canv]);
     }
 
     setSize(w: number, h: number, scaleFactor: number): Promise<void> {

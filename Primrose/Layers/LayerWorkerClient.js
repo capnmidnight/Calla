@@ -5,10 +5,11 @@ export class LayerWorkerClient extends WorkerClient {
         return this._canvas;
     }
     createLayer(canvas, type) {
-        this._canvas = isOffscreenCanvas(canvas)
+        this._canvas = canvas;
+        const canv = isOffscreenCanvas(canvas)
             ? canvas
             : canvas.transferControlToOffscreen();
-        return this.execute("createLayer", [this._canvas, type], [this._canvas]);
+        return this.execute("createLayer", [canv, type], [canv]);
     }
     setSize(w, h, scaleFactor) {
         return this.execute("setSize", [w, h, scaleFactor]);

@@ -26,6 +26,7 @@ export class BackgroundLayer extends BaseLayer {
         _showScrollBars: boolean,
         _vScrollWidth: number,
         _wordWrap: boolean) {
+
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (theme.regular.backColor) {
             this.g.fillStyle = theme.regular.backColor;
@@ -35,7 +36,7 @@ export class BackgroundLayer extends BaseLayer {
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);
         this.g.translate(
-            (gridBounds.x - scroll.x) * character.width + padding,
+            (gridBounds.point.x - scroll.x) * character.width + padding,
             -scroll.y * character.height + padding);
 
 
@@ -44,14 +45,14 @@ export class BackgroundLayer extends BaseLayer {
             this.fillRect(character, theme.currentRowBackColor ||
                 DefaultTheme.currentRowBackColor,
                 0, minCursor.y,
-                gridBounds.width,
+                gridBounds.size.width,
                 maxCursor.y - minCursor.y + 1);
         }
 
         const minY = scroll.y | 0,
-            maxY = minY + gridBounds.height,
+            maxY = minY + gridBounds.size.height,
             minX = scroll.x | 0,
-            maxX = minX + gridBounds.width;
+            maxX = minX + gridBounds.size.width;
         this.tokenFront.setXY(rows, 0, minY);
         this.tokenBack.copy(this.tokenFront);
         for (let y = minY; y <= maxY && y < rows.length; ++y) {

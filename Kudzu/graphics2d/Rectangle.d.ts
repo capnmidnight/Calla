@@ -1,10 +1,8 @@
-import { Point } from "./point.js";
-import { Size } from "./Size";
+import { IPoint, Point } from "./point.js";
+import { ISize, Size } from "./Size";
 export interface IRectangle {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    point: IPoint;
+    size: ISize;
 }
 export declare class Rectangle implements IRectangle {
     point: Point;

@@ -29,8 +29,7 @@ export function makeFont(style: FontDescription): string {
     fontParts.push(style.fontSize + "px");
     fontParts.push(style.fontFamily);
 
-    const font = fontParts.join(" ");
-    return font;
+    return fontParts.join(" ");
 }
 
 interface FontFace {

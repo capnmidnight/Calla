@@ -29,6 +29,8 @@ export interface PrimroseOptions {
     element: HTMLElement;
     width: number;
     height: number;
+    workerScript: string;
+    minWorkerScript: string;
 }
 export declare class Primrose extends TypedEventBase<{
     out: TypedEvent<"out">;
@@ -48,7 +50,6 @@ export declare class Primrose extends TypedEventBase<{
     private scrolling;
     private lastScrollDX;
     private lastScrollDY;
-    private canRender;
     private _value;
     private _padding;
     private _theme;
@@ -77,7 +78,10 @@ export declare class Primrose extends TypedEventBase<{
     private lastCharacterHeight;
     private lastCharacterWidth;
     private lastFrontCursor;
-    private lastGridBounds;
+    private lastGridBoundsX;
+    private lastGridBoundsY;
+    private lastGridBoundsWidth;
+    private lastGridBoundsHeight;
     private lastBackCursor;
     private lastThemeName;
     private lastPadding;

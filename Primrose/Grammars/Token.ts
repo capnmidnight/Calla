@@ -39,18 +39,13 @@ export interface IToken {
 
 // with fields linking it back to its source.
 export class Token implements IToken {
+    length: number;
+
     constructor(public value: string,
         public type: TokenType,
         public startStringIndex: number = 0) {
+        this.length = value.length;
         Object.seal(this);
-    }
-
-    get length() {
-        return this.value.length;
-    }
-
-    get endStringIndex() {
-        return this.startStringIndex + this.length;
     }
 
     clone() {

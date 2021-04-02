@@ -26,11 +26,8 @@ export class Row {
     substring(x, y) {
         return this.text.substring(x, y);
     }
-    get stringLength() {
-        return this.text.length;
-    }
     get endStringIndex() {
-        return this.startStringIndex + this.stringLength;
+        return this.startStringIndex + this.text.length;
     }
     get numTokens() {
         return this.tokens.length;

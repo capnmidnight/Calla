@@ -44,12 +44,12 @@ export class TrimLayer extends BaseLayer {
             this.fillRect(character, theme.selectedBackColor ||
                 DefaultTheme.selectedBackColor,
                 0, 0,
-                gridBounds.x, width - padding * 2);
+                gridBounds.point.x, width - padding * 2);
             this.strokeRect(character,
                 theme.regular.foreColor ||
                 DefaultTheme.regular.foreColor,
                 0, 0,
-                gridBounds.x, height - padding * 2);
+                gridBounds.point.x, height - padding * 2);
         }
 
         let maxRowWidth = 2;
@@ -58,12 +58,12 @@ export class TrimLayer extends BaseLayer {
             this.g.translate((lineCountWidth - 0.5) * character.width, -scroll.y * character.height);
             let lastLineNumber = -1;
             const minY = scroll.y | 0,
-                maxY = minY + gridBounds.height;
+                maxY = minY + gridBounds.size.height;
             this.tokenFront.setXY(rows, 0, minY);
             this.tokenBack.copy(this.tokenFront);
             for (let y = minY; y <= maxY && y < rows.length; ++y) {
                 const row = rows[y];
-                maxRowWidth = Math.max(maxRowWidth, row.stringLength);
+                maxRowWidth = Math.max(maxRowWidth, row.text.length);
                 if (showLineNumbers) {
                     // draw the left gutter
                     if (row.lineNumber > lastLineNumber) {
@@ -89,10 +89,10 @@ export class TrimLayer extends BaseLayer {
                 DefaultTheme.selectedBackColor;
 
             // horizontal
-            if (!wordWrap && maxRowWidth > gridBounds.width) {
-                const drawWidth = gridBounds.width * character.width - padding,
-                    scrollX = (scroll.x * drawWidth) / maxRowWidth + gridBounds.x * character.width,
-                    scrollBarWidth = drawWidth * (gridBounds.width / maxRowWidth),
+            if (!wordWrap && maxRowWidth > gridBounds.size.width) {
+                const drawWidth = gridBounds.size.width * character.width - padding,
+                    scrollX = (scroll.x * drawWidth) / maxRowWidth + gridBounds.point.x * character.width,
+                    scrollBarWidth = drawWidth * (gridBounds.size.width / maxRowWidth),
                     by = height - character.height - padding,
                     bw = Math.max(character.width, scrollBarWidth);
                 this.g.fillRect(scrollX, by, bw, character.height);
@@ -100,10 +100,10 @@ export class TrimLayer extends BaseLayer {
             }
 
             //vertical
-            if (rows.length > gridBounds.height) {
-                const drawHeight = gridBounds.height * character.height,
+            if (rows.length > gridBounds.size.height) {
+                const drawHeight = gridBounds.size.height * character.height,
                     scrollY = (scroll.y * drawHeight) / rows.length,
-                    scrollBarHeight = drawHeight * (gridBounds.height / rows.length),
+                    scrollBarHeight = drawHeight * (gridBounds.size.height / rows.length),
                     bx = width - vScrollWidth * character.width - 2 * padding,
                     bw = vScrollWidth * character.width,
                     bh = Math.max(character.height, scrollBarHeight);

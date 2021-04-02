@@ -1,7 +1,7 @@
 import type { IPoint } from "kudzu/graphics2d/Point";
 import type { IRectangle } from "kudzu/graphics2d/Rectangle";
 import type { ISize } from "kudzu/graphics2d/Size";
-import type { CanvasTypes } from "kudzu/html/canvas";
+import { CanvasTypes } from "kudzu/html/canvas";
 import type { ICursor } from "../Cursor";
 import type { IRow } from "../Row";
 import type { Theme } from "../themes";

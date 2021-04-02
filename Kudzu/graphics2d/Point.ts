@@ -1,5 +1,6 @@
 import { isDefined } from "../typeChecks";
 import type { Rectangle } from "./Rectangle";
+import { Size } from "./Size";
 
 export interface IPoint {
     x: number;
@@ -23,7 +24,7 @@ export class Point implements IPoint {
         }
     }
 
-    toCell(character: Rectangle, scroll: Point, gridBounds: Rectangle) {
+    toCell(character: Size, scroll: Point, gridBounds: Rectangle) {
         this.x = Math.round(this.x / character.width) + scroll.x - gridBounds.x;
         this.y = Math.floor((this.y / character.height) - 0.25) + scroll.y;
     }

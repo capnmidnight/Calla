@@ -10,13 +10,13 @@ export class BackgroundLayer extends BaseLayer {
         }
         this.g.save();
         this.g.scale(this.scaleFactor, this.scaleFactor);
-        this.g.translate((gridBounds.x - scroll.x) * character.width + padding, -scroll.y * character.height + padding);
+        this.g.translate((gridBounds.point.x - scroll.x) * character.width + padding, -scroll.y * character.height + padding);
         // draw the current row highlighter
         if (focused) {
             this.fillRect(character, theme.currentRowBackColor ||
-                DefaultTheme.currentRowBackColor, 0, minCursor.y, gridBounds.width, maxCursor.y - minCursor.y + 1);
+                DefaultTheme.currentRowBackColor, 0, minCursor.y, gridBounds.size.width, maxCursor.y - minCursor.y + 1);
         }
-        const minY = scroll.y | 0, maxY = minY + gridBounds.height, minX = scroll.x | 0, maxX = minX + gridBounds.width;
+        const minY = scroll.y | 0, maxY = minY + gridBounds.size.height, minX = scroll.x | 0, maxX = minX + gridBounds.size.width;
         this.tokenFront.setXY(rows, 0, minY);
         this.tokenBack.copy(this.tokenFront);
         for (let y = minY; y <= maxY && y < rows.length; ++y) {
