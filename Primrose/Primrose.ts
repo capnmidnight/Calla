@@ -151,7 +151,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private _padding = 0;
     private _theme = DefaultTheme;
     private _tabWidth = 2;
-    private canv: CanvasTypes = null;
+    private _canvas: CanvasTypes = null;
     private resized = false;
     private _hovered = false;
     private _focused = false;
@@ -589,8 +589,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         };
 
         const setTouchPointer = (touch: Touch) => {
-            if (isHTMLCanvas(this.canv)) {
-                const cb = this.canv.getBoundingClientRect();
+            if (isHTMLCanvas(this.canvas)) {
+                const cb = this.canvas.getBoundingClientRect();
                 this.pointer.set(
                     touch.clientX - cb.left,
                     touch.clientY - cb.top);
@@ -712,22 +712,22 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
 
         if (options.element === null) {
-            this.canv = createUtilityCanvas(options.width, options.height);
+            this._canvas = createUtilityCanvas(options.width, options.height);
         }
         else if (isHTMLCanvas(options.element)) {
-            this._element = this.canv = options.element;
-            elementClearChildren(this.canv);
+            this._element = this._canvas = options.element;
+            elementClearChildren(options.element);
         }
         else {
             this._element = options.element;
             elementClearChildren(this.element);
 
-            this.canv = Canvas(
+            this._canvas = Canvas(
                 styles(
                     width("100%"),
                     height("100%")));
 
-            this.element.appendChild(this.canv);
+            this.element.appendChild(this._canvas);
             this.element.removeAttribute("tabindex");
 
             styles(
@@ -738,8 +738,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
                 .apply(this.element.style);
         }
 
-        if (isHTMLCanvas(this.canv)
-            && this.canv.parentElement !== null
+        if (isHTMLCanvas(this.canvas)
+            && this.canvas.parentElement !== null
             && currentTabIndex === -1) {
             const tabbableElements = Array.from(document.querySelectorAll<HTMLElement>("[tabindex]"));
             for (let tabbableElement of tabbableElements) {
@@ -748,27 +748,27 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             ++currentTabIndex;
         }
 
-        if (isHTMLCanvas(this.canv)
+        if (isHTMLCanvas(this.canvas)
             && this.isInDocument) {
-            this.canv.tabIndex = currentTabIndex;
-            this.canv.style.touchAction = "none";
-            this.canv.addEventListener("focus", () => this.focus());
-            this.canv.addEventListener("blur", () => this.blur());
+            this.canvas.tabIndex = currentTabIndex;
+            this.canvas.style.touchAction = "none";
+            this.canvas.addEventListener("focus", () => this.focus());
+            this.canvas.addEventListener("blur", () => this.blur());
 
-            this.canv.addEventListener("mouseover", readMouseOverEvent);
-            this.canv.addEventListener("mouseout", readMouseOutEvent);
-            this.canv.addEventListener("mousedown", readMouseDownEvent);
-            this.canv.addEventListener("mouseup", readMouseUpEvent);
-            this.canv.addEventListener("mousemove", readMouseMoveEvent);
+            this.canvas.addEventListener("mouseover", readMouseOverEvent);
+            this.canvas.addEventListener("mouseout", readMouseOutEvent);
+            this.canvas.addEventListener("mousedown", readMouseDownEvent);
+            this.canvas.addEventListener("mouseup", readMouseUpEvent);
+            this.canvas.addEventListener("mousemove", readMouseMoveEvent);
 
-            this.canv.addEventListener("touchstart", readTouchStartEvent);
-            this.canv.addEventListener("touchend", readTouchEndEvent);
-            this.canv.addEventListener("touchmove", readTouchMoveEvent);
+            this.canvas.addEventListener("touchstart", readTouchStartEvent);
+            this.canvas.addEventListener("touchend", readTouchEndEvent);
+            this.canvas.addEventListener("touchmove", readTouchMoveEvent);
         }
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
 
         //>>>>>>>>>> SETUP BUFFERS >>>>>>>>>>
-        this.context = this.canv.getContext("2d");
+        this.context = this.canvas.getContext("2d");
         this.context.imageSmoothingEnabled = true;
         this.context.textBaseline = "top";
         //<<<<<<<<<< SETUP BUFFERS <<<<<<<<<<
@@ -799,9 +799,9 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         // manager.
         Primrose.add(this.element, this);
 
-        this.fg = new ForegroundLayer(this.canv.width, this.canv.height);
-        this.bg = new BackgroundLayer(this.canv.width, this.canv.height);
-        this.trim = new TrimLayer(this.canv.width, this.canv.height);
+        this.fg = new ForegroundLayer(this.canvas.width, this.canvas.height);
+        this.bg = new BackgroundLayer(this.canvas.width, this.canvas.height);
+        this.trim = new TrimLayer(this.canvas.width, this.canvas.height);
 
         if (!isString(options.language)) {
             this.language = options.language;
@@ -1088,7 +1088,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
         await Promise.all(tasks);
 
-        this.context.clearRect(0, 0, this.canv.width, this.canv.height);
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.context.save();
         this.context.translate(this.vibX, this.vibY);
         this.context.drawImage(this.bg.canvas, 0, 0);
@@ -1384,13 +1384,13 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// <summary>
     /// </summary>
     resize() {
-        if (isHTMLCanvas(this.canv)) {
+        if (isHTMLCanvas(this.canvas)) {
             if (!this.isInDocument) {
                 console.warn("Can't automatically resize a canvas that is not in the DOM tree");
             }
             else {
                 this.scaleFactor = devicePixelRatio;
-                if (setContextSize(this.context, this.canv.clientWidth, this.canv.clientHeight, this.scaleFactor)) {
+                if (setContextSize(this.context, this.canvas.clientWidth, this.canvas.clientHeight, this.scaleFactor)) {
                     this.refreshBuffers();
                 }
             }
@@ -1514,15 +1514,15 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// Returns `false` if `element` is null. Returns `true` otherwise.
     /// </summary>
     get isInDocument() {
-        return isHTMLCanvas(this.canv)
-            && document.body.contains(this.canv);
+        return isHTMLCanvas(this.canvas)
+            && document.body.contains(this.canvas);
     }
 
     /// <summary>
     /// The canvas to which the editor is rendering text. If the `options.element` value was set to a canvas, that canvas will be returned. Otherwise, the canvas will be the canvas that Primrose created for the control. If `OffscreenCanvas` is not available, the canvas will be an `HTMLCanvasElement`.
     /// </summary>
     get canvas() {
-        return this.canv;
+        return this._canvas;
     }
 
     /// <summary>
@@ -1824,7 +1824,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// The scale-independent width of the editor control.
     /// </summary>
     get width() {
-        return this.canv.width / this.scaleFactor;
+        return this.canvas.width / this.scaleFactor;
     }
 
     set width(w) {
@@ -1835,7 +1835,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// The scale-independent height of the editor control.
     /// </summary>
     get height() {
-        return this.canv.height / this.scaleFactor;
+        return this.canvas.height / this.scaleFactor;
     }
 
     set height(h) {

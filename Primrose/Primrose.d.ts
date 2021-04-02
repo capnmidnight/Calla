@@ -53,7 +53,7 @@ export declare class Primrose extends TypedEventBase<PrimroseEvents> {
     private _padding;
     private _theme;
     private _tabWidth;
-    private canv;
+    private _canvas;
     private resized;
     private _hovered;
     private _focused;
