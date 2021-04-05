@@ -2,18 +2,23 @@ import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { arrayProgress } from "../tasks/arrayProgress";
 import type { progressCallback } from "../tasks/progressCallback";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import {
-    GET_PROPERTY_VALUES_METHOD,
+import type {
+    WorkerClientMessages,
     WorkerClientMethodCallMessage,
     WorkerClientPropertySetMessage,
-    WorkerServerMessages
+    WorkerServerErrorMessage,
+    WorkerServerEventMessage,
+    WorkerServerMessages,
+    WorkerServerProgressMessage,
+    WorkerServerPropertyChangedMessage,
+    WorkerServerPropertyInitializedMessage,
+    WorkerServerReturnMessage
 } from "./WorkerMessages";
 import {
+    GET_PROPERTY_VALUES_METHOD,
     WorkerClientMessageType,
     WorkerServerMessageType
 } from "./WorkerMessages";
-
-export type workerClientCallback<T> = (...params: any[]) => Promise<T>;
 
 interface WorkerClientMessageHandler {
     onProgress: progressCallback;
@@ -102,49 +107,26 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         this.dispatchMessageResponse = (evt: MessageEvent<WorkerServerMessages>) => {
             const data = evt.data;
 
-            // Did this response message match the current invocation?
             if (data.methodName === WorkerServerMessageType.Event) {
-                const evt = new TypedEvent(data.type);
-                this.dispatchEvent(Object.assign(evt, data.data));
+                this.propogateEvent(data);
             }
             else if (data.methodName === WorkerServerMessageType.PropertyInit) {
-                if (this.propertyValues.has(data.propertyName)) {
-                    this.setProperty(
-                        data.propertyName,
-                        this.propertyValues.get(data.propertyName));
-                }
-                else {
-                    this.propertyValues.set(data.propertyName, data.value);
-                }
+                this.propertyInit(data);
             }
             else if (data.methodName === WorkerServerMessageType.Property) {
-                this.propertyValues.set(data.propertyName, data.value);
+                this.propertyChanged(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Progress) {
+                this.progressReport(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Return) {
+                this.methodReturned(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Error) {
+                this.invocationError(data);
             }
             else {
-                const messageHandler = this.messageHandlers.get(data.taskID);
-                const { onProgress, resolve, reject, methodName } = messageHandler;
-
-                if (data.methodName === WorkerServerMessageType.Progress) {
-                    if (isFunction(onProgress)) {
-                        onProgress(data.soFar, data.total, data.msg);
-                    }
-                }
-                else {
-                    // When the invocation is complete, we want to stop listening to the worker
-                    // message channel so we don't eat up processing messages that have no chance
-                    // over pertaining to the invocation.
-                    this.messageHandlers.delete(data.taskID);
-
-                    if (data.methodName === WorkerServerMessageType.Return) {
-                        resolve(data.returnValue);
-                    }
-                    else if (data.methodName === WorkerServerMessageType.Error) {
-                        reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
-                    }
-                    else {
-                        assertNever(data);
-                    }
-                }
+                assertNever(data);
             }
         };
 
@@ -164,6 +146,56 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
 
         const firstWorker = this.workers[0];
         this._ready = this.callMethodOnWorker(firstWorker, this.taskCounter++, GET_PROPERTY_VALUES_METHOD);
+    }
+
+    private propogateEvent(data: WorkerServerEventMessage) {
+        const evt = new TypedEvent(data.type);
+        this.dispatchEvent(Object.assign(evt, data.data));
+    }
+
+    private propertyInit(data: WorkerServerPropertyInitializedMessage) {
+        if (this.propertyValues.has(data.propertyName)) {
+            this.setProperty(
+                data.propertyName,
+                this.propertyValues.get(data.propertyName));
+        }
+        else {
+            this.propertyValues.set(data.propertyName, data.value);
+        }
+    }
+
+    private propertyChanged(data: WorkerServerPropertyChangedMessage) {
+        this.propertyValues.set(data.propertyName, data.value);
+    }
+
+    private progressReport(data: WorkerServerProgressMessage) {
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { onProgress } = messageHandler;
+        if (isFunction(onProgress)) {
+            onProgress(data.soFar, data.total, data.msg);
+        }
+    }
+
+    private methodReturned(data: WorkerServerReturnMessage) {
+        // When the invocation is complete, we want to stop listening to the worker
+        // message channel so we don't eat up processing messages that have no chance
+        // over pertaining to the invocation.
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { resolve } = messageHandler;
+
+        this.messageHandlers.delete(data.taskID);
+        resolve(data.returnValue);
+    }
+
+    private invocationError(data: WorkerServerErrorMessage) {
+        // When the invocation has errored, we want to stop listening to the worker
+        // message channel so we don't eat up processing messages that have no chance
+        // over pertaining to the invocation.
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { reject, methodName } = messageHandler;
+
+        this.messageHandlers.delete(data.taskID);
+        reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
     }
 
     get ready() {
@@ -208,7 +240,7 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         };
 
         for (const worker of this.workers) {
-            worker.postMessage(message);
+            this.postMessage(worker, message);
         }
     }
 
@@ -242,13 +274,17 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
                 };
             }
 
-            if (isDefined(transferables)) {
-                worker.postMessage(message, transferables);
-            }
-            else {
-                worker.postMessage(message);
-            }
+            this.postMessage(worker, message, transferables)
         });
+    }
+
+    private postMessage(worker: Worker, message: WorkerClientMessages, transferables?: Transferable[]) {
+        if (isDefined(transferables)) {
+            worker.postMessage(message, transferables);
+        }
+        else {
+            worker.postMessage(message);
+        }
     }
 
     /**

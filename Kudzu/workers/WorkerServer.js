@@ -1,7 +1,6 @@
 import { TypedEvent } from "../events/EventBase";
 import { isArray, isDefined } from "../typeChecks";
-import { GET_PROPERTY_VALUES_METHOD } from "./WorkerMessages";
-import { WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
+import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerServer {
     /**
      * Creates a new worker thread method call listener.
@@ -20,32 +19,48 @@ export class WorkerServer {
         this.self.onmessage = (evt) => {
             const data = evt.data;
             if (data.type === WorkerClientMessageType.PropertySet) {
-                const prop = this.properties.get(data.propertyName);
-                prop.set(data.value);
+                this.setProperty(data);
             }
             else {
-                const method = this.methods.get(data.methodName);
-                if (method) {
-                    try {
-                        if (isArray(data.params)) {
-                            method(data.taskID, ...data.params);
-                        }
-                        else if (isDefined(data.params)) {
-                            method(data.taskID, data.params);
-                        }
-                        else {
-                            method(data.taskID);
-                        }
-                    }
-                    catch (exp) {
-                        this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
-                    }
-                }
-                else {
-                    this.onError(data.taskID, "method not found: " + data.methodName);
-                }
+                this.callMethod(data);
             }
         };
+    }
+    setProperty(data) {
+        const prop = this.properties.get(data.propertyName);
+        if (prop) {
+            try {
+                prop.set(data.value);
+            }
+            catch (exp) {
+                this.onError(data.taskID, `property invocation error: ${data.propertyName}(${exp.message})`);
+            }
+        }
+        else {
+            this.onError(data.taskID, "property not found: " + data.propertyName);
+        }
+    }
+    callMethod(data) {
+        const method = this.methods.get(data.methodName);
+        if (method) {
+            try {
+                if (isArray(data.params)) {
+                    method(data.taskID, ...data.params);
+                }
+                else if (isDefined(data.params)) {
+                    method(data.taskID, data.params);
+                }
+                else {
+                    method(data.taskID);
+                }
+            }
+            catch (exp) {
+                this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
+            }
+        }
+        else {
+            this.onError(data.taskID, "method not found: " + data.methodName);
+        }
     }
     postMessage(message, transferables) {
         if (isDefined(transferables)) {

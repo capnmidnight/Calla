@@ -1,6 +1,5 @@
 import { TypedEventBase } from "../events/EventBase";
 import type { progressCallback } from "../tasks/progressCallback";
-export declare type workerClientCallback<T> = (...params: any[]) => Promise<T>;
 export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported: boolean;
     private _script;
@@ -41,6 +40,12 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      */
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
+    private propogateEvent;
+    private propertyInit;
+    private propertyChanged;
+    private progressReport;
+    private methodReturned;
+    private invocationError;
     get ready(): Promise<void>;
     get isDedicated(): boolean;
     popWorker(): Worker;
@@ -53,6 +58,7 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     protected setProperty<T>(propertyName: string, value: T): void;
     protected getProperty<T>(propertyName: string): T;
     private callMethodOnWorker;
+    private postMessage;
     /**
      * Execute a method on a round-robin selected worker thread.
      * @param methodName - the name of the method to execute.

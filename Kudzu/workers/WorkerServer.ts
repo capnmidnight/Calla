@@ -1,8 +1,9 @@
 import { EventBase, TypedEvent } from "../events/EventBase";
 import { isArray, isDefined } from "../typeChecks";
-import {
-    GET_PROPERTY_VALUES_METHOD,
+import type {
     WorkerClientMessages,
+    WorkerClientMethodCallMessage,
+    WorkerClientPropertySetMessage,
     WorkerServerErrorMessage,
     WorkerServerEventMessage,
     WorkerServerMessages,
@@ -12,13 +13,14 @@ import {
     WorkerServerReturnMessage
 } from "./WorkerMessages";
 import {
+    GET_PROPERTY_VALUES_METHOD,
     WorkerClientMessageType,
     WorkerServerMessageType
 } from "./WorkerMessages";
 
-export type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
+type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
 
-export type createTransferableCallback<T> = (returnValue: T) => Transferable[];
+type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 
 export class WorkerServer {
     private methods = new Map<string, workerServerMethod>();
@@ -40,32 +42,50 @@ export class WorkerServer {
             const data = evt.data;
 
             if (data.type === WorkerClientMessageType.PropertySet) {
-                const prop = this.properties.get(data.propertyName);
-                prop.set(data.value);
+                this.setProperty(data);
             }
             else {
-                const method = this.methods.get(data.methodName);
-                if (method) {
-                    try {
-                        if (isArray(data.params)) {
-                            method(data.taskID, ...data.params);
-                        }
-                        else if (isDefined(data.params)) {
-                            method(data.taskID, data.params);
-                        }
-                        else {
-                            method(data.taskID);
-                        }
-                    }
-                    catch (exp) {
-                        this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
-                    }
-                }
-                else {
-                    this.onError(data.taskID, "method not found: " + data.methodName);
-                }
+                this.callMethod(data);
             }
         };
+    }
+
+    private setProperty(data: WorkerClientPropertySetMessage) {
+        const prop = this.properties.get(data.propertyName);
+        if (prop) {
+            try {
+                prop.set(data.value);
+            }
+            catch (exp) {
+                this.onError(data.taskID, `property invocation error: ${data.propertyName}(${exp.message})`);
+            }
+        }
+        else {
+            this.onError(data.taskID, "property not found: " + data.propertyName);
+        }
+    }
+
+    private callMethod(data: WorkerClientMethodCallMessage) {
+        const method = this.methods.get(data.methodName);
+        if (method) {
+            try {
+                if (isArray(data.params)) {
+                    method(data.taskID, ...data.params);
+                }
+                else if (isDefined(data.params)) {
+                    method(data.taskID, data.params);
+                }
+                else {
+                    method(data.taskID);
+                }
+            }
+            catch (exp) {
+                this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
+            }
+        }
+        else {
+            this.onError(data.taskID, "method not found: " + data.methodName);
+        }
     }
 
     private postMessage(message: WorkerServerMessages, transferables?: Transferable[]): void {

@@ -1,6 +1,5 @@
 import { EventBase } from "../events/EventBase";
-export declare type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
-export declare type createTransferableCallback<T> = (returnValue: T) => Transferable[];
+declare type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 export declare class WorkerServer {
     private self;
     private methods;
@@ -10,6 +9,8 @@ export declare class WorkerServer {
      * @param self - the worker scope in which to listen.
      */
     constructor(self: DedicatedWorkerGlobalScope);
+    private setProperty;
+    private callMethod;
     private postMessage;
     /**
      * Report an error back to the calling thread.
@@ -42,3 +43,4 @@ export declare class WorkerServer {
     private addMethodInternal;
     addEvent<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void;
 }
+export {};

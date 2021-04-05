@@ -5,9 +5,33 @@ export enum WorkerClientMessageType {
     PropertySet = "propertySet"
 }
 
-export interface WorkerClientMessage<T extends WorkerClientMessageType> {
+export enum WorkerServerMessageType {
+    Error = "error",
+    Progress = "progress",
+    PropertyInit = "propertyInit",
+    Property = "property",
+    Return = "return",
+    Event = "event"
+}
+
+interface WorkerClientMessage<T extends WorkerClientMessageType> {
     type: T;
     taskID: number;
+}
+
+interface WorkerServerMessage<T extends WorkerServerMessageType> {
+    methodName: T;
+}
+
+interface WorkerServerTaskMessage<T extends WorkerServerMessageType>
+    extends WorkerServerMessage<T> {
+    taskID: number;
+}
+
+interface WorkerServerPropertyMessage<T extends WorkerServerMessageType>
+    extends WorkerServerMessage<T> {
+    propertyName: string,
+    value: any;
 }
 
 export interface WorkerClientMethodCallMessage
@@ -22,33 +46,10 @@ export interface WorkerClientPropertySetMessage
     value: any;
 }
 
-export type WorkerClientMessages = WorkerClientMethodCallMessage |
-    WorkerClientPropertySetMessage;
-
-
-
-export enum WorkerServerMessageType {
-    Error = "error",
-    Progress = "progress",
-    PropertyInit = "propertyInit",
-    Property = "property",
-    Return = "return",
-    Event = "event"
-}
-
-export interface WorkerServerMessage<T extends WorkerServerMessageType> {
-    methodName: T;
-}
-
 export interface WorkerServerEventMessage
     extends WorkerServerMessage<WorkerServerMessageType.Event> {
     type: string;
     data?: any;
-}
-
-export interface WorkerServerTaskMessage<T extends WorkerServerMessageType>
-    extends WorkerServerMessage<T> {
-    taskID: number;
 }
 
 export interface WorkerServerErrorMessage
@@ -68,12 +69,6 @@ export interface WorkerServerReturnMessage
     returnValue?: any;
 }
 
-export interface WorkerServerPropertyMessage<T extends WorkerServerMessageType>
-    extends WorkerServerMessage<T> {
-    propertyName: string,
-    value: any;
-}
-
 export interface WorkerServerPropertyInitializedMessage
     extends WorkerServerPropertyMessage<WorkerServerMessageType.PropertyInit> {
 }
@@ -81,6 +76,9 @@ export interface WorkerServerPropertyInitializedMessage
 export interface WorkerServerPropertyChangedMessage
     extends WorkerServerPropertyMessage<WorkerServerMessageType.Property> {
 }
+
+export type WorkerClientMessages = WorkerClientMethodCallMessage
+    | WorkerClientPropertySetMessage;
 
 export type WorkerServerMessages = WorkerServerErrorMessage
     | WorkerServerProgressMessage

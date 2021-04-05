@@ -1,8 +1,7 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { arrayProgress } from "../tasks/arrayProgress";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import { GET_PROPERTY_VALUES_METHOD } from "./WorkerMessages";
-import { WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
+import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerClient extends TypedEventBase {
     constructor(scriptPath, minScriptPathOrWorkers, workerPoolSize) {
         super();
@@ -34,45 +33,26 @@ export class WorkerClient extends TypedEventBase {
         }
         this.dispatchMessageResponse = (evt) => {
             const data = evt.data;
-            // Did this response message match the current invocation?
             if (data.methodName === WorkerServerMessageType.Event) {
-                const evt = new TypedEvent(data.type);
-                this.dispatchEvent(Object.assign(evt, data.data));
+                this.propogateEvent(data);
             }
             else if (data.methodName === WorkerServerMessageType.PropertyInit) {
-                if (this.propertyValues.has(data.propertyName)) {
-                    this.setProperty(data.propertyName, this.propertyValues.get(data.propertyName));
-                }
-                else {
-                    this.propertyValues.set(data.propertyName, data.value);
-                }
+                this.propertyInit(data);
             }
             else if (data.methodName === WorkerServerMessageType.Property) {
-                this.propertyValues.set(data.propertyName, data.value);
+                this.propertyChanged(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Progress) {
+                this.progressReport(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Return) {
+                this.methodReturned(data);
+            }
+            else if (data.methodName === WorkerServerMessageType.Error) {
+                this.invocationError(data);
             }
             else {
-                const messageHandler = this.messageHandlers.get(data.taskID);
-                const { onProgress, resolve, reject, methodName } = messageHandler;
-                if (data.methodName === WorkerServerMessageType.Progress) {
-                    if (isFunction(onProgress)) {
-                        onProgress(data.soFar, data.total, data.msg);
-                    }
-                }
-                else {
-                    // When the invocation is complete, we want to stop listening to the worker
-                    // message channel so we don't eat up processing messages that have no chance
-                    // over pertaining to the invocation.
-                    this.messageHandlers.delete(data.taskID);
-                    if (data.methodName === WorkerServerMessageType.Return) {
-                        resolve(data.returnValue);
-                    }
-                    else if (data.methodName === WorkerServerMessageType.Error) {
-                        reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
-                    }
-                    else {
-                        assertNever(data);
-                    }
-                }
+                assertNever(data);
             }
         };
         if (isArray(minScriptPathOrWorkers)) {
@@ -89,6 +69,46 @@ export class WorkerClient extends TypedEventBase {
         }
         const firstWorker = this.workers[0];
         this._ready = this.callMethodOnWorker(firstWorker, this.taskCounter++, GET_PROPERTY_VALUES_METHOD);
+    }
+    propogateEvent(data) {
+        const evt = new TypedEvent(data.type);
+        this.dispatchEvent(Object.assign(evt, data.data));
+    }
+    propertyInit(data) {
+        if (this.propertyValues.has(data.propertyName)) {
+            this.setProperty(data.propertyName, this.propertyValues.get(data.propertyName));
+        }
+        else {
+            this.propertyValues.set(data.propertyName, data.value);
+        }
+    }
+    propertyChanged(data) {
+        this.propertyValues.set(data.propertyName, data.value);
+    }
+    progressReport(data) {
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { onProgress } = messageHandler;
+        if (isFunction(onProgress)) {
+            onProgress(data.soFar, data.total, data.msg);
+        }
+    }
+    methodReturned(data) {
+        // When the invocation is complete, we want to stop listening to the worker
+        // message channel so we don't eat up processing messages that have no chance
+        // over pertaining to the invocation.
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { resolve } = messageHandler;
+        this.messageHandlers.delete(data.taskID);
+        resolve(data.returnValue);
+    }
+    invocationError(data) {
+        // When the invocation has errored, we want to stop listening to the worker
+        // message channel so we don't eat up processing messages that have no chance
+        // over pertaining to the invocation.
+        const messageHandler = this.messageHandlers.get(data.taskID);
+        const { reject, methodName } = messageHandler;
+        this.messageHandlers.delete(data.taskID);
+        reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
     }
     get ready() {
         return this._ready;
@@ -124,7 +144,7 @@ export class WorkerClient extends TypedEventBase {
             value
         };
         for (const worker of this.workers) {
-            worker.postMessage(message);
+            this.postMessage(worker, message);
         }
     }
     getProperty(propertyName) {
@@ -154,13 +174,16 @@ export class WorkerClient extends TypedEventBase {
                     methodName
                 };
             }
-            if (isDefined(transferables)) {
-                worker.postMessage(message, transferables);
-            }
-            else {
-                worker.postMessage(message);
-            }
+            this.postMessage(worker, message, transferables);
         });
+    }
+    postMessage(worker, message, transferables) {
+        if (isDefined(transferables)) {
+            worker.postMessage(message, transferables);
+        }
+        else {
+            worker.postMessage(message);
+        }
     }
     /**
      * Execute a method on a round-robin selected worker thread.
