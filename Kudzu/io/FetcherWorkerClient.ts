@@ -33,7 +33,7 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     implements IFetcher {
 
     async getBuffer(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this.execute("getBuffer", [path, headers], onProgress);
+        return await this.callMethod("getBuffer", [path, headers], onProgress);
     }
 
     async getBlob(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob> {
@@ -45,7 +45,7 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     }
 
     async getText(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.execute("getText", [path, headers], onProgress);
+        return await this.callMethod("getText", [path, headers], onProgress);
     }
 
     async getXml(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement> {
@@ -54,15 +54,15 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     }
 
     async getObject<T>(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
-        return await this.execute("getObject", [path, headers], onProgress);
+        return await this.callMethod("getObject", [path, headers], onProgress);
     }
 
     async getFile(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.execute("getFile", [path, headers], onProgress);
+        return await this.callMethod("getFile", [path, headers], onProgress);
     }
 
     async getImageBitmap(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
-        return await this.execute("getImageBitmap", [path, headers], onProgress);
+        return await this.callMethod("getImageBitmap", [path, headers], onProgress);
     }
 
     async getCanvasImage(path: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {
@@ -76,11 +76,11 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     }
 
     async postObject(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<void> {
-        await this.execute("postObject", [path, obj, contentType, headers], onProgress);
+        await this.callMethod("postObject", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForBuffer(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType> {
-        return await this.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForBlob(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<Blob> {
@@ -92,7 +92,7 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     }
 
     async postObjectForText(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForText", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForXml(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement> {
@@ -101,15 +101,15 @@ export abstract class BaseFetcherWorkerClient<EventsT>
     }
 
     async postObjectForObject<T>(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<T> {
-        return await this.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForObject", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForFile(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        return await this.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForFile", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForImageBitmap(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
-        return await this.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
     }
 
     async postObjectForCanvasImage(path: string, obj: any, contentType: string, headers?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasImageTypes> {

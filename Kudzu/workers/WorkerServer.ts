@@ -1,94 +1,74 @@
-import { EventBase } from "../events/EventBase";
+import { EventBase, TypedEvent } from "../events/EventBase";
 import { isArray, isDefined } from "../typeChecks";
+import {
+    GET_PROPERTY_VALUES_METHOD,
+    WorkerClientMessages,
+    WorkerServerErrorMessage,
+    WorkerServerEventMessage,
+    WorkerServerMessages,
+    WorkerServerProgressMessage,
+    WorkerServerPropertyChangedMessage,
+    WorkerServerPropertyInitializedMessage,
+    WorkerServerReturnMessage
+} from "./WorkerMessages";
+import {
+    WorkerClientMessageType,
+    WorkerServerMessageType
+} from "./WorkerMessages";
 
 export type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
 
 export type createTransferableCallback<T> = (returnValue: T) => Transferable[];
 
-export enum WorkerServerMessageType {
-    Error = "error",
-    Progress = "progress",
-    Return = "return",
-    Event = "event"
-}
-
-interface WorkerServerMessage<T extends WorkerServerMessageType> {
-    methodName: T;
-}
-
-export interface WorkerServerEventMessage
-    extends WorkerServerMessage<WorkerServerMessageType.Event> {
-    type: string;
-    data?: any;
-}
-
-export interface WorkerServerTaskMessage<T extends WorkerServerMessageType>
-    extends WorkerServerMessage<T> {
-    taskID: number;
-}
-
-export interface WorkerServerErrorMessage
-    extends WorkerServerTaskMessage<WorkerServerMessageType.Error> {
-    errorMessage: string;
-}
-
-export interface WorkerServerProgressMessage
-    extends WorkerServerTaskMessage<WorkerServerMessageType.Progress> {
-    soFar: number;
-    total: number;
-    msg: string;
-}
-
-export interface WorkerServerReturnMessage
-    extends WorkerServerTaskMessage<WorkerServerMessageType.Return> {
-    returnValue?: any;
-}
-
-export type WorkerServerMessages = WorkerServerErrorMessage
-    | WorkerServerProgressMessage
-    | WorkerServerReturnMessage
-    | WorkerServerEventMessage;
-
-export interface WorkerMethodCallMessage {
-    taskID: number;
-    methodName: string;
-    params?: any[];
-}
-
 export class WorkerServer {
     private methods = new Map<string, workerServerMethod>();
+    private properties = new Map<string, PropertyDescriptor>();
 
     /**
      * Creates a new worker thread method call listener.
      * @param self - the worker scope in which to listen.
      */
     constructor(private self: DedicatedWorkerGlobalScope) {
-        this.self.onmessage = (evt: MessageEvent<WorkerMethodCallMessage>): void => {
+        this.addMethodInternal(GET_PROPERTY_VALUES_METHOD, () => {
+            for (const [name, prop] of this.properties) {
+                this.onPropertyInitialized(name, prop.get());
+            }
+            return Promise.resolve();
+        });
+
+        this.self.onmessage = (evt: MessageEvent<WorkerClientMessages>): void => {
             const data = evt.data;
-            const method = this.methods.get(data.methodName);
-            if (method) {
-                try {
-                    if (isArray(data.params)) {
-                        method(data.taskID, ...data.params);
-                    }
-                    else if (isDefined(data.params)) {
-                        method(data.taskID, data.params);
-                    }
-                    else {
-                        method(data.taskID);
-                    }
-                }
-                catch (exp) {
-                    this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
-                }
+
+            if (data.type === WorkerClientMessageType.PropertySet) {
+                const prop = this.properties.get(data.propertyName);
+                prop.set(data.value);
             }
             else {
-                this.onError(data.taskID, "method not found: " + data.methodName);
+                const method = this.methods.get(data.methodName);
+                if (method) {
+                    try {
+                        if (isArray(data.params)) {
+                            method(data.taskID, ...data.params);
+                        }
+                        else if (isDefined(data.params)) {
+                            method(data.taskID, data.params);
+                        }
+                        else {
+                            method(data.taskID);
+                        }
+                    }
+                    catch (exp) {
+                        this.onError(data.taskID, `method invocation error: ${data.methodName}(${exp.message})`);
+                    }
+                }
+                else {
+                    this.onError(data.taskID, "method not found: " + data.methodName);
+                }
             }
         };
     }
 
-    private postMessage<T extends WorkerServerMessageType>(message: WorkerServerMessage<T>, transferables?: Transferable[]) {
+    private postMessage(message: WorkerServerMessages, transferables?: Transferable[]): void {
         if (isDefined(transferables)) {
             this.self.postMessage(message, transferables);
         }
@@ -104,8 +84,8 @@ export class WorkerServer {
      */
     private onError(taskID: number, errorMessage: string): void {
         const message: WorkerServerErrorMessage = {
-            taskID,
             methodName: WorkerServerMessageType.Error,
+            taskID,
             errorMessage
         };
         this.postMessage(message);
@@ -121,8 +101,8 @@ export class WorkerServer {
      */
     private onProgress(taskID: number, soFar: number, total: number, msg?: string): void {
         const message: WorkerServerProgressMessage = {
-            taskID,
             methodName: WorkerServerMessageType.Progress,
+            taskID,
             soFar,
             total,
             msg
@@ -130,18 +110,18 @@ export class WorkerServer {
         this.postMessage(message);
     }
 
-    private onReturn<T>(taskID: number, returnValue: T, transferReturnValue: createTransferableCallback<T>) {
+    private onReturn<T>(taskID: number, returnValue: T, transferReturnValue: createTransferableCallback<T>): void {
         let message: WorkerServerReturnMessage = null;
         if (returnValue === undefined) {
             message = {
-                taskID,
-                methodName: WorkerServerMessageType.Return
+                methodName: WorkerServerMessageType.Return,
+                taskID
             };
         }
         else {
             message = {
-                taskID,
                 methodName: WorkerServerMessageType.Return,
+                taskID,
                 returnValue
             };
         }
@@ -155,7 +135,7 @@ export class WorkerServer {
         }
     }
 
-    private onEvent<T>(type: string, evt: Event, makePayload: (evt: Event) => T, transferReturnValue: createTransferableCallback<T>) {
+    private onEvent<T>(type: string, evt: Event, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void {
         let message: WorkerServerEventMessage = null;
         if (isDefined(makePayload)) {
             message = {
@@ -181,13 +161,62 @@ export class WorkerServer {
         }
     }
 
+    private onPropertyInitialized(propertyName: string, value: any): void {
+        const message: WorkerServerPropertyInitializedMessage = {
+            methodName: WorkerServerMessageType.PropertyInit,
+            propertyName,
+            value
+        };
+        this.postMessage(message);
+    }
+
+    private onPropertyChanged(propertyName: string, value: any): void {
+        const message: WorkerServerPropertyChangedMessage = {
+            methodName: WorkerServerMessageType.Property,
+            propertyName,
+            value
+        };
+        this.postMessage(message);
+    }
+
+    protected onReady(): void {
+        this.onEvent("workerserverready", new TypedEvent("workerserverready"));
+    }
+
+    addProperty(obj: any, name: string): void {
+        const proto = Object.getPrototypeOf(obj);
+        const protoProp = Object.getOwnPropertyDescriptor(proto, name);
+        const prop = {
+            get: protoProp.get.bind(obj),
+            set: protoProp.set.bind(obj)
+        };
+        this.properties.set(name, prop);
+
+        Object.defineProperty(obj, name, {
+            get: () => prop.get(),
+            set: (v: string) => {
+                prop.set(v);
+                this.onPropertyChanged(name, v);
+            }
+        });
+    }
+
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
      * @param asyncFunc - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>) {
+    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void {
+        if (methodName === GET_PROPERTY_VALUES_METHOD) {
+            console.warn(`"${GET_PROPERTY_VALUES_METHOD}" is the name of an internal method for WorkerServers and cannot be overridden.`);
+        }
+        else {
+            this.addMethodInternal<T>(methodName, asyncFunc, transferReturnValue);
+        }
+    }
+
+    private addMethodInternal<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>) {
         this.methods.set(methodName, async (taskID: number, ...params: any[]) => {
             const onProgress = this.onProgress.bind(this, taskID);
 
@@ -204,7 +233,7 @@ export class WorkerServer {
         });
     }
 
-    handle<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>) {
+    addEvent<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void {
         object.addEventListener(type, (evt: Event) =>
             this.onEvent(type, evt, makePayload, transferReturnValue));
     }

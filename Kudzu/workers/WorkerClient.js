@@ -1,11 +1,14 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
+import { arrayProgress } from "../tasks/arrayProgress";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import { WorkerServerMessageType } from "./WorkerServer";
+import { GET_PROPERTY_VALUES_METHOD } from "./WorkerMessages";
+import { WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerClient extends TypedEventBase {
     constructor(scriptPath, minScriptPathOrWorkers, workerPoolSize) {
         super();
         this.taskCounter = 0;
         this.messageHandlers = new Map();
+        this.propertyValues = new Map();
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
@@ -29,21 +32,23 @@ export class WorkerClient extends TypedEventBase {
         else {
             this._script = minScriptPathOrWorkers;
         }
-        if (isArray(minScriptPathOrWorkers)) {
-            this.workers = minScriptPathOrWorkers;
-        }
-        else {
-            this.workers = new Array(workerPoolSize);
-            for (let i = 0; i < workerPoolSize; ++i) {
-                this.workers[i] = new Worker(this._script);
-            }
-        }
         this.dispatchMessageResponse = (evt) => {
             const data = evt.data;
             // Did this response message match the current invocation?
             if (data.methodName === WorkerServerMessageType.Event) {
                 const evt = new TypedEvent(data.type);
                 this.dispatchEvent(Object.assign(evt, data.data));
+            }
+            else if (data.methodName === WorkerServerMessageType.PropertyInit) {
+                if (this.propertyValues.has(data.propertyName)) {
+                    this.setProperty(data.propertyName, this.propertyValues.get(data.propertyName));
+                }
+                else {
+                    this.propertyValues.set(data.propertyName, data.value);
+                }
+            }
+            else if (data.methodName === WorkerServerMessageType.Property) {
+                this.propertyValues.set(data.propertyName, data.value);
             }
             else {
                 const messageHandler = this.messageHandlers.get(data.taskID);
@@ -70,9 +75,23 @@ export class WorkerClient extends TypedEventBase {
                 }
             }
         };
+        if (isArray(minScriptPathOrWorkers)) {
+            this.workers = minScriptPathOrWorkers;
+        }
+        else {
+            this.workers = new Array(workerPoolSize);
+            for (let i = 0; i < workerPoolSize; ++i) {
+                this.workers[i] = new Worker(this._script);
+            }
+        }
         for (const worker of this.workers) {
             worker.addEventListener("message", this.dispatchMessageResponse);
         }
+        const firstWorker = this.workers[0];
+        this._ready = this.callMethodOnWorker(firstWorker, this.taskCounter++, GET_PROPERTY_VALUES_METHOD);
+    }
+    get ready() {
+        return this._ready;
     }
     get isDedicated() {
         return this.workers.length === 1;
@@ -88,7 +107,30 @@ export class WorkerClient extends TypedEventBase {
     get scriptPath() {
         return this._script;
     }
-    executeOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
+    /**
+     * Set a property value on all of the worker threads.
+     * @param propertyName - the name of the property to set.
+     * @param value - the value to which to set the property.
+     */
+    setProperty(propertyName, value) {
+        if (!WorkerClient.isSupported) {
+            throw new Error("Workers are not supported on this system.");
+        }
+        this.propertyValues.set(propertyName, value);
+        const message = {
+            type: WorkerClientMessageType.PropertySet,
+            taskID: this.taskCounter++,
+            propertyName,
+            value
+        };
+        for (const worker of this.workers) {
+            worker.postMessage(message);
+        }
+    }
+    getProperty(propertyName) {
+        return this.propertyValues.get(propertyName);
+    }
+    callMethodOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
         return new Promise((resolve, reject) => {
             this.messageHandlers.set(taskID, {
                 onProgress,
@@ -99,6 +141,7 @@ export class WorkerClient extends TypedEventBase {
             let message = null;
             if (isDefined(params)) {
                 message = {
+                    type: WorkerClientMessageType.MethodCall,
                     taskID,
                     methodName,
                     params
@@ -106,6 +149,7 @@ export class WorkerClient extends TypedEventBase {
             }
             else {
                 message = {
+                    type: WorkerClientMessageType.MethodCall,
                     taskID,
                     methodName
                 };
@@ -119,28 +163,63 @@ export class WorkerClient extends TypedEventBase {
         });
     }
     /**
-     * Execute a method on the worker thread.
+     * Execute a method on a round-robin selected worker thread.
      * @param methodName - the name of the method to execute.
      * @param params - the parameters to pass to the method.
      * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
-    execute(methodName, params = null, transferables = null, onProgress = null) {
+    callMethod(methodName, params, transferables, onProgress) {
         if (!WorkerClient.isSupported) {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }
         // Normalize method parameters.
+        let parameters = null;
+        let tfers = null;
+        if (isFunction(params)) {
+            onProgress = params;
+            params = null;
+            transferables = null;
+        }
         if (isFunction(transferables)
             && !onProgress) {
             onProgress = transferables;
             transferables = null;
+        }
+        if (isArray(params)) {
+            parameters = params;
+        }
+        if (isArray(transferables)) {
+            tfers = transferables;
         }
         // taskIDs help us keep track of return values.
         const taskID = this.taskCounter++;
         // Workers are pooled, so the modulus selects them in a round-robin fashion.
         const workerID = taskID % this.workers.length;
         const worker = this.workers[workerID];
-        return this.executeOnWorker(worker, taskID, methodName, params, transferables, onProgress);
+        return this.callMethodOnWorker(worker, taskID, methodName, parameters, tfers, onProgress);
+    }
+    /**
+     * Execute a method on all of the worker threads.
+     * @param methodName - the name of the method to execute.
+     * @param params - the parameters to pass to the method.
+     * @param onProgress - a callback for receiving progress reports on long-running invocations.
+     */
+    async callMethodOnAll(methodName, params, onProgress) {
+        if (!WorkerClient.isSupported) {
+            return Promise.reject(new Error("Workers are not supported on this system."));
+        }
+        if (isFunction(params)) {
+            onProgress = params;
+            params = null;
+        }
+        let parameters = null;
+        if (isArray(params)) {
+            parameters = params;
+        }
+        const rootTaskID = this.taskCounter;
+        this.taskCounter += this.workers.length;
+        return await arrayProgress(onProgress, this.workers, (worker, subProgress, i) => this.callMethodOnWorker(worker, rootTaskID + i, methodName, parameters, null, subProgress));
     }
 }
 WorkerClient.isSupported = "Worker" in globalThis;

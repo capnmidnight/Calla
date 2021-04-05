@@ -22,7 +22,7 @@ function bufferToXml(buffer) {
 }
 export class BaseFetcherWorkerClient extends WorkerClient {
     async getBuffer(path, headers, onProgress) {
-        return await this.execute("getBuffer", [path, headers], onProgress);
+        return await this.callMethod("getBuffer", [path, headers], onProgress);
     }
     async getBlob(path, headers, onProgress) {
         const buffer = await this.getBuffer(path, headers, onProgress);
@@ -32,20 +32,20 @@ export class BaseFetcherWorkerClient extends WorkerClient {
         return blob;
     }
     async getText(path, headers, onProgress) {
-        return await this.execute("getText", [path, headers], onProgress);
+        return await this.callMethod("getText", [path, headers], onProgress);
     }
     async getXml(path, headers, onProgress) {
         const buffer = await this.getBuffer(path, headers, onProgress);
         return bufferToXml(buffer);
     }
     async getObject(path, headers, onProgress) {
-        return await this.execute("getObject", [path, headers], onProgress);
+        return await this.callMethod("getObject", [path, headers], onProgress);
     }
     async getFile(path, headers, onProgress) {
-        return await this.execute("getFile", [path, headers], onProgress);
+        return await this.callMethod("getFile", [path, headers], onProgress);
     }
     async getImageBitmap(path, headers, onProgress) {
-        return await this.execute("getImageBitmap", [path, headers], onProgress);
+        return await this.callMethod("getImageBitmap", [path, headers], onProgress);
     }
     async getCanvasImage(path, headers, onProgress) {
         if (hasImageBitmap) {
@@ -57,10 +57,10 @@ export class BaseFetcherWorkerClient extends WorkerClient {
         }
     }
     async postObject(path, obj, contentType, headers, onProgress) {
-        await this.execute("postObject", [path, obj, contentType, headers], onProgress);
+        await this.callMethod("postObject", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
-        return await this.execute("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForBuffer", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForBlob(path, obj, contentType, headers, onProgress) {
         const buffer = await this.postObjectForBuffer(path, obj, contentType, headers, onProgress);
@@ -70,20 +70,20 @@ export class BaseFetcherWorkerClient extends WorkerClient {
         return blob;
     }
     async postObjectForText(path, obj, contentType, headers, onProgress) {
-        return await this.execute("postObjectForText", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForText", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForXml(path, obj, contentType, headers, onProgress) {
         const buffer = await this.postObjectForBuffer(path, obj, contentType, headers, onProgress);
         return bufferToXml(buffer);
     }
     async postObjectForObject(path, obj, contentType, headers, onProgress) {
-        return await this.execute("postObjectForObject", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForObject", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForFile(path, obj, contentType, headers, onProgress) {
-        return await this.execute("postObjectForFile", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForFile", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
-        return await this.execute("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
+        return await this.callMethod("postObjectForImageBitmap", [path, obj, contentType, headers], onProgress);
     }
     async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
         if (hasImageBitmap) {
