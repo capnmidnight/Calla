@@ -77,7 +77,13 @@ export class WorkerClient extends TypedEventBase {
             worker.addEventListener("message", this.dispatchMessageResponse);
         }
     }
+    get isDedicated() {
+        return this.workers.length === 1;
+    }
     popWorker() {
+        if (this.isDedicated) {
+            throw new Error("Can't create a dedicated fetcher from a dedicated fetcher.");
+        }
         const worker = this.workers.pop();
         worker.removeEventListener("message", this.dispatchMessageResponse);
         return worker;

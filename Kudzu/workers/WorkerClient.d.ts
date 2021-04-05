@@ -39,6 +39,7 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      */
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
+    get isDedicated(): boolean;
     popWorker(): Worker;
     get scriptPath(): string;
     private executeOnWorker;
