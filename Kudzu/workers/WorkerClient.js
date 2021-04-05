@@ -1,5 +1,5 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { assertNever, isArray, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerServerMessageType } from "./WorkerServer";
 export class WorkerClient extends TypedEventBase {
     constructor(scriptPath, minScriptPathOrWorkers, workerPoolSize) {
@@ -59,9 +59,6 @@ export class WorkerClient extends TypedEventBase {
                     // over pertaining to the invocation.
                     this.messageHandlers.delete(data.taskID);
                     if (data.methodName === WorkerServerMessageType.Return) {
-                        resolve(undefined);
-                    }
-                    else if (data.methodName === WorkerServerMessageType.ReturnValue) {
                         resolve(data.returnValue);
                     }
                     else if (data.methodName === WorkerServerMessageType.Error) {
@@ -99,31 +96,25 @@ export class WorkerClient extends TypedEventBase {
                 reject,
                 methodName
             });
-            if (params && transferables) {
-                worker.postMessage({
+            let message = null;
+            if (isDefined(params)) {
+                message = {
                     taskID,
                     methodName,
                     params
-                }, transferables);
-            }
-            else if (params) {
-                worker.postMessage({
-                    taskID,
-                    methodName,
-                    params
-                });
-            }
-            else if (transferables) {
-                worker.postMessage({
-                    taskID,
-                    methodName
-                }, transferables);
+                };
             }
             else {
-                worker.postMessage({
+                message = {
                     taskID,
                     methodName
-                });
+                };
+            }
+            if (isDefined(transferables)) {
+                worker.postMessage(message, transferables);
+            }
+            else {
+                worker.postMessage(message);
             }
         });
     }

@@ -5,38 +5,34 @@ export declare enum WorkerServerMessageType {
     Error = "error",
     Progress = "progress",
     Return = "return",
-    ReturnValue = "returnValue",
     Event = "event"
 }
 interface WorkerServerMessage<T extends WorkerServerMessageType> {
     methodName: T;
 }
-export interface WorkerServerErrorMessage extends WorkerServerMessage<WorkerServerMessageType.Error> {
+export interface WorkerServerEventMessage extends WorkerServerMessage<WorkerServerMessageType.Event> {
+    type: string;
+    data?: any;
+}
+export interface WorkerServerTaskMessage<T extends WorkerServerMessageType> extends WorkerServerMessage<T> {
     taskID: number;
+}
+export interface WorkerServerErrorMessage extends WorkerServerTaskMessage<WorkerServerMessageType.Error> {
     errorMessage: string;
 }
-export interface WorkerServerProgressMessage extends WorkerServerMessage<WorkerServerMessageType.Progress> {
-    taskID: number;
+export interface WorkerServerProgressMessage extends WorkerServerTaskMessage<WorkerServerMessageType.Progress> {
     soFar: number;
     total: number;
     msg: string;
 }
-export interface WorkerServerReturnMessage extends WorkerServerMessage<WorkerServerMessageType.Return> {
-    taskID: number;
+export interface WorkerServerReturnMessage extends WorkerServerTaskMessage<WorkerServerMessageType.Return> {
+    returnValue?: any;
 }
-export interface WorkerServerReturnValueMessage extends WorkerServerMessage<WorkerServerMessageType.ReturnValue> {
-    taskID: number;
-    returnValue: any;
-}
-export interface WorkerServerEventMessage extends WorkerServerMessage<WorkerServerMessageType.Event> {
-    type: string;
-    data: any;
-}
-export declare type WorkerServerMessages = WorkerServerErrorMessage | WorkerServerProgressMessage | WorkerServerReturnMessage | WorkerServerReturnValueMessage | WorkerServerEventMessage;
+export declare type WorkerServerMessages = WorkerServerErrorMessage | WorkerServerProgressMessage | WorkerServerReturnMessage | WorkerServerEventMessage;
 export interface WorkerMethodCallMessage {
     taskID: number;
     methodName: string;
-    params: any[];
+    params?: any[];
 }
 export declare class WorkerServer {
     private self;
@@ -46,7 +42,7 @@ export declare class WorkerServer {
      * @param self - the worker scope in which to listen.
      */
     constructor(self: DedicatedWorkerGlobalScope);
-    handle<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void;
+    private postMessage;
     /**
      * Report an error back to the calling thread.
      * @param taskID - the invocation ID of the method that errored.
@@ -62,13 +58,8 @@ export declare class WorkerServer {
      * @param msg - an optional message to include as part of the progress update.
      */
     private onProgress;
-    /**
-     * Return the results back to the invoker.
-     * @param taskID - the invocation ID of the method that has completed.
-     * @param returnValue - the (optional) value that is being returned.
-     * @param transferables - an (optional) array of values that appear in the return value that should be transfered back to the calling thread, rather than copied.
-     */
     private onReturn;
+    private onEvent;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
@@ -76,5 +67,6 @@ export declare class WorkerServer {
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
     add<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void;
+    handle<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void;
 }
 export {};

@@ -1,7 +1,7 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import type { progressCallback } from "../tasks/progressCallback";
-import { assertNever, isArray, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
-import type { WorkerServerMessages } from "./WorkerServer";
+import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import type { WorkerMethodCallMessage, WorkerServerMessages } from "./WorkerServer";
 import { WorkerServerMessageType } from "./WorkerServer";
 
 export type workerClientCallback<T> = (...params: any[]) => Promise<T>;
@@ -109,6 +109,7 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
             else {
                 const messageHandler = this.messageHandlers.get(data.taskID);
                 const { onProgress, resolve, reject, methodName } = messageHandler;
+
                 if (data.methodName === WorkerServerMessageType.Progress) {
                     if (isFunction(onProgress)) {
                         onProgress(data.soFar, data.total, data.msg);
@@ -121,9 +122,6 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
                     this.messageHandlers.delete(data.taskID);
 
                     if (data.methodName === WorkerServerMessageType.Return) {
-                        resolve(undefined);
-                    }
-                    else if (data.methodName === WorkerServerMessageType.ReturnValue) {
                         resolve(data.returnValue);
                     }
                     else if (data.methodName === WorkerServerMessageType.Error) {
@@ -168,31 +166,26 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
                 methodName
             });
 
-            if (params && transferables) {
-                worker.postMessage({
+            let message: WorkerMethodCallMessage = null;
+            if (isDefined(params)) {
+                message = {
                     taskID,
                     methodName,
                     params
-                }, transferables);
-            }
-            else if (params) {
-                worker.postMessage({
-                    taskID,
-                    methodName,
-                    params
-                });
-            }
-            else if (transferables) {
-                worker.postMessage({
-                    taskID,
-                    methodName
-                }, transferables);
+                };
             }
             else {
-                worker.postMessage({
+                message = {
                     taskID,
                     methodName
-                });
+                };
+            }
+
+            if (isDefined(transferables)) {
+                worker.postMessage(message, transferables);
+            }
+            else {
+                worker.postMessage(message);
             }
         });
     }

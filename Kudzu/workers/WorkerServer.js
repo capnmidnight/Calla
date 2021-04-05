@@ -1,9 +1,9 @@
+import { isArray, isDefined } from "../typeChecks";
 export var WorkerServerMessageType;
 (function (WorkerServerMessageType) {
     WorkerServerMessageType["Error"] = "error";
     WorkerServerMessageType["Progress"] = "progress";
     WorkerServerMessageType["Return"] = "return";
-    WorkerServerMessageType["ReturnValue"] = "returnValue";
     WorkerServerMessageType["Event"] = "event";
 })(WorkerServerMessageType || (WorkerServerMessageType = {}));
 export class WorkerServer {
@@ -19,8 +19,11 @@ export class WorkerServer {
             const method = this.methods.get(data.methodName);
             if (method) {
                 try {
-                    if (data.params) {
+                    if (isArray(data.params)) {
                         method(data.taskID, ...data.params);
+                    }
+                    else if (isDefined(data.params)) {
+                        method(data.taskID, data.params);
                     }
                     else {
                         method(data.taskID);
@@ -35,33 +38,13 @@ export class WorkerServer {
             }
         };
     }
-    handle(object, type, makePayload, transferReturnValue) {
-        object.addEventListener(type, (evt) => {
-            if (!makePayload) {
-                this.self.postMessage({
-                    type,
-                    methodName: WorkerServerMessageType.Event
-                });
-            }
-            else {
-                const data = makePayload(evt);
-                if (transferReturnValue) {
-                    const transferables = transferReturnValue(data);
-                    this.self.postMessage({
-                        type,
-                        methodName: WorkerServerMessageType.Event,
-                        data
-                    }, transferables);
-                }
-                else {
-                    this.self.postMessage({
-                        type,
-                        methodName: WorkerServerMessageType.Event,
-                        data
-                    });
-                }
-            }
-        });
+    postMessage(message, transferables) {
+        if (isDefined(transferables)) {
+            this.self.postMessage(message, transferables);
+        }
+        else {
+            this.self.postMessage(message);
+        }
     }
     /**
      * Report an error back to the calling thread.
@@ -69,11 +52,12 @@ export class WorkerServer {
      * @param errorMessage - what happened?
      */
     onError(taskID, errorMessage) {
-        this.self.postMessage({
+        const message = {
             taskID,
             methodName: WorkerServerMessageType.Error,
             errorMessage
-        });
+        };
+        this.postMessage(message);
     }
     /**
      * Report progress through long-running invocations. If your invocable
@@ -84,40 +68,60 @@ export class WorkerServer {
      * @param msg - an optional message to include as part of the progress update.
      */
     onProgress(taskID, soFar, total, msg) {
-        this.self.postMessage({
+        const message = {
             taskID,
             methodName: WorkerServerMessageType.Progress,
             soFar,
             total,
             msg
-        });
+        };
+        this.postMessage(message);
     }
-    /**
-     * Return the results back to the invoker.
-     * @param taskID - the invocation ID of the method that has completed.
-     * @param returnValue - the (optional) value that is being returned.
-     * @param transferables - an (optional) array of values that appear in the return value that should be transfered back to the calling thread, rather than copied.
-     */
-    onReturn(taskID, returnValue, transferables) {
+    onReturn(taskID, returnValue, transferReturnValue) {
+        let message = null;
         if (returnValue === undefined) {
-            this.self.postMessage({
+            message = {
                 taskID,
                 methodName: WorkerServerMessageType.Return
-            });
-        }
-        else if (transferables === undefined) {
-            this.self.postMessage({
-                taskID,
-                methodName: WorkerServerMessageType.ReturnValue,
-                returnValue
-            });
+            };
         }
         else {
-            this.self.postMessage({
+            message = {
                 taskID,
-                methodName: WorkerServerMessageType.ReturnValue,
+                methodName: WorkerServerMessageType.Return,
                 returnValue
-            }, transferables);
+            };
+        }
+        if (isDefined(transferReturnValue)) {
+            const transferables = transferReturnValue(returnValue);
+            this.postMessage(message, transferables);
+        }
+        else {
+            this.postMessage(message);
+        }
+    }
+    onEvent(type, evt, makePayload, transferReturnValue) {
+        let message = null;
+        if (isDefined(makePayload)) {
+            message = {
+                methodName: WorkerServerMessageType.Event,
+                type,
+                data: makePayload(evt)
+            };
+        }
+        else {
+            message = {
+                methodName: WorkerServerMessageType.Event,
+                type
+            };
+        }
+        if (message.data !== undefined
+            && isDefined(transferReturnValue)) {
+            const transferables = transferReturnValue(message.data);
+            this.postMessage(message, transferables);
+        }
+        else {
+            this.postMessage(message);
         }
     }
     /**
@@ -133,24 +137,16 @@ export class WorkerServer {
                 // Even functions returning void and functions returning bare, unPromised values, can be awaited.
                 // This creates a convenient fallback where we don't have to consider the exact return type of the function.
                 const returnValue = await asyncFunc(...params, onProgress);
-                if (returnValue === undefined) {
-                    this.onReturn(taskID);
-                }
-                else {
-                    if (transferReturnValue) {
-                        const transferables = transferReturnValue(returnValue);
-                        this.onReturn(taskID, returnValue, transferables);
-                    }
-                    else {
-                        this.onReturn(taskID, returnValue);
-                    }
-                }
+                this.onReturn(taskID, returnValue, transferReturnValue);
             }
             catch (exp) {
                 console.error(exp);
                 this.onError(taskID, exp.message);
             }
         });
+    }
+    handle(object, type, makePayload, transferReturnValue) {
+        object.addEventListener(type, (evt) => this.onEvent(type, evt, makePayload, transferReturnValue));
     }
 }
 //# sourceMappingURL=WorkerServer.js.map
