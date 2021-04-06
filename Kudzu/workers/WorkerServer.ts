@@ -1,5 +1,5 @@
 import { EventBase } from "../events/EventBase";
-import { assertNever, isArray, isDefined, isFunction } from "../typeChecks";
+import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined } from "../typeChecks";
 import type {
     WorkerClientMessages,
     WorkerClientMethodCallMessage,
@@ -208,17 +208,46 @@ export class WorkerServer {
         this.postMessage(message);
     }
 
+    private addMethodInternal<T>(methodName: string, asyncFunc: Function, transferReturnValue?: createTransferableCallback<T>) {
+        if (this.methods.has(methodName)) {
+            throw new Error(`${methodName} method has already been mapped.`);
+        }
+
+        this.methods.set(methodName, async (taskID: number, ...params: any[]) => {
+            const onProgress = this.onProgress.bind(this, taskID);
+
+            try {
+                // Even functions returning void and functions returning bare, unPromised values, can be awaited.
+                // This creates a convenient fallback where we don't have to consider the exact return type of the function.
+                const returnValue = await asyncFunc(...params, onProgress);
+                this.onReturn(taskID, returnValue, transferReturnValue);
+            }
+            catch (exp) {
+                console.error(exp);
+                this.onError(taskID, exp.message);
+            }
+        });
+    }
+
     addProperty(obj: any, name: string): void {
-        const proto = Object.getPrototypeOf(obj);
-        const protoProp = Object.getOwnPropertyDescriptor(proto, name);
-        const prop = {
-            get: protoProp.get.bind(obj),
-            set: protoProp.set.bind(obj)
-        };
+        if (this.properties.has(name)) {
+            throw new Error(`${name} property has already been mapped.`);
+        }
+
+        let prop = Object.getOwnPropertyDescriptor(obj, name);
+        if (isNullOrUndefined(prop)) {
+            const proto = Object.getPrototypeOf(obj);
+            const protoProp = Object.getOwnPropertyDescriptor(proto, name);
+            prop = {
+                get: protoProp.get.bind(obj),
+                set: protoProp.set.bind(obj)
+            };
+        }
+
         this.properties.set(name, prop);
 
         Object.defineProperty(obj, name, {
-            get: () => prop.get(),
+            get: prop.get.bind(prop),
             set: (v: string) => {
                 prop.set(v);
                 this.onPropertyChanged(name, v);
@@ -226,20 +255,33 @@ export class WorkerServer {
         });
     }
 
+
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param obj - the object on which to find the method.
+     */
+    addMethod<T>(methodName: string, obj: any): void;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
      * @param obj - the object on which to find the method.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    addMethod<T>(methodName: string, obj: any, transferReturnValue?: createTransferableCallback<T>): void;
+    addMethod<T>(methodName: string, obj: any, transferReturnValue: createTransferableCallback<T>): void;
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param asyncFuncOrObject - the function to execute when the method is invoked.
+     */
+    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>): void;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
      * @param asyncFuncOrObject - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void;
+    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue: createTransferableCallback<T>): void;
     addMethod<T>(methodName: string, asyncFuncOrObject: (...args: any[]) => Promise<T> | object, transferReturnValue?: createTransferableCallback<T>): void {
         if (methodName === GET_PROPERTY_VALUES_METHOD) {
             throw new Error(`"${GET_PROPERTY_VALUES_METHOD}" is the name of an internal method for WorkerServers and cannot be overridden.`);
@@ -261,23 +303,9 @@ export class WorkerServer {
         this.addMethodInternal<T>(methodName, method, transferReturnValue);
     }
 
-    private addMethodInternal<T>(methodName: string, asyncFunc: Function, transferReturnValue?: createTransferableCallback<T>) {
-        this.methods.set(methodName, async (taskID: number, ...params: any[]) => {
-            const onProgress = this.onProgress.bind(this, taskID);
-
-            try {
-                // Even functions returning void and functions returning bare, unPromised values, can be awaited.
-                // This creates a convenient fallback where we don't have to consider the exact return type of the function.
-                const returnValue = await asyncFunc(...params, onProgress);
-                this.onReturn(taskID, returnValue, transferReturnValue);
-            }
-            catch (exp) {
-                console.error(exp);
-                this.onError(taskID, exp.message);
-            }
-        });
-    }
-
+    addEvent<U extends EventBase, T>(object: U, type: string): void;
+    addEvent<U extends EventBase, T>(object: U, type: string, makePayload: (evt: Event) => T): void;
+    addEvent<U extends EventBase, T>(object: U, type: string, makePayload: (evt: Event) => T, transferReturnValue: createTransferableCallback<T>): void;
     addEvent<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void {
         object.addEventListener(type, (evt: Event) =>
             this.onEvent(type, evt, makePayload, transferReturnValue));

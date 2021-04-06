@@ -37,22 +37,36 @@ export declare class WorkerServer {
     private onEvent;
     private onPropertyInitialized;
     private onPropertyChanged;
+    private addMethodInternal;
     addProperty(obj: any, name: string): void;
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param obj - the object on which to find the method.
+     */
+    addMethod<T>(methodName: string, obj: any): void;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
      * @param obj - the object on which to find the method.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    addMethod<T>(methodName: string, obj: any, transferReturnValue?: createTransferableCallback<T>): void;
+    addMethod<T>(methodName: string, obj: any, transferReturnValue: createTransferableCallback<T>): void;
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param asyncFuncOrObject - the function to execute when the method is invoked.
+     */
+    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>): void;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
      * @param asyncFuncOrObject - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
-    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void;
-    private addMethodInternal;
-    addEvent<U extends EventBase, T>(object: U, type: string, makePayload?: (evt: Event) => T, transferReturnValue?: createTransferableCallback<T>): void;
+    addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue: createTransferableCallback<T>): void;
+    addEvent<U extends EventBase, T>(object: U, type: string): void;
+    addEvent<U extends EventBase, T>(object: U, type: string, makePayload: (evt: Event) => T): void;
+    addEvent<U extends EventBase, T>(object: U, type: string, makePayload: (evt: Event) => T, transferReturnValue: createTransferableCallback<T>): void;
 }
 export {};

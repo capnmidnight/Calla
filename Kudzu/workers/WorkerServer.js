@@ -1,4 +1,4 @@
-import { assertNever, isArray, isDefined, isFunction } from "../typeChecks";
+import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerServer {
     /**
@@ -173,16 +173,40 @@ export class WorkerServer {
         };
         this.postMessage(message);
     }
+    addMethodInternal(methodName, asyncFunc, transferReturnValue) {
+        if (this.methods.has(methodName)) {
+            throw new Error(`${methodName} method has already been mapped.`);
+        }
+        this.methods.set(methodName, async (taskID, ...params) => {
+            const onProgress = this.onProgress.bind(this, taskID);
+            try {
+                // Even functions returning void and functions returning bare, unPromised values, can be awaited.
+                // This creates a convenient fallback where we don't have to consider the exact return type of the function.
+                const returnValue = await asyncFunc(...params, onProgress);
+                this.onReturn(taskID, returnValue, transferReturnValue);
+            }
+            catch (exp) {
+                console.error(exp);
+                this.onError(taskID, exp.message);
+            }
+        });
+    }
     addProperty(obj, name) {
-        const proto = Object.getPrototypeOf(obj);
-        const protoProp = Object.getOwnPropertyDescriptor(proto, name);
-        const prop = {
-            get: protoProp.get.bind(obj),
-            set: protoProp.set.bind(obj)
-        };
+        if (this.properties.has(name)) {
+            throw new Error(`${name} property has already been mapped.`);
+        }
+        let prop = Object.getOwnPropertyDescriptor(obj, name);
+        if (isNullOrUndefined(prop)) {
+            const proto = Object.getPrototypeOf(obj);
+            const protoProp = Object.getOwnPropertyDescriptor(proto, name);
+            prop = {
+                get: protoProp.get.bind(obj),
+                set: protoProp.set.bind(obj)
+            };
+        }
         this.properties.set(name, prop);
         Object.defineProperty(obj, name, {
-            get: () => prop.get(),
+            get: prop.get.bind(prop),
             set: (v) => {
                 prop.set(v);
                 this.onPropertyChanged(name, v);
@@ -205,21 +229,6 @@ export class WorkerServer {
             method = method.bind(asyncFuncOrObject);
         }
         this.addMethodInternal(methodName, method, transferReturnValue);
-    }
-    addMethodInternal(methodName, asyncFunc, transferReturnValue) {
-        this.methods.set(methodName, async (taskID, ...params) => {
-            const onProgress = this.onProgress.bind(this, taskID);
-            try {
-                // Even functions returning void and functions returning bare, unPromised values, can be awaited.
-                // This creates a convenient fallback where we don't have to consider the exact return type of the function.
-                const returnValue = await asyncFunc(...params, onProgress);
-                this.onReturn(taskID, returnValue, transferReturnValue);
-            }
-            catch (exp) {
-                console.error(exp);
-                this.onError(taskID, exp.message);
-            }
-        });
     }
     addEvent(object, type, makePayload, transferReturnValue) {
         object.addEventListener(type, (evt) => this.onEvent(type, evt, makePayload, transferReturnValue));
