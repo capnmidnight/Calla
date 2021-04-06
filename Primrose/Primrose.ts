@@ -1,8 +1,5 @@
 import { documentReady } from "kudzu/events/documentReady";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { Point } from "kudzu/graphics2d/Point";
-import { Rectangle } from "kudzu/graphics2d/Rectangle";
-import { Size } from "kudzu/graphics2d/Size";
 import type { CanvasTypes } from "kudzu/html/canvas";
 import { createUtilityCanvas, isHTMLCanvas } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
@@ -131,37 +128,37 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private tx = 0;
     private ty = 0;
 
-    private pressed = false;
-    private dragging = false;
-    private scrolling = false;
-    private lastScrollDX: number = null;
-    private lastScrollDY: number = null;
-
     private _value = "";
     private _padding = 0;
     private _theme = DefaultTheme;
     private _tabWidth = 2;
     private _canvas: CanvasTypes = null;
-    private resized = false;
     private _hovered = false;
     private _focused = false;
     private _fontSize: number = null;
     private _fontFamily: string = null;
     private _scaleFactor: number = null;
-    private tabString = "  ";
     private _readOnly = false;
     private _wordWrap = false;
-    private historyIndex = -1;
     private _multiLine = false;
-    private tabPressed = false;
-    private lineCount = 1;
-    private lineCountWidth = 0;
+    private resized = false;
     private _element: HTMLElement = null;
     private _language = JavaScript;
     private _showScrollBars = false;
     private _showLineNumbers = false;
+
+    private pressed = false;
+    private dragging = false;
+    private scrolling = false;
+    private tabPressed = false;
+    private tabString = "  ";
+    private historyIndex = -1;
+    private history = new Array<HistoryFrame>();
+    private tokens = new Array<Token>();
+    private os = isApple ? MacOS : Windows;
+    private lineCount = 1;
+    private lineCountWidth = 0;
     private controlType = singleLineOutput;
-    private maxVerticalScroll = 0;
 
     private lastCharacterHeight: number = null;
     private lastCharacterWidth: number = null;
@@ -179,16 +176,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private lastFont: string = null;
     private lastText: string = null;
 
-    private history = new Array<HistoryFrame>();
-    private tokens = new Array<Token>();
-    private rows = [Row.emptyRow(0, 0, 0)];
-    private scroll = new Point();
-    private pointer = new Point();
-    private bottomRightGutter = new Size();
-    private gridBounds = new Rectangle();
-    private backCursor = new Cursor();
-    private frontCursor = new Cursor();
-    private os = isApple ? MacOS : Windows;
+    private renderer: IPrimroseRenderer;
 
     private outEvt = new TypedEvent("out");
     private overEvt = new TypedEvent("over");
@@ -196,7 +184,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private focusEvt = new TypedEvent("focus");
     private changeEvt = new TypedEvent("change");
     private updateEvt = new TypedEvent("update");
-    private renderer: IPrimroseRenderer;
     private keyDownCommands: Map<string, () => void> = null;
     private keyPressCommands: Map<string, () => void> = null;
 
@@ -224,212 +211,212 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         //>>>>>>>>>> KEY EVENT HANDLERS >>>>>>>>>>
         this.keyDownCommands = new Map([
             ["CursorUp", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
-                minCursor.up(this.rows);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
+                minCursor.up(this.renderer.rows);
                 maxCursor.copy(minCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorDown", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
-                maxCursor.down(this.rows);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
+                maxCursor.down(this.renderer.rows);
                 minCursor.copy(maxCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorLeft", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
                 if (minCursor.i === maxCursor.i) {
-                    minCursor.left(this.rows);
+                    minCursor.left(this.renderer.rows);
                 }
                 maxCursor.copy(minCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorRight", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
                 if (minCursor.i === maxCursor.i) {
-                    maxCursor.right(this.rows);
+                    maxCursor.right(this.renderer.rows);
                 }
                 minCursor.copy(maxCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorPageUp", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
-                minCursor.incY(this.rows, -this.gridBounds.height);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
+                minCursor.incY(this.renderer.rows, -this.renderer.gridBounds.height);
                 maxCursor.copy(minCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorPageDown", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
-                maxCursor.incY(this.rows, this.gridBounds.height);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
+                maxCursor.incY(this.renderer.rows, this.renderer.gridBounds.height);
                 minCursor.copy(maxCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorSkipLeft", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
                 if (minCursor.i === maxCursor.i) {
-                    minCursor.skipLeft(this.rows);
+                    minCursor.skipLeft(this.renderer.rows);
                 }
                 maxCursor.copy(minCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorSkipRight", () => {
-                const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                    maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+                const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                    maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
                 if (minCursor.i === maxCursor.i) {
-                    maxCursor.skipRight(this.rows);
+                    maxCursor.skipRight(this.renderer.rows);
                 }
                 minCursor.copy(maxCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorHome", () => {
-                this.frontCursor.home();
-                this.backCursor.copy(this.frontCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.renderer.frontCursor.home();
+                this.renderer.backCursor.copy(this.renderer.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorEnd", () => {
-                this.frontCursor.end(this.rows);
-                this.backCursor.copy(this.frontCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.renderer.frontCursor.end(this.renderer.rows);
+                this.renderer.backCursor.copy(this.renderer.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorFullHome", () => {
-                this.frontCursor.fullHome();
-                this.backCursor.copy(this.frontCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.renderer.frontCursor.fullHome();
+                this.renderer.backCursor.copy(this.renderer.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["CursorFullEnd", () => {
-                this.frontCursor.fullEnd(this.rows);
-                this.backCursor.copy(this.frontCursor);
-                this.scrollIntoView(this.frontCursor);
+                this.renderer.frontCursor.fullEnd(this.renderer.rows);
+                this.renderer.backCursor.copy(this.renderer.frontCursor);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["SelectDown", () => {
-                this.backCursor.down(this.rows);
-                this.scrollIntoView(this.frontCursor);
+                this.renderer.backCursor.down(this.renderer.rows);
+                this.scrollIntoView(this.renderer.frontCursor);
             }],
 
             ["SelectLeft", () => {
-                this.backCursor.left(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.left(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectRight", () => {
-                this.backCursor.right(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.right(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectUp", () => {
-                this.backCursor.up(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.up(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectPageDown", () => {
-                this.backCursor.incY(this.rows, this.gridBounds.height);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.incY(this.renderer.rows, this.renderer.gridBounds.height);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectPageUp", () => {
-                this.backCursor.incY(this.rows, -this.gridBounds.height);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.incY(this.renderer.rows, -this.renderer.gridBounds.height);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectSkipLeft", () => {
-                this.backCursor.skipLeft(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.skipLeft(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectSkipRight", () => {
-                this.backCursor.skipRight(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.skipRight(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectHome", () => {
-                this.backCursor.home();
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.home();
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectEnd", () => {
-                this.backCursor.end(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.end(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectFullHome", () => {
-                this.backCursor.fullHome();
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.fullHome();
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectFullEnd", () => {
-                this.backCursor.fullEnd(this.rows);
-                this.scrollIntoView(this.backCursor);
+                this.renderer.backCursor.fullEnd(this.renderer.rows);
+                this.scrollIntoView(this.renderer.backCursor);
             }],
 
             ["SelectAll", () => {
-                this.frontCursor.fullHome();
-                this.backCursor.fullEnd(this.rows);
+                this.renderer.frontCursor.fullHome();
+                this.renderer.backCursor.fullEnd(this.renderer.rows);
                 this.render();
             }],
 
             ["ScrollDown", () => {
-                if (this.scroll.y < this.rows.length - this.gridBounds.height) {
+                if (this.renderer.scroll.y < this.renderer.rows.length - this.renderer.gridBounds.height) {
                     this.scrollBy(0, 1);
                 }
             }],
 
             ["ScrollUp", () => {
-                if (this.scroll.y > 0) {
+                if (this.renderer.scroll.y > 0) {
                     this.scrollBy(0, -1);
                 }
             }],
 
             ["DeleteLetterLeft", () => {
-                if (this.frontCursor.i === this.backCursor.i) {
-                    this.backCursor.left(this.rows);
+                if (this.renderer.frontCursor.i === this.renderer.backCursor.i) {
+                    this.renderer.backCursor.left(this.renderer.rows);
                 }
                 this.setSelectedText("");
             }],
 
             ["DeleteLetterRight", () => {
-                if (this.frontCursor.i === this.backCursor.i) {
-                    this.backCursor.right(this.rows);
+                if (this.renderer.frontCursor.i === this.renderer.backCursor.i) {
+                    this.renderer.backCursor.right(this.renderer.rows);
                 }
                 this.setSelectedText("");
             }],
 
             ["DeleteWordLeft", () => {
-                if (this.frontCursor.i === this.backCursor.i) {
-                    this.frontCursor.skipLeft(this.rows);
+                if (this.renderer.frontCursor.i === this.renderer.backCursor.i) {
+                    this.renderer.frontCursor.skipLeft(this.renderer.rows);
                 }
                 this.setSelectedText("");
             }],
 
             ["DeleteWordRight", () => {
-                if (this.frontCursor.i === this.backCursor.i) {
-                    this.backCursor.skipRight(this.rows);
+                if (this.renderer.frontCursor.i === this.renderer.backCursor.i) {
+                    this.renderer.backCursor.skipRight(this.renderer.rows);
                 }
                 this.setSelectedText("");
             }],
 
             ["DeleteLine", () => {
-                if (this.frontCursor.i === this.backCursor.i) {
-                    this.frontCursor.home();
-                    this.backCursor.end(this.rows);
-                    this.backCursor.right(this.rows);
+                if (this.renderer.frontCursor.i === this.renderer.backCursor.i) {
+                    this.renderer.frontCursor.home();
+                    this.renderer.backCursor.end(this.renderer.rows);
+                    this.renderer.backCursor.right(this.renderer.rows);
                 }
                 this.setSelectedText("");
             }],
@@ -448,17 +435,17 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             }],
 
             ["RemoveTab", () => {
-                const row = this.rows[this.frontCursor.y],
-                    toDelete = Math.min(this.frontCursor.x, this.tabWidth);
-                for (let i = 0; i < this.frontCursor.x; ++i) {
+                const row = this.renderer.rows[this.renderer.frontCursor.y],
+                    toDelete = Math.min(this.renderer.frontCursor.x, this.tabWidth);
+                for (let i = 0; i < this.renderer.frontCursor.x; ++i) {
                     if (row.text[i] !== ' ') {
                         // can only remove tabs at the beginning of a row
                         return;
                     }
                 }
 
-                this.backCursor.copy(this.frontCursor);
-                this.backCursor.incX(this.rows, -toDelete);
+                this.renderer.backCursor.copy(this.renderer.frontCursor);
+                this.renderer.backCursor.incX(this.renderer.rows, -toDelete);
                 this.setSelectedText("");
             }]
         ]);
@@ -467,7 +454,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             ["AppendNewline", () => {
                 if (this.multiLine) {
                     let indent = "";
-                    const row = this.rows[this.frontCursor.y].tokens;
+                    const row = this.renderer.rows[this.renderer.frontCursor.y].tokens;
                     if (row.length > 0
                         && row[0].type === "whitespace") {
                         indent = row[0].value;
@@ -482,13 +469,13 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             ["PrependNewline", () => {
                 if (this.multiLine) {
                     let indent = "";
-                    const row = this.rows[this.frontCursor.y].tokens;
+                    const row = this.renderer.rows[this.renderer.frontCursor.y].tokens;
                     if (row.length > 0
                         && row[0].type === "whitespace") {
                         indent = row[0].value;
                     }
-                    this.frontCursor.home();
-                    this.backCursor.copy(this.frontCursor);
+                    this.renderer.frontCursor.home();
+                    this.renderer.backCursor.copy(this.renderer.frontCursor);
                     this.setSelectedText(indent + "\n");
                 }
                 else {
@@ -515,7 +502,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
         //>>>>>>>>>> MOUSE EVENT HANDLERS >>>>>>>>>> 
         const setMousePointer = (evt: MouseEvent) => {
-            this.pointer.set(
+            this.renderer.pointer.set(
                 evt.offsetX,
                 evt.offsetY);
         };
@@ -532,12 +519,12 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.longPress = new TimedEvent(1000);
 
         this.longPress.addEventListener("tick", () => {
-            this.startSelecting();
-            this.backCursor.copy(this.frontCursor);
-            this.frontCursor.skipLeft(this.rows);
-            this.backCursor.skipRight(this.rows);
-            this.render();
             navigator.vibrate(20);
+            this.startSelecting();
+            this.renderer.backCursor.copy(this.renderer.frontCursor);
+            this.renderer.frontCursor.skipLeft(this.renderer.rows);
+            this.renderer.backCursor.skipRight(this.renderer.rows);
+            this.render();
         });
 
         let currentTouchID: number = null;
@@ -562,7 +549,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         const setTouchPointer = (touch: Touch) => {
             if (isHTMLCanvas(this.canvas)) {
                 const cb = this.canvas.getBoundingClientRect();
-                this.pointer.set(
+                this.renderer.pointer.set(
                     touch.clientX - cb.left,
                     touch.clientY - cb.top);
             }
@@ -577,7 +564,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
         //>>>>>>>>>> UV POINTER EVENT HANDLERS >>>>>>>>>>
         const setUVPointer = (evt: PointerUVEvent) => {
-            this.pointer.set(
+            this.renderer.pointer.set(
                 evt.uv.x * this.width,
                 (1 - evt.uv.y) * this.height);
         };
@@ -738,8 +725,6 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
         //<<<<<<<<<< SETUP CANVAS <<<<<<<<<<
 
-        this.renderer = new PrimroseRenderer(this.canvas);
-
         //>>>>>>>>>> INITIALIZE STATE >>>>>>>>>>
         this.addEventListener("blur", () => {
             if (this.tabPressed) {
@@ -758,13 +743,10 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             }
         }
 
+        this.renderer = new PrimroseRenderer(this.canvas);
+
         Object.seal(this);
         //<<<<<<<<<< INITIALIZE STATE <<<<<<<<<<
-
-        // This is done last so that controls that have errored 
-        // out during their setup don't get added to the control
-        // manager.
-        Primrose.add(this.element, this);
 
         if (!isString(options.language)) {
             this.language = options.language;
@@ -782,11 +764,16 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         this.value = currentValue;
 
         this.render();
+
+        // This is done last so that controls that have errored 
+        // out during their setup don't get added to the control
+        // manager.
+        Primrose.add(this.element, this);
     }
 
     private startSelecting() {
         this.dragging = true;
-        this.moveCursor(this.frontCursor);
+        this.moveCursor(this.renderer.frontCursor);
     }
 
     private pointerDown() {
@@ -796,7 +783,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
     private pointerMove() {
         if (this.dragging) {
-            this.moveCursor(this.backCursor);
+            this.moveCursor(this.renderer.backCursor);
         }
         else if (this.pressed) {
             this.dragScroll();
@@ -827,8 +814,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     private touchLikePointerDown<EventT>(setPointer: (evt: EventT) => void) {
         return (evt: EventT) => {
             setPointer(evt);
-            this.tx = this.pointer.x;
-            this.ty = this.pointer.y;
+            this.tx = this.renderer.pointer.x;
+            this.ty = this.renderer.pointer.y;
             this.pointerDown();
             this.longPress.start();
         };
@@ -839,16 +826,16 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             this.startSelecting();
         }
         this.mouseLikePointerUp();
-        this.lastScrollDX = null;
-        this.lastScrollDY = null;
+        this.renderer.lastScrollDX = null;
+        this.renderer.lastScrollDY = null;
     }
 
     private touchLikePointerMove<EventT>(setPointer: (evt: EventT) => void) {
         return (evt: EventT) => {
             setPointer(evt);
             if (this.longPress.isRunning) {
-                const dx = this.pointer.x - this.tx,
-                    dy = this.pointer.y - this.ty,
+                const dx = this.renderer.pointer.x - this.tx,
+                    dy = this.renderer.pointer.y - this.ty,
                     lenSq = dx * dx + dy * dy;
                 if (lenSq > 25) {
                     this.longPress.cancel();
@@ -862,34 +849,34 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private moveCursor(cursor: Cursor) {
-        this.pointer.toCell(this.renderer.character, this.scroll, this.gridBounds);
-        const gx = this.pointer.x - this.scroll.x,
-            gy = this.pointer.y - this.scroll.y,
-            onBottom = gy >= this.gridBounds.height,
+        this.renderer.pointer.toCell(this.renderer.character, this.renderer.scroll, this.renderer.gridBounds);
+        const gx = this.renderer.pointer.x - this.renderer.scroll.x,
+            gy = this.renderer.pointer.y - this.renderer.scroll.y,
+            onBottom = gy >= this.renderer.gridBounds.height,
             onLeft = gx < 0,
-            onRight = this.pointer.x >= this.gridBounds.width;
+            onRight = this.renderer.pointer.x >= this.renderer.gridBounds.width;
 
         if (!this.scrolling && !onBottom && !onLeft && !onRight) {
-            cursor.setXY(this.rows, this.pointer.x, this.pointer.y);
-            this.backCursor.copy(cursor);
+            cursor.setXY(this.renderer.rows, this.renderer.pointer.x, this.renderer.pointer.y);
+            this.renderer.backCursor.copy(cursor);
         }
         else if (this.scrolling || onRight && !onBottom) {
             this.scrolling = true;
-            const scrollHeight = this.rows.length - this.gridBounds.height;
+            const scrollHeight = this.renderer.rows.length - this.renderer.gridBounds.height;
             if (gy >= 0 && scrollHeight >= 0) {
-                const sy = gy * scrollHeight / this.gridBounds.height;
-                this.scrollTo(this.scroll.x, sy);
+                const sy = gy * scrollHeight / this.renderer.gridBounds.height;
+                this.scrollTo(this.renderer.scroll.x, sy);
             }
         }
         else if (onBottom && !onLeft) {
             let maxWidth = 0;
-            for (let dy = 0; dy < this.rows.length; ++dy) {
-                maxWidth = Math.max(maxWidth, this.rows[dy].text.length);
+            for (let dy = 0; dy < this.renderer.rows.length; ++dy) {
+                maxWidth = Math.max(maxWidth, this.renderer.rows[dy].text.length);
             }
-            const scrollWidth = maxWidth - this.gridBounds.width;
+            const scrollWidth = maxWidth - this.renderer.gridBounds.width;
             if (gx >= 0 && scrollWidth >= 0) {
-                const sx = gx * scrollWidth / this.gridBounds.width;
-                this.scrollTo(sx, this.scroll.y);
+                const sx = gx * scrollWidth / this.renderer.gridBounds.width;
+                this.scrollTo(sx, this.renderer.scroll.y);
             }
         }
         else if (onLeft && !onBottom) {
@@ -903,14 +890,14 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private dragScroll() {
-        if (this.lastScrollDX !== null
-            && this.lastScrollDY !== null) {
-            let dx = (this.lastScrollDX - this.pointer.x) / this.renderer.character.width,
-                dy = (this.lastScrollDY - this.pointer.y) / this.renderer.character.height;
+        if (this.renderer.lastScrollDX !== null
+            && this.renderer.lastScrollDY !== null) {
+            let dx = (this.renderer.lastScrollDX - this.renderer.pointer.x) / this.renderer.character.width,
+                dy = (this.renderer.lastScrollDY - this.renderer.pointer.y) / this.renderer.character.height;
             this.scrollBy(dx, dy);
         }
-        this.lastScrollDX = this.pointer.x;
-        this.lastScrollDY = this.pointer.y;
+        this.renderer.lastScrollDX = this.renderer.pointer.x;
+        this.renderer.lastScrollDY = this.renderer.pointer.y;
     }
 
     private refreshControlType() {
@@ -936,13 +923,13 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
     private refreshGutter() {
         if (!this.showScrollBars) {
-            this.bottomRightGutter.set(0, 0);
+            this.renderer.bottomRightGutter.set(0, 0);
         }
         else if (this.wordWrap) {
-            this.bottomRightGutter.set(vScrollWidth, 0);
+            this.renderer.bottomRightGutter.set(vScrollWidth, 0);
         }
         else {
-            this.bottomRightGutter.set(vScrollWidth, 1);
+            this.renderer.bottomRightGutter.set(vScrollWidth, 1);
         }
     }
 
@@ -957,10 +944,10 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             paddingChanged = this.padding !== this.lastPadding,
             themeChanged = this.theme.name !== this.lastThemeName,
 
-            boundsXChanged = this.gridBounds.x !== this.lastGridBoundsX,
-            boundsYChanged = this.gridBounds.y !== this.lastGridBoundsY,
-            boundsWidthChanged = this.gridBounds.width !== this.lastGridBoundsWidth,
-            boundsHeightChanged = this.gridBounds.height !== this.lastGridBoundsHeight,
+            boundsXChanged = this.renderer.gridBounds.x !== this.lastGridBoundsX,
+            boundsYChanged = this.renderer.gridBounds.y !== this.lastGridBoundsY,
+            boundsWidthChanged = this.renderer.gridBounds.width !== this.lastGridBoundsWidth,
+            boundsHeightChanged = this.renderer.gridBounds.height !== this.lastGridBoundsHeight,
             boundsChanged = boundsXChanged
                 || boundsYChanged
                 || boundsWidthChanged
@@ -971,11 +958,11 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             characterSizeChanged = characterWidthChanged
                 || characterHeightChanged,
 
-            cursorChanged = this.frontCursor.i !== this.lastFrontCursor
-                || this.backCursor.i !== this.lastBackCursor,
+            cursorChanged = this.renderer.frontCursor.i !== this.lastFrontCursor
+                || this.renderer.backCursor.i !== this.lastBackCursor,
 
-            scrollChanged = this.scroll.x !== this.lastScrollX
-                || this.scroll.y !== this.lastScrollY,
+            scrollChanged = this.renderer.scroll.x !== this.lastScrollX
+                || this.renderer.scroll.y !== this.lastScrollY,
 
             layoutChanged = this.resized
                 || boundsChanged
@@ -999,24 +986,24 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         if (backgroundChanged) {
             tasks.push(this.renderer.bg.render(
                 this.theme,
-                Cursor.min(this.frontCursor, this.backCursor),
-                Cursor.max(this.frontCursor, this.backCursor),
-                this.gridBounds,
-                this.scroll,
+                Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                Cursor.max(this.renderer.frontCursor, this.renderer.backCursor),
+                this.renderer.gridBounds,
+                this.renderer.scroll,
                 this.renderer.character,
                 this.padding,
                 this.focused,
-                this.rows));
+                this.renderer.rows));
         }
 
         if (foregroundChanged) {
             tasks.push(this.renderer.fg.render(
                 this.theme,
-                this.gridBounds,
-                this.scroll,
+                this.renderer.gridBounds,
+                this.renderer.scroll,
                 this.renderer.character,
                 this.padding,
-                this.rows,
+                this.renderer.rows,
                 this.fontFamily,
                 this.fontSize));
         }
@@ -1024,12 +1011,12 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         if (trimChanged) {
             tasks.push(this.renderer.trim.render(
                 this.theme,
-                this.gridBounds,
-                this.scroll,
+                this.renderer.gridBounds,
+                this.renderer.scroll,
                 this.renderer.character,
                 this.padding,
                 this.focused,
-                this.rows,
+                this.renderer.rows,
                 this.fontFamily,
                 this.fontSize,
                 this.showLineNumbers,
@@ -1042,21 +1029,21 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         await Promise.all(tasks);
         await this.renderer.render();
 
-        this.lastGridBoundsX = this.gridBounds.x;
-        this.lastGridBoundsY = this.gridBounds.y;
-        this.lastGridBoundsWidth = this.gridBounds.width;
-        this.lastGridBoundsHeight = this.gridBounds.height;
+        this.lastGridBoundsX = this.renderer.gridBounds.x;
+        this.lastGridBoundsY = this.renderer.gridBounds.y;
+        this.lastGridBoundsWidth = this.renderer.gridBounds.width;
+        this.lastGridBoundsHeight = this.renderer.gridBounds.height;
         this.lastText = this.value;
         this.lastCharacterWidth = this.renderer.character.width;
         this.lastCharacterHeight = this.renderer.character.height;
         this.lastPadding = this.padding;
-        this.lastFrontCursor = this.frontCursor.i;
-        this.lastBackCursor = this.backCursor.i;
+        this.lastFrontCursor = this.renderer.frontCursor.i;
+        this.lastBackCursor = this.renderer.backCursor.i;
         this.lastFocused = this.focused;
         this.lastFont = this.renderer.context.font;
         this.lastThemeName = this.theme.name;
-        this.lastScrollX = this.scroll.x;
-        this.lastScrollY = this.scroll.y;
+        this.lastScrollX = this.renderer.scroll.x;
+        this.lastScrollY = this.renderer.scroll.y;
         this.resized = false;
         this.dispatchEvent(this.updateEvt);
     }
@@ -1078,11 +1065,11 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         txt = txt || "";
         txt = txt.replace(/\r\n/g, "\n");
 
-        if (this.frontCursor.i !== this.backCursor.i || txt.length > 0) {
-            const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-                maxCursor = Cursor.max(this.frontCursor, this.backCursor),
-                startRow = this.rows[minCursor.y],
-                endRow = this.rows[maxCursor.y],
+        if (this.renderer.frontCursor.i !== this.renderer.backCursor.i || txt.length > 0) {
+            const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+                maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor),
+                startRow = this.renderer.rows[minCursor.y],
+                endRow = this.renderer.rows[maxCursor.y],
 
                 unchangedLeft = this.value.substring(0, startRow.startStringIndex),
                 unchangedRight = this.value.substring(endRow.endStringIndex),
@@ -1098,15 +1085,15 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             this.value = unchangedLeft + changedText + unchangedRight;
             this.pushUndo();
             this.refreshAllTokens();
-            this.frontCursor.setI(this.rows, minCursor.i + txt.length);
-            this.backCursor.copy(this.frontCursor);
-            this.scrollIntoView(this.frontCursor);
+            this.renderer.frontCursor.setI(this.renderer.rows, minCursor.i + txt.length);
+            this.renderer.backCursor.copy(this.renderer.frontCursor);
+            this.scrollIntoView(this.renderer.frontCursor);
             this.dispatchEvent(this.changeEvt);
         }
     }
 
     private refreshAllTokens() {
-        this.refreshTokens(0, this.rows.length - 1, this.value);
+        this.refreshTokens(0, this.renderer.rows.length - 1, this.value);
     }
 
     private refreshTokens(startY: number, endY: number, txt: string) {
@@ -1116,28 +1103,28 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             startY = 0;
         }
 
-        if (endY >= this.rows.length) {
-            endY = this.rows.length - 1;
+        if (endY >= this.renderer.rows.length) {
+            endY = this.renderer.rows.length - 1;
         }
 
         while (startY > 0
-            && this.rows[startY].lineNumber === this.rows[startY - 1].lineNumber) {
+            && this.renderer.rows[startY].lineNumber === this.renderer.rows[startY - 1].lineNumber) {
             --startY;
-            txt = this.rows[startY].text + txt;
+            txt = this.renderer.rows[startY].text + txt;
         }
 
-        while (endY < this.rows.length - 1
-            && this.rows[endY].lineNumber === this.rows[endY + 1].lineNumber) {
+        while (endY < this.renderer.rows.length - 1
+            && this.renderer.rows[endY].lineNumber === this.renderer.rows[endY + 1].lineNumber) {
             ++endY;
-            txt += this.rows[endY].text;
+            txt += this.renderer.rows[endY].text;
         }
 
         const newTokens = this.language.tokenize(txt),
-            startRow = this.rows[startY],
+            startRow = this.renderer.rows[startY],
             startTokenIndex = startRow.startTokenIndex,
             startLineNumber = startRow.lineNumber,
             startStringIndex = startRow.startStringIndex,
-            endRow = this.rows[endY],
+            endRow = this.renderer.rows[endY],
             endTokenIndex = endRow.endTokenIndex,
             tokenRemoveCount = endTokenIndex - startTokenIndex,
             oldTokens = this.tokens.splice(startTokenIndex, tokenRemoveCount, ...newTokens);
@@ -1163,9 +1150,9 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         // measure the grid
         const x = Math.floor(this.lineCountWidth + this.padding / this.renderer.character.width),
             y = Math.floor(this.padding / this.renderer.character.height),
-            w = Math.floor((this.width - 2 * this.padding) / this.renderer.character.width) - x - this.bottomRightGutter.width,
-            h = Math.floor((this.height - 2 * this.padding) / this.renderer.character.height) - y - this.bottomRightGutter.height;
-        this.gridBounds.set(x, y, w, h);
+            w = Math.floor((this.width - 2 * this.padding) / this.renderer.character.width) - x - this.renderer.bottomRightGutter.width,
+            h = Math.floor((this.height - 2 * this.padding) / this.renderer.character.height) - y - this.renderer.bottomRightGutter.height;
+        this.renderer.gridBounds.set(x, y, w, h);
 
         // Perform the layout
         const tokenQueue = newTokens.map(t => t.clone()),
@@ -1180,12 +1167,12 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
 
         for (let i = 0; i < tokenQueue.length; ++i) {
             const t = tokenQueue[i],
-                widthLeft = this.gridBounds.width - currentString.length,
+                widthLeft = this.renderer.gridBounds.width - currentString.length,
                 wrap = this.wordWrap && t.type !== FinalTokenType.newLines && t.length > widthLeft,
                 breakLine = t.type === FinalTokenType.newLines || wrap;
 
             if (wrap) {
-                const split = t.length > this.gridBounds.width
+                const split = t.length > this.renderer.gridBounds.width
                     ? widthLeft
                     : 0;
                 tokenQueue.splice(i + 1, 0, t.splitAt(split));
@@ -1209,11 +1196,11 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             }
         }
 
-        this.rows.splice(startY, rowRemoveCount, ...newRows);
+        this.renderer.rows.splice(startY, rowRemoveCount, ...newRows);
 
         // renumber rows
-        for (let y = startY + newRows.length; y < this.rows.length; ++y) {
-            const row = this.rows[y];
+        for (let y = startY + newRows.length; y < this.renderer.rows.length; ++y) {
+            const row = this.renderer.rows[y];
             row.lineNumber = currentLineNumber;
             row.startStringIndex = currentStringIndex;
             row.startTokenIndex += currentTokenIndex;
@@ -1230,17 +1217,17 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
 
         // provide editing room at the end of the buffer
-        if (this.rows.length === 0) {
-            this.rows.push(Row.emptyRow(0, 0, 0));
+        if (this.renderer.rows.length === 0) {
+            this.renderer.rows.push(Row.emptyRow(0, 0, 0));
         }
         else {
-            const lastRow = this.rows[this.rows.length - 1];
+            const lastRow = this.renderer.rows[this.renderer.rows.length - 1];
             if (lastRow.text.endsWith('\n')) {
-                this.rows.push(Row.emptyRow(lastRow.endStringIndex, lastRow.endTokenIndex, lastRow.lineNumber + 1));
+                this.renderer.rows.push(Row.emptyRow(lastRow.endStringIndex, lastRow.endTokenIndex, lastRow.lineNumber + 1));
             }
         }
 
-        this.maxVerticalScroll = Math.max(0, this.rows.length - this.gridBounds.height);
+        this.renderer.maxVerticalScroll = Math.max(0, this.renderer.rows.length - this.renderer.gridBounds.height);
 
         this.render();
     }
@@ -1261,14 +1248,14 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private clampScroll() {
-        const toHigh = this.scroll.y < 0 || this.maxVerticalScroll === 0,
-            toLow = this.scroll.y > this.maxVerticalScroll;
+        const toHigh = this.renderer.scroll.y < 0 || this.renderer.maxVerticalScroll === 0,
+            toLow = this.renderer.scroll.y > this.renderer.maxVerticalScroll;
 
         if (toHigh) {
-            this.scroll.y = 0;
+            this.renderer.scroll.y = 0;
         }
         else if (toLow) {
-            this.scroll.y = this.maxVerticalScroll;
+            this.renderer.scroll.y = this.renderer.maxVerticalScroll;
         }
         this.render();
 
@@ -1276,8 +1263,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private scrollIntoView(currentCursor: Cursor) {
-        const dx = this.minDelta(currentCursor.x, this.scroll.x, this.scroll.x + this.gridBounds.width),
-            dy = this.minDelta(currentCursor.y, this.scroll.y, this.scroll.y + this.gridBounds.height);
+        const dx = this.minDelta(currentCursor.x, this.renderer.scroll.x, this.renderer.scroll.x + this.renderer.gridBounds.width),
+            dy = this.minDelta(currentCursor.y, this.renderer.scroll.y, this.renderer.scroll.y + this.renderer.gridBounds.height);
         this.scrollBy(dx, dy);
     }
 
@@ -1287,8 +1274,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
         }
         this.history.push({
             value: this.value,
-            frontCursor: this.frontCursor.i,
-            backCursor: this.backCursor.i
+            frontCursor: this.renderer.frontCursor.i,
+            backCursor: this.renderer.backCursor.i
         });
         this.historyIndex = this.history.length - 1;
     }
@@ -1300,8 +1287,8 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
             this.historyIndex = nextHistoryIndex;
             const nextFrame = this.history[this.historyIndex];
             this.setValue(nextFrame.value, false);
-            this.frontCursor.setI(this.rows, curFrame.frontCursor);
-            this.backCursor.setI(this.rows, curFrame.backCursor);
+            this.renderer.frontCursor.setI(this.renderer.rows, curFrame.frontCursor);
+            this.renderer.backCursor.setI(this.renderer.rows, curFrame.backCursor);
         }
     }
 
@@ -1310,9 +1297,9 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// </summary>
     scrollTo(x: number, y: number) {
         if (!this.wordWrap) {
-            this.scroll.x = x;
+            this.renderer.scroll.x = x;
         }
-        this.scroll.y = y;
+        this.renderer.scroll.y = y;
         return this.clampScroll();
     }
 
@@ -1320,7 +1307,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// Move the scroll window by a given amount to a new location. The final location of the scroll window gets clamped to the text contents of the editor.
     /// </summary>
     scrollBy(dx: number, dy: number) {
-        return this.scrollTo(this.scroll.x + dx, this.scroll.y + dy);
+        return this.scrollTo(this.renderer.scroll.x + dx, this.renderer.scroll.y + dy);
     }
 
     readKeyDownEvent(evt: KeyboardEvent) {
@@ -1351,7 +1338,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     private copySelectedText(evt: ClipboardEvent) {
-        if (this.focused && this.frontCursor.i !== this.backCursor.i) {
+        if (this.focused && this.renderer.frontCursor.i !== this.renderer.backCursor.i) {
             evt.clipboardData.setData("text/plain", this.selectedText);
             evt.returnValue = false;
             return true;
@@ -1526,23 +1513,12 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     }
 
     /// <summary>
-    /// A synonymn for `value`
-    /// </summary>
-    get text() {
-        return this.value;
-    }
-
-    set text(txt) {
-        this.value = txt;
-    }
-
-    /// <summary>
     /// The range of text that is currently selected by the cursor. If no text is selected, reading `selectedText` returns the empty string (`""`) and writing to it inserts text at the current cursor location. 
     /// If text is selected, reading `selectedText` returns the text between the front and back cursors, writing to it overwrites the selected text, inserting the provided value.
     /// </summary>
     get selectedText() {
-        const minCursor = Cursor.min(this.frontCursor, this.backCursor),
-            maxCursor = Cursor.max(this.frontCursor, this.backCursor);
+        const minCursor = Cursor.min(this.renderer.frontCursor, this.renderer.backCursor),
+            maxCursor = Cursor.max(this.renderer.frontCursor, this.renderer.backCursor);
         return this.value.substring(minCursor.i, maxCursor.i);
     }
 
@@ -1554,13 +1530,13 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// The string index at which the front cursor is located. NOTE: the "front cursor" is the main cursor, but does not necessarily represent the beginning of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
     /// </summary>
     get selectionStart() {
-        return this.frontCursor.i;
+        return this.renderer.frontCursor.i;
     }
 
     set selectionStart(i) {
         i = i | 0;
-        if (i !== this.frontCursor.i) {
-            this.frontCursor.setI(this.rows, i);
+        if (i !== this.renderer.frontCursor.i) {
+            this.renderer.frontCursor.setI(this.renderer.rows, i);
             this.render();
         }
     }
@@ -1569,13 +1545,13 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// The string index at which the back cursor is located. NOTE: the "back cursor" is the selection range cursor, but does not necessarily represent the end of the selction range. The selection range runs from the minimum of front and back cursors, to the maximum.
     /// </summary>
     get selectionEnd() {
-        return this.backCursor.i;
+        return this.renderer.backCursor.i;
     }
 
     set selectionEnd(i) {
         i = i | 0;
-        if (i !== this.backCursor.i) {
-            this.backCursor.setI(this.rows, i);
+        if (i !== this.renderer.backCursor.i) {
+            this.renderer.backCursor.setI(this.renderer.rows, i);
             this.render();
         }
     }
@@ -1584,7 +1560,7 @@ export class Primrose extends TypedEventBase<PrimroseEvents> {
     /// If the back cursor is behind the front cursor, this value returns `"backward"`. Otherwise, `"forward"` is returned.
     /// </summary>
     get selectionDirection() {
-        return this.frontCursor.i <= this.backCursor.i
+        return this.renderer.frontCursor.i <= this.renderer.backCursor.i
             ? "forward"
             : "backward";
     }

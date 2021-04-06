@@ -1,13 +1,27 @@
 import { makeFont } from "kudzu/graphics2d/fonts";
+import { Point } from "kudzu/graphics2d/Point";
+import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
 import { setContextSize } from "kudzu/html/canvas";
+import { Cursor } from "../Cursor";
 import { BackgroundLayer } from "../Layers/BackgroundLayer";
 import { ForegroundLayer } from "../Layers/ForegroundLayer";
 import { TrimLayer } from "../Layers/TrimLayer";
+import { Row } from "../Row";
 export class PrimroseRenderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.character = new Size();
+        this.gridBounds = new Rectangle();
+        this.bottomRightGutter = new Size();
+        this.pointer = new Point();
+        this.scroll = new Point();
+        this.lastScrollDX = null;
+        this.lastScrollDY = null;
+        this.maxVerticalScroll = 0;
+        this.frontCursor = new Cursor();
+        this.backCursor = new Cursor();
+        this.rows = [Row.emptyRow(0, 0, 0)];
         this.context = this.canvas.getContext("2d");
         this.fg = new ForegroundLayer(this.canvas.width, this.canvas.height);
         this.bg = new BackgroundLayer(this.canvas.width, this.canvas.height);

@@ -1,16 +1,33 @@
 import { makeFont } from "kudzu/graphics2d/fonts";
+import { Point } from "kudzu/graphics2d/Point";
+import { Rectangle } from "kudzu/graphics2d/Rectangle";
 import { Size } from "kudzu/graphics2d/Size";
 import { CanvasTypes, Context2D, setContextSize } from "kudzu/html/canvas";
+import { Cursor } from "../Cursor";
 import { BackgroundLayer } from "../Layers/BackgroundLayer";
 import { ForegroundLayer } from "../Layers/ForegroundLayer";
 import { TrimLayer } from "../Layers/TrimLayer";
+import { Row } from "../Row";
 
 export interface IPrimroseRenderer {
     context: Context2D;
     fg: ForegroundLayer;
     bg: BackgroundLayer;
     trim: TrimLayer;
+
     character: Size;
+    gridBounds: Rectangle;
+    bottomRightGutter: Size;
+    pointer: Point;
+    scroll: Point;
+    lastScrollDX: number;
+    lastScrollDY: number;
+    maxVerticalScroll: number;
+    frontCursor: Cursor;
+    backCursor: Cursor;
+
+    rows: Row[];
+
     setSize(width: number, height: number, scaleFactor: number): Promise<void>;
     setFont(family: string, size: number): Promise<void>;
     render(): Promise<void>;
@@ -24,6 +41,18 @@ export class PrimroseRenderer implements IPrimroseRenderer {
     trim: TrimLayer;
 
     character = new Size();
+    gridBounds = new Rectangle();
+    bottomRightGutter = new Size();
+    pointer = new Point();
+    scroll = new Point();
+    lastScrollDX: number = null;
+    lastScrollDY: number = null;
+    maxVerticalScroll = 0;
+    frontCursor = new Cursor();
+    backCursor = new Cursor();
+
+    rows = [Row.emptyRow(0, 0, 0)];
+
 
     constructor(private canvas: CanvasTypes) {
         this.context = this.canvas.getContext("2d");
