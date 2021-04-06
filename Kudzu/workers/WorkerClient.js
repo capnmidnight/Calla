@@ -3,24 +3,23 @@ import { arrayProgress } from "../tasks/arrayProgress";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerClient extends TypedEventBase {
-    constructor(scriptPath, minScriptPathOrWorkers, workerPoolSize) {
+    constructor(scriptPath, minScriptPathOrWorkers, workerPoolSizeOrCurTaskCounter) {
         super();
-        this.taskCounter = 0;
-        this.messageHandlers = new Map();
+        this.invocations = new Map();
         this.propertyValues = new Map();
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
         // Normalize constructor parameters.
         if (isNumber(minScriptPathOrWorkers)) {
-            workerPoolSize = minScriptPathOrWorkers;
+            workerPoolSizeOrCurTaskCounter = minScriptPathOrWorkers;
             minScriptPathOrWorkers = undefined;
         }
-        if (isNullOrUndefined(workerPoolSize)) {
-            workerPoolSize = 1;
+        if (isNullOrUndefined(workerPoolSizeOrCurTaskCounter)) {
+            workerPoolSizeOrCurTaskCounter = 1;
         }
         // Validate parameters
-        if (workerPoolSize < 1) {
+        if (workerPoolSizeOrCurTaskCounter < 1) {
             throw new Error("Worker pool size must be a postive integer greater than 0");
         }
         // Choose which version of the script we're going to load.
@@ -33,45 +32,49 @@ export class WorkerClient extends TypedEventBase {
         }
         this.dispatchMessageResponse = (evt) => {
             const data = evt.data;
-            if (data.methodName === WorkerServerMessageType.Event) {
-                this.propogateEvent(data);
-            }
-            else if (data.methodName === WorkerServerMessageType.PropertyInit) {
-                this.propertyInit(data);
-            }
-            else if (data.methodName === WorkerServerMessageType.Property) {
-                this.propertyChanged(data);
-            }
-            else if (data.methodName === WorkerServerMessageType.Progress) {
-                this.progressReport(data);
-            }
-            else if (data.methodName === WorkerServerMessageType.Return) {
-                this.methodReturned(data);
-            }
-            else if (data.methodName === WorkerServerMessageType.Error) {
-                this.invocationError(data);
-            }
-            else {
-                assertNever(data);
+            switch (data.type) {
+                case WorkerServerMessageType.Event:
+                    this.propogateEvent(data);
+                    break;
+                case WorkerServerMessageType.PropertyInit:
+                    this.propertyInit(data);
+                    break;
+                case WorkerServerMessageType.Property:
+                    this.propertyChanged(data);
+                    break;
+                case WorkerServerMessageType.Progress:
+                    this.progressReport(data);
+                    break;
+                case WorkerServerMessageType.Return:
+                    this.methodReturned(data);
+                    break;
+                case WorkerServerMessageType.Error:
+                    this.invocationError(data);
+                    break;
+                default:
+                    assertNever(data);
             }
         };
         if (isArray(minScriptPathOrWorkers)) {
+            this.taskCounter = workerPoolSizeOrCurTaskCounter;
             this.workers = minScriptPathOrWorkers;
         }
         else {
-            this.workers = new Array(workerPoolSize);
-            for (let i = 0; i < workerPoolSize; ++i) {
+            this.taskCounter = 0;
+            this.workers = new Array(workerPoolSizeOrCurTaskCounter);
+            for (let i = 0; i < workerPoolSizeOrCurTaskCounter; ++i) {
                 this.workers[i] = new Worker(this._script);
             }
         }
         for (const worker of this.workers) {
             worker.addEventListener("message", this.dispatchMessageResponse);
         }
-        const firstWorker = this.workers[0];
-        this._ready = this.callMethodOnWorker(firstWorker, this.taskCounter++, GET_PROPERTY_VALUES_METHOD);
+        this._ready = (async () => {
+            await this.callMethodOnAll(GET_PROPERTY_VALUES_METHOD);
+        })();
     }
     propogateEvent(data) {
-        const evt = new TypedEvent(data.type);
+        const evt = new TypedEvent(data.eventName);
         this.dispatchEvent(Object.assign(evt, data.data));
     }
     propertyInit(data) {
@@ -86,29 +89,31 @@ export class WorkerClient extends TypedEventBase {
         this.propertyValues.set(data.propertyName, data.value);
     }
     progressReport(data) {
-        const messageHandler = this.messageHandlers.get(data.taskID);
-        const { onProgress } = messageHandler;
+        const invocation = this.invocations.get(data.taskID);
+        const { onProgress } = invocation;
         if (isFunction(onProgress)) {
             onProgress(data.soFar, data.total, data.msg);
         }
     }
     methodReturned(data) {
-        // When the invocation is complete, we want to stop listening to the worker
-        // message channel so we don't eat up processing messages that have no chance
-        // over pertaining to the invocation.
-        const messageHandler = this.messageHandlers.get(data.taskID);
+        const messageHandler = this.removeInvocation(data.taskID);
         const { resolve } = messageHandler;
-        this.messageHandlers.delete(data.taskID);
         resolve(data.returnValue);
     }
     invocationError(data) {
-        // When the invocation has errored, we want to stop listening to the worker
-        // message channel so we don't eat up processing messages that have no chance
-        // over pertaining to the invocation.
-        const messageHandler = this.messageHandlers.get(data.taskID);
+        const messageHandler = this.removeInvocation(data.taskID);
         const { reject, methodName } = messageHandler;
-        this.messageHandlers.delete(data.taskID);
         reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
+    }
+    /**
+     * When the invocation has errored, we want to stop listening to the worker
+     * message channel so we don't eat up processing messages that have no chance
+     * ever pertaining to the invocation.
+     **/
+    removeInvocation(taskID) {
+        const invocation = this.invocations.get(taskID);
+        this.invocations.delete(taskID);
+        return invocation;
     }
     get ready() {
         return this._ready;
@@ -152,12 +157,13 @@ export class WorkerClient extends TypedEventBase {
     }
     callMethodOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
         return new Promise((resolve, reject) => {
-            this.messageHandlers.set(taskID, {
+            const invocation = {
                 onProgress,
                 resolve,
                 reject,
                 methodName
-            });
+            };
+            this.invocations.set(taskID, invocation);
             let message = null;
             if (isDefined(params)) {
                 message = {
@@ -243,6 +249,10 @@ export class WorkerClient extends TypedEventBase {
         const rootTaskID = this.taskCounter;
         this.taskCounter += this.workers.length;
         return await arrayProgress(onProgress, this.workers, (worker, subProgress, i) => this.callMethodOnWorker(worker, rootTaskID + i, methodName, parameters, null, subProgress));
+    }
+    getDedicatedClient() {
+        const Class = Object.getPrototypeOf(this).constructor;
+        return new Class(this.scriptPath, [this.popWorker()], this.taskCounter + 1);
     }
 }
 WorkerClient.isSupported = "Worker" in globalThis;

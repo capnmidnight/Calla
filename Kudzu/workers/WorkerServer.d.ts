@@ -27,16 +27,28 @@ export declare class WorkerServer {
      * @param msg - an optional message to include as part of the progress update.
      */
     private onProgress;
+    /**
+     * Return back to the client.
+     * @param taskID - the invocation ID of the method that is returning.
+     * @param returnValue - the (optional) value to return.
+     * @param transferReturnValue - a mapping function to extract any Transferable objects from the return value.
+     */
     private onReturn;
     private onEvent;
     private onPropertyInitialized;
     private onPropertyChanged;
-    protected onReady(): void;
     addProperty(obj: any, name: string): void;
     /**
      * Registers a function call for cross-thread invocation.
      * @param methodName - the name of the method to use during invocations.
-     * @param asyncFunc - the function to execute when the method is invoked.
+     * @param obj - the object on which to find the method.
+     * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
+     */
+    addMethod<T>(methodName: string, obj: any, transferReturnValue?: createTransferableCallback<T>): void;
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param asyncFuncOrObject - the function to execute when the method is invoked.
      * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
      */
     addMethod<T>(methodName: string, asyncFunc: (...args: any[]) => Promise<T>, transferReturnValue?: createTransferableCallback<T>): void;

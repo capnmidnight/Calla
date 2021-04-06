@@ -1,5 +1,4 @@
-import { TypedEvent } from "../events/EventBase";
-import { isArray, isDefined } from "../typeChecks";
+import { assertNever, isArray, isDefined, isFunction } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerServer {
     /**
@@ -18,11 +17,15 @@ export class WorkerServer {
         });
         this.self.onmessage = (evt) => {
             const data = evt.data;
-            if (data.type === WorkerClientMessageType.PropertySet) {
-                this.setProperty(data);
-            }
-            else {
-                this.callMethod(data);
+            switch (data.type) {
+                case WorkerClientMessageType.PropertySet:
+                    this.setProperty(data);
+                    break;
+                case WorkerClientMessageType.MethodCall:
+                    this.callMethod(data);
+                    break;
+                default:
+                    assertNever(data);
             }
         };
     }
@@ -77,7 +80,7 @@ export class WorkerServer {
      */
     onError(taskID, errorMessage) {
         const message = {
-            methodName: WorkerServerMessageType.Error,
+            type: WorkerServerMessageType.Error,
             taskID,
             errorMessage
         };
@@ -93,7 +96,7 @@ export class WorkerServer {
      */
     onProgress(taskID, soFar, total, msg) {
         const message = {
-            methodName: WorkerServerMessageType.Progress,
+            type: WorkerServerMessageType.Progress,
             taskID,
             soFar,
             total,
@@ -101,17 +104,23 @@ export class WorkerServer {
         };
         this.postMessage(message);
     }
+    /**
+     * Return back to the client.
+     * @param taskID - the invocation ID of the method that is returning.
+     * @param returnValue - the (optional) value to return.
+     * @param transferReturnValue - a mapping function to extract any Transferable objects from the return value.
+     */
     onReturn(taskID, returnValue, transferReturnValue) {
         let message = null;
         if (returnValue === undefined) {
             message = {
-                methodName: WorkerServerMessageType.Return,
+                type: WorkerServerMessageType.Return,
                 taskID
             };
         }
         else {
             message = {
-                methodName: WorkerServerMessageType.Return,
+                type: WorkerServerMessageType.Return,
                 taskID,
                 returnValue
             };
@@ -124,19 +133,19 @@ export class WorkerServer {
             this.postMessage(message);
         }
     }
-    onEvent(type, evt, makePayload, transferReturnValue) {
+    onEvent(eventName, evt, makePayload, transferReturnValue) {
         let message = null;
         if (isDefined(makePayload)) {
             message = {
-                methodName: WorkerServerMessageType.Event,
-                type,
+                type: WorkerServerMessageType.Event,
+                eventName,
                 data: makePayload(evt)
             };
         }
         else {
             message = {
-                methodName: WorkerServerMessageType.Event,
-                type
+                type: WorkerServerMessageType.Event,
+                eventName
             };
         }
         if (message.data !== undefined
@@ -150,7 +159,7 @@ export class WorkerServer {
     }
     onPropertyInitialized(propertyName, value) {
         const message = {
-            methodName: WorkerServerMessageType.PropertyInit,
+            type: WorkerServerMessageType.PropertyInit,
             propertyName,
             value
         };
@@ -158,14 +167,11 @@ export class WorkerServer {
     }
     onPropertyChanged(propertyName, value) {
         const message = {
-            methodName: WorkerServerMessageType.Property,
+            type: WorkerServerMessageType.Property,
             propertyName,
             value
         };
         this.postMessage(message);
-    }
-    onReady() {
-        this.onEvent("workerserverready", new TypedEvent("workerserverready"));
     }
     addProperty(obj, name) {
         const proto = Object.getPrototypeOf(obj);
@@ -183,19 +189,22 @@ export class WorkerServer {
             }
         });
     }
-    /**
-     * Registers a function call for cross-thread invocation.
-     * @param methodName - the name of the method to use during invocations.
-     * @param asyncFunc - the function to execute when the method is invoked.
-     * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
-     */
-    addMethod(methodName, asyncFunc, transferReturnValue) {
+    addMethod(methodName, asyncFuncOrObject, transferReturnValue) {
         if (methodName === GET_PROPERTY_VALUES_METHOD) {
-            console.warn(`"${GET_PROPERTY_VALUES_METHOD}" is the name of an internal method for WorkerServers and cannot be overridden.`);
+            throw new Error(`"${GET_PROPERTY_VALUES_METHOD}" is the name of an internal method for WorkerServers and cannot be overridden.`);
+        }
+        let method = null;
+        if (isFunction(asyncFuncOrObject)) {
+            method = asyncFuncOrObject;
         }
         else {
-            this.addMethodInternal(methodName, asyncFunc, transferReturnValue);
+            method = asyncFuncOrObject[methodName];
+            if (!isFunction(method)) {
+                throw new Error(`${methodName} is not a method in the given object.`);
+            }
+            method = method.bind(asyncFuncOrObject);
         }
+        this.addMethodInternal(methodName, method, transferReturnValue);
     }
     addMethodInternal(methodName, asyncFunc, transferReturnValue) {
         this.methods.set(methodName, async (taskID, ...params) => {

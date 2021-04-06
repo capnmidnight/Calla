@@ -3,9 +3,9 @@ import type { progressCallback } from "../tasks/progressCallback";
 export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported: boolean;
     private _script;
-    private workers;
     private taskCounter;
-    private messageHandlers;
+    private workers;
+    private invocations;
     private dispatchMessageResponse;
     private propertyValues;
     private _ready;
@@ -18,8 +18,9 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      * Creates a new pooled worker method executor.
      * @param scriptPath - the path to the unminified script to use for the worker
      * @param workers - a set of workers that are already running.
+     * @param startTaskCounter - the next task ID that the worker should use.
      */
-    constructor(scriptPath: string, workers: Worker[]);
+    constructor(scriptPath: string, workers: Worker[], startTaskCounter: number);
     /**
      * Creates a new pooled worker method executor.
      * @param scriptPath - the path to the unminified script to use for the worker
@@ -39,13 +40,18 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
      */
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPathOrWorkers?: number | string | Worker[], workerPoolSize?: number);
     private propogateEvent;
     private propertyInit;
     private propertyChanged;
     private progressReport;
     private methodReturned;
     private invocationError;
+    /**
+     * When the invocation has errored, we want to stop listening to the worker
+     * message channel so we don't eat up processing messages that have no chance
+     * ever pertaining to the invocation.
+     **/
+    private removeInvocation;
     get ready(): Promise<void>;
     get isDedicated(): boolean;
     popWorker(): Worker;
@@ -93,4 +99,5 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
     protected callMethodOnAll<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T[]>;
+    getDedicatedClient(): any;
 }

@@ -16,7 +16,7 @@ interface WorkerClientMessage<T extends WorkerClientMessageType> {
     taskID: number;
 }
 interface WorkerServerMessage<T extends WorkerServerMessageType> {
-    methodName: T;
+    type: T;
 }
 interface WorkerServerTaskMessage<T extends WorkerServerMessageType> extends WorkerServerMessage<T> {
     taskID: number;
@@ -34,7 +34,7 @@ export interface WorkerClientPropertySetMessage extends WorkerClientMessage<Work
     value: any;
 }
 export interface WorkerServerEventMessage extends WorkerServerMessage<WorkerServerMessageType.Event> {
-    type: string;
+    eventName: string;
     data?: any;
 }
 export interface WorkerServerErrorMessage extends WorkerServerTaskMessage<WorkerServerMessageType.Error> {

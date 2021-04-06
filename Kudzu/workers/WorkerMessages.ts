@@ -20,7 +20,7 @@ interface WorkerClientMessage<T extends WorkerClientMessageType> {
 }
 
 interface WorkerServerMessage<T extends WorkerServerMessageType> {
-    methodName: T;
+    type: T;
 }
 
 interface WorkerServerTaskMessage<T extends WorkerServerMessageType>
@@ -48,7 +48,7 @@ export interface WorkerClientPropertySetMessage
 
 export interface WorkerServerEventMessage
     extends WorkerServerMessage<WorkerServerMessageType.Event> {
-    type: string;
+    eventName: string;
     data?: any;
 }
 
