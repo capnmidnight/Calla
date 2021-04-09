@@ -21,14 +21,17 @@ export const isMobile = isAndroid
     || isUCBrowser;
 export const isDesktop = !isMobile;
 
-export const isOculus = /oculus/.test(navigator.userAgent);
-export const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
-export const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
+export const isOculus = /oculus/i.test(navigator.userAgent);
+export const isOculusGo = isOculus && /pacific/i.test(navigator.userAgent);
+export const isOculusQuest = isOculus && /quest/i.test(navigator.userAgent);
+export const isOculusQuest2 = isOculus && /quest 2/i.test(navigator.userAgent);
 export const isMobileVR = /Mobile VR/.test(navigator.userAgent)
     || isOculus;
 export const hasWebXR = "xr" in navigator
     && "isSessionSupported" in (navigator as any).xr;
 export const hasWebVR = "getVRDisplays" in navigator;
+
+export const hasBatteryAPI = "getBattery" in navigator;
 
 export const browserName = isChrome
     ? "CHROMIUM"
