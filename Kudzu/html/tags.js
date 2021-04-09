@@ -1,7 +1,7 @@
 import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
 import { Attr, type } from "./attrs";
 import { CssPropSet, margin, styles } from "./css";
-function hasNode(obj) {
+function isErsatzElement(obj) {
     return isObject(obj)
         && "element" in obj
         && obj.element instanceof Node;
@@ -62,8 +62,8 @@ export function tag(name, ...rest) {
                 || isBoolean(x)
                 || x instanceof Date
                 || x instanceof Node
-                || hasNode(x)) {
-                if (hasNode(x)) {
+                || isErsatzElement(x)) {
+                if (isErsatzElement(x)) {
                     x = x.element;
                 }
                 else if (!(x instanceof Node)) {

@@ -1,5 +1,6 @@
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import type { CanvasTypes } from "kudzu/html/canvas";
+import { ErsatzElement } from "kudzu/html/tags";
 import { Grammar } from "./grammars";
 interface PointXY {
     x: number;
@@ -15,7 +16,7 @@ interface PointerEventCollection {
     readUpEventUV: (evt: PointerUVEvent) => void;
     readMoveEventUV: (evt: PointerUVEvent) => void;
 }
-export interface PrimroseOptions {
+export interface PrimroseOptions extends ErsatzElement {
     readOnly: boolean;
     multiLine: boolean;
     wordWrap: boolean;
@@ -26,7 +27,6 @@ export interface PrimroseOptions {
     fontFamily: string;
     language: string | Grammar;
     scaleFactor: number;
-    element: HTMLElement;
     width: number;
     height: number;
 }

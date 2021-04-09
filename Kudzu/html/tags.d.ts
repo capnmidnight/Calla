@@ -1,12 +1,12 @@
 import { CSSInJSRule, CssPropSet } from "./css";
-interface HasNode {
+export interface ErsatzElement {
     element: HTMLElement;
 }
 interface IAppliable {
     apply(x: any): any;
 }
 declare type makesIAppliable = (v: any) => IAppliable;
-export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | string | number | boolean | Date | CssPropSet;
+export declare type TagChild = Node | ErsatzElement | IAppliable | makesIAppliable | string | number | boolean | Date | CssPropSet;
 export interface IFocusable {
     focus(): void;
 }

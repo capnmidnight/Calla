@@ -2,7 +2,7 @@ import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChec
 import { Attr, type } from "./attrs";
 import { CSSInJSRule, CssPropSet, margin, styles } from "./css";
 
-interface HasNode {
+export interface ErsatzElement {
     element: HTMLElement;
 }
 
@@ -14,7 +14,7 @@ type makesIAppliable = (v: any) => IAppliable;
 
 
 export type TagChild = Node
-    | HasNode
+    | ErsatzElement
     | IAppliable
     | makesIAppliable
     | string
@@ -23,7 +23,7 @@ export type TagChild = Node
     | Date
     | CssPropSet;
 
-function hasNode(obj: any): obj is HasNode {
+function isErsatzElement(obj: any): obj is ErsatzElement {
     return isObject(obj)
         && "element" in obj
         && (obj as any).element instanceof Node;
@@ -100,9 +100,9 @@ export function tag(name: string, ...rest: TagChild[]) {
                 || isBoolean(x)
                 || x instanceof Date
                 || x instanceof Node
-                || hasNode(x)) {
+                || isErsatzElement(x)) {
 
-                if (hasNode(x)) {
+                if (isErsatzElement(x)) {
                     x = x.element;
                 }
                 else if (!(x instanceof Node)) {

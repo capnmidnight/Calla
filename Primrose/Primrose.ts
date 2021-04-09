@@ -4,7 +4,7 @@ import type { CanvasTypes } from "kudzu/html/canvas";
 import { createUtilityCanvas, isHTMLCanvas } from "kudzu/html/canvas";
 import { border, display, height, overflow, padding, styles, width } from "kudzu/html/css";
 import { isApple, isFirefox } from "kudzu/html/flags";
-import { Canvas, elementClearChildren } from "kudzu/html/tags";
+import { Canvas, elementClearChildren, ErsatzElement } from "kudzu/html/tags";
 import { isDefined, isFunction, isString } from "kudzu/typeChecks";
 import { multiLineInput, multiLineOutput, singleLineInput, singleLineOutput } from "./controlTypes";
 import { Cursor } from "./Cursor";
@@ -55,7 +55,8 @@ interface PointerEventCollection {
     readMoveEventUV: (evt: PointerUVEvent) => void;
 }
 
-export interface PrimroseOptions {
+export interface PrimroseOptions
+    extends ErsatzElement {
     readOnly: boolean;
     multiLine: boolean;
     wordWrap: boolean;
@@ -66,7 +67,6 @@ export interface PrimroseOptions {
     fontFamily: string;
     language: string | Grammar;
     scaleFactor: number;
-    element: HTMLElement;
     width: number;
     height: number;
 }
