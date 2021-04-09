@@ -1,7 +1,8 @@
-import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { CanvasTypes, Context2D, createUtilityCanvas, setContextSize } from "../html/canvas";
+import { TypedEvent } from "../events/EventBase";
+import { Context2D, createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
+import { CanvasImage } from "./CanvasImage";
 import { makeFont } from "./fonts";
 
 export interface PaddingRect {
@@ -10,14 +11,6 @@ export interface PaddingRect {
     bottom: number;
     left: number;
 }
-
-interface TextImageEvents {
-    redrawn: TypedEvent<"redrawn">;
-    notready: TypedEvent<"notready">;
-}
-
-const redrawnEvt = new TypedEvent("redrawn");
-const notReadyEvt = new TypedEvent("notready");
 
 export interface TextImageOptions {
     minWidth: number;
@@ -44,7 +37,9 @@ export interface TextImageOptions {
 }
 
 export class TextImage
-    extends TypedEventBase<TextImageEvents> {
+    extends CanvasImage<{
+        notready: TypedEvent<"notready">;
+    }> {
     private _minWidth: number | null = null;
     private _maxWidth: number | null = null;
     private _minHeight: number | null = null;
@@ -67,11 +62,10 @@ export class TextImage
 
     private _padding: PaddingRect;
 
-    private _canvas: CanvasTypes;
-    private _g: Context2D;
+    private notReadyEvt = new TypedEvent("notready");
 
     constructor(options?: Partial<TextImageOptions>) {
-        super();
+        super(10, 10);
 
         if (isDefined(options)) {
             if (isDefined(options.minWidth)) {
@@ -156,14 +150,6 @@ export class TextImage
                 left: 0
             };
         }
-
-        this._canvas = createUtilityCanvas(10, 10);
-        const g = this.canvas.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a graphics context for the TextImage canvas.");
-        }
-
-        this._g = g;
     }
 
     get scale() {
@@ -219,10 +205,6 @@ export class TextImage
             this._maxHeight = v;
             this.redraw();
         }
-    }
-
-    get canvas() {
-        return this._canvas;
     }
 
     get width() {
@@ -384,9 +366,9 @@ export class TextImage
     }
 
     draw(g: Context2D, x: number, y: number) {
-        if (this._canvas.width > 0
-            && this._canvas.height > 0) {
-            g.drawImage(this._canvas, x, y, this.width, this.height);
+        if (this.canvas.width > 0
+            && this.canvas.height > 0) {
+            g.drawImage(this.canvas, x, y, this.width, this.height);
         }
     }
 
@@ -405,8 +387,8 @@ export class TextImage
         }
     }
 
-    private redraw() {
-        this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    protected onRedraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.fontFamily
             && this.fontSize
@@ -450,14 +432,14 @@ export class TextImage
                 const font = makeFont(this);
                 this._fontSize = realFontSize;
 
-                this._g.textAlign = "center";
-                this._g.textBaseline = "middle";
-                this._g.font = font;
+                this.g.textAlign = "center";
+                this.g.textBaseline = "middle";
+                this.g.font = font;
 
                 trueWidth = 0;
                 trueHeight = 0;
                 for (const line of lines) {
-                    const metrics = this._g.measureText(line);
+                    const metrics = this.g.measureText(line);
                     trueWidth = Math.max(trueWidth, metrics.width);
                     trueHeight += fontSize;
                     if (isNumber(metrics.actualBoundingBoxLeft)
@@ -489,13 +471,13 @@ export class TextImage
                     const minDif = Math.min(mdMinWidth, Math.min(mdMaxWidth, Math.min(mdMinHeight, mdMaxHeight)));
                     if (minDif < minFontDelta) {
                         minFontDelta = minDif;
-                        minFont = this._g.font;
+                        minFont = this.g.font;
                     }
 
                     if ((tooBig || tooSmall)
-                        && tried.indexOf(this._g.font) > -1
+                        && tried.indexOf(this.g.font) > -1
                         && minFont) {
-                        this._g.font = minFont;
+                        this.g.font = minFont;
                         tooBig = false;
                         tooSmall = false;
                     }
@@ -510,7 +492,7 @@ export class TextImage
                     }
                 }
 
-                tried.push(this._g.font);
+                tried.push(this.g.font);
             } while (tooBig || tooSmall);
 
             if (autoResize) {
@@ -532,7 +514,7 @@ export class TextImage
             const newW = trueWidth + this.scale * (this.padding.right + this.padding.left);
             const newH = trueHeight + this.scale * (this.padding.top + this.padding.bottom);
             try {
-                setContextSize(this._g, newW, newH);
+                setContextSize(this.g, newW, newH);
             }
             catch (exp) {
                 console.error(exp);
@@ -540,20 +522,20 @@ export class TextImage
             }
 
             if (this.bgColor) {
-                this._g.fillStyle = this.bgColor;
-                this._g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
             else {
-                this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
 
             if (this.strokeColor && this.strokeSize) {
-                this._g.lineWidth = this.strokeSize * this.scale;
-                this._g.strokeStyle = this.strokeColor;
+                this.g.lineWidth = this.strokeSize * this.scale;
+                this.g.strokeStyle = this.strokeColor;
             }
 
             if (this.fillColor) {
-                this._g.fillStyle = this.fillColor;
+                this.g.fillStyle = this.fillColor;
             }
 
             const di = 0.5 * (lines.length - 1);
@@ -565,11 +547,11 @@ export class TextImage
                 const y = dy + this.canvas.height / 2;
 
                 if (this.strokeColor && this.strokeSize) {
-                    this._g.strokeText(line, x, y);
+                    this.g.strokeText(line, x, y);
                 }
 
                 if (this.fillColor) {
-                    this._g.fillText(line, x, y);
+                    this.g.fillText(line, x, y);
                 }
             }
 
@@ -587,18 +569,19 @@ export class TextImage
                     }
                     g.translate(-this.canvas.width / 2, -this.canvas.height / 2);
                     g.drawImage(this.canvas, 0, 0);
-                    setContextSize(this._g, canv.width, canv.height);
+                    setContextSize(this.g, canv.width, canv.height);
                 }
                 else {
                     console.warn("Couldn't rotate the TextImage");
                 }
-                this._g.drawImage(canv, 0, 0);
+                this.g.drawImage(canv, 0, 0);
             }
 
-            this.dispatchEvent(redrawnEvt);
+            return true;
         }
         else {
-            this.dispatchEvent(notReadyEvt);
+            this.dispatchEvent(this.notReadyEvt);
+            return false;
         }
     }
 }

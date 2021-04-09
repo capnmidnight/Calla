@@ -1,14 +1,11 @@
-import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { CanvasTypes, Context2D } from "../html/canvas";
+import { TypedEvent } from "../events/EventBase";
+import { Context2D } from "../html/canvas";
+import { CanvasImage } from "./CanvasImage";
 export interface PaddingRect {
     top: number;
     right: number;
     bottom: number;
     left: number;
-}
-interface TextImageEvents {
-    redrawn: TypedEvent<"redrawn">;
-    notready: TypedEvent<"notready">;
 }
 export interface TextImageOptions {
     minWidth: number;
@@ -30,7 +27,9 @@ export interface TextImageOptions {
     fontSize: number;
     padding: PaddingRect;
 }
-export declare class TextImage extends TypedEventBase<TextImageEvents> {
+export declare class TextImage extends CanvasImage<{
+    notready: TypedEvent<"notready">;
+}> {
     private _minWidth;
     private _maxWidth;
     private _minHeight;
@@ -49,8 +48,7 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     private _fontFamily;
     private _fontSize;
     private _padding;
-    private _canvas;
-    private _g;
+    private notReadyEvt;
     constructor(options?: Partial<TextImageOptions>);
     get scale(): number;
     set scale(v: number);
@@ -62,7 +60,6 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     set minHeight(v: number);
     get maxHeight(): number;
     set maxHeight(v: number);
-    get canvas(): CanvasTypes;
     get width(): number;
     get height(): number;
     get padding(): PaddingRect;
@@ -93,6 +90,5 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     set value(v: string);
     draw(g: Context2D, x: number, y: number): void;
     private split;
-    private redraw;
+    protected onRedraw(): boolean;
 }
-export {};

@@ -1,13 +1,12 @@
-import { TypedEvent, TypedEventBase } from "../events/EventBase";
+import { TypedEvent } from "../events/EventBase";
 import { createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
+import { CanvasImage } from "./CanvasImage";
 import { makeFont } from "./fonts";
-const redrawnEvt = new TypedEvent("redrawn");
-const notReadyEvt = new TypedEvent("notready");
-export class TextImage extends TypedEventBase {
+export class TextImage extends CanvasImage {
     constructor(options) {
-        super();
+        super(10, 10);
         this._minWidth = null;
         this._maxWidth = null;
         this._minHeight = null;
@@ -25,6 +24,7 @@ export class TextImage extends TypedEventBase {
         this._fontWeight = "normal";
         this._fontFamily = "sans-serif";
         this._fontSize = 20;
+        this.notReadyEvt = new TypedEvent("notready");
         if (isDefined(options)) {
             if (isDefined(options.minWidth)) {
                 this._minWidth = options.minWidth;
@@ -89,12 +89,6 @@ export class TextImage extends TypedEventBase {
                 left: 0
             };
         }
-        this._canvas = createUtilityCanvas(10, 10);
-        const g = this.canvas.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a graphics context for the TextImage canvas.");
-        }
-        this._g = g;
     }
     get scale() {
         return this._scale;
@@ -140,9 +134,6 @@ export class TextImage extends TypedEventBase {
             this._maxHeight = v;
             this.redraw();
         }
-    }
-    get canvas() {
-        return this._canvas;
     }
     get width() {
         return this.canvas.width / this.scale;
@@ -274,9 +265,9 @@ export class TextImage extends TypedEventBase {
         }
     }
     draw(g, x, y) {
-        if (this._canvas.width > 0
-            && this._canvas.height > 0) {
-            g.drawImage(this._canvas, x, y, this.width, this.height);
+        if (this.canvas.width > 0
+            && this.canvas.height > 0) {
+            g.drawImage(this.canvas, x, y, this.width, this.height);
         }
     }
     split(value) {
@@ -293,8 +284,8 @@ export class TextImage extends TypedEventBase {
                 .split('\n');
         }
     }
-    redraw() {
-        this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    onRedraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.fontFamily
             && this.fontSize
             && (this.fillColor || (this.strokeColor && this.strokeSize))
@@ -320,13 +311,13 @@ export class TextImage extends TypedEventBase {
                 this._fontSize = fontSize;
                 const font = makeFont(this);
                 this._fontSize = realFontSize;
-                this._g.textAlign = "center";
-                this._g.textBaseline = "middle";
-                this._g.font = font;
+                this.g.textAlign = "center";
+                this.g.textBaseline = "middle";
+                this.g.font = font;
                 trueWidth = 0;
                 trueHeight = 0;
                 for (const line of lines) {
-                    const metrics = this._g.measureText(line);
+                    const metrics = this.g.measureText(line);
                     trueWidth = Math.max(trueWidth, metrics.width);
                     trueHeight += fontSize;
                     if (isNumber(metrics.actualBoundingBoxLeft)
@@ -354,12 +345,12 @@ export class TextImage extends TypedEventBase {
                     const minDif = Math.min(mdMinWidth, Math.min(mdMaxWidth, Math.min(mdMinHeight, mdMaxHeight)));
                     if (minDif < minFontDelta) {
                         minFontDelta = minDif;
-                        minFont = this._g.font;
+                        minFont = this.g.font;
                     }
                     if ((tooBig || tooSmall)
-                        && tried.indexOf(this._g.font) > -1
+                        && tried.indexOf(this.g.font) > -1
                         && minFont) {
-                        this._g.font = minFont;
+                        this.g.font = minFont;
                         tooBig = false;
                         tooSmall = false;
                     }
@@ -372,7 +363,7 @@ export class TextImage extends TypedEventBase {
                         fontSize = (fontSize + highFontSize) / 2;
                     }
                 }
-                tried.push(this._g.font);
+                tried.push(this.g.font);
             } while (tooBig || tooSmall);
             if (autoResize) {
                 if (trueWidth < targetMinWidth) {
@@ -391,25 +382,25 @@ export class TextImage extends TypedEventBase {
             const newW = trueWidth + this.scale * (this.padding.right + this.padding.left);
             const newH = trueHeight + this.scale * (this.padding.top + this.padding.bottom);
             try {
-                setContextSize(this._g, newW, newH);
+                setContextSize(this.g, newW, newH);
             }
             catch (exp) {
                 console.error(exp);
                 throw exp;
             }
             if (this.bgColor) {
-                this._g.fillStyle = this.bgColor;
-                this._g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
             else {
-                this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
             if (this.strokeColor && this.strokeSize) {
-                this._g.lineWidth = this.strokeSize * this.scale;
-                this._g.strokeStyle = this.strokeColor;
+                this.g.lineWidth = this.strokeSize * this.scale;
+                this.g.strokeStyle = this.strokeColor;
             }
             if (this.fillColor) {
-                this._g.fillStyle = this.fillColor;
+                this.g.fillStyle = this.fillColor;
             }
             const di = 0.5 * (lines.length - 1);
             for (let i = 0; i < lines.length; ++i) {
@@ -418,10 +409,10 @@ export class TextImage extends TypedEventBase {
                 const x = dx + this.canvas.width / 2;
                 const y = dy + this.canvas.height / 2;
                 if (this.strokeColor && this.strokeSize) {
-                    this._g.strokeText(line, x, y);
+                    this.g.strokeText(line, x, y);
                 }
                 if (this.fillColor) {
-                    this._g.fillText(line, x, y);
+                    this.g.fillText(line, x, y);
                 }
             }
             if (isVertical) {
@@ -438,17 +429,18 @@ export class TextImage extends TypedEventBase {
                     }
                     g.translate(-this.canvas.width / 2, -this.canvas.height / 2);
                     g.drawImage(this.canvas, 0, 0);
-                    setContextSize(this._g, canv.width, canv.height);
+                    setContextSize(this.g, canv.width, canv.height);
                 }
                 else {
                     console.warn("Couldn't rotate the TextImage");
                 }
-                this._g.drawImage(canv, 0, 0);
+                this.g.drawImage(canv, 0, 0);
             }
-            this.dispatchEvent(redrawnEvt);
+            return true;
         }
         else {
-            this.dispatchEvent(notReadyEvt);
+            this.dispatchEvent(this.notReadyEvt);
+            return false;
         }
     }
 }
