@@ -36,8 +36,6 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "MyRollup", "MyRollup\", "{E
 		SlnRelativePath = "MyRollup\"
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssemblyScript", "TestAssemblyScript\TestAssemblyScript.csproj", "{9B86AAFF-3EC3-4EB9-8D54-6121D1EEFF91}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,10 +58,6 @@ Global
 		{EB966239-23AB-4562-979A-719E76303082}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB966239-23AB-4562-979A-719E76303082}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{EB966239-23AB-4562-979A-719E76303082}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{9B86AAFF-3EC3-4EB9-8D54-6121D1EEFF91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86AAFF-3EC3-4EB9-8D54-6121D1EEFF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B86AAFF-3EC3-4EB9-8D54-6121D1EEFF91}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B86AAFF-3EC3-4EB9-8D54-6121D1EEFF91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
