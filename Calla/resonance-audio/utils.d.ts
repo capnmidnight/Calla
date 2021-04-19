@@ -16,7 +16,6 @@
 import { vec3 } from "gl-matrix";
 import { AttenuationRolloff } from "./AttenuationRolloff";
 import { Dimension } from "./Dimension";
-import { Direction } from "./Direction";
 import type { ReflectionCoefficients } from "./ReflectionCoefficients";
 import type { RoomDimensions } from "./RoomDimensions";
 import type { RoomMaterials } from "./RoomMaterials";
