@@ -1,11 +1,27 @@
+import { isNullOrUndefined } from "../typeChecks";
+
 /**
  * Performs the Boyer-Moore fast string search algorithm
  * over Unicode graphemes, instead of individual bytes
  * like JavaScript's regular string::indexOf method.
- * @param search
- * @param pattern
+ * @param search - the string to search
+ * @param pattern - the string to find
  */
 export function stringSearch(search: string, pattern: string) {
+    if (isNullOrUndefined(search)) {
+        throw new Error("Parameter `search` is not defined.");
+    }
+
+    if (isNullOrUndefined(pattern)) {
+        throw new Error("Parameter `pattern` is not defined.");
+    }
+
+    if (search.length === 0
+        || pattern.length === 0
+        || pattern.length > search.length) {
+        return -1;
+    }
+
     const strChars = [...search];
     const patternChars = [...pattern];
     const end = search.length - pattern.length;
