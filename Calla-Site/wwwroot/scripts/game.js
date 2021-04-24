@@ -36,11 +36,17 @@
     function isNumber(obj) {
         return t(obj, "number", Number);
     }
-    function isObject(obj) {
-        return t(obj, "object", Object);
+    /**
+     * Check a value to see if it is of a number type
+     * and is not the special NaN value.
+     */
+    function isGoodNumber(obj) {
+        return isNumber(obj)
+            && !Number.isNaN(obj);
     }
-    function isDate(obj) {
-        return obj instanceof Date;
+    function isObject(obj) {
+        return isDefined(obj)
+            && t(obj, "object", Object);
     }
     function isArray(obj) {
         return obj instanceof Array;
@@ -51,17 +57,34 @@
     function assertNever(x, msg) {
         throw new Error((msg || "Unexpected object: ") + x);
     }
-    /**
-     * Check a value to see if it is of a number type
-     * and is not the special NaN value.
-     */
-    function isGoodNumber(obj) {
-        return isNumber(obj)
-            && !Number.isNaN(obj);
-    }
     function isNullOrUndefined(obj) {
         return obj === null
             || obj === undefined;
+    }
+    function isDefined(obj) {
+        return !isNullOrUndefined(obj);
+    }
+    function isArrayBufferView(obj) {
+        return obj instanceof Uint8Array
+            || obj instanceof Uint8ClampedArray
+            || obj instanceof Int8Array
+            || obj instanceof Uint16Array
+            || obj instanceof Int16Array
+            || obj instanceof Uint32Array
+            || obj instanceof Int32Array
+            || obj instanceof BigUint64Array
+            || obj instanceof BigInt64Array
+            || obj instanceof Float32Array
+            || obj instanceof Float64Array;
+    }
+    function isXHRBodyInit(obj) {
+        return isString(obj)
+            || obj instanceof Blob
+            || obj instanceof FormData
+            || obj instanceof ArrayBuffer
+            || obj instanceof Document
+            || isArrayBufferView(obj)
+            || obj instanceof ReadableStream;
     }
 
     function defaultKeySelector(obj) {
@@ -85,7 +108,7 @@
             const compareToKey = isNullOrUndefined(compareTo)
                 ? null
                 : keySelector(compareTo);
-            if (!isNullOrUndefined(compareToKey)
+            if (isDefined(compareToKey)
                 && itemKey < compareToKey) {
                 right = idx;
             }
@@ -188,7 +211,9 @@
             if (listeners) {
                 for (const callback of listeners) {
                     const options = this.listenerOptions.get(callback);
-                    if (options && options.once) {
+                    if (isDefined(options)
+                        && !isBoolean(options)
+                        && options.once) {
                         this.removeListener(listeners, callback);
                     }
                     callback.call(this, evt);
@@ -208,12 +233,17 @@
             this.mappedCallbacks = new Map();
         }
         addEventListener(type, callback, options) {
-            let mappedCallback = this.mappedCallbacks.get(callback);
-            if (mappedCallback == null) {
-                mappedCallback = (evt) => callback(evt);
-                this.mappedCallbacks.set(callback, mappedCallback);
+            if (this.checkAddEventListener(type, callback)) {
+                let mappedCallback = this.mappedCallbacks.get(callback);
+                if (mappedCallback == null) {
+                    mappedCallback = (evt) => callback(evt);
+                    this.mappedCallbacks.set(callback, mappedCallback);
+                }
+                super.addEventListener(type, mappedCallback, options);
             }
-            super.addEventListener(type, mappedCallback, options);
+        }
+        checkAddEventListener(_type, _callback) {
+            return true;
         }
         removeEventListener(type, callback) {
             const mappedCallback = this.mappedCallbacks.get(callback);
@@ -221,9 +251,14 @@
                 super.removeEventListener(type, mappedCallback);
             }
         }
+        dispatchEvent(evt) {
+            this.onDispatching(evt);
+            return super.dispatchEvent(evt);
+        }
+        onDispatching(_evt) { }
     }
 
-    function add(a, b) {
+    function add$2(a, b) {
         return async (v) => {
             await a(v);
             await b(v);
@@ -241,20 +276,20 @@
             const remove = () => {
                 target.removeEventListener(resolveEvt, resolve);
             };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
+            resolve = add$2(remove, resolve);
+            reject = add$2(remove, reject);
             if (isString(rejectEvt)) {
                 const rejectEvt2 = rejectEvt;
                 const remove = () => {
                     target.removeEventListener(rejectEvt2, reject);
                 };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
+                resolve = add$2(remove, resolve);
+                reject = add$2(remove, reject);
             }
             if (hasTimeout) {
                 const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
+                resolve = add$2(cancel, resolve);
+                reject = add$2(cancel, reject);
             }
             target.addEventListener(resolveEvt, resolve);
             if (isString(rejectEvt)) {
@@ -332,30 +367,25 @@
          * @param elem - the element on which to set the attribute.
          */
         apply(elem) {
-            if (isHTMLElement(elem)) {
-                const isValid = this.tags.length === 0
-                    || this.tags.indexOf(elem.tagName) > -1;
-                if (!isValid) {
-                    console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-                }
-                else if (this.key === "style") {
-                    Object.assign(elem.style, this.value);
-                }
-                else if (this.key in elem) {
-                    elem[this.key] = this.value;
-                }
-                else if (this.value === false) {
-                    elem.removeAttribute(this.key);
-                }
-                else if (this.value === true) {
-                    elem.setAttribute(this.key, "");
-                }
-                else {
-                    elem.setAttribute(this.key, this.value);
-                }
+            const isValid = this.tags.length === 0
+                || this.tags.indexOf(elem.tagName) > -1;
+            if (!isValid) {
+                console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+            }
+            else if (this.key === "style") {
+                Object.assign(elem.style, this.value);
+            }
+            else if (this.key in elem) {
+                elem[this.key] = this.value;
+            }
+            else if (this.value === false) {
+                elem.removeAttribute(this.key);
+            }
+            else if (this.value === true) {
+                elem.setAttribute(this.key, "");
             }
             else {
-                elem[this.key] = this.value;
+                elem.setAttribute(this.key, this.value);
             }
         }
     }
@@ -374,7 +404,7 @@
     /**
      * Indicates whether the browser should show playback controls to the user.
       **/
-    function controls(value) { return new Attr("controls", value, "audio", "video"); }
+    function controls$1(value) { return new Attr("controls", value, "audio", "video"); }
     /**
      * Indicates whether the user can interact with the element.
       **/
@@ -386,7 +416,7 @@
     /**
      * Specifies the height of elements listed here. For all other elements, use the CSS height property.
       **/
-    function height(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+    function htmlHeight(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
     /**
      * The URL of a linked resource.
       **/
@@ -438,7 +468,7 @@
     /**
      * Defines the type of the element.
       **/
-    function type(value) { return new Attr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+    function type(value) { return new Attr("type", value, "button", "input", "command", "embed", "link", "object", "script", "source", "style", "menu"); }
     /**
      * Defines a default value which will be displayed in the element on page load.
       **/
@@ -450,41 +480,35 @@
     /**
      * For the elements listed here, this establishes the element's width.
       **/
-    function width(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-    class CssPropSet {
-        constructor(...rest) {
-            this.set = new Map();
-            const set = (key, value) => {
-                if (value || isBoolean(value)) {
-                    this.set.set(key, value);
-                }
-                else if (this.set.has(key)) {
-                    this.set.delete(key);
-                }
-            };
-            for (const prop of rest) {
-                if (prop instanceof Attr) {
-                    const { key, value } = prop;
-                    set(key, value);
-                }
-                else {
-                    for (const [key, value] of prop.set.entries()) {
-                        set(key, value);
-                    }
-                }
-            }
+    function htmlWidth(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+    class CssProp {
+        constructor(key, value) {
+            this.key = key;
+            this.value = value;
+            this.name = key.replace(/[A-Z]/g, (m) => {
+                return "-" + m.toLocaleLowerCase();
+            });
         }
         /**
          * Set the attribute value on an HTMLElement
          * @param elem - the element on which to set the attribute.
          */
         apply(elem) {
-            const style = isHTMLElement(elem)
-                ? elem.style
-                : elem;
-            for (const prop of this.set.entries()) {
-                const [key, value] = prop;
-                style[key] = value;
+            elem[this.key] = this.value;
+        }
+    }
+    class CssPropSet {
+        constructor(...rest) {
+            this.rest = rest;
+        }
+        /**
+         * Set the attribute value on an HTMLElement
+         * @param style - the element on which to set the attribute.
+         */
+        apply(style) {
+            for (const prop of this.rest) {
+                prop.apply(style);
             }
         }
     }
@@ -494,21 +518,19 @@
     function styles(...rest) {
         return new CssPropSet(...rest);
     }
-    function backgroundColor(v) { return new Attr("backgroundColor", v); }
-    function display(v) { return new Attr("display", v); }
-    function gridArea(v) { return new Attr("gridArea", v); }
-    function gridRow(v) { return new Attr("gridRow", v); }
-    function gridTemplateColumns(v) { return new Attr("gridTemplateColumns", v); }
-    function margin(v) { return new Attr("margin", v); }
-    function textAlign(v) { return new Attr("textAlign", v); }
-    function zIndex(v) { return new Attr("zIndex", v); }
+    function backgroundColor(v) { return new CssProp("backgroundColor", v); }
+    function display(v) { return new CssProp("display", v); }
+    function gridArea(v) { return new CssProp("gridArea", v); }
+    function gridRow(v) { return new CssProp("gridRow", v); }
+    function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
+    function height(v) { return new CssProp("height", v); }
+    function margin(v) { return new CssProp("margin", v); }
+    function textAlign(v) { return new CssProp("textAlign", v); }
+    function width(v) { return new CssProp("width", v); }
+    function zIndex(v) { return new CssProp("zIndex", v.toFixed(0)); }
 
-    function hasNode(obj) {
-        return !isNullOrUndefined(obj)
-            && !isString(obj)
-            && !isNumber(obj)
-            && !isBoolean(obj)
-            && !isDate(obj)
+    function isErsatzElement(obj) {
+        return isObject(obj)
             && "element" in obj
             && obj.element instanceof Node;
     }
@@ -536,13 +558,16 @@
         }
         for (let x of rest) {
             if (x != null) {
-                if (isString(x)
+                if (x instanceof CssPropSet) {
+                    x.apply(elem.style);
+                }
+                else if (isString(x)
                     || isNumber(x)
                     || isBoolean(x)
                     || x instanceof Date
                     || x instanceof Node
-                    || hasNode(x)) {
-                    if (hasNode(x)) {
+                    || isErsatzElement(x)) {
+                    if (isErsatzElement(x)) {
                         x = x.element;
                     }
                     else if (!(x instanceof Node)) {
@@ -609,22 +634,151 @@
         return Div(styles(margin("auto")), ...rest);
     }
 
+    const windows = [];
+    if ("window" in globalThis) {
+        // Closes all the windows.
+        window.addEventListener("unload", () => {
+            for (const w of windows) {
+                w.close();
+            }
+        });
+    }
+
+    "chrome" in globalThis && !navigator.userAgent.match("CriOS");
+    const isFirefox = "InstallTrigger" in globalThis;
+    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    /Opera/.test(navigator.userAgent);
+    /Android/.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
+        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
+        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
+    /Macintosh/.test(navigator.userAgent || "");
+    /BlackBerry/.test(navigator.userAgent);
+    /(UC Browser |UCWEB)/.test(navigator.userAgent);
+    const isOculus = /oculus/i.test(navigator.userAgent);
+    isOculus && /pacific/i.test(navigator.userAgent);
+    isOculus && /quest/i.test(navigator.userAgent);
+    isOculus && /quest 2/i.test(navigator.userAgent);
+    /Mobile VR/.test(navigator.userAgent)
+        || isOculus;
+
+    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
+    const hasImageBitmap = "createImageBitmap" in globalThis;
+    function testOffscreen2D() {
+        try {
+            const canv = new OffscreenCanvas(1, 1);
+            const g = canv.getContext("2d");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && testOffscreen2D();
+    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
+        ? createOffscreenCanvas
+        : createCanvas;
+    function testOffscreen3D() {
+        try {
+            const canv = new OffscreenCanvas(1, 1);
+            const g = canv.getContext("webgl2");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    hasOffscreenCanvas && testOffscreen3D();
+    function testBitmapRenderer() {
+        try {
+            const canv = createUtilityCanvas(1, 1);
+            const g = canv.getContext("bitmaprenderer");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    hasImageBitmap && testBitmapRenderer();
+    function createOffscreenCanvas(width, height) {
+        return new OffscreenCanvas(width, height);
+    }
+    function createCanvas(w, h) {
+        return Canvas(htmlWidth(w), htmlHeight(h));
+    }
+    /**
+     * Resizes a canvas element
+     * @param canv
+     * @param w - the new width of the canvas
+     * @param h - the new height of the canvas
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function setCanvasSize(canv, w, h, superscale = 1) {
+        w = Math.floor(w * superscale);
+        h = Math.floor(h * superscale);
+        if (canv.width != w
+            || canv.height != h) {
+            canv.width = w;
+            canv.height = h;
+            return true;
+        }
+        return false;
+    }
+    function is2DRenderingContext(ctx) {
+        return isDefined(ctx.textBaseline);
+    }
+    function setCanvas2DContextSize(ctx, w, h, superscale = 1) {
+        const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled, oldTextBaseline = ctx.textBaseline, oldTextAlign = ctx.textAlign, oldFont = ctx.font, resized = setCanvasSize(ctx.canvas, w, h, superscale);
+        if (resized) {
+            ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+            ctx.textBaseline = oldTextBaseline;
+            ctx.textAlign = oldTextAlign;
+            ctx.font = oldFont;
+        }
+        return resized;
+    }
+    /**
+     * Resizes the canvas element of a given rendering context.
+     *
+     * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font
+     * properties of the context will be restored after the context is resized,
+     * as these values are usually reset to their default values when a canvas
+     * is resized.
+     * @param ctx
+     * @param w - the new width of the canvas
+     * @param h - the new height of the canvas
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function setContextSize(ctx, w, h, superscale = 1) {
+        if (is2DRenderingContext(ctx)) {
+            return setCanvas2DContextSize(ctx, w, h, superscale);
+        }
+        else {
+            return setCanvasSize(ctx.canvas, w, h, superscale);
+        }
+    }
+    /**
+     * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+     * @param canv
+     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+     */
+    function resizeCanvas(canv, superscale = 1) {
+        return setCanvasSize(canv, canv.clientWidth, canv.clientHeight, superscale);
+    }
+
     function createScript(file) {
         const script = Script(src(file));
         document.body.appendChild(script);
     }
 
-    function splitProgress(onProgress, weights) {
-        let subProgressWeights;
-        if (isNumber(weights)) {
-            subProgressWeights = new Array(weights);
-            for (let i = 0; i < subProgressWeights.length; ++i) {
-                subProgressWeights[i] = 1 / weights;
-            }
-        }
-        else {
-            subProgressWeights = weights;
-        }
+    function dumpProgress(_soFar, _total, _message, _est) {
+        // do nothing
+    }
+
+    function splitProgress(onProgress, subProgressWeights) {
         let weightTotal = 0;
         for (let i = 0; i < subProgressWeights.length; ++i) {
             weightTotal += subProgressWeights[i];
@@ -652,308 +806,191 @@
         return subProgressCallbacks;
     }
 
+    function normalizeMap(map, key, value) {
+        if (isNullOrUndefined(map)) {
+            map = new Map();
+        }
+        if (!map.has(key)) {
+            map.set(key, value);
+        }
+        return map;
+    }
+    async function fileToImage(file) {
+        const img = Img(src(file));
+        await once(img, "loaded");
+        return img;
+    }
+    function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) {
+        return new Promise((resolve, reject) => {
+            let done = false;
+            let loaded = skipLoading;
+            function maybeResolve() {
+                if (loaded && done) {
+                    resolve();
+                }
+            }
+            async function onError() {
+                await prevTask;
+                reject(xhr.status);
+            }
+            target.addEventListener("loadstart", async () => {
+                await prevTask;
+                onProgress(0, 1, name);
+            });
+            target.addEventListener("progress", async (ev) => {
+                const evt = ev;
+                await prevTask;
+                onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
+                if (evt.loaded === evt.total) {
+                    loaded = true;
+                    maybeResolve();
+                }
+            });
+            target.addEventListener("load", async () => {
+                await prevTask;
+                onProgress(1, 1, name);
+                done = true;
+                maybeResolve();
+            });
+            target.addEventListener("error", onError);
+            target.addEventListener("abort", onError);
+        });
+    }
+    function setXHRHeaders(xhr, method, path, xhrType, headers) {
+        xhr.open(method, path);
+        xhr.responseType = xhrType;
+        if (headers) {
+            for (const [key, value] of headers) {
+                xhr.setRequestHeader(key, value);
+            }
+        }
+    }
+    async function blobToBuffer(blob) {
+        const buffer = await blob.arrayBuffer();
+        return {
+            buffer,
+            contentType: blob.type
+        };
+    }
     class Fetcher {
-        normalizeOnProgress(headerMap, onProgress) {
-            if (isNullOrUndefined(onProgress)
-                && headerMap instanceof Function) {
-                onProgress = headerMap;
-            }
-            return onProgress;
+        async getXHR(path, xhrType, headers, onProgress) {
+            onProgress = onProgress || dumpProgress;
+            const xhr = new XMLHttpRequest();
+            const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
+            setXHRHeaders(xhr, "GET", path, xhrType, headers);
+            xhr.send();
+            await download;
+            return xhr.response;
         }
-        normalizeHeaderMap(headerMap) {
-            if (headerMap instanceof Map) {
-                return headerMap;
+        async postXHR(path, xhrType, obj, contentType, headers, onProgress) {
+            onProgress = onProgress || dumpProgress;
+            const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
+            const xhr = new XMLHttpRequest();
+            const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
+            const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
+            let body = null;
+            if (!(obj instanceof FormData)
+                && isDefined(contentType)) {
+                headers = normalizeMap(headers, "Content-Type", contentType);
             }
-            return undefined;
-        }
-        async getResponse(path, headerMap) {
-            const headers = {};
-            if (headerMap) {
-                for (const pair of headerMap.entries()) {
-                    headers[pair[0]] = pair[1];
-                }
+            if (isXHRBodyInit(obj) && !isString(obj)) {
+                body = obj;
             }
-            return await this.readRequestResponse(path, fetch(path, {
-                headers
-            }));
-        }
-        async postObjectForResponse(path, obj, headerMap) {
-            const headers = {};
-            if (!(obj instanceof FormData)) {
-                headers["Content-Type"] = "application/json";
+            else if (isDefined(obj)) {
+                body = JSON.stringify(obj);
             }
-            if (headerMap) {
-                for (const pair of headerMap.entries()) {
-                    headers[pair[0]] = pair[1];
-                }
-            }
-            const body = obj instanceof FormData
-                ? obj
-                : JSON.stringify(obj);
-            return await this.readRequestResponse(path, fetch(path, {
-                method: "POST",
-                headers,
-                body
-            }));
-        }
-        async readRequestResponse(path, request) {
-            const response = await request;
-            if (!response.ok) {
-                let message = response.statusText;
-                if (response.body) {
-                    message += " ";
-                    message += await response.text();
-                    message = message.trim();
-                }
-                throw new Error(`[${response.status}] - ${message} . Path ${path}`);
-            }
-            return response;
-        }
-        async readResponseBuffer(path, response, onProgress) {
-            const contentType = response.headers.get("Content-Type");
-            if (!contentType) {
-                throw new Error("Server did not provide a content type");
-            }
-            let contentLength = 1;
-            const contentLengthStr = response.headers.get("Content-Length");
-            if (!contentLengthStr) {
-                console.warn(`Server did not provide a content length header. Path: ${path}`);
+            setXHRHeaders(xhr, "POST", path, xhrType, headers);
+            if (isDefined(body)) {
+                xhr.send(body);
             }
             else {
-                contentLength = parseInt(contentLengthStr, 10);
-                if (!isGoodNumber(contentLength)) {
-                    console.warn(`Server did not provide a valid content length header. Value: ${contentLengthStr}, Path: ${path}`);
-                    contentLength = 1;
-                }
+                xhr.send();
             }
-            const hasContentLength = isGoodNumber(contentLength);
-            if (!hasContentLength) {
-                contentLength = 1;
-            }
-            if (!response.body) {
-                throw new Error("No response body!");
-            }
-            const reader = response.body.getReader();
-            const values = [];
-            let receivedLength = 0;
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                if (value) {
-                    values.push(value);
-                    receivedLength += value.length;
-                    if (onProgress) {
-                        onProgress(receivedLength, Math.max(receivedLength, contentLength), path);
-                    }
-                }
-            }
-            const buffer = new ArrayBuffer(receivedLength);
-            const array = new Uint8Array(buffer);
-            receivedLength = 0;
-            for (const value of values) {
-                array.set(value, receivedLength);
-                receivedLength += value.length;
-            }
-            if (onProgress) {
-                onProgress(1, 1, path);
-            }
-            return { buffer, contentType };
+            await upload;
+            await download;
+            return xhr.response;
         }
-        async _getBuffer(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const response = await this.getResponse(path, headerMap);
-            return await this.readResponseBuffer(path, response, onProgress);
+        async getBlob(path, headers, onProgress) {
+            return await this.getXHR(path, "blob", headers, onProgress);
         }
-        async getBuffer(path, headerMap, onProgress) {
-            return await this._getBuffer(path, headerMap, onProgress);
+        async postObjectForBlob(path, obj, contentType, headers, onProgress) {
+            return await this.postXHR(path, "blob", obj, contentType, headers, onProgress);
         }
-        async _postObjectForBuffer(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const response = await this.postObjectForResponse(path, obj, headerMap);
-            return await this.readResponseBuffer(path, response, onProgress);
+        async getBuffer(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
+            return await blobToBuffer(blob);
         }
-        async postObjectForBuffer(path, obj, headerMap, onProgress) {
-            return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
+        async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+            return await blobToBuffer(blob);
         }
-        async _getBlob(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
-            return new Blob([buffer], { type: contentType });
-        }
-        async getBlob(path, headerMap, onProgress) {
-            return this._getBlob(path, headerMap, onProgress);
-        }
-        async _postObjectForBlob(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-            return new Blob([buffer], { type: contentType });
-        }
-        async postObjectForBlob(path, obj, headerMap, onProgress) {
-            return this._postObjectForBlob(path, obj, headerMap, onProgress);
-        }
-        async _getFile(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._getBlob(path, headerMap, onProgress);
+        async getFile(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
             return URL.createObjectURL(blob);
         }
-        async getFile(path, headerMap, onProgress) {
-            return await this._getFile(path, headerMap, onProgress);
-        }
-        async _postObjectForFile(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
+        async postObjectForFile(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
             return URL.createObjectURL(blob);
         }
-        async postObjectForFile(path, obj, headerMap, onProgress) {
-            return await this._postObjectForFile(path, obj, headerMap, onProgress);
+        async getText(path, headers, onProgress) {
+            return await this.getXHR(path, "text", headers, onProgress);
         }
-        readBufferText(buffer) {
-            const decoder = new TextDecoder("utf-8");
-            const text = decoder.decode(buffer);
-            return text;
+        async postObjectForText(path, obj, contentType, headers, onProgress) {
+            return this.postXHR(path, "text", obj, contentType, headers, onProgress);
         }
-        async _getText(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer } = await this._getBuffer(path, headerMap, onProgress);
-            return this.readBufferText(buffer);
-        }
-        async getText(path, headerMap, onProgress) {
-            return await this._getText(path, headerMap, onProgress);
-        }
-        async _postObjectForText(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-            return this.readBufferText(buffer);
-        }
-        async postObjectForText(path, obj, headerMap, onProgress) {
-            return await this._postObjectForText(path, obj, headerMap, onProgress);
-        }
-        setDefaultAcceptType(headerMap, type) {
-            if (!headerMap) {
-                headerMap = new Map();
+        async getObject(path, headers, onProgress) {
+            if (!headers) {
+                headers = new Map();
             }
-            if (!headerMap.has("Accept")) {
-                headerMap.set("Accept", type);
+            if (!headers.has("Accept")) {
+                headers.set("Accept", "application/json");
             }
-            return headerMap;
+            return await this.getXHR(path, "json", headers, onProgress);
         }
-        async _getObject(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-            const text = await this._getText(path, headerMap, onProgress);
-            return JSON.parse(text);
+        async postObjectForObject(path, obj, contentType, headers, onProgress) {
+            return await this.postXHR(path, "json", obj, contentType, headers, onProgress);
         }
-        async getObject(path, headerMap, onProgress) {
-            return await this._getObject(path, headerMap, onProgress);
+        async postObject(path, obj, contentType, headers, onProgress) {
+            await this.postXHR(path, "", obj, contentType, headers, onProgress);
         }
-        async _postObjectForObject(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-            return JSON.parse(text);
+        async getXml(path, headers, onProgress) {
+            const doc = await this.getXHR(path, "document", headers, onProgress);
+            return doc.documentElement;
         }
-        async postObjectForObject(path, obj, headerMap, onProgress) {
-            return await this._postObjectForObject(path, obj, headerMap, onProgress);
+        async postObjectForXml(path, obj, contentType, headers, onProgress) {
+            const doc = await this.postXHR(path, "document", obj, contentType, headers, onProgress);
+            return doc.documentElement;
         }
-        async postObject(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            if (onProgress instanceof Function) {
-                const [upProg, downProg] = splitProgress(onProgress, 2);
-                let headers = headerMap;
-                const xhr = new XMLHttpRequest();
-                function makeTask(name, target, onProgress, skipLoading, prevTask) {
-                    return new Promise((resolve, reject) => {
-                        let done = false;
-                        let loaded = skipLoading;
-                        function maybeResolve() {
-                            if (loaded && done) {
-                                resolve();
-                            }
-                        }
-                        async function onError() {
-                            await prevTask;
-                            reject(xhr.status);
-                        }
-                        target.addEventListener("loadstart", async () => {
-                            await prevTask;
-                            onProgress(0, 1, name);
-                        });
-                        target.addEventListener("progress", async (ev) => {
-                            const evt = ev;
-                            await prevTask;
-                            onProgress(evt.loaded, evt.total, name);
-                            if (evt.loaded === evt.total) {
-                                loaded = true;
-                                maybeResolve();
-                            }
-                        });
-                        target.addEventListener("load", async () => {
-                            await prevTask;
-                            onProgress(1, 1, name);
-                            done = true;
-                            maybeResolve();
-                        });
-                        target.addEventListener("error", onError);
-                        target.addEventListener("abort", onError);
-                    });
-                }
-                const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
-                const download = makeTask("saving", xhr, downProg, true, upload);
-                xhr.open("POST", path);
-                if (headers) {
-                    for (const [key, value] of headers) {
-                        xhr.setRequestHeader(key, value);
-                    }
-                }
-                if (obj instanceof FormData) {
-                    xhr.send(obj);
-                }
-                else {
-                    const json = JSON.stringify(obj);
-                    xhr.send(json);
-                }
-                await upload;
-                await download;
+        async getImageBitmap(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
+            return await createImageBitmap(blob);
+        }
+        async getCanvasImage(path, headers, onProgress) {
+            if (hasImageBitmap) {
+                return await this.getImageBitmap(path, headers, onProgress);
             }
             else {
-                await this.postObjectForResponse(path, obj, headerMap);
+                const file = await this.getFile(path, headers, onProgress);
+                return await fileToImage(file);
             }
         }
-        readTextXml(text) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, "text/xml");
-            return xml.documentElement;
+        async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+            return await createImageBitmap(blob);
         }
-        async _getXml(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const text = await this._getText(path, headerMap, onProgress);
-            return this.readTextXml(text);
-        }
-        async getXml(path, headerMap, onProgress) {
-            return await this._getXml(path, headerMap, onProgress);
-        }
-        async postObjectForXml(path, obj, headerMap, onProgress) {
-            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-            return this.readTextXml(text);
+        async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
+            if (hasImageBitmap) {
+                return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+            }
+            else {
+                const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+                return await fileToImage(file);
+            }
         }
         async loadScript(path, test, onProgress) {
             if (!test()) {
                 const scriptLoadTask = waitFor(test);
-                const file = await this.getFile(path, onProgress);
+                const file = await this.getFile(path, null, onProgress);
                 createScript(file);
                 await scriptLoadTask;
             }
@@ -962,7 +999,7 @@
             }
         }
         async getWASM(path, imports, onProgress) {
-            const wasmBuffer = await this.getBuffer(path, onProgress);
+            const wasmBuffer = await this.getBuffer(path, null, onProgress);
             if (wasmBuffer.contentType !== "application/wasm") {
                 throw new Error("Server did not respond with WASM file. Was: " + wasmBuffer.contentType);
             }
@@ -1323,7 +1360,7 @@
         setConferenceState(state) {
             this._conferenceState = state;
         }
-        dispatchEvent(evt) {
+        onDispatching(evt) {
             if (evt instanceof CallaUserEvent
                 && (evt.id == null
                     || evt.id === "local")) {
@@ -1334,7 +1371,6 @@
                     evt.id = this.localUserID;
                 }
             }
-            return super.dispatchEvent(evt);
         }
         async getNext(evtName, userID) {
             return new Promise((resolve) => {
@@ -1573,8 +1609,8 @@
         return removed;
     }
     function isAudioNode(a) {
-        return !isNullOrUndefined(a)
-            && !isNullOrUndefined(a.context);
+        return isDefined(a)
+            && isDefined(a.context);
     }
     function isAudioParam(a) {
         return !isAudioNode(a);
@@ -1652,7 +1688,7 @@
     }
     window.printGraph = print;
 
-    const audioActivityEvt = new AudioActivityEvent();
+    const audioActivityEvt$2 = new AudioActivityEvent();
     const activityCounterMin = 0;
     const activityCounterMax = 60;
     const activityCounterThresh = 5;
@@ -1675,6 +1711,7 @@
             this.source = source;
             this.wasActive = false;
             this.analyser = null;
+            this.disposed = false;
             if (!isGoodNumber(bufferSize)
                 || bufferSize <= 0) {
                 throw new Error("Buffer size must be greater than 0");
@@ -1699,9 +1736,9 @@
             checkSource();
         }
         dispose() {
-            if (this.analyser) {
+            if (!this.disposed) {
                 disconnect(this.source.source, this.analyser);
-                this.analyser = null;
+                this.disposed = true;
             }
             this.buffer = null;
         }
@@ -1718,9 +1755,9 @@
                 const isActive = this.activityCounter > activityCounterThresh;
                 if (this.wasActive !== isActive) {
                     this.wasActive = isActive;
-                    audioActivityEvt.id = this.id;
-                    audioActivityEvt.isActive = isActive;
-                    this.dispatchEvent(audioActivityEvt);
+                    audioActivityEvt$2.id = this.id;
+                    audioActivityEvt$2.isActive = isActive;
+                    this.dispatchEvent(audioActivityEvt$2);
                 }
             }
         }
@@ -1753,7 +1790,7 @@
      * @returns {mat3} a new 3x3 matrix
      */
 
-    function create() {
+    function create$2() {
       var out = new ARRAY_TYPE(9);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -1786,7 +1823,7 @@
      * @returns {mat3} out
      */
 
-    function set(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    function set$2(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
       out[0] = m00;
       out[1] = m01;
       out[2] = m02;
@@ -1907,7 +1944,7 @@
      * @returns {vec3} a new 3D vector
      */
 
-    function create$2() {
+    function create() {
       var out = new ARRAY_TYPE(3);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -1955,7 +1992,7 @@
      * @returns {vec3} out
      */
 
-    function set$2(out, x, y, z) {
+    function set(out, x, y, z) {
       out[0] = x;
       out[1] = y;
       out[2] = z;
@@ -1970,7 +2007,7 @@
      * @returns {vec3} out
      */
 
-    function add$2(out, a, b) {
+    function add(out, a, b) {
       out[0] = a[0] + b[0];
       out[1] = a[1] + b[1];
       out[2] = a[2] + b[2];
@@ -2072,7 +2109,7 @@
      * @returns {vec3} out
      */
 
-    function lerp(out, a, b, t) {
+    function lerp$1(out, a, b, t) {
       var ax = a[0];
       var ay = a[1];
       var az = a[2];
@@ -2113,8 +2150,8 @@
      * @function
      */
 
-    var forEach = function () {
-      var vec = create$2();
+    (function () {
+      var vec = create();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
 
@@ -2144,7 +2181,7 @@
 
         return a;
       };
-    }();
+    })();
 
     /**
      * Translate a value into a range.
@@ -2168,18 +2205,18 @@
          **/
         constructor() {
             this.t = 0;
-            this.p = create$2();
-            this.f = set$2(create$2(), 0, 0, -1);
-            this.u = set$2(create$2(), 0, 1, 0);
+            this.p = create();
+            this.f = set(create(), 0, 0, -1);
+            this.u = set(create(), 0, 1, 0);
             Object.seal(this);
         }
         /**
          * Sets the components of the pose.
          */
         set(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            set$2(this.p, px, py, pz);
-            set$2(this.f, fx, fy, fz);
-            set$2(this.u, ux, uy, uz);
+            set(this.p, px, py, pz);
+            set(this.f, fx, fy, fz);
+            set(this.u, ux, uy, uz);
         }
         /**
          * Copies the components of another pose into this pose.
@@ -2203,9 +2240,9 @@
             else if (start.t < t) {
                 const p = project(t, start.t, end.t);
                 this.copy(start);
-                lerp(this.p, this.p, end.p, p);
-                lerp(this.f, this.f, end.f, p);
-                lerp(this.u, this.u, end.u, p);
+                lerp$1(this.p, this.p, end.p, p);
+                lerp$1(this.f, this.f, end.f, p);
+                lerp$1(this.u, this.u, end.u, p);
                 normalize(this.f, this.f);
                 normalize(this.u, this.u);
                 this.t = t;
@@ -2213,7 +2250,7 @@
         }
     }
 
-    const delta = create$2();
+    const delta$1 = create();
     const k = 2;
     /**
      * A position value that is blended from the current position to
@@ -2224,27 +2261,27 @@
             this.start = new Pose();
             this.current = new Pose();
             this.end = new Pose();
-            this.offset = create$2();
+            this.offset = create();
         }
         /**
          * Set the target comfort offset for the time `t + dt`.
          */
         setOffset(ox, oy, oz) {
-            set$2(delta, ox, oy, oz);
-            sub(delta, delta, this.offset);
-            add$2(this.start.p, this.start.p, delta);
-            add$2(this.current.p, this.current.p, delta);
-            add$2(this.end.p, this.end.p, delta);
+            set(delta$1, ox, oy, oz);
+            sub(delta$1, delta$1, this.offset);
+            add(this.start.p, this.start.p, delta$1);
+            add(this.current.p, this.current.p, delta$1);
+            add(this.end.p, this.end.p, delta$1);
             scale(this.start.f, this.start.f, k);
-            add$2(this.start.f, this.start.f, delta);
+            add(this.start.f, this.start.f, delta$1);
             normalize(this.start.f, this.start.f);
             scale(this.current.f, this.current.f, k);
-            add$2(this.current.f, this.current.f, delta);
+            add(this.current.f, this.current.f, delta$1);
             normalize(this.current.f, this.current.f);
             scale(this.end.f, this.end.f, k);
-            add$2(this.end.f, this.end.f, delta);
+            add(this.end.f, this.end.f, delta$1);
             normalize(this.end.f, this.end.f);
-            set$2(this.offset, ox, oy, oz);
+            set(this.offset, ox, oy, oz);
         }
         /**
          * Set the target position and orientation for the time `t + dt`.
@@ -2315,10 +2352,14 @@
             this.audioContext = audioContext;
             this.pose = new InterpolatedPose();
             this._spatializer = null;
+            this.disposed = false;
             this.volumeControl = audioContext.createGain();
         }
         dispose() {
-            this.spatializer = null;
+            if (!this.disposed) {
+                this.spatializer = null;
+                this.disposed = true;
+            }
         }
         get volume() {
             return this.volumeControl.gain.value;
@@ -2387,18 +2428,17 @@
         /**
          * Creates a spatializer that keeps track of position
          */
-        constructor(audioContext, input, output, destination) {
+        constructor(audioContext, destination) {
             super(audioContext);
-            this.input = input;
-            this.output = output;
             this.destination = destination;
-            if (this.output !== this.destination) {
-                connect(this.output, this.destination);
-            }
+            this.disposed = false;
         }
         dispose() {
-            if (this.output !== this.destination) {
-                disconnect(this.output, this.destination);
+            if (!this.disposed) {
+                if (this.output !== this.destination) {
+                    disconnect(this.output, this.destination);
+                }
+                this.disposed = true;
             }
         }
         copyAudioProperties(from) {
@@ -2416,7 +2456,8 @@
          * Creates a new "spatializer" that performs no panning. An anti-spatializer.
          */
         constructor(audioContext, destination) {
-            super(audioContext, destination, destination, destination);
+            super(audioContext, destination);
+            this.input = this.output = destination;
             Object.seal(this);
         }
         createNew() {
@@ -2434,10 +2475,8 @@
         /**
          * Creates a spatializer that keeps track of position
          */
-        constructor(audioContext, input, output) {
+        constructor(audioContext) {
             super(audioContext);
-            this.input = input;
-            this.output = output;
         }
         /**
          * Creates a spatialzer for an audio source.
@@ -2452,9 +2491,10 @@
 
     class NoSpatializationListener extends BaseListener {
         constructor(audioContext) {
+            super(audioContext);
             const gain = audioContext.createGain();
             gain.gain.value = 0.1;
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
         }
         /**
          * Do nothing
@@ -2472,15 +2512,19 @@
     class AudioDestination extends BaseAudioElement {
         constructor(audioContext, destination) {
             super(audioContext);
+            this.disposed2 = false;
             this._spatializedInput = audioContext.createGain();
             this._nonSpatializedInput = audioContext.createGain();
             connect(this._nonSpatializedInput, this.volumeControl);
             this.setDestination(destination);
         }
         dispose() {
-            this.setDestination(null);
-            disconnect(this._nonSpatializedInput, this.volumeControl);
-            super.dispose();
+            if (!this.disposed2) {
+                this.setDestination(null);
+                disconnect(this._nonSpatializedInput, this.volumeControl);
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
         get spatialized() {
             return !(this.spatializer instanceof NoSpatializationListener);
@@ -3292,8 +3336,8 @@
                 1.000000, -0.000000, 0.000000, -0.000000],
         ],
     ];
-    const SPHERICAL_HARMONICS_AZIMUTH_RESOLUTION = SPHERICAL_HARMONICS[0].length;
-    const SPHERICAL_HARMONICS_ELEVATION_RESOLUTION = SPHERICAL_HARMONICS[1].length;
+    SPHERICAL_HARMONICS[0].length;
+    SPHERICAL_HARMONICS[1].length;
     /**
      * The maximum allowed ambisonic order.
      */
@@ -3709,10 +3753,10 @@
      * Maximum outside-the-room distance to attenuate far-field sources by.
      */
     const SOURCE_MAX_OUTSIDE_ROOM_DISTANCE = 1;
-    const DEFAULT_POSITION = zero(create$2());
-    const DEFAULT_FORWARD = set$2(create$2(), 0, 0, -1);
-    const DEFAULT_UP = set$2(create$2(), 0, 1, 0);
-    const DEFAULT_RIGHT = set$2(create$2(), 1, 0, 0);
+    const DEFAULT_POSITION = zero(create());
+    const DEFAULT_FORWARD = set(create(), 0, 0, -1);
+    const DEFAULT_UP = set(create(), 0, 1, 0);
+    set(create(), 1, 0, 0);
     const DEFAULT_SPEED_OF_SOUND = 343;
     /**
      * Default rolloff model ('logarithmic').
@@ -3951,7 +3995,7 @@
     /**
      * ResonanceAudio library logging function.
      */
-    const log = function (...args) {
+    const log$1 = function (...args) {
         window.console.log.apply(window.console, [
             '%c[ResonanceAudio]%c '
                 + args.join(' ') + ' %c(@'
@@ -4011,6 +4055,7 @@
         constructor(context, options) {
             this.channelGain = new Array();
             this.merger = null;
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -4035,15 +4080,15 @@
          */
         static validateAmbisonicOrder(ambisonicOrder) {
             if (isNaN(ambisonicOrder) || ambisonicOrder == null) {
-                log('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
+                log$1('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder < 1) {
-                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
+                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder > SPHERICAL_HARMONICS_MAX_ORDER) {
-                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
+                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
                 ambisonicOrder = SPHERICAL_HARMONICS_MAX_ORDER;
             }
             return ambisonicOrder;
@@ -4067,14 +4112,17 @@
             connect(this.merger, this.output);
         }
         dispose() {
-            for (let i = 0; i < this.channelGain.length; i++) {
-                disconnect(this.input, this.channelGain[i]);
-                if (this.merger) {
-                    disconnect(this.channelGain[i], this.merger, 0, i);
+            if (!this.disposed) {
+                for (let i = 0; i < this.channelGain.length; i++) {
+                    disconnect(this.input, this.channelGain[i]);
+                    if (this.merger) {
+                        disconnect(this.channelGain[i], this.merger, 0, i);
+                    }
                 }
-            }
-            if (this.merger) {
-                disconnect(this.merger, this.output);
+                if (this.merger) {
+                    disconnect(this.merger, this.output);
+                }
+                this.disposed = true;
             }
         }
         /**
@@ -4157,7 +4205,7 @@
      * Omnitone library logging function.
      * @param Message to be printed out.
      */
-    function log$1(...rest) {
+    function log(...rest) {
         const message = `[Omnitone] ${rest.join(' ')}`;
         window.console.log(message);
     }
@@ -4301,6 +4349,7 @@
          * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
          */
         constructor(context, hrirBufferList) {
+            this.disposed = false;
             this._context = context;
             this._active = false;
             this._isBufferLoaded = false;
@@ -4355,28 +4404,31 @@
             this.output = this._summingBus;
         }
         dispose() {
-            if (this._active) {
-                this.disable();
+            if (!this.disposed) {
+                if (this._active) {
+                    this.disable();
+                }
+                // Group W and Y, then Z and X.
+                disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+                disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+                disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+                disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
+                // Create a network of convolvers using splitter/merger.
+                disconnect(this._mergerWY, this._convolverWY);
+                disconnect(this._mergerZX, this._convolverZX);
+                disconnect(this._convolverWY, this._splitterWY);
+                disconnect(this._convolverZX, this._splitterZX);
+                disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+                disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+                disconnect(this._splitterWY, this._inverter, 1, 0);
+                disconnect(this._inverter, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+                disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+                disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
+                this.disposed = true;
             }
-            // Group W and Y, then Z and X.
-            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
-            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
-            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
-            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
-            // Create a network of convolvers using splitter/merger.
-            disconnect(this._mergerWY, this._convolverWY);
-            disconnect(this._mergerZX, this._convolverZX);
-            disconnect(this._convolverWY, this._splitterWY);
-            disconnect(this._convolverZX, this._splitterZX);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterWY, this._inverter, 1, 0);
-            disconnect(this._inverter, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
         }
         /**
          * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
@@ -4443,6 +4495,7 @@
          * @param context - Associated BaseAudioContext.
          */
         constructor(context) {
+            this.disposed = false;
             this._context = context;
             this._splitter = this._context.createChannelSplitter(4);
             this._inX = this._context.createGain();
@@ -4505,50 +4558,53 @@
             this._outX.gain.value = -1;
             this._outY.gain.value = -1;
             this._outZ.gain.value = -1;
-            this.setRotationMatrix3(identity(create()));
+            this.setRotationMatrix3(identity(create$2()));
             // input/output proxy.
             this.input = this._splitter;
             this.output = this._merger;
         }
         dispose() {
-            // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
-            // X (from channel 1)
-            disconnect(this._splitter, this._inX, 1);
-            // Y (from channel 2)
-            disconnect(this._splitter, this._inY, 2);
-            // Z (from channel 3)
-            disconnect(this._splitter, this._inZ, 3);
-            // Apply the rotation in the world space.
-            // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
-            // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
-            // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            disconnect(this._inX, this._m0);
-            disconnect(this._inX, this._m1);
-            disconnect(this._inX, this._m2);
-            disconnect(this._inY, this._m3);
-            disconnect(this._inY, this._m4);
-            disconnect(this._inY, this._m5);
-            disconnect(this._inZ, this._m6);
-            disconnect(this._inZ, this._m7);
-            disconnect(this._inZ, this._m8);
-            disconnect(this._m0, this._outX);
-            disconnect(this._m1, this._outY);
-            disconnect(this._m2, this._outZ);
-            disconnect(this._m3, this._outX);
-            disconnect(this._m4, this._outY);
-            disconnect(this._m5, this._outZ);
-            disconnect(this._m6, this._outX);
-            disconnect(this._m7, this._outY);
-            disconnect(this._m8, this._outZ);
-            // Transform 3: world space to audio space.
-            // W -> W (to channel 0)
-            disconnect(this._splitter, this._merger, 0, 0);
-            // X (to channel 1)
-            disconnect(this._outX, this._merger, 0, 1);
-            // Y (to channel 2)
-            disconnect(this._outY, this._merger, 0, 2);
-            // Z (to channel 3)
-            disconnect(this._outZ, this._merger, 0, 3);
+            if (!this.disposed) {
+                // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
+                // X (from channel 1)
+                disconnect(this._splitter, this._inX, 1);
+                // Y (from channel 2)
+                disconnect(this._splitter, this._inY, 2);
+                // Z (from channel 3)
+                disconnect(this._splitter, this._inZ, 3);
+                // Apply the rotation in the world space.
+                // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
+                // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
+                // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
+                disconnect(this._inX, this._m0);
+                disconnect(this._inX, this._m1);
+                disconnect(this._inX, this._m2);
+                disconnect(this._inY, this._m3);
+                disconnect(this._inY, this._m4);
+                disconnect(this._inY, this._m5);
+                disconnect(this._inZ, this._m6);
+                disconnect(this._inZ, this._m7);
+                disconnect(this._inZ, this._m8);
+                disconnect(this._m0, this._outX);
+                disconnect(this._m1, this._outY);
+                disconnect(this._m2, this._outZ);
+                disconnect(this._m3, this._outX);
+                disconnect(this._m4, this._outY);
+                disconnect(this._m5, this._outZ);
+                disconnect(this._m6, this._outX);
+                disconnect(this._m7, this._outY);
+                disconnect(this._m8, this._outZ);
+                // Transform 3: world space to audio space.
+                // W -> W (to channel 0)
+                disconnect(this._splitter, this._merger, 0, 0);
+                // X (to channel 1)
+                disconnect(this._outX, this._merger, 0, 1);
+                // Y (to channel 2)
+                disconnect(this._outY, this._merger, 0, 2);
+                // Z (to channel 3)
+                disconnect(this._outZ, this._merger, 0, 3);
+                this.disposed = true;
+            }
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -4585,20 +4641,20 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set(rotationMatrix3, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
-            return rotationMatrix3;
+            set$2(rotationMatrix3$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
+            return rotationMatrix3$1;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4;
+            set$1(rotationMatrix4$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4$1;
         }
     }
-    const rotationMatrix3 = create();
-    const rotationMatrix4 = create$1();
+    const rotationMatrix3$1 = create$2();
+    const rotationMatrix4$1 = create$1();
 
     /**
      * @license
@@ -4646,6 +4702,7 @@
          * @param channelMap - Routing destination array.
          */
         constructor(context, channelMap) {
+            this.disposed = false;
             this._context = context;
             this._splitter = this._context.createChannelSplitter(4);
             this._merger = this._context.createChannelMerger(4);
@@ -4671,10 +4728,13 @@
             connect(this._splitter, this._merger, 3, this._channelMap[3]);
         }
         dispose() {
-            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
-            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
-            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
-            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+            if (!this.disposed) {
+                disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+                disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+                disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+                disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+                this.disposed = true;
+            }
         }
     }
 
@@ -4706,6 +4766,7 @@
          * Omnitone FOA renderer class. Uses the optimized convolution technique.
          */
         constructor(context, options) {
+            this.disposed = false;
             this.context = context;
             this.config = Object.assign({
                 channelMap: ChannelMap.Default,
@@ -4742,17 +4803,20 @@
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
-            if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+            if (!this.disposed) {
+                if (this.getRenderingMode() === RenderingMode.Bypass) {
+                    disconnect(this.bypass, this.output);
+                }
+                disconnect(this.input, this.router.input);
+                disconnect(this.input, this.bypass);
+                disconnect(this.router.output, this.rotator.input);
+                disconnect(this.rotator.output, this.convolver.input);
+                disconnect(this.convolver.output, this.output);
+                this.convolver.dispose();
+                this.rotator.dispose();
+                this.router.dispose();
+                this.disposed = true;
             }
-            disconnect(this.input, this.router.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.router.output, this.rotator.input);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
-            this.convolver.dispose();
-            this.rotator.dispose();
-            this.router.dispose();
         }
         /**
          * Initializes and loads the resource for the renderer.
@@ -4777,7 +4841,7 @@
          */
         setChannelMap(channelMap) {
             if (channelMap.toString() !== this.config.channelMap.toString()) {
-                log$1('Remapping channels ([' + this.config.channelMap.toString() +
+                log('Remapping channels ([' + this.config.channelMap.toString() +
                     '] -> [' + channelMap.toString() + ']).');
                 if (channelMap instanceof Array) {
                     this.config.channelMap = channelMap.slice();
@@ -5173,13 +5237,13 @@
     function computeUVWCoeff(m, n, l) {
         const d = getKroneckerDelta(m, 0);
         const reciprocalDenominator = Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
-        set$2(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
+        set(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
             (l + Math.abs(m) - 1) *
             (l + Math.abs(m)) *
             reciprocalDenominator), -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) * reciprocalDenominator);
         return UVWCoeff;
     }
-    const UVWCoeff = create$2();
+    const UVWCoeff = create();
     /**
      * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
      * This uses the matrices computed for band 1 and band l-1 to compute the
@@ -5255,6 +5319,7 @@
          * @param ambisonicOrder - Ambisonic order.
          */
         constructor(context, ambisonicOrder) {
+            this.disposed = false;
             this._context = context;
             this._ambisonicOrder = ambisonicOrder;
             // We need to determine the number of channels K based on the ambisonic order
@@ -5290,34 +5355,37 @@
             // W-channel is not involved in rotation, skip straight to ouput.
             connect(this._splitter, this._merger, 0, 0);
             // Default Identity matrix.
-            this.setRotationMatrix3(identity(create()));
+            this.setRotationMatrix3(identity(create$2()));
             // Input/Output proxy.
             this.input = this._splitter;
             this.output = this._merger;
         }
         dispose() {
-            for (let i = 1; i <= this._ambisonicOrder; i++) {
-                // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-                // matrix. We compute the offset value as the first channel index of the
-                // current order where
-                //   k_last = l^2 + l + m,
-                // and m = -l
-                //   k_last = l^2
-                const orderOffset = i * i;
-                // Uses row-major indexing.
-                const rows = (2 * i + 1);
-                for (let j = 0; j < rows; j++) {
-                    const inputIndex = orderOffset + j;
-                    for (let k = 0; k < rows; k++) {
-                        const outputIndex = orderOffset + k;
-                        const matrixIndex = j * rows + k;
-                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+            if (!this.disposed) {
+                for (let i = 1; i <= this._ambisonicOrder; i++) {
+                    // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+                    // matrix. We compute the offset value as the first channel index of the
+                    // current order where
+                    //   k_last = l^2 + l + m,
+                    // and m = -l
+                    //   k_last = l^2
+                    const orderOffset = i * i;
+                    // Uses row-major indexing.
+                    const rows = (2 * i + 1);
+                    for (let j = 0; j < rows; j++) {
+                        const inputIndex = orderOffset + j;
+                        for (let k = 0; k < rows; k++) {
+                            const outputIndex = orderOffset + k;
+                            const matrixIndex = j * rows + k;
+                            disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                            disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+                        }
                     }
                 }
+                // W-channel is not involved in rotation, skip straight to ouput.
+                disconnect(this._splitter, this._merger, 0, 0);
+                this.disposed = true;
             }
-            // W-channel is not involved in rotation, skip straight to ouput.
-            disconnect(this._splitter, this._merger, 0, 0);
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -5356,16 +5424,16 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set(rotationMatrix3$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
-            return rotationMatrix3$1;
+            set$2(rotationMatrix3, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
+            return rotationMatrix3;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4$1;
+            set$1(rotationMatrix4, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4;
         }
         /**
          * Get the current ambisonic order.
@@ -5374,8 +5442,8 @@
             return this._ambisonicOrder;
         }
     }
-    const rotationMatrix3$1 = create();
-    const rotationMatrix4$1 = create$1();
+    const rotationMatrix3 = create$2();
+    const rotationMatrix4 = create$1();
 
     var SOAHrirBase64 = [
         "UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wQA8/8ZAPr/DAD+/wMA/v8KAAQA/f8DAAMABADs//z/8v/z/8f/R/90/ob+//zAAWsDAwY3DKn9//tu93DvkwI6An4CuwJ0/BH7VPux92X0Gu7N/EX9mgfqCkkIiRMgBd4NQQGL/c0G/xBxAKELZATUA/sIHRSx+fkCyAUmBNEJIARlAdHz2AjNACcIsAW4AlECsvtJ/P/7K/tf++n8aP4W+g0FXAElAMn8nQHn/sT+Zv7N+9X2xvzM/O3+EvpqBBD7SQLd+vb/sPlw/JD72/3n+Rr+L/wS/vz6UQGg/Nf+Av5L/5X9Gv2//SP+mf3j/lf+v/2B/ZH/5P05/iL9MP9F/uf9UP4v/qv9mv7o/Xn+wP2k/8L+uP5J/tD+Dv/Y/bL+mP72/n3+pP+7/hAA+/5zAGH+Z/+u/g8Azv2y/6L+//9o/iIADP8VACz/CwCN/pb/1v4yAFP+wf+4/jsAcf5VAP3+bADa/nMA6f4sAOT+IQBd/v7/7v6aAIL+QADe/nEA0P4yAKz+CQCo/moAuf5xAN7+mAC8/jcANf9eAPX+IAA1/1kAAP9hAMz+PQD5/m0A2/4gAPr+UQDh/jQAEv9BAPH+FABN/zkASv9DADP/BABe/1IAGf8oAE3/RQAw/zIAQf8mADn/GgBE/xIAR/8hAD7/BABy/zEAKP/0/07/GwBX/z4ARf8mAFr/QQBV/zUAVP8eAFz/JABt/0EAUP8MAHz/KgBr/ycAYv8EAH3/MABl/x8Agv8bAIj/GgBv//z/ff8AAJX/IABu/+T/jv/r/4z/9/9n/77/pP8JAJD/EQCJ//r/q/8WAJ//GQCU/xYAtv8qAKr/PQCW/ysAwf8+ALb/OgC3/ygAz/8uAM7/OgDH/ygAz/8kAMz/OgC//xsA1f8qAMn/LwDN/xcA1f8oAMv/JQDR/xMAzf8bAM//HgDU/wUA2v8ZANL/EwDW/wEA1f8ZAMz/BwDX/wIA0v8SANT/BQDW/wMA0/8PANT/AADY/wIA1f8MANX/+f/a/wUA0v8IANf/+//Y/wUA0/8DANr/+f/Y/wQA1v8BANr/+f/Z/wUA1//8/9z/+v/Y/wYA2f/8/93//v/Y/wUA2v/9/93////Z/wUA3P/8/97/AgDa/wMA3v/8/97/AwDb/wIA3//9/97/BADd/wEA4f///9//BQDf/wAA4v8AAN//BQDf/wAA4/8CAN//BADh/wAA4/8DAOD/BADi////4/8DAOH/AwDk/wAA5P8FAOL/AgDl/wEA5P8FAOL/AQDl/wEA4/8EAOL/AQDj/wIA4P8DAN//AADg/wIA3v8CAOD/AADh/wEA4v8AAOP/AADm/wAA6P8AAOz/AADu/wAA",
@@ -5421,13 +5489,14 @@
          * Omnitone HOA renderer class. Uses the optimized convolution technique.
          */
         constructor(context, options) {
+            this.disposed = false;
             this.context = context;
             this.config = Object.assign({
                 ambisonicOrder: 3,
                 renderingMode: RenderingMode.Ambisonic,
             }, options);
             if (!SupportedAmbisonicOrder.includes(this.config.ambisonicOrder)) {
-                log$1('HOARenderer: Invalid ambisonic order. (got ' +
+                log('HOARenderer: Invalid ambisonic order. (got ' +
                     this.config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
                 this.config.ambisonicOrder = Math.max(2, Math.min(3, this.config.ambisonicOrder));
             }
@@ -5461,15 +5530,18 @@
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
-            if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+            if (!this.disposed) {
+                if (this.getRenderingMode() === RenderingMode.Bypass) {
+                    disconnect(this.bypass, this.output);
+                }
+                disconnect(this.input, this.rotator.input);
+                disconnect(this.input, this.bypass);
+                disconnect(this.rotator.output, this.convolver.input);
+                disconnect(this.convolver.output, this.output);
+                this.rotator.dispose();
+                this.convolver.dispose();
+                this.disposed = true;
             }
-            disconnect(this.input, this.rotator.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
-            this.rotator.dispose();
-            this.convolver.dispose();
         }
         /**
          * Initializes and loads the resource for the renderer.
@@ -5593,17 +5665,18 @@
          * Listener model to spatialize sources in an environment.
          */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                position: copy(create$2(), DEFAULT_POSITION),
-                forward: copy(create$2(), DEFAULT_FORWARD),
-                up: copy(create$2(), DEFAULT_UP),
+                position: copy(create(), DEFAULT_POSITION),
+                forward: copy(create(), DEFAULT_FORWARD),
+                up: copy(create(), DEFAULT_UP),
                 renderingMode: DEFAULT_RENDERING_MODE
             }, options);
             // Member variables.
-            this.position = create$2();
-            this.tempMatrix3 = create();
+            this.position = create();
+            this.tempMatrix3 = create$2();
             // Select the appropriate HRIR filters using 2-channel chunks since
             // multichannel audio is not yet supported by a majority of browsers.
             this.ambisonicOrder =
@@ -5638,13 +5711,16 @@
             this.setOrientation(options.forward, options.up);
         }
         dispose() {
-            // Connect pre-rotated soundfield to renderer.
-            disconnect(this.input, this.renderer.input);
-            // Connect rotated soundfield to ambisonic output.
-            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
-            // Connect binaurally-rendered soundfield to binaural output.
-            disconnect(this.renderer.output, this.output);
-            this.renderer.dispose();
+            if (!this.disposed) {
+                // Connect pre-rotated soundfield to renderer.
+                disconnect(this.input, this.renderer.input);
+                // Connect rotated soundfield to ambisonic output.
+                disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+                // Connect binaurally-rendered soundfield to binaural output.
+                disconnect(this.renderer.output, this.output);
+                this.renderer.dispose();
+                this.disposed = true;
+            }
         }
         getRenderingMode() {
             return this.renderer.getRenderingMode();
@@ -5659,13 +5735,13 @@
             copy(F, forward);
             copy(U, up);
             cross(R, F, U);
-            set(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
+            set$2(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
             this.renderer.setRotationMatrix3(this.tempMatrix3);
         }
     }
-    const F = create$2();
-    const U = create$2();
-    const R = create$2();
+    const F = create();
+    const U = create();
+    const R = create();
 
     /**
      * @license
@@ -5690,7 +5766,7 @@
          * Ray-tracing-based early reflections model.
          */
         constructor(context, options) {
-            this.listenerPosition = copy(create$2(), DEFAULT_POSITION);
+            this.listenerPosition = copy(create(), DEFAULT_POSITION);
             this.speedOfSound = DEFAULT_SPEED_OF_SOUND;
             this.coefficients = {
                 left: DEFAULT_REFLECTION_COEFFICIENTS.left,
@@ -5705,6 +5781,7 @@
                 height: 0.5 * DEFAULT_ROOM_DIMENSIONS.height,
                 depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
             };
+            this.disposed = false;
             if (options) {
                 if (isGoodNumber(options.speedOfSound)) {
                     this.speedOfSound = options.speedOfSound;
@@ -5790,32 +5867,35 @@
             this.setRoomProperties(options && options.dimensions, options && options.coefficients);
         }
         dispose() {
-            // Connect nodes.
-            disconnect(this.input, this.lowpass);
-            for (const property of Object.values(Direction)) {
-                const delay = this.delays[property];
-                const gain = this.gains[property];
-                disconnect(this.lowpass, delay);
-                disconnect(delay, gain);
-                disconnect(gain, this.merger, 0, 0);
+            if (!this.disposed) {
+                // Connect nodes.
+                disconnect(this.input, this.lowpass);
+                for (const property of Object.values(Direction)) {
+                    const delay = this.delays[property];
+                    const gain = this.gains[property];
+                    disconnect(this.lowpass, delay);
+                    disconnect(delay, gain);
+                    disconnect(gain, this.merger, 0, 0);
+                }
+                // Connect gains to ambisonic channel output.
+                // Left: [1 1 0 0]
+                // Right: [1 -1 0 0]
+                // Up: [1 0 1 0]
+                // Down: [1 0 -1 0]
+                // Front: [1 0 0 1]
+                // Back: [1 0 0 -1]
+                disconnect(this.gains.left, this.merger, 0, 1);
+                disconnect(this.gains.right, this.inverters.right);
+                disconnect(this.inverters.right, this.merger, 0, 1);
+                disconnect(this.gains.up, this.merger, 0, 2);
+                disconnect(this.gains.down, this.inverters.down);
+                disconnect(this.inverters.down, this.merger, 0, 2);
+                disconnect(this.gains.front, this.merger, 0, 3);
+                disconnect(this.gains.back, this.inverters.back);
+                disconnect(this.inverters.back, this.merger, 0, 3);
+                disconnect(this.merger, this.output);
+                this.disposed = true;
             }
-            // Connect gains to ambisonic channel output.
-            // Left: [1 1 0 0]
-            // Right: [1 -1 0 0]
-            // Up: [1 0 1 0]
-            // Down: [1 0 -1 0]
-            // Front: [1 0 0 1]
-            // Back: [1 0 0 -1]
-            disconnect(this.gains.left, this.merger, 0, 1);
-            disconnect(this.gains.right, this.inverters.right);
-            disconnect(this.inverters.right, this.merger, 0, 1);
-            disconnect(this.gains.up, this.merger, 0, 2);
-            disconnect(this.gains.down, this.inverters.down);
-            disconnect(this.inverters.down, this.merger, 0, 2);
-            disconnect(this.gains.front, this.merger, 0, 3);
-            disconnect(this.gains.back, this.inverters.back);
-            disconnect(this.inverters.back, this.merger, 0, 3);
-            disconnect(this.merger, this.output);
         }
         /**
          * Set the room's properties which determines the characteristics of
@@ -5915,6 +5995,7 @@
         * Late-reflections reverberation filter for Ambisonic content.
         */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 durations: DEFAULT_REVERB_DURATIONS.slice(),
@@ -5945,9 +6026,12 @@
             this.setDurations(options.durations);
         }
         dispose() {
-            disconnect(this.input, this.predelay);
-            disconnect(this.predelay, this.convolver);
-            disconnect(this.convolver, this.output);
+            if (!this.disposed) {
+                disconnect(this.input, this.predelay);
+                disconnect(this.predelay, this.convolver);
+                disconnect(this.convolver, this.output);
+                this.disposed = true;
+            }
         }
         /**
          * Re-compute a new impulse response by providing Multiband RT60 durations.
@@ -5958,7 +6042,7 @@
          */
         setDurations(durations) {
             if (durations.length !== NUMBER_REVERB_FREQUENCY_BANDS) {
-                log('Warning: invalid number of RT60 values provided to reverb.');
+                log$1('Warning: invalid number of RT60 values provided to reverb.');
                 return;
             }
             // Compute impulse response.
@@ -6076,7 +6160,7 @@
                     ROOM_MATERIAL_COEFFICIENTS[materials[property]];
             }
             else {
-                log('Material \"' + materials[property] + '\" on wall \"' +
+                log$1('Material \"' + materials[property] + '\" on wall \"' +
                     property + '\" not found. Using \"' +
                     DEFAULT_ROOM_MATERIALS[property] + '\".');
             }
@@ -6210,7 +6294,7 @@
         constructor(context, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                listenerPosition: copy(create$2(), DEFAULT_POSITION),
+                listenerPosition: copy(create(), DEFAULT_POSITION),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND
@@ -6400,8 +6484,8 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    const forwardNorm = create$2();
-    const directionNorm = create$2();
+    const forwardNorm = create();
+    const directionNorm = create();
     /**
      * Directivity/occlusion filter.
      **/
@@ -6458,7 +6542,7 @@
             this.alpha = Math.min(1, Math.max(0, alpha));
             this.sharpness = Math.max(1, sharpness);
             // Update angle calculation using new values.
-            this.computeAngle(set$2(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set$2(directionNorm, 1, 0, 0));
+            this.computeAngle(set(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set(directionNorm, 1, 0, 0));
         }
     }
 
@@ -6506,9 +6590,9 @@
         constructor(scene, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                position: copy(create$2(), DEFAULT_POSITION),
-                forward: copy(create$2(), DEFAULT_FORWARD),
-                up: copy(create$2(), DEFAULT_UP),
+                position: copy(create(), DEFAULT_POSITION),
+                forward: copy(create(), DEFAULT_FORWARD),
+                up: copy(create(), DEFAULT_UP),
                 minDistance: DEFAULT_MIN_DISTANCE,
                 maxDistance: DEFAULT_MAX_DISTANCE,
                 rolloff: DEFAULT_ATTENUATION_ROLLOFF,
@@ -6522,8 +6606,8 @@
             this.position = options.position;
             this.forward = options.forward;
             this.up = options.up;
-            this.dx = create$2();
-            this.right = create$2();
+            this.dx = create();
+            this.right = create();
             cross(this.right, this.forward, this.up);
             // Create audio nodes.
             let context = scene.context;
@@ -6680,12 +6764,13 @@
          * Options for constructing a new ResonanceAudio scene.
          */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                listenerPosition: copy(create$2(), DEFAULT_POSITION),
-                listenerForward: copy(create$2(), DEFAULT_FORWARD),
-                listenerUp: copy(create$2(), DEFAULT_UP),
+                listenerPosition: copy(create(), DEFAULT_POSITION),
+                listenerForward: copy(create(), DEFAULT_FORWARD),
+                listenerUp: copy(create(), DEFAULT_UP),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND,
@@ -6724,9 +6809,12 @@
             this.listener.setRenderingMode(mode);
         }
         dispose() {
-            disconnect(this.room.output, this.listener.input);
-            disconnect(this.listener.output, this.output);
-            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            if (!this.disposed) {
+                disconnect(this.room.output, this.listener.input);
+                disconnect(this.listener.output, this.output);
+                disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+                this.disposed = true;
+            }
         }
         /**
          * Create a new source for the scene.
@@ -6802,10 +6890,12 @@
          * Creates a new spatializer that uses Google's Resonance Audio library.
          */
         constructor(audioContext, destination, res) {
-            const resNode = res.createSource(undefined);
-            super(audioContext, resNode.input, resNode.output, destination);
+            super(audioContext, destination);
             this.resScene = res;
-            this.resNode = resNode;
+            this.resNode = res.createSource(undefined);
+            this.input = this.resNode.input;
+            this.output = this.resNode.output;
+            connect(this.output, this.destination);
             Object.seal(this);
         }
         createNew() {
@@ -6847,6 +6937,8 @@
          * Creates a new audio positioner that uses Google's Resonance Audio library
          */
         constructor(audioContext) {
+            super(audioContext);
+            this.disposed = false;
             const scene = new ResonanceAudio(audioContext, {
                 ambisonicOrder: 1,
                 renderingMode: RenderingMode.Bypass
@@ -6863,16 +6955,19 @@
                 [Direction.Down]: Material.Grass,
                 [Direction.Up]: Material.Transparent,
             });
-            super(audioContext, scene.listener.input, scene.output);
+            this.input = scene.listener.input;
+            this.output = scene.output;
             this.scene = scene;
             Object.seal(this);
         }
         dispose() {
-            if (this.scene) {
-                this.scene.dispose();
-                this.scene = null;
+            if (!this.disposed) {
+                if (this.scene) {
+                    this.scene.dispose();
+                }
+                super.dispose();
+                this.disposed = true;
             }
-            super.dispose();
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
@@ -6895,16 +6990,18 @@
         }
     }
 
-    const delta$1 = create$2();
+    const delta = create();
     class VolumeScalingNode extends BaseEmitter {
         /**
          * Creates a new spatializer that performs no panning, only distance-based volume scaling
          */
         constructor(audioContext, destination, listener) {
+            super(audioContext, destination);
             const gain = audioContext.createGain();
-            super(audioContext, gain, gain, destination);
+            this.input = this.output = gain;
             this.gain = gain;
             this.listener = listener;
+            connect(this.output, this.destination);
             Object.seal(this);
         }
         createNew() {
@@ -6912,8 +7009,8 @@
         }
         update(loc, t) {
             const p = this.listener.pose.p;
-            sub(delta$1, p, loc.p);
-            const distance = length(delta$1);
+            sub(delta, p, loc.p);
+            const distance = length(delta);
             let range = clamp(project(distance, this.minDistance, this.maxDistance), 0, 1);
             if (this.algorithm === "logarithmic") {
                 range = Math.sqrt(range);
@@ -6931,8 +7028,9 @@
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
         constructor(audioContext) {
+            super(audioContext);
             const gain = audioContext.createGain();
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
             this.pose = new Pose();
         }
         /**
@@ -6963,14 +7061,15 @@
          * @param audioContext - the output WebAudio context
          */
         constructor(audioContext, destination) {
-            const panner = audioContext.createPanner();
-            super(audioContext, panner, panner, destination);
-            this.panner = panner;
+            super(audioContext, destination);
+            this.panner = audioContext.createPanner();
             this.panner.panningModel = "HRTF";
             this.panner.distanceModel = "inverse";
             this.panner.coneInnerAngle = 360;
             this.panner.coneOuterAngle = 0;
             this.panner.coneOuterGain = 0;
+            this.input = this.output = this.panner;
+            connect(this.output, this.destination);
         }
         copyAudioProperties(from) {
             super.copyAudioProperties(from);
@@ -7030,14 +7129,19 @@
          * Creates a new spatializer that uses WebAudio's PannerNode.
          */
         constructor(audioContext) {
+            super(audioContext);
+            this.disposed2 = false;
             const gain = audioContext.createGain();
             gain.gain.value = 0.75;
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
             this.listener = audioContext.listener;
         }
         dispose() {
-            this.listener = null;
-            super.dispose();
+            if (!this.disposed2) {
+                this.listener = null;
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
     }
 
@@ -7147,10 +7251,14 @@
         constructor(id, audioContext) {
             super(audioContext);
             this.id = id;
+            this.disposed2 = false;
         }
         dispose() {
-            this.source = null;
-            super.dispose();
+            if (!this.disposed2) {
+                this.source = null;
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
         get spatialized() {
             return !(this.spatializer instanceof NoSpatializationNode);
@@ -7189,6 +7297,7 @@
         constructor(id, audioContext, source, spatializer) {
             super(id, audioContext, source, spatializer);
             this.isPlaying = false;
+            this.disposed3 = false;
         }
         async play() {
             this.source.start();
@@ -7199,8 +7308,11 @@
             this.source.stop();
         }
         dispose() {
-            this.stop();
-            super.dispose();
+            if (!this.disposed3) {
+                this.stop();
+                super.dispose();
+                this.disposed3 = true;
+            }
         }
     }
 
@@ -7209,6 +7321,7 @@
             super(id, audioContext, source, spatializer);
             this.counter = 0;
             this.playingSources = new Array();
+            this.disposed3 = false;
         }
         connectSpatializer() {
             // do nothing, this node doesn't play on its own
@@ -7248,8 +7361,11 @@
             arrayClear(this.playingSources);
         }
         dispose() {
-            this.stop();
-            super.dispose();
+            if (!this.disposed3) {
+                this.stop();
+                super.dispose();
+                this.disposed3 = true;
+            }
         }
     }
 
@@ -7257,6 +7373,7 @@
         constructor(id, audioContext, source, spatializer) {
             super(id, audioContext);
             this.isPlaying = false;
+            this.disposed3 = false;
             this.source = source;
             this.spatializer = spatializer;
         }
@@ -7274,10 +7391,13 @@
             this.isPlaying = false;
         }
         dispose() {
-            if (this.source.mediaElement.parentElement) {
-                this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+            if (!this.disposed3) {
+                if (this.source.mediaElement.parentElement) {
+                    this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+                }
+                super.dispose();
+                this.disposed3 = false;
             }
-            super.dispose();
         }
     }
 
@@ -7289,7 +7409,7 @@
     }
 
     function BackgroundAudio(autoplay, mute, ...rest) {
-        const elem = Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
+        const elem = Audio(playsInline(true), controls$1(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
         //document.body.appendChild(elem);
         return elem;
     }
@@ -7412,14 +7532,12 @@
         get algorithm() {
             return this._algorithm;
         }
-        addEventListener(type, callback, options = null) {
-            if (type === audioReadyEvt.type
-                && this.ready) {
+        checkAddEventListener(type, callback) {
+            if (type === audioReadyEvt.type && this.ready) {
                 callback(audioReadyEvt);
+                return false;
             }
-            else {
-                super.addEventListener(type, callback, options);
-            }
+            return true;
         }
         get ready() {
             return this.audioContext && this.audioContext.state === "running";
@@ -7578,7 +7696,7 @@
         /**
          * Creates a new sound effect from a series of fallback paths
          * for media files.
-         * @param name - the name of the sound effect, to reference when executing playback.
+         * @param id - the name of the sound effect, to reference when executing playback.
          * @param looping - whether or not the sound effect should be played on loop.
          * @param autoPlaying - whether or not the sound effect should be played immediately.
          * @param spatialize - whether or not the sound effect should be spatialized.
@@ -7586,32 +7704,32 @@
          * @param path - a path for loading the media of the sound effect.
          * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
          */
-        async createClip(name, looping, autoPlaying, spatialize, vol, path, onProgress) {
+        async createClip(id, looping, autoPlaying, spatialize, vol, path, onProgress) {
             if (path == null || path.length === 0) {
                 throw new Error("No clip source path provided");
             }
-            const clip =  await this.createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress)
+            const clip = await this.createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress)
                 ;
             clip.volume = vol;
-            this.clips.set(name, clip);
+            this.clips.set(id, clip);
             return clip;
         }
-        async createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+        async createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress) {
             if (onProgress) {
                 onProgress(0, 1);
             }
             const elem = BackgroundAudio(autoPlaying, false);
             const task = once(elem, "canplaythrough");
             elem.loop = looping;
-            elem.src = await this.fetcher.getFile(path, onProgress);
+            elem.src = await this.fetcher.getFile(path, null, onProgress);
             await task;
             const source = this.audioContext.createMediaElementSource(elem);
             if (onProgress) {
                 onProgress(1, 1);
             }
-            return new AudioElementSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+            return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
         }
-        async createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+        async createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress) {
             let goodBlob = null;
             if (!shouldTry(path)) {
                 if (onProgress) {
@@ -7619,7 +7737,7 @@
                 }
             }
             else {
-                const blob = await this.fetcher.getBlob(path, onProgress);
+                const blob = await this.fetcher.getBlob(path, null, onProgress);
                 if (testAudio.canPlayType(blob.type)) {
                     goodBlob = blob;
                 }
@@ -7632,7 +7750,7 @@
             const source = this.audioContext.createBufferSource();
             source.buffer = data;
             source.loop = looping;
-            const clip = new AudioBufferSpawningSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+            const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
             if (autoPlaying) {
                 clip.play();
             }
@@ -7669,6 +7787,14 @@
         getClip(id) {
             return this.clips.get(id);
         }
+        renameClip(id, newID) {
+            const clip = this.clips.get(id);
+            if (clip) {
+                clip.id = "audio-clip-" + id;
+                this.clips.delete(id);
+                this.clips.set(newID, clip);
+            }
+        }
         /**
          * Remove an audio source from audio processing.
          * @param sources - the collection of audio sources from which to remove.
@@ -7680,6 +7806,7 @@
                 sources.delete(id);
                 source.dispose();
             }
+            return source;
         }
         /**
          * Remove a user from audio processing.
@@ -7693,7 +7820,7 @@
          * Remove an audio clip from audio processing.
          **/
         removeClip(id) {
-            this.removeSource(this.clips, id);
+            return this.removeSource(this.clips, id);
         }
         createSourceFromStream(stream) {
             if (useTrackSource) {
@@ -8470,7 +8597,7 @@
         ClientState["Prepairing"] = "prepairing";
         ClientState["Unprepared"] = "unprepaired";
     })(ClientState || (ClientState = {}));
-    const audioActivityEvt$2 = new AudioActivityEvent();
+    const audioActivityEvt = new AudioActivityEvent();
     class Calla extends TypedEventBase {
         constructor(_fetcher, _tele, _meta) {
             super();
@@ -8479,6 +8606,7 @@
             this._meta = _meta;
             this.isAudioMuted = null;
             this.isVideoMuted = null;
+            this.disposed = false;
             const fwd = this.dispatchEvent.bind(this);
             this._tele.addEventListener("serverConnected", fwd);
             this._tele.addEventListener("serverDisconnected", fwd);
@@ -8552,9 +8680,9 @@
                 offsetEvt(evt);
             });
             this.audio.addEventListener("audioActivity", (evt) => {
-                audioActivityEvt$2.id = evt.id;
-                audioActivityEvt$2.isActive = evt.isActive;
-                this.dispatchEvent(audioActivityEvt$2);
+                audioActivityEvt.id = evt.id;
+                audioActivityEvt.isActive = evt.isActive;
+                this.dispatchEvent(audioActivityEvt);
             });
             const dispose = this.dispose.bind(this);
             window.addEventListener("beforeunload", dispose);
@@ -8614,8 +8742,11 @@
             return await this._tele.getVideoInputDevices(filterDuplicates);
         }
         dispose() {
-            this.leave();
-            this.disconnect();
+            if (!this.disposed) {
+                this.leave();
+                this.disconnect();
+                this.disposed = true;
+            }
         }
         get offsetRadius() {
             return this.audio.offsetRadius;
@@ -8745,7 +8876,7 @@
             let f = null;
             let a = null;
             let p = null;
-            if (!isNullOrUndefined(fetcher)
+            if (isDefined(fetcher)
                 && !(fetcher instanceof AudioManager)
                 && !isFunction(fetcher)) {
                 f = fetcher;
@@ -8756,7 +8887,7 @@
             if (fetcher instanceof AudioManager) {
                 a = fetcher;
             }
-            else if (!isNullOrUndefined(audio)
+            else if (isDefined(audio)
                 && !isFunction(audio)) {
                 a = audio;
             }
@@ -8791,7 +8922,7 @@
         async _load(fetcher, onProgress) {
             if (!this.loaded) {
                 console.info("Connecting to:", this.host);
-                const progs = splitProgress(onProgress, 2);
+                const progs = splitProgress(onProgress, [1, 3]);
                 await fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
                 await fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
                 {
@@ -11862,7 +11993,7 @@
         allPoliceMaleGroup,
         allPoliceFemaleGroup
     ];
-    const allCopsGroup = new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allCops);
+    new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allCops);
     const allWearingTurban = [
         wearingTurban,
         wearingTurbanLightSkinTone,
@@ -11895,7 +12026,7 @@
         allWearingTurbanMaleGroup,
         allWearingTurbanFemaleGroup
     ];
-    const allTurbanWearersGroup = new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allTurbanWearers);
+    new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allTurbanWearers);
     const allSuperhero = [
         superhero,
         superheroLightSkinTone,
@@ -12348,7 +12479,7 @@
         allBlondPersonMaleGroup,
         allBlondPersonFemaleGroup
     ];
-    const allBlondePeopleGroup = new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allBlondePeople);
+    new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allBlondePeople);
     const allPerson = [
         person,
         personLightSkinTone,
@@ -13753,7 +13884,7 @@
         allOccupationGroup,
         allFantasyGroup
     ];
-    const allCharactersGroup = new EmojiGroup("\u0041\u006C\u006C\u0020\u0050\u0065\u006F\u0070\u006C\u0065", "All People", ...allCharacters);
+    new EmojiGroup("\u0041\u006C\u006C\u0020\u0050\u0065\u006F\u0070\u006C\u0065", "All People", ...allCharacters);
 
     const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
     const loadedFonts = [];
@@ -13791,308 +13922,10 @@
         }
     }
 
-    const windows = [];
-    if ("window" in globalThis) {
-        // Closes all the windows.
-        window.addEventListener("unload", () => {
-            for (const w of windows) {
-                w.close();
-            }
-        });
-    }
-    /**
-     * Opens a window that will be closed when the window that opened it is closed.
-     * @param href - the location to load in the window
-     * @param x - the screen position horizontal component
-     * @param y - the screen position vertical component
-     * @param width - the screen size horizontal component
-     * @param height - the screen size vertical component
-     */
-    function openWindow(href, x, y, width, height) {
-        if ("window" in globalThis) {
-            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-            if (w) {
-                windows.push(w);
-            }
-        }
-        else {
-            throw new Error("Cannot open a window from a Worker.");
-        }
-    }
-
-    const hasHTMLCanvas = "HTMLCanvasElement" in globalThis;
-    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
-    const hasImageBitmap = "createImageBitmap" in globalThis;
-    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
-        try {
-            const canv = new OffscreenCanvas(1, 1);
-            const g = canv.getContext("2d");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
-        try {
-            const canv = hasOffscreenCanvas
-                ? new OffscreenCanvas(1, 1)
-                : Canvas();
-            const g = canv.getContext("bitmaprenderer");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    function drawImageBitmapToCanvas2D(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function copyImageBitmapToCanvas(canv, img) {
-        const g = canv.getContext("bitmaprenderer");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create bitmaprenderer context for canvas");
-        }
-        g.transferFromImageBitmap(img);
-    }
-    const drawImageBitmapToCanvas = hasImageBitmapRenderingContext
-        ? copyImageBitmapToCanvas
-        : drawImageBitmapToCanvas2D;
-    function createOffscreenCanvas(width, height) {
-        return new OffscreenCanvas(width, height);
-    }
-    function createCanvas(w, h) {
-        return Canvas(width(w), height(h));
-    }
-    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvas
-        : createCanvas;
-    function createOffscreenCanvasFromImageBitmap(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImageBitmap(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImageBitmap = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImageBitmap
-        : createCanvasFromImageBitmap;
-    function drawImageToCanvas(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function createOffscreenCanvasFromImage(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImage(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImage
-        : createCanvasFromImage;
-    function isOffscreenCanvas(obj) {
-        return hasOffscreenCanvas && obj instanceof OffscreenCanvas;
-    }
-    /**
-     * Resizes a canvas element
-     * @param canv
-     * @param w - the new width of the canvas
-     * @param h - the new height of the canvas
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function setCanvasSize(canv, w, h, superscale = 1) {
-        w = Math.floor(w * superscale);
-        h = Math.floor(h * superscale);
-        if (canv.width != w
-            || canv.height != h) {
-            canv.width = w;
-            canv.height = h;
-            return true;
-        }
-        return false;
-    }
-    function isCanvasRenderingContext2D(ctx) {
-        return ctx.textBaseline != null;
-    }
-    function isOffscreenCanvasRenderingContext2D(ctx) {
-        return ctx.textBaseline != null;
-    }
-    function is2DRenderingContext(ctx) {
-        return isCanvasRenderingContext2D(ctx)
-            || isOffscreenCanvasRenderingContext2D(ctx);
-    }
-    function setCanvas2DContextSize(ctx, w, h, superscale = 1) {
-        const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled, oldTextBaseline = ctx.textBaseline, oldTextAlign = ctx.textAlign, oldFont = ctx.font, resized = setCanvasSize(ctx.canvas, w, h, superscale);
-        if (resized) {
-            ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-            ctx.textBaseline = oldTextBaseline;
-            ctx.textAlign = oldTextAlign;
-            ctx.font = oldFont;
-        }
-        return resized;
-    }
-    /**
-     * Resizes the canvas element of a given rendering context.
-     *
-     * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font
-     * properties of the context will be restored after the context is resized,
-     * as these values are usually reset to their default values when a canvas
-     * is resized.
-     * @param ctx
-     * @param w - the new width of the canvas
-     * @param h - the new height of the canvas
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function setContextSize(ctx, w, h, superscale = 1) {
-        if (is2DRenderingContext(ctx)) {
-            return setCanvas2DContextSize(ctx, w, h, superscale);
-        }
-        else {
-            return setCanvasSize(ctx.canvas, w, h, superscale);
-        }
-    }
-    /**
-     * Resizes a canvas element to match the proportions of the size of the element in the DOM.
-     * @param canv
-     * @param [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
-     * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
-     */
-    function resizeCanvas(canv, superscale = 1) {
-        return setCanvasSize(canv, canv.clientWidth, canv.clientHeight, superscale);
-    }
-    async function canvasView(canvas) {
-        let url;
-        if (isOffscreenCanvas(canvas)) {
-            const blob = await canvas.convertToBlob();
-            url = URL.createObjectURL(blob);
-        }
-        else {
-            url = canvas.toDataURL();
-        }
-        openWindow(url, 0, 0, canvas.width + 10, canvas.height + 100);
-    }
-    async function canvasToBlob(canvas, type, quality) {
-        if (isOffscreenCanvas(canvas)) {
-            return await canvas.convertToBlob({ type, quality });
-        }
-        else {
-            return await new Promise((resolve) => {
-                canvas.toBlob(resolve, type, quality);
-            });
-        }
-    }
-    if (hasHTMLCanvas) {
-        HTMLCanvasElement.prototype.view = async function () {
-            return await canvasView(this);
-        };
-        HTMLCanvasElement.prototype.convertToBlob = async function (opts) {
-            return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
-        };
-    }
-    if (hasOffscreenCanvas) {
-        OffscreenCanvas.prototype.view = async function () {
-            return await canvasView(this);
-        };
-        OffscreenCanvas.prototype.toBlob = function (callback, type, quality) {
-            canvasToBlob(this, type, quality)
-                .then(callback);
-        };
-    }
-
-    class ImageFetcher extends Fetcher {
-        constructor() {
-            super();
-            this.__getCanvas = hasImageBitmap
-                ? this._getCanvasViaImageBitmap
-                : this._getCanvasViaImage;
-        }
-        async readFileImage(file) {
-            const img = new Image();
-            img.src = file;
-            if (!img.complete) {
-                await once(img, "load", "error");
-            }
-            return img;
-        }
-        async _getImageBitmap(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._getBlob(path, headerMap, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async getImageBitmap(path, headerMap, onProgress) {
-            return await this._getImageBitmap(path, headerMap, onProgress);
-        }
-        async _getImage(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const file = await this._getFile(path, headerMap, onProgress);
-            return await this.readFileImage(file);
-        }
-        async getImage(path, headerMap, onProgress) {
-            return await this._getImage(path, headerMap, onProgress);
-        }
-        async _postObjectForImageBitmap(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async postObjectForImageBitmap(path, obj, headerMap, onProgress) {
-            return await this._postObjectForImageBitmap(path, obj, headerMap, onProgress);
-        }
-        async _postObjectForImage(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const file = await this._postObjectForFile(path, obj, headerMap, onProgress);
-            return await this.readFileImage(file);
-        }
-        async postObjectForImage(path, obj, headerMap, onProgress) {
-            return await this._postObjectForImage(path, obj, headerMap, onProgress);
-        }
-        async _getCanvasViaImageBitmap(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            return using(await this._getImageBitmap(path, headerMap, onProgress), (img) => {
-                return createUtilityCanvasFromImageBitmap(img);
-            });
-        }
-        async _getCanvasViaImage(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const img = await this._getImage(path, headerMap, onProgress);
-            return createUtilityCanvasFromImage(img);
-        }
-        async _getCanvas(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            return await this.__getCanvas(path, headerMap, onProgress);
-        }
-        async getCanvas(path, headerMap, onProgress) {
-            return await this._getCanvas(path, headerMap, onProgress);
-        }
-    }
-
     /**
      * Pick a value that is proportionally between two values.
      */
-    function lerp$1(a, b, p) {
+    function lerp(a, b, p) {
         return (1 - p) * a + p * b;
     }
 
@@ -14112,7 +13945,7 @@
         set(t, dt) {
             this.t = t;
             this.dt = dt;
-            this.sdt = lerp$1(this.sdt, dt, 0.01);
+            this.sdt = lerp(this.sdt, dt, 0.01);
         }
     }
     class BaseTimer extends TypedEventBase {
@@ -14311,20 +14144,20 @@
     function isLockable(obj) {
         return isFunction(obj.setLocked);
     }
-    const disabler = disabled(true), enabler = disabled(false);
+    const disabler$4 = disabled(true), enabler$4 = disabled(false);
     function setLocked(target, value) {
         if (isLockable(target)) {
             target.setLocked(value);
         }
         else if (value) {
-            disabler.apply(target);
+            disabler$4.apply(target);
         }
         else {
-            enabler.apply(target);
+            enabler$4.apply(target);
         }
     }
 
-    const toggleOptionsEvt = new TypedEvent("toggleOptions"), tweetEvt = new TypedEvent("tweet"), leaveEvt = new TypedEvent("leave"), toggleFullscreenEvt = new TypedEvent("toggleFullscreen"), toggleInstructionsEvt = new TypedEvent("toggleInstructions"), toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), changeDevicesEvt = new TypedEvent("changeDevices"), emoteEvt = new TypedEvent("emote"), selectEmojiEvt = new TypedEvent("selectEmoji"), zoomChangedEvt = new TypedEvent("zoomChanged");
+    const toggleOptionsEvt = new TypedEvent("toggleOptions"), tweetEvt = new TypedEvent("tweet"), leaveEvt = new TypedEvent("leave"), toggleFullscreenEvt = new TypedEvent("toggleFullscreen"), toggleInstructionsEvt = new TypedEvent("toggleInstructions"), toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"), toggleAudioEvt$1 = new TypedEvent("toggleAudio"), toggleVideoEvt$2 = new TypedEvent("toggleVideo"), changeDevicesEvt = new TypedEvent("changeDevices"), emoteEvt$1 = new TypedEvent("emote"), selectEmojiEvt = new TypedEvent("selectEmoji"), zoomChangedEvt$1 = new TypedEvent("zoomChanged");
     class ButtonLayer extends TypedEventBase {
         constructor(zoomMin, zoomMax) {
             super();
@@ -14332,10 +14165,10 @@
             this._videoEnabled = false;
             const changeZoom = (dz) => {
                 this.zoom += dz;
-                this.dispatchEvent(zoomChangedEvt);
+                this.dispatchEvent(zoomChangedEvt$1);
             };
             this.element = Div(id("controls"));
-            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt$1)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt$2)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt$1)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt$1)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
             Object.seal(this);
         }
         get isFullscreen() {
@@ -14496,8 +14329,8 @@
         }
     }
 
-    const disabler$1 = disabled(true);
-    const enabler$1 = disabled(false);
+    const disabler$3 = disabled(true);
+    const enabler$3 = disabled(false);
     /**
      * Creates a select box that can bind to collections
      * @param id - the ID to use for the select box
@@ -14541,7 +14374,7 @@
             elementClearChildren(this.element);
             if (this.values.length === 0) {
                 this.element.append(Option(this.noSelectionText));
-                disabler$1.apply(this.element);
+                disabler$3.apply(this.element);
             }
             else {
                 if (this.emptySelectionEnabled) {
@@ -14550,7 +14383,7 @@
                 for (let v of this.values) {
                     this.element.append(Option(value(this.makeID(v)), this.makeLabel(v)));
                 }
-                enabler$1.apply(this.element);
+                enabler$3.apply(this.element);
             }
         }
         /**
@@ -15047,6 +14880,7 @@
     //longDrum,
     banjo);
 
+    new EmojiGroup("Keycap Digits", "Keycap Digits", keycapDigitZero, keycapDigitOne, keycapDigitTwo, keycapDigitThree, keycapDigitFour, keycapDigitFive, keycapDigitSix, keycapDigitSeven, keycapDigitEight, keycapDigitNine, keycap10);
     const numbers = new EmojiGroup("Numbers", "Numbers", digitZero, digitOne, digitTwo, digitThree, digitFour, digitFive, digitSix, digitSeven, digitEight, digitNine, asterisk, numberSign, keycapDigitZero, keycapDigitOne, keycapDigitTwo, keycapDigitThree, keycapDigitFour, keycapDigitFive, keycapDigitSix, keycapDigitSeven, keycapDigitEight, keycapDigitNine, keycapAsterisk, keycapNumberSign, keycap10);
 
     const office = new EmojiGroup("Office", "Office", fileFolder, openFileFolder, pageWithCurl, pageFacingUp, calendar, tearOffCalendar, cardIndex, cardIndexDividers, cardFileBox, fileCabinet, wastebasket, spiralNotePad, spiralCalendar, chartIncreasing, chartDecreasing, barChart, clipboard, pushpin, roundPushpin, paperclip, linkedPaperclips, straightRuler, triangularRuler, bookmarkTabs, ledger, notebook, notebookWithDecorativeCover, closedBook, openBook, greenBook, blueBook, orangeBook, books, nameBadge, scroll, memo, scissors, envelope);
@@ -15483,23 +15317,24 @@
     }
     class GamepadButtonUpEvent extends GamepadButtonEvent {
         constructor(button) {
-            super("gamepadButtonUp", button);
+            super("gamepadbuttonup", button);
         }
     }
     class GamepadButtonDownEvent extends GamepadButtonEvent {
         constructor(button) {
-            super("gamepadButtonDown", button);
+            super("gamepadbuttondown", button);
         }
     }
     class GamepadAxisEvent extends TypedEvent {
-        constructor(type, axis) {
+        constructor(type, axis, value) {
             super(type);
             this.axis = axis;
+            this.value = value;
         }
     }
     class GamepadAxisMaxedEvent extends GamepadAxisEvent {
-        constructor(axis) {
-            super("gamepadAxisMaxed", axis);
+        constructor(axis, value) {
+            super("gamepadaxismaxed", axis, value);
         }
     }
     class EventedGamepad extends TypedEventBase {
@@ -15530,7 +15365,7 @@
                 this.buttons[b] = pad.buttons[b];
             }
             for (let a = 0; a < pad.axes.length; ++a) {
-                this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a);
+                this.axisMaxEvts[a] = new GamepadAxisMaxedEvent(a, 0);
                 this.axisMaxed[a] = false;
                 if (this._isStick(a)) {
                     this.sticks[a / 2] = { x: 0, y: 0 };
@@ -15560,11 +15395,13 @@
                 this.buttons[b] = pad.buttons[b];
             }
             for (let a = 0; a < pad.axes.length; ++a) {
-                const wasMaxed = this.axisMaxed[a], val = pad.axes[a], dir = Math.sign(val), mag = Math.abs(val), maxed = mag >= this.axisThresholdMax, mined = mag <= this.axisThresholdMin;
+                const wasMaxed = this.axisMaxed[a], val = pad.axes[a], dir = Math.sign(val), mag = Math.abs(val), maxed = mag >= this.axisThresholdMax, mined = mag <= this.axisThresholdMin, correctedVal = dir * (maxed ? 1 : (mined ? 0 : mag));
                 if (maxed && !wasMaxed) {
+                    this.axisMaxEvts[a].value = correctedVal;
                     this.dispatchEvent(this.axisMaxEvts[a]);
                 }
-                this.axes[a] = dir * (maxed ? 1 : (mined ? 0 : mag));
+                this.axisMaxed[a] = maxed;
+                this.axes[a] = correctedVal;
             }
             for (let a = 0; a < this.axes.length - 1; a += 2) {
                 const stick = this.sticks[a / 2];
@@ -15585,7 +15422,7 @@
             super("inputBindingChanged");
         }
     }
-    const inputBindingChangedEvt = new InputBindingChangedEvent();
+    const inputBindingChangedEvt$1 = new InputBindingChangedEvent();
     class InputBinding extends TypedEventBase {
         constructor() {
             super();
@@ -15616,7 +15453,7 @@
                         if (this.bindings.has(id)
                             && v !== this.bindings.get(id)) {
                             this.bindings.set(id, v);
-                            this.dispatchEvent(inputBindingChangedEvt);
+                            this.dispatchEvent(inputBindingChangedEvt$1);
                         }
                     }
                 });
@@ -15669,7 +15506,7 @@
             if (this.bindings.has(key)
                 && v !== this.bindings.get(key)) {
                 this.bindings.set(key, v);
-                this.dispatchEvent(inputBindingChangedEvt);
+                this.dispatchEvent(inputBindingChangedEvt$1);
             }
         }
         toJSON() {
@@ -16145,8 +15982,8 @@
             this.axis = 0;
         }
     }
-    const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt$1 = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt$1 = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
-    const disabler$3 = disabled(true), enabler$3 = disabled(false);
+    const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt$1 = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
+    const disabler$1 = disabled(true), enabler$1 = disabled(false);
     class OptionsForm extends FormDialog {
         constructor() {
             super("options");
@@ -16161,7 +15998,7 @@
                     if (keyEvt.key !== "Tab"
                         && keyEvt.key !== "Shift") {
                         this._inputBinding.set(id, keyEvt.key);
-                        this.dispatchEvent(inputBindingChangedEvt$1);
+                        this.dispatchEvent(inputBindingChangedEvt);
                     }
                 }));
                 key.value = this._inputBinding.get(id).toString();
@@ -16172,7 +16009,7 @@
                 this.addEventListener("gamepadButtonUp", (evt) => {
                     if (document.activeElement === gp.input) {
                         this._inputBinding.set(id, evt.button);
-                        this.dispatchEvent(inputBindingChangedEvt$1);
+                        this.dispatchEvent(inputBindingChangedEvt);
                     }
                 });
                 gp.value = this._inputBinding.get(id).toString();
@@ -16183,7 +16020,7 @@
                 this.addEventListener("gamepadAxisMaxed", (evt) => {
                     if (document.activeElement === gp.input) {
                         this._inputBinding.set(id, evt.axis);
-                        this.dispatchEvent(inputBindingChangedEvt$1);
+                        this.dispatchEvent(inputBindingChangedEvt);
                     }
                 });
                 gp.value = this._inputBinding.get(id).toString();
@@ -16196,7 +16033,7 @@
                 })), this.clearAvatarURLButton = Button(disabled, "Clear", onClick(() => {
                     this.avatarURL = null;
                     this.dispatchEvent(avatarUrlChangedEvt);
-                }))), " or ", Div(Label(htmlFor("videoAvatarButton"), "Video: "), this.useVideoAvatarButton = Button(id("videoAvatarButton"), "Use video", onClick(_(toggleVideoEvt$1)))), this.avatarPreview = Canvas(width(256), height(256))),
+                }))), " or ", Div(Label(htmlFor("videoAvatarButton"), "Video: "), this.useVideoAvatarButton = Button(id("videoAvatarButton"), "Use video", onClick(_(toggleVideoEvt$1)))), this.avatarPreview = Canvas(htmlWidth(256), htmlHeight(256))),
                 OptionPanel("interface", "Interface", this.fontSizeInput = LabeledInput("fontSize", "number", "Font size: ", value("10"), min(5), max(32), numberWidthStyle, onInput(_(fontSizeChangedEvt))), P(this.drawHearingCheck = LabeledInput("drawHearing", "checkbox", "Draw hearing range: ", onInput(() => {
                     this.drawHearing = !this.drawHearing;
                     this.dispatchEvent(toggleDrawHearingEvt);
@@ -16209,7 +16046,7 @@
                 cols[i] = "1fr";
                 panels[i].style.gridColumnStart = (i + 1).toFixed(0);
             }
-            gridColsDef(...cols).apply(this.header);
+            gridColsDef(...cols).apply(this.header.style);
             this.header.append(...panels.map(p => p.button));
             this.content.append(...panels.map(p => p.element));
             const showPanel = (p) => () => {
@@ -16281,11 +16118,11 @@
         set avatarURL(v) {
             if (isString(v)) {
                 this.avatarURLInput.value = v;
-                enabler$3.apply(this.clearAvatarURLButton);
+                enabler$1.apply(this.clearAvatarURLButton);
             }
             else {
                 this.avatarURLInput.value = "";
-                disabler$3.apply(this.clearAvatarURLButton);
+                disabler$1.apply(this.clearAvatarURLButton);
             }
         }
         setAvatarVideo(v) {
@@ -16563,7 +16400,7 @@
                 }, ROW_TIMEOUT);
                 this.usersList.append(elem);
                 this.users.set(user.id, user);
-                this.avatarGs.set(user.id, Canvas(width(32), height(32))
+                this.avatarGs.set(user.id, Canvas(htmlWidth(32), htmlHeight(32))
                     .getContext("2d"));
             }
             const avatar = this.avatarGs.get(user.id).canvas;
@@ -16593,7 +16430,7 @@
                 for (let elems of this.rows.values()) {
                     const r = row(rowCount++);
                     for (let elem of elems) {
-                        r.apply(elem);
+                        r.apply(elem.style);
                     }
                 }
             }
@@ -16670,10 +16507,38 @@
         return _getTransform(g);
     }
 
-    const redrawnEvt = new TypedEvent("redrawn");
-    class TextImage extends TypedEventBase {
-        constructor() {
+    class CanvasImage extends TypedEventBase {
+        constructor(width, height) {
             super();
+            this.redrawnEvt = new TypedEvent("redrawn");
+            this._canvas = createUtilityCanvas(width, height);
+            this._g = this.canvas.getContext("2d");
+        }
+        get canvas() {
+            return this._canvas;
+        }
+        get g() {
+            return this._g;
+        }
+        fillRect(color, x, y, width, height, margin) {
+            this.g.fillStyle = color;
+            this.g.fillRect(x + margin, y + margin, width - 2 * margin, height - 2 * margin);
+        }
+        drawText(text, x, y, align) {
+            this.g.textAlign = align;
+            this.g.strokeText(text, x, y);
+            this.g.fillText(text, x, y);
+        }
+        redraw() {
+            if (this.onRedraw()) {
+                this.dispatchEvent(this.redrawnEvt);
+            }
+        }
+    }
+
+    class TextImage extends CanvasImage {
+        constructor(options) {
+            super(10, 10);
             this._minWidth = null;
             this._maxWidth = null;
             this._minHeight = null;
@@ -16691,23 +16556,71 @@
             this._fontWeight = "normal";
             this._fontFamily = "sans-serif";
             this._fontSize = 20;
-            this._padding = {
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0
-            };
-            this._canvas = createUtilityCanvas(10, 10);
-            const g = this.canvas.getContext("2d");
-            if (!g) {
-                throw new Error("Couldn't create a graphics context for the TextImage canvas.");
+            this.notReadyEvt = new TypedEvent("notready");
+            if (isDefined(options)) {
+                if (isDefined(options.minWidth)) {
+                    this._minWidth = options.minWidth;
+                }
+                if (isDefined(options.maxWidth)) {
+                    this._maxWidth = options.maxWidth;
+                }
+                if (isDefined(options.minHeight)) {
+                    this._minHeight = options.minHeight;
+                }
+                if (isDefined(options.maxHeight)) {
+                    this._maxHeight = options.maxHeight;
+                }
+                if (isDefined(options.strokeColor)) {
+                    this._strokeColor = options.strokeColor;
+                }
+                if (isDefined(options.strokeSize)) {
+                    this._strokeSize = options.strokeSize;
+                }
+                if (isDefined(options.bgColor)) {
+                    this._bgColor = options.bgColor;
+                }
+                if (isDefined(options.value)) {
+                    this._value = options.value;
+                }
+                if (isDefined(options.scale)) {
+                    this._scale = options.scale;
+                }
+                if (isDefined(options.fillColor)) {
+                    this._fillColor = options.fillColor;
+                }
+                if (isDefined(options.textDirection)) {
+                    this._textDirection = options.textDirection;
+                }
+                if (isDefined(options.wrapWords)) {
+                    this._wrapWords = options.wrapWords;
+                }
+                if (isDefined(options.fontStyle)) {
+                    this._fontStyle = options.fontStyle;
+                }
+                if (isDefined(options.fontVariant)) {
+                    this._fontVariant = options.fontVariant;
+                }
+                if (isDefined(options.fontWeight)) {
+                    this._fontWeight = options.fontWeight;
+                }
+                if (isDefined(options.fontFamily)) {
+                    this._fontFamily = options.fontFamily;
+                }
+                if (isDefined(options.fontSize)) {
+                    this._fontSize = options.fontSize;
+                }
+                if (isDefined(options.padding)) {
+                    this._padding = options.padding;
+                }
             }
-            this._g = g;
-        }
-        async loadFontAndSetText(value = null) {
-            const font = makeFont(this);
-            await loadFont(font, value);
-            this.value = value;
+            if (isNullOrUndefined(this._padding)) {
+                this._padding = {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                };
+            }
         }
         get scale() {
             return this._scale;
@@ -16753,9 +16666,6 @@
                 this._maxHeight = v;
                 this.redraw();
             }
-        }
-        get canvas() {
-            return this._canvas;
         }
         get width() {
             return this.canvas.width / this.scale;
@@ -16887,9 +16797,9 @@
             }
         }
         draw(g, x, y) {
-            if (this._canvas.width > 0
-                && this._canvas.height > 0) {
-                g.drawImage(this._canvas, x, y, this.width, this.height);
+            if (this.canvas.width > 0
+                && this.canvas.height > 0) {
+                g.drawImage(this.canvas, x, y, this.width, this.height);
             }
         }
         split(value) {
@@ -16906,8 +16816,8 @@
                     .split('\n');
             }
         }
-        redraw() {
-            this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        onRedraw() {
+            this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
             if (this.fontFamily
                 && this.fontSize
                 && (this.fillColor || (this.strokeColor && this.strokeSize))
@@ -16933,13 +16843,13 @@
                     this._fontSize = fontSize;
                     const font = makeFont(this);
                     this._fontSize = realFontSize;
-                    this._g.textAlign = "center";
-                    this._g.textBaseline = "middle";
-                    this._g.font = font;
+                    this.g.textAlign = "center";
+                    this.g.textBaseline = "middle";
+                    this.g.font = font;
                     trueWidth = 0;
                     trueHeight = 0;
                     for (const line of lines) {
-                        const metrics = this._g.measureText(line);
+                        const metrics = this.g.measureText(line);
                         trueWidth = Math.max(trueWidth, metrics.width);
                         trueHeight += fontSize;
                         if (isNumber(metrics.actualBoundingBoxLeft)
@@ -16967,12 +16877,12 @@
                         const minDif = Math.min(mdMinWidth, Math.min(mdMaxWidth, Math.min(mdMinHeight, mdMaxHeight)));
                         if (minDif < minFontDelta) {
                             minFontDelta = minDif;
-                            minFont = this._g.font;
+                            minFont = this.g.font;
                         }
                         if ((tooBig || tooSmall)
-                            && tried.indexOf(this._g.font) > -1
+                            && tried.indexOf(this.g.font) > -1
                             && minFont) {
-                            this._g.font = minFont;
+                            this.g.font = minFont;
                             tooBig = false;
                             tooSmall = false;
                         }
@@ -16985,7 +16895,7 @@
                             fontSize = (fontSize + highFontSize) / 2;
                         }
                     }
-                    tried.push(this._g.font);
+                    tried.push(this.g.font);
                 } while (tooBig || tooSmall);
                 if (autoResize) {
                     if (trueWidth < targetMinWidth) {
@@ -17004,25 +16914,25 @@
                 const newW = trueWidth + this.scale * (this.padding.right + this.padding.left);
                 const newH = trueHeight + this.scale * (this.padding.top + this.padding.bottom);
                 try {
-                    setContextSize(this._g, newW, newH);
+                    setContextSize(this.g, newW, newH);
                 }
                 catch (exp) {
                     console.error(exp);
                     throw exp;
                 }
                 if (this.bgColor) {
-                    this._g.fillStyle = this.bgColor;
-                    this._g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.g.fillStyle = this.bgColor;
+                    this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
                 else {
-                    this._g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 }
                 if (this.strokeColor && this.strokeSize) {
-                    this._g.lineWidth = this.strokeSize * this.scale;
-                    this._g.strokeStyle = this.strokeColor;
+                    this.g.lineWidth = this.strokeSize * this.scale;
+                    this.g.strokeStyle = this.strokeColor;
                 }
                 if (this.fillColor) {
-                    this._g.fillStyle = this.fillColor;
+                    this.g.fillStyle = this.fillColor;
                 }
                 const di = 0.5 * (lines.length - 1);
                 for (let i = 0; i < lines.length; ++i) {
@@ -17031,10 +16941,10 @@
                     const x = dx + this.canvas.width / 2;
                     const y = dy + this.canvas.height / 2;
                     if (this.strokeColor && this.strokeSize) {
-                        this._g.strokeText(line, x, y);
+                        this.g.strokeText(line, x, y);
                     }
                     if (this.fillColor) {
-                        this._g.fillText(line, x, y);
+                        this.g.fillText(line, x, y);
                     }
                 }
                 if (isVertical) {
@@ -17051,14 +16961,18 @@
                         }
                         g.translate(-this.canvas.width / 2, -this.canvas.height / 2);
                         g.drawImage(this.canvas, 0, 0);
-                        setContextSize(this._g, canv.width, canv.height);
+                        setContextSize(this.g, canv.width, canv.height);
                     }
                     else {
                         console.warn("Couldn't rotate the TextImage");
                     }
-                    this._g.drawImage(canv, 0, 0);
+                    this.g.drawImage(canv, 0, 0);
                 }
-                this.dispatchEvent(redrawnEvt);
+                return true;
+            }
+            else {
+                this.dispatchEvent(this.notReadyEvt);
+                return false;
             }
         }
     }
@@ -17115,23 +17029,6 @@
             g.globalAlpha = oldAlpha;
         }
     }
-
-    const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
-    const isFirefox = "InstallTrigger" in globalThis;
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isOpera = /Opera/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
-        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
-        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
-    const isBlackberry = /BlackBerry/.test(navigator.userAgent);
-    const isUCBrowser = /(UC Browser |UCWEB)/.test(navigator.userAgent);
-    const isOculus = /oculus/.test(navigator.userAgent);
-    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
-    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
-    const isMobileVR = /Mobile VR/.test(navigator.userAgent)
-        || isOculusGo
-        || isOculusQuest;
 
     class ScreenPointerEvent extends TypedEvent {
         constructor(type) {
@@ -17701,7 +17598,7 @@
             this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
             this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
             this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
-            this.image = await this.fetcher.getCanvas(imageURL.href);
+            this.image = await this.fetcher.getCanvasImage(imageURL.href);
             this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
         }
         isClear(tile) {
@@ -17733,7 +17630,7 @@
             this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
         }
         async load() {
-            const map = await this.fetcher.getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = map.querySelectorAll("layer > data");
+            const map = await this.fetcher.getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = Array.from(map.querySelectorAll("layer > data"));
             this._layers = layers.length;
             this._width = width;
             this._height = height;
@@ -18352,7 +18249,7 @@
         }
     }
 
-    const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new TypedEvent("gameStarted"), gameEndedEvt = new TypedEvent("gameEnded"), zoomChangedEvt$1 = new TypedEvent("zoomChanged"), emojiNeededEvt = new TypedEvent("emojiNeeded"), toggleAudioEvt$1 = new TypedEvent("toggleAudio"), toggleVideoEvt$2 = new TypedEvent("toggleVideo"), userJoinedEvt = new UserJoinedEvent(null), moveEvent = new UserMovedEvent(null), emoteEvt$1 = new EmoteEvent(null);
+    const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new TypedEvent("gameStarted"), gameEndedEvt = new TypedEvent("gameEnded"), zoomChangedEvt = new TypedEvent("zoomChanged"), emojiNeededEvt = new TypedEvent("emojiNeeded"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), userJoinedEvt = new UserJoinedEvent(null), moveEvent = new UserMovedEvent(null), emoteEvt = new EmoteEvent(null);
     /** @type {Map<Game, EventedGamepad>} */
     const gamepads = new Map();
     class Game extends TypedEventBase {
@@ -18444,7 +18341,7 @@
             this.screenControls.addEventListener("move", (evt) => {
                 if (Math.abs(evt.dz) > 0) {
                     this.zoom += evt.dz;
-                    this.dispatchEvent(zoomChangedEvt$1);
+                    this.dispatchEvent(zoomChangedEvt);
                 }
             });
             this.screenControls.addEventListener("drag", (evt) => {
@@ -18478,8 +18375,8 @@
                         this.dispatchEvent(emojiNeededEvt);
                     }
                     else {
-                        emoteEvt$1.emoji = this.currentEmoji = emoji;
-                        this.dispatchEvent(emoteEvt$1);
+                        emoteEvt.emoji = this.currentEmoji = emoji;
+                        this.dispatchEvent(emoteEvt);
                     }
                 }
                 if (emoji) {
@@ -18552,10 +18449,10 @@
             this.dispatchEvent(userJoinedEvt);
         }
         toggleMyAudio() {
-            this.dispatchEvent(toggleAudioEvt$1);
+            this.dispatchEvent(toggleAudioEvt);
         }
         toggleMyVideo() {
-            this.dispatchEvent(toggleVideoEvt$2);
+            this.dispatchEvent(toggleVideoEvt);
         }
         muteUserAudio(id, muted) {
             this.withUser("mute audio", id, (user) => {
@@ -18647,7 +18544,7 @@
                 console.error("Couldn't load any maps!");
             }
             this.startLoop();
-            this.dispatchEvent(zoomChangedEvt$1);
+            this.dispatchEvent(zoomChangedEvt);
             this.dispatchEvent(gameStartedEvt);
         }
         startLoop() {
@@ -18737,7 +18634,7 @@
                         dz += 2 * (pad.buttons[this.inputBinding.gpButtonZoomIn].value - pad.buttons[this.inputBinding.gpButtonZoomOut].value);
                         this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                         this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
-                        this.dispatchEvent(zoomChangedEvt$1);
+                        this.dispatchEvent(zoomChangedEvt);
                     }
                     dx = clamp(dx, -1, 1);
                     dy = clamp(dy, -1, 1);
@@ -18748,7 +18645,7 @@
                     }
                     if (dz !== 0) {
                         this.zoom += dz;
-                        this.dispatchEvent(zoomChangedEvt$1);
+                        this.dispatchEvent(zoomChangedEvt);
                     }
                     this.lastMove = 0;
                 }
@@ -18772,11 +18669,11 @@
         }
         render() {
             const targetCameraX = -this.me.x * this.map.tileWidth, targetCameraY = -this.me.y * this.map.tileHeight;
-            this.cameraZ = lerp$1(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
-            this.cameraX = lerp$1(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
-            this.cameraY = lerp$1(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
-            this.offsetCameraX = lerp$1(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
-            this.offsetCameraY = lerp$1(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
+            this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
+            this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
+            this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
+            this.offsetCameraX = lerp(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
+            this.offsetCameraY = lerp(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
             this.gFront.resetTransform();
             this.gFront.imageSmoothingEnabled = false;
             this.gFront.clearRect(0, 0, this.element.width, this.element.height);
@@ -18820,14 +18717,13 @@
         }
     }
 
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new ImageFetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
     let waitingForEmoji = false;
-    let client = null;
     async function recordJoin(Name, Email, Room) {
-        await fetcher.postObject("/Contacts", { Name, Email, Room });
+        await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
     }
     async function recordRoom(roomName) {
-        return await fetcher.postObjectForText("/Game/Rooms", roomName);
+        return await fetcher.postObjectForText("/Game/Rooms", roomName, "application/json");
     }
     function _showView(view) {
         return () => showView(view);
@@ -18846,28 +18742,19 @@
     async function withEmojiSelection(callback) {
         if (!isOpen(emoji)) {
             waitingForEmoji = true;
-            disabler$4.apply(controls$1.optionsButton);
-            disabler$4.apply(controls$1.instructionsButton);
-            disabler$4.apply(controls$1.changeDevicesButton);
+            disabler.apply(controls.optionsButton);
+            disabler.apply(controls.instructionsButton);
+            disabler.apply(controls.changeDevicesButton);
             hide(options);
             const e = await emoji.selectAsync();
             if (e) {
                 callback(e);
             }
-            enabler$4.apply(controls$1.optionsButton);
-            enabler$4.apply(controls$1.instructionsButton);
-            enabler$4.apply(controls$1.changeDevicesButton);
+            enabler.apply(controls.optionsButton);
+            enabler.apply(controls.instructionsButton);
+            enabler.apply(controls.changeDevicesButton);
             waitingForEmoji = false;
         }
-    }
-    async function selectEmojiAsync() {
-        await withEmojiSelection((e) => {
-            game.emote(client.localUserID, e);
-            controls$1.setEmojiButton(e);
-        });
-    }
-    function setAudioProperties() {
-        client.audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, client.audio.algorithm, settings.transitionSpeed);
     }
     function refreshGamepads() {
         options.gamepads = navigator.getGamepads();
@@ -18876,262 +18763,271 @@
     function refreshUser(userID) {
         game.withUser("list user in directory", userID, (user) => directory.set(user));
     }
-    window.addEventListener("gamepadconnected", refreshGamepads);
-    window.addEventListener("gamepaddisconnected", refreshGamepads);
-    window.addEventListener("resize", () => game.resize());
-    controls$1.addEventListener("toggleOptions", _showView(options));
-    controls$1.addEventListener("toggleInstructions", _showView(instructions));
-    controls$1.addEventListener("toggleUserDirectory", _showView(directory));
-    controls$1.addEventListener("changeDevices", _showView(devices));
-    controls$1.addEventListener("tweet", () => {
-        const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`), url = "https://twitter.com/intent/tweet?text=" + message;
-        window.open(url);
-    });
-    controls$1.addEventListener("leave", async () => {
-        directory.clear();
-        await client.leave();
-    });
-    controls$1.addEventListener("selectEmoji", selectEmojiAsync);
-    controls$1.addEventListener("emote", () => {
-        game.emote(client.localUserID, game.currentEmoji);
-    });
-    controls$1.addEventListener("toggleAudio", async () => {
-        await client.toggleAudioMuted();
-    });
-    controls$1.addEventListener("toggleVideo", async () => {
-        await client.toggleVideoMuted();
-    });
-    controls$1.addEventListener("zoomChanged", () => {
-        settings.zoom = game.zoom = controls$1.zoom;
-    });
-    login.addEventListener("login", async () => {
-        await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
-        await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
-        setAudioProperties();
-        let roomName = login.roomName;
-        if (!login.roomSelectMode) {
-            roomName = await recordRoom(roomName);
-        }
-        await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
-        const title = `Calla - chatting in ${roomName}`;
-        const path = `${window.location.pathname}#${roomName}`;
-        window.history.replaceState({}, title, path);
-        await directory.startAsync(roomName, login.userName);
-        await client.join(roomName);
-        await client.identify(login.userName);
-    });
-    options.addEventListener("audioPropertiesChanged", setAudioProperties);
-    options.addEventListener("selectAvatar", async () => {
-        await withEmojiSelection((e) => {
-            settings.avatarEmoji = e.value;
-            client.setAvatarEmoji(e);
-            game.me.setAvatarEmoji(e.value);
-            refreshUser(client.localUserID);
-        });
-    });
-    options.addEventListener("avatarURLChanged", () => {
-        settings.avatarURL = options.avatarURL;
-        client.setAvatarURL(options.avatarURL);
-        game.me.setAvatarImage(options.avatarURL);
-        refreshUser(client.localUserID);
-    });
-    options.addEventListener("toggleDrawHearing", () => {
-        settings.drawHearing
-            = game.drawHearing
-                = options.drawHearing;
-    });
-    options.addEventListener("fontSizeChanged", () => {
-        settings.fontSize
-            = game.fontSize
-                = options.fontSize;
-    });
-    options.addEventListener("gamepadChanged", () => {
-        settings.gamepadIndex
-            = game.gamepadIndex
-                = options.gamepadIndex;
-    });
-    options.addEventListener("inputBindingChanged", () => {
-        settings.inputBinding
-            = game.inputBinding
-                = options.inputBinding;
-    });
-    options.addEventListener("toggleVideo", async () => {
-        await client.toggleVideoMuted();
-    });
-    devices.addEventListener("audioInputChanged", async () => {
-        const device = devices.currentAudioInputDevice;
-        await client.setAudioInputDevice(device);
-        settings.preferredAudioInputID = client.preferredAudioInputID;
-    });
-    devices.addEventListener("audioOutputChanged", async () => {
-        const device = devices.currentAudioOutputDevice;
-        await client.setAudioOutputDevice(device);
-        settings.preferredAudioOutputID = client.preferredAudioOutputID;
-    });
-    devices.addEventListener("videoInputChanged", async () => {
-        const device = devices.currentVideoInputDevice;
-        await client.setVideoInputDevice(device);
-        settings.preferredVideoInputID = client.preferredVideoInputID;
-    });
-    game.addEventListener("emojiNeeded", selectEmojiAsync);
-    game.addEventListener("emote", (evt) => {
-        client.emote(evt.emoji);
-    });
-    game.addEventListener("userJoined", (evt) => {
-        refreshUser(evt.user.id);
-    });
-    game.addEventListener("toggleAudio", async () => {
-        await client.toggleAudioMuted();
-        settings.preferredAudioInputID = client.preferredAudioInputID;
-    });
-    game.addEventListener("toggleVideo", async () => {
-        await client.toggleVideoMuted();
-        settings.preferredVideoInputID = client.preferredVideoInputID;
-    });
-    const rawGameStartEmoji = new Emoji(null, "");
-    game.addEventListener("gameStarted", () => {
-        game.resize();
-        hide(login);
-        show(controls$1);
-        options.user = game.me;
-        controls$1.enabled = true;
-        settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
-        rawGameStartEmoji.value = settings.avatarEmoji;
-        client.setAvatarEmoji(rawGameStartEmoji);
-        game.me.setAvatarEmoji(settings.avatarEmoji);
-        refreshUser(client.localUserID);
-    });
-    game.addEventListener("userMoved", (evt) => {
-        client.setLocalPose(evt.x, 0, evt.y, 0, 0, -1, 0, 1, 0);
-    });
-    game.addEventListener("gameEnded", () => {
-        login.connected = false;
-        showView(login);
-    });
-    game.addEventListener("zoomChanged", () => {
-        settings.zoom = controls$1.zoom = game.zoom;
-    });
-    directory.addEventListener("warpTo", (evt) => {
-        game.visit(evt.id);
-    });
-    client.addEventListener("conferenceJoined", async (evt) => {
-        login.connected = true;
-        await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
-        options.avatarURL = settings.avatarURL;
-        client.setAvatarURL(settings.avatarURL);
-        game.me.setAvatarImage(settings.avatarURL);
-        devices.audioInputDevices = await client.getAudioInputDevices(true);
-        devices.audioOutputDevices = await client.getAudioOutputDevices(true);
-        devices.videoInputDevices = await client.getVideoInputDevices(true);
-        settings.preferredAudioInputID = client.preferredAudioInputID;
-        settings.preferredAudioOutputID = client.preferredAudioOutputID;
-        settings.preferredVideoInputID = client.preferredVideoInputID;
-        devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-        devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
-        devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
-        const audioMuted = client.isAudioMuted;
-        game.muteUserAudio(client.localUserID, audioMuted);
-        controls$1.audioEnabled = !audioMuted;
-        const videoMuted = client.isVideoMuted;
-        game.muteUserVideo(client.localUserID, videoMuted);
-        controls$1.videoEnabled = !videoMuted;
-    });
-    client.addEventListener("conferenceLeft", () => {
-        game.end();
-    });
-    client.addEventListener("participantJoined", (evt) => {
-        client.audio.playClip("join");
-        game.addUser(evt.id, evt.displayName, evt.source.pose);
-    });
-    client.addEventListener("participantLeft", (evt) => {
-        client.audio.playClip("leave");
-        game.removeUser(evt.id);
-        directory.delete(evt.id);
-    });
-    client.addEventListener("audioAdded", (evt) => refreshUser(evt.id));
-    client.addEventListener("audioRemoved", (evt) => refreshUser(evt.id));
-    client.addEventListener("videoAdded", (evt) => {
-        game.setAvatarVideo(evt.id, evt.stream);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("videoRemoved", (evt) => {
-        game.setAvatarVideo(evt.id, null);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("avatarChanged", (evt) => {
-        game.setAvatarURL(evt.id, evt.url);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("userNameChanged", (evt) => {
-        game.changeUserName(evt.id, evt.displayName);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("audioMuteStatusChanged", async (evt) => {
-        if (evt.id === client.localUserID) {
-            controls$1.audioEnabled = !evt.muted;
-            devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        }
-        game.muteUserAudio(evt.id, evt.muted);
-    });
-    client.addEventListener("videoMuteStatusChanged", async (evt) => {
-        if (evt.id === client.localUserID) {
-            controls$1.videoEnabled = !evt.muted;
-            if (evt.muted) {
-                options.setAvatarVideo(null);
-            }
-            else {
-                options.setAvatarVideo(game.me.avatarVideo.element);
-            }
-            devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
-        }
-        game.muteUserVideo(evt.id, evt.muted);
-        settings.preferredVideoInputID = client.preferredVideoInputID;
-    });
-    const rawEmoteEmoji = new Emoji(null, "");
-    client.addEventListener("emote", (evt) => {
-        rawEmoteEmoji.value = evt.emoji;
-        game.emote(evt.id, rawEmoteEmoji);
-    });
-    const rawAvatarEmoji = new Emoji(null, "");
-    client.addEventListener("setAvatarEmoji", (evt) => {
-        rawAvatarEmoji.value = evt.emoji;
-        game.setAvatarEmoji(evt.id, rawAvatarEmoji);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("audioActivity", (evt) => {
-        game.updateAudioActivity(evt.id, evt.isActive);
-    });
-    timer.addEventListener("tick", (evt) => {
-        client.update();
-        options.update();
-        directory.update();
-        game.update(evt.dt);
-    });
-    options.drawHearing = game.drawHearing = settings.drawHearing;
-    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
-    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
-    options.audioRolloff = settings.audioRolloff;
-    options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepads = navigator.getGamepads();
-    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
-    options.inputBinding = game.inputBinding = settings.inputBinding;
-    controls$1.zoom = game.zoom = settings.zoom;
-    game.cameraZ = game.targetCameraZ;
-    game.transitionSpeed = settings.transitionSpeed = 0.5;
-    login.userName = settings.userName;
-    login.roomName = settings.roomName;
-    login.email = settings.email;
-    controls$1.enabled = false;
-    showView(login);
-    login.ready = true;
-    timer.start();
     (async function () {
+        async function selectEmojiAsync() {
+            await withEmojiSelection((e) => {
+                game.emote(client.localUserID, e);
+                controls.setEmojiButton(e);
+            });
+        }
+        function setAudioProperties() {
+            client.audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, client.audio.algorithm, settings.transitionSpeed);
+        }
         await loadFont(makeFont({
             fontFamily: "Noto Color Emoji",
             fontSize: 100
         }));
-        client = await loader.load(fetcher, audio);
+        const client = await loader.load(fetcher, audio);
+        window.addEventListener("gamepadconnected", refreshGamepads);
+        window.addEventListener("gamepaddisconnected", refreshGamepads);
+        window.addEventListener("resize", () => game.resize());
+        controls.addEventListener("toggleOptions", _showView(options));
+        controls.addEventListener("toggleInstructions", _showView(instructions));
+        controls.addEventListener("toggleUserDirectory", _showView(directory));
+        controls.addEventListener("changeDevices", _showView(devices));
+        controls.addEventListener("tweet", () => {
+            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`), url = "https://twitter.com/intent/tweet?text=" + message;
+            window.open(url);
+        });
+        controls.addEventListener("leave", async () => {
+            directory.clear();
+            await client.leave();
+        });
+        controls.addEventListener("selectEmoji", selectEmojiAsync);
+        controls.addEventListener("emote", () => {
+            game.emote(client.localUserID, game.currentEmoji);
+        });
+        controls.addEventListener("toggleAudio", async () => {
+            await client.toggleAudioMuted();
+        });
+        controls.addEventListener("toggleVideo", async () => {
+            await client.toggleVideoMuted();
+        });
+        controls.addEventListener("zoomChanged", () => {
+            settings.zoom = game.zoom = controls.zoom;
+        });
+        login.addEventListener("login", async () => {
+            await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
+            await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
+            setAudioProperties();
+            let roomName = login.roomName;
+            if (!login.roomSelectMode) {
+                roomName = await recordRoom(roomName);
+            }
+            await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
+            const title = `Calla - chatting in ${roomName}`;
+            const path = `${window.location.pathname}#${roomName}`;
+            window.history.replaceState({}, title, path);
+            await directory.startAsync(roomName, login.userName);
+            await client.join(roomName);
+            await client.identify(login.userName);
+        });
+        options.addEventListener("audioPropertiesChanged", setAudioProperties);
+        options.addEventListener("selectAvatar", async () => {
+            await withEmojiSelection((e) => {
+                settings.avatarEmoji = e.value;
+                client.setAvatarEmoji(e);
+                game.me.setAvatarEmoji(e.value);
+                refreshUser(client.localUserID);
+            });
+        });
+        options.addEventListener("avatarURLChanged", () => {
+            settings.avatarURL = options.avatarURL;
+            client.setAvatarURL(options.avatarURL);
+            game.me.setAvatarImage(options.avatarURL);
+            refreshUser(client.localUserID);
+        });
+        options.addEventListener("toggleDrawHearing", () => {
+            settings.drawHearing
+                = game.drawHearing
+                    = options.drawHearing;
+        });
+        options.addEventListener("fontSizeChanged", () => {
+            settings.fontSize
+                = game.fontSize
+                    = options.fontSize;
+        });
+        options.addEventListener("gamepadChanged", () => {
+            settings.gamepadIndex
+                = game.gamepadIndex
+                    = options.gamepadIndex;
+        });
+        options.addEventListener("inputBindingChanged", () => {
+            settings.inputBinding
+                = game.inputBinding
+                    = options.inputBinding;
+        });
+        options.addEventListener("toggleVideo", async () => {
+            await client.toggleVideoMuted();
+        });
+        devices.addEventListener("audioInputChanged", async () => {
+            const device = devices.currentAudioInputDevice;
+            await client.setAudioInputDevice(device);
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+        });
+        devices.addEventListener("audioOutputChanged", async () => {
+            const device = devices.currentAudioOutputDevice;
+            await client.setAudioOutputDevice(device);
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
+        });
+        devices.addEventListener("videoInputChanged", async () => {
+            const device = devices.currentVideoInputDevice;
+            await client.setVideoInputDevice(device);
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        });
+        game.addEventListener("emojiNeeded", selectEmojiAsync);
+        game.addEventListener("emote", (evt) => {
+            client.emote(evt.emoji);
+        });
+        game.addEventListener("userJoined", (evt) => {
+            refreshUser(evt.user.id);
+        });
+        game.addEventListener("toggleAudio", async () => {
+            await client.toggleAudioMuted();
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+        });
+        game.addEventListener("toggleVideo", async () => {
+            await client.toggleVideoMuted();
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        });
+        const rawGameStartEmoji = new Emoji(null, "");
+        game.addEventListener("gameStarted", () => {
+            game.resize();
+            hide(login);
+            show(controls);
+            options.user = game.me;
+            controls.enabled = true;
+            settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
+            rawGameStartEmoji.value = settings.avatarEmoji;
+            client.setAvatarEmoji(rawGameStartEmoji);
+            game.me.setAvatarEmoji(settings.avatarEmoji);
+            refreshUser(client.localUserID);
+        });
+        game.addEventListener("userMoved", (evt) => {
+            client.setLocalPose(evt.x, 0, evt.y, 0, 0, -1, 0, 1, 0);
+        });
+        game.addEventListener("gameEnded", () => {
+            login.connected = false;
+            showView(login);
+        });
+        game.addEventListener("zoomChanged", () => {
+            settings.zoom = controls.zoom = game.zoom;
+        });
+        directory.addEventListener("warpTo", (evt) => {
+            game.visit(evt.id);
+        });
+        client.addEventListener("conferenceJoined", async (evt) => {
+            login.connected = true;
+            await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
+            options.avatarURL = settings.avatarURL;
+            client.setAvatarURL(settings.avatarURL);
+            game.me.setAvatarImage(settings.avatarURL);
+            devices.audioInputDevices = await client.getAudioInputDevices(true);
+            devices.audioOutputDevices = await client.getAudioOutputDevices(true);
+            devices.videoInputDevices = await client.getVideoInputDevices(true);
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+            devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
+            devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
+            devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
+            const audioMuted = client.isAudioMuted;
+            game.muteUserAudio(client.localUserID, audioMuted);
+            controls.audioEnabled = !audioMuted;
+            const videoMuted = client.isVideoMuted;
+            game.muteUserVideo(client.localUserID, videoMuted);
+            controls.videoEnabled = !videoMuted;
+        });
+        client.addEventListener("conferenceLeft", () => {
+            game.end();
+        });
+        client.addEventListener("participantJoined", (evt) => {
+            client.audio.playClip("join");
+            game.addUser(evt.id, evt.displayName, evt.source.pose);
+        });
+        client.addEventListener("participantLeft", (evt) => {
+            client.audio.playClip("leave");
+            game.removeUser(evt.id);
+            directory.delete(evt.id);
+        });
+        client.addEventListener("audioAdded", (evt) => refreshUser(evt.id));
+        client.addEventListener("audioRemoved", (evt) => refreshUser(evt.id));
+        client.addEventListener("videoAdded", (evt) => {
+            game.setAvatarVideo(evt.id, evt.stream);
+            refreshUser(evt.id);
+        });
+        client.addEventListener("videoRemoved", (evt) => {
+            game.setAvatarVideo(evt.id, null);
+            refreshUser(evt.id);
+        });
+        client.addEventListener("avatarChanged", (evt) => {
+            game.setAvatarURL(evt.id, evt.url);
+            refreshUser(evt.id);
+        });
+        client.addEventListener("userNameChanged", (evt) => {
+            game.changeUserName(evt.id, evt.displayName);
+            refreshUser(evt.id);
+        });
+        client.addEventListener("audioMuteStatusChanged", async (evt) => {
+            if (evt.id === client.localUserID) {
+                controls.audioEnabled = !evt.muted;
+                devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
+                settings.preferredAudioInputID = client.preferredAudioInputID;
+            }
+            game.muteUserAudio(evt.id, evt.muted);
+        });
+        client.addEventListener("videoMuteStatusChanged", async (evt) => {
+            if (evt.id === client.localUserID) {
+                controls.videoEnabled = !evt.muted;
+                if (evt.muted) {
+                    options.setAvatarVideo(null);
+                }
+                else {
+                    options.setAvatarVideo(game.me.avatarVideo.element);
+                }
+                devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
+            }
+            game.muteUserVideo(evt.id, evt.muted);
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        });
+        const rawEmoteEmoji = new Emoji(null, "");
+        client.addEventListener("emote", (evt) => {
+            rawEmoteEmoji.value = evt.emoji;
+            game.emote(evt.id, rawEmoteEmoji);
+        });
+        const rawAvatarEmoji = new Emoji(null, "");
+        client.addEventListener("setAvatarEmoji", (evt) => {
+            rawAvatarEmoji.value = evt.emoji;
+            game.setAvatarEmoji(evt.id, rawAvatarEmoji);
+            refreshUser(evt.id);
+        });
+        client.addEventListener("audioActivity", (evt) => {
+            game.updateAudioActivity(evt.id, evt.isActive);
+        });
+        timer.addEventListener("tick", (evt) => {
+            client.update();
+            options.update();
+            directory.update();
+            game.update(evt.dt);
+        });
+        options.drawHearing = game.drawHearing = settings.drawHearing;
+        options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+        options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+        options.audioRolloff = settings.audioRolloff;
+        options.fontSize = game.fontSize = settings.fontSize;
+        options.gamepads = navigator.getGamepads();
+        options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+        options.inputBinding = game.inputBinding = settings.inputBinding;
+        controls.zoom = game.zoom = settings.zoom;
+        game.cameraZ = game.targetCameraZ;
+        game.transitionSpeed = settings.transitionSpeed = 0.5;
+        login.userName = settings.userName;
+        login.roomName = settings.roomName;
+        login.email = settings.email;
+        controls.enabled = false;
+        showView(login);
+        login.ready = true;
+        timer.start();
         await client.getMediaPermissions();
         await client.connect();
         Object.assign(window, {
@@ -19141,7 +19037,7 @@
             game,
             login,
             directory,
-            controls: controls$1,
+            controls,
             devices,
             options,
             emoji,

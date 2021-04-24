@@ -17,21 +17,6 @@
     function isNumber(obj) {
         return t(obj, "number", Number);
     }
-    function isObject(obj) {
-        return t(obj, "object", Object);
-    }
-    function isDate(obj) {
-        return obj instanceof Date;
-    }
-    function isArray(obj) {
-        return obj instanceof Array;
-    }
-    function isHTMLElement(obj) {
-        return obj instanceof HTMLElement;
-    }
-    function assertNever(x, msg) {
-        throw new Error((msg || "Unexpected object: ") + x);
-    }
     /**
      * Check a value to see if it is of a number type
      * and is not the special NaN value.
@@ -40,9 +25,44 @@
         return isNumber(obj)
             && !Number.isNaN(obj);
     }
+    function isObject(obj) {
+        return isDefined(obj)
+            && t(obj, "object", Object);
+    }
+    function isArray(obj) {
+        return obj instanceof Array;
+    }
+    function assertNever(x, msg) {
+        throw new Error((msg || "Unexpected object: ") + x);
+    }
     function isNullOrUndefined(obj) {
         return obj === null
             || obj === undefined;
+    }
+    function isDefined(obj) {
+        return !isNullOrUndefined(obj);
+    }
+    function isArrayBufferView(obj) {
+        return obj instanceof Uint8Array
+            || obj instanceof Uint8ClampedArray
+            || obj instanceof Int8Array
+            || obj instanceof Uint16Array
+            || obj instanceof Int16Array
+            || obj instanceof Uint32Array
+            || obj instanceof Int32Array
+            || obj instanceof BigUint64Array
+            || obj instanceof BigInt64Array
+            || obj instanceof Float32Array
+            || obj instanceof Float64Array;
+    }
+    function isXHRBodyInit(obj) {
+        return isString(obj)
+            || obj instanceof Blob
+            || obj instanceof FormData
+            || obj instanceof ArrayBuffer
+            || obj instanceof Document
+            || isArrayBufferView(obj)
+            || obj instanceof ReadableStream;
     }
 
     /**
@@ -90,7 +110,7 @@
             const compareToKey = isNullOrUndefined(compareTo)
                 ? null
                 : keySelector(compareTo);
-            if (!isNullOrUndefined(compareToKey)
+            if (isDefined(compareToKey)
                 && itemKey < compareToKey) {
                 right = idx;
             }
@@ -151,7 +171,7 @@
         return idx;
     }
 
-    function add(a, b) {
+    function add$2(a, b) {
         return async (v) => {
             await a(v);
             await b(v);
@@ -169,20 +189,20 @@
             const remove = () => {
                 target.removeEventListener(resolveEvt, resolve);
             };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
+            resolve = add$2(remove, resolve);
+            reject = add$2(remove, reject);
             if (isString(rejectEvt)) {
                 const rejectEvt2 = rejectEvt;
                 const remove = () => {
                     target.removeEventListener(rejectEvt2, reject);
                 };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
+                resolve = add$2(remove, resolve);
+                reject = add$2(remove, reject);
             }
             if (hasTimeout) {
                 const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
+                resolve = add$2(cancel, resolve);
+                reject = add$2(cancel, reject);
             }
             target.addEventListener(resolveEvt, resolve);
             if (isString(rejectEvt)) {
@@ -485,7 +505,9 @@
             if (listeners) {
                 for (const callback of listeners) {
                     const options = this.listenerOptions.get(callback);
-                    if (options && options.once) {
+                    if (isDefined(options)
+                        && !isBoolean(options)
+                        && options.once) {
                         this.removeListener(listeners, callback);
                     }
                     callback.call(this, evt);
@@ -505,12 +527,17 @@
             this.mappedCallbacks = new Map();
         }
         addEventListener(type, callback, options) {
-            let mappedCallback = this.mappedCallbacks.get(callback);
-            if (mappedCallback == null) {
-                mappedCallback = (evt) => callback(evt);
-                this.mappedCallbacks.set(callback, mappedCallback);
+            if (this.checkAddEventListener(type, callback)) {
+                let mappedCallback = this.mappedCallbacks.get(callback);
+                if (mappedCallback == null) {
+                    mappedCallback = (evt) => callback(evt);
+                    this.mappedCallbacks.set(callback, mappedCallback);
+                }
+                super.addEventListener(type, mappedCallback, options);
             }
-            super.addEventListener(type, mappedCallback, options);
+        }
+        checkAddEventListener(_type, _callback) {
+            return true;
         }
         removeEventListener(type, callback) {
             const mappedCallback = this.mappedCallbacks.get(callback);
@@ -518,6 +545,11 @@
                 super.removeEventListener(type, mappedCallback);
             }
         }
+        dispatchEvent(evt) {
+            this.onDispatching(evt);
+            return super.dispatchEvent(evt);
+        }
+        onDispatching(_evt) { }
     }
 
     function sleep(dt) {
@@ -671,17 +703,7 @@
         }
     }
 
-    function splitProgress(onProgress, weights) {
-        let subProgressWeights;
-        if (isNumber(weights)) {
-            subProgressWeights = new Array(weights);
-            for (let i = 0; i < subProgressWeights.length; ++i) {
-                subProgressWeights[i] = 1 / weights;
-            }
-        }
-        else {
-            subProgressWeights = weights;
-        }
+    function splitProgress(onProgress, subProgressWeights) {
         let weightTotal = 0;
         for (let i = 0; i < subProgressWeights.length; ++i) {
             weightTotal += subProgressWeights[i];
@@ -824,7 +846,7 @@
         setConferenceState(state) {
             this._conferenceState = state;
         }
-        dispatchEvent(evt) {
+        onDispatching(evt) {
             if (evt instanceof CallaUserEvent
                 && (evt.id == null
                     || evt.id === "local")) {
@@ -835,7 +857,6 @@
                     evt.id = this.localUserID;
                 }
             }
-            return super.dispatchEvent(evt);
         }
         async getNext(evtName, userID) {
             return new Promise((resolve) => {
@@ -1419,30 +1440,25 @@
          * @param elem - the element on which to set the attribute.
          */
         apply(elem) {
-            if (isHTMLElement(elem)) {
-                const isValid = this.tags.length === 0
-                    || this.tags.indexOf(elem.tagName) > -1;
-                if (!isValid) {
-                    console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-                }
-                else if (this.key === "style") {
-                    Object.assign(elem.style, this.value);
-                }
-                else if (this.key in elem) {
-                    elem[this.key] = this.value;
-                }
-                else if (this.value === false) {
-                    elem.removeAttribute(this.key);
-                }
-                else if (this.value === true) {
-                    elem.setAttribute(this.key, "");
-                }
-                else {
-                    elem.setAttribute(this.key, this.value);
-                }
+            const isValid = this.tags.length === 0
+                || this.tags.indexOf(elem.tagName) > -1;
+            if (!isValid) {
+                console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+            }
+            else if (this.key === "style") {
+                Object.assign(elem.style, this.value);
+            }
+            else if (this.key in elem) {
+                elem[this.key] = this.value;
+            }
+            else if (this.value === false) {
+                elem.removeAttribute(this.key);
+            }
+            else if (this.value === true) {
+                elem.setAttribute(this.key, "");
             }
             else {
-                elem[this.key] = this.value;
+                elem.setAttribute(this.key, this.value);
             }
         }
     }
@@ -1453,7 +1469,11 @@
     /**
      * Indicates whether the browser should show playback controls to the user.
       **/
-    function controls(value) { return new Attr("controls", value, "audio", "video"); }
+    function controls$1(value) { return new Attr("controls", value, "audio", "video"); }
+    /**
+     * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+      **/
+    function htmlHeight(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
     /**
      * Indicates whether the audio will be initially silenced on page load.
       **/
@@ -1470,40 +1490,119 @@
      * A MediaStream object to use as a source for an HTML video or audio element
       **/
     function srcObject(value) { return new Attr("srcObject", value, "audio", "video"); }
-    class CssPropSet {
-        constructor(...rest) {
-            this.set = new Map();
-            const set = (key, value) => {
-                if (value || isBoolean(value)) {
-                    this.set.set(key, value);
-                }
-                else if (this.set.has(key)) {
-                    this.set.delete(key);
-                }
-            };
-            for (const prop of rest) {
-                if (prop instanceof Attr) {
-                    const { key, value } = prop;
-                    set(key, value);
-                }
-                else {
-                    for (const [key, value] of prop.set.entries()) {
-                        set(key, value);
-                    }
-                }
+    /**
+     * For the elements listed here, this establishes the element's width.
+      **/
+    function htmlWidth(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+    function getTestNumber() {
+        if ("location" in globalThis) {
+            const loc = new URL(globalThis.location.href);
+            const testNumber = loc.searchParams.get("testUserNumber");
+            return testNumber;
+        }
+        else {
+            return null;
+        }
+    }
+    /**
+     * The test instance value that the current window has loaded. This is
+     * figured out either from a number in the query string parameter "testUserNumber",
+     * or the default value of 1.
+     **/
+    function getUserNumber() {
+        const testNumber = getTestNumber();
+        return isDefined(testNumber)
+            ? parseInt(testNumber, 10)
+            : 1;
+    }
+
+    const windows = [];
+    if ("window" in globalThis) {
+        // Closes all the windows.
+        window.addEventListener("unload", () => {
+            for (const w of windows) {
+                w.close();
             }
+        });
+    }
+    /**
+     * Opens a window that will be closed when the window that opened it is closed.
+     * @param href - the location to load in the window
+     * @param x - the screen position horizontal component
+     * @param y - the screen position vertical component
+     * @param width - the screen size horizontal component
+     * @param height - the screen size vertical component
+     */
+    function openWindow(href, x, y, width, height) {
+        if ("window" in globalThis) {
+            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+            if (w) {
+                windows.push(w);
+            }
+        }
+        else {
+            throw new Error("Cannot open a window from a Worker.");
+        }
+    }
+    /**
+     * Opens a new window with a query string parameter that can be used to differentiate different test instances.
+     **/
+    function openSideTest() {
+        if ("window" in globalThis) {
+            const loc = new URL(location.href);
+            loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
+            openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
+        }
+        else {
+            throw new Error("Cannot open a window from a Worker.");
+        }
+    }
+
+    "chrome" in globalThis && !navigator.userAgent.match("CriOS");
+    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    /Opera/.test(navigator.userAgent);
+    /Android/.test(navigator.userAgent);
+    /iPad|iPhone|iPod/.test(navigator.platform)
+        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
+        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
+    /Macintosh/.test(navigator.userAgent || "");
+    /BlackBerry/.test(navigator.userAgent);
+    /(UC Browser |UCWEB)/.test(navigator.userAgent);
+    const isOculus = /oculus/i.test(navigator.userAgent);
+    isOculus && /pacific/i.test(navigator.userAgent);
+    isOculus && /quest/i.test(navigator.userAgent);
+    isOculus && /quest 2/i.test(navigator.userAgent);
+    /Mobile VR/.test(navigator.userAgent)
+        || isOculus;
+
+    class CssProp {
+        constructor(key, value) {
+            this.key = key;
+            this.value = value;
+            this.name = key.replace(/[A-Z]/g, (m) => {
+                return "-" + m.toLocaleLowerCase();
+            });
         }
         /**
          * Set the attribute value on an HTMLElement
          * @param elem - the element on which to set the attribute.
          */
         apply(elem) {
-            const style = isHTMLElement(elem)
-                ? elem.style
-                : elem;
-            for (const prop of this.set.entries()) {
-                const [key, value] = prop;
-                style[key] = value;
+            elem[this.key] = this.value;
+        }
+    }
+    class CssPropSet {
+        constructor(...rest) {
+            this.rest = rest;
+        }
+        /**
+         * Set the attribute value on an HTMLElement
+         * @param style - the element on which to set the attribute.
+         */
+        apply(style) {
+            for (const prop of this.rest) {
+                prop.apply(style);
             }
         }
     }
@@ -1513,14 +1612,10 @@
     function styles(...rest) {
         return new CssPropSet(...rest);
     }
-    function display(v) { return new Attr("display", v); }
+    function display(v) { return new CssProp("display", v); }
 
-    function hasNode(obj) {
-        return !isNullOrUndefined(obj)
-            && !isString(obj)
-            && !isNumber(obj)
-            && !isBoolean(obj)
-            && !isDate(obj)
+    function isErsatzElement(obj) {
+        return isObject(obj)
             && "element" in obj
             && obj.element instanceof Node;
     }
@@ -1548,13 +1643,16 @@
         }
         for (let x of rest) {
             if (x != null) {
-                if (isString(x)
+                if (x instanceof CssPropSet) {
+                    x.apply(elem.style);
+                }
+                else if (isString(x)
                     || isNumber(x)
                     || isBoolean(x)
                     || x instanceof Date
                     || x instanceof Node
-                    || hasNode(x)) {
-                    if (hasNode(x)) {
+                    || isErsatzElement(x)) {
+                    if (isErsatzElement(x)) {
                         x = x.element;
                     }
                     else if (!(x instanceof Node)) {
@@ -1573,315 +1671,249 @@
         return elem;
     }
     function Audio(...rest) { return tag("audio", ...rest); }
+    function Canvas(...rest) { return tag("canvas", ...rest); }
+    function Img(...rest) { return tag("img", ...rest); }
     function Script(...rest) { return tag("script", ...rest); }
+
+    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
+    const hasImageBitmap = "createImageBitmap" in globalThis;
+    function testOffscreen2D() {
+        try {
+            const canv = new OffscreenCanvas(1, 1);
+            const g = canv.getContext("2d");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && testOffscreen2D();
+    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
+        ? createOffscreenCanvas
+        : createCanvas;
+    function testOffscreen3D() {
+        try {
+            const canv = new OffscreenCanvas(1, 1);
+            const g = canv.getContext("webgl2");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    hasOffscreenCanvas && testOffscreen3D();
+    function testBitmapRenderer() {
+        try {
+            const canv = createUtilityCanvas(1, 1);
+            const g = canv.getContext("bitmaprenderer");
+            return g != null;
+        }
+        catch (exp) {
+            return false;
+        }
+    }
+    hasImageBitmap && testBitmapRenderer();
+    function createOffscreenCanvas(width, height) {
+        return new OffscreenCanvas(width, height);
+    }
+    function createCanvas(w, h) {
+        return Canvas(htmlWidth(w), htmlHeight(h));
+    }
 
     function createScript(file) {
         const script = Script(src(file));
         document.body.appendChild(script);
     }
 
+    function dumpProgress(_soFar, _total, _message, _est) {
+        // do nothing
+    }
+
+    function normalizeMap(map, key, value) {
+        if (isNullOrUndefined(map)) {
+            map = new Map();
+        }
+        if (!map.has(key)) {
+            map.set(key, value);
+        }
+        return map;
+    }
+    async function fileToImage(file) {
+        const img = Img(src(file));
+        await once(img, "loaded");
+        return img;
+    }
+    function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) {
+        return new Promise((resolve, reject) => {
+            let done = false;
+            let loaded = skipLoading;
+            function maybeResolve() {
+                if (loaded && done) {
+                    resolve();
+                }
+            }
+            async function onError() {
+                await prevTask;
+                reject(xhr.status);
+            }
+            target.addEventListener("loadstart", async () => {
+                await prevTask;
+                onProgress(0, 1, name);
+            });
+            target.addEventListener("progress", async (ev) => {
+                const evt = ev;
+                await prevTask;
+                onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
+                if (evt.loaded === evt.total) {
+                    loaded = true;
+                    maybeResolve();
+                }
+            });
+            target.addEventListener("load", async () => {
+                await prevTask;
+                onProgress(1, 1, name);
+                done = true;
+                maybeResolve();
+            });
+            target.addEventListener("error", onError);
+            target.addEventListener("abort", onError);
+        });
+    }
+    function setXHRHeaders(xhr, method, path, xhrType, headers) {
+        xhr.open(method, path);
+        xhr.responseType = xhrType;
+        if (headers) {
+            for (const [key, value] of headers) {
+                xhr.setRequestHeader(key, value);
+            }
+        }
+    }
+    async function blobToBuffer(blob) {
+        const buffer = await blob.arrayBuffer();
+        return {
+            buffer,
+            contentType: blob.type
+        };
+    }
     class Fetcher {
-        normalizeOnProgress(headerMap, onProgress) {
-            if (isNullOrUndefined(onProgress)
-                && headerMap instanceof Function) {
-                onProgress = headerMap;
-            }
-            return onProgress;
+        async getXHR(path, xhrType, headers, onProgress) {
+            onProgress = onProgress || dumpProgress;
+            const xhr = new XMLHttpRequest();
+            const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
+            setXHRHeaders(xhr, "GET", path, xhrType, headers);
+            xhr.send();
+            await download;
+            return xhr.response;
         }
-        normalizeHeaderMap(headerMap) {
-            if (headerMap instanceof Map) {
-                return headerMap;
+        async postXHR(path, xhrType, obj, contentType, headers, onProgress) {
+            onProgress = onProgress || dumpProgress;
+            const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
+            const xhr = new XMLHttpRequest();
+            const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
+            const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
+            let body = null;
+            if (!(obj instanceof FormData)
+                && isDefined(contentType)) {
+                headers = normalizeMap(headers, "Content-Type", contentType);
             }
-            return undefined;
-        }
-        async getResponse(path, headerMap) {
-            const headers = {};
-            if (headerMap) {
-                for (const pair of headerMap.entries()) {
-                    headers[pair[0]] = pair[1];
-                }
+            if (isXHRBodyInit(obj) && !isString(obj)) {
+                body = obj;
             }
-            return await this.readRequestResponse(path, fetch(path, {
-                headers
-            }));
-        }
-        async postObjectForResponse(path, obj, headerMap) {
-            const headers = {};
-            if (!(obj instanceof FormData)) {
-                headers["Content-Type"] = "application/json";
+            else if (isDefined(obj)) {
+                body = JSON.stringify(obj);
             }
-            if (headerMap) {
-                for (const pair of headerMap.entries()) {
-                    headers[pair[0]] = pair[1];
-                }
-            }
-            const body = obj instanceof FormData
-                ? obj
-                : JSON.stringify(obj);
-            return await this.readRequestResponse(path, fetch(path, {
-                method: "POST",
-                headers,
-                body
-            }));
-        }
-        async readRequestResponse(path, request) {
-            const response = await request;
-            if (!response.ok) {
-                let message = response.statusText;
-                if (response.body) {
-                    message += " ";
-                    message += await response.text();
-                    message = message.trim();
-                }
-                throw new Error(`[${response.status}] - ${message} . Path ${path}`);
-            }
-            return response;
-        }
-        async readResponseBuffer(path, response, onProgress) {
-            const contentType = response.headers.get("Content-Type");
-            if (!contentType) {
-                throw new Error("Server did not provide a content type");
-            }
-            let contentLength = 1;
-            const contentLengthStr = response.headers.get("Content-Length");
-            if (!contentLengthStr) {
-                console.warn(`Server did not provide a content length header. Path: ${path}`);
+            setXHRHeaders(xhr, "POST", path, xhrType, headers);
+            if (isDefined(body)) {
+                xhr.send(body);
             }
             else {
-                contentLength = parseInt(contentLengthStr, 10);
-                if (!isGoodNumber(contentLength)) {
-                    console.warn(`Server did not provide a valid content length header. Value: ${contentLengthStr}, Path: ${path}`);
-                    contentLength = 1;
-                }
+                xhr.send();
             }
-            const hasContentLength = isGoodNumber(contentLength);
-            if (!hasContentLength) {
-                contentLength = 1;
-            }
-            if (!response.body) {
-                throw new Error("No response body!");
-            }
-            const reader = response.body.getReader();
-            const values = [];
-            let receivedLength = 0;
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                if (value) {
-                    values.push(value);
-                    receivedLength += value.length;
-                    if (onProgress) {
-                        onProgress(receivedLength, Math.max(receivedLength, contentLength), path);
-                    }
-                }
-            }
-            const buffer = new ArrayBuffer(receivedLength);
-            const array = new Uint8Array(buffer);
-            receivedLength = 0;
-            for (const value of values) {
-                array.set(value, receivedLength);
-                receivedLength += value.length;
-            }
-            if (onProgress) {
-                onProgress(1, 1, path);
-            }
-            return { buffer, contentType };
+            await upload;
+            await download;
+            return xhr.response;
         }
-        async _getBuffer(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const response = await this.getResponse(path, headerMap);
-            return await this.readResponseBuffer(path, response, onProgress);
+        async getBlob(path, headers, onProgress) {
+            return await this.getXHR(path, "blob", headers, onProgress);
         }
-        async getBuffer(path, headerMap, onProgress) {
-            return await this._getBuffer(path, headerMap, onProgress);
+        async postObjectForBlob(path, obj, contentType, headers, onProgress) {
+            return await this.postXHR(path, "blob", obj, contentType, headers, onProgress);
         }
-        async _postObjectForBuffer(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const response = await this.postObjectForResponse(path, obj, headerMap);
-            return await this.readResponseBuffer(path, response, onProgress);
+        async getBuffer(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
+            return await blobToBuffer(blob);
         }
-        async postObjectForBuffer(path, obj, headerMap, onProgress) {
-            return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
+        async postObjectForBuffer(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+            return await blobToBuffer(blob);
         }
-        async _getBlob(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
-            return new Blob([buffer], { type: contentType });
-        }
-        async getBlob(path, headerMap, onProgress) {
-            return this._getBlob(path, headerMap, onProgress);
-        }
-        async _postObjectForBlob(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-            return new Blob([buffer], { type: contentType });
-        }
-        async postObjectForBlob(path, obj, headerMap, onProgress) {
-            return this._postObjectForBlob(path, obj, headerMap, onProgress);
-        }
-        async _getFile(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._getBlob(path, headerMap, onProgress);
+        async getFile(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
             return URL.createObjectURL(blob);
         }
-        async getFile(path, headerMap, onProgress) {
-            return await this._getFile(path, headerMap, onProgress);
-        }
-        async _postObjectForFile(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
+        async postObjectForFile(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
             return URL.createObjectURL(blob);
         }
-        async postObjectForFile(path, obj, headerMap, onProgress) {
-            return await this._postObjectForFile(path, obj, headerMap, onProgress);
+        async getText(path, headers, onProgress) {
+            return await this.getXHR(path, "text", headers, onProgress);
         }
-        readBufferText(buffer) {
-            const decoder = new TextDecoder("utf-8");
-            const text = decoder.decode(buffer);
-            return text;
+        async postObjectForText(path, obj, contentType, headers, onProgress) {
+            return this.postXHR(path, "text", obj, contentType, headers, onProgress);
         }
-        async _getText(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer } = await this._getBuffer(path, headerMap, onProgress);
-            return this.readBufferText(buffer);
-        }
-        async getText(path, headerMap, onProgress) {
-            return await this._getText(path, headerMap, onProgress);
-        }
-        async _postObjectForText(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
-            return this.readBufferText(buffer);
-        }
-        async postObjectForText(path, obj, headerMap, onProgress) {
-            return await this._postObjectForText(path, obj, headerMap, onProgress);
-        }
-        setDefaultAcceptType(headerMap, type) {
-            if (!headerMap) {
-                headerMap = new Map();
+        async getObject(path, headers, onProgress) {
+            if (!headers) {
+                headers = new Map();
             }
-            if (!headerMap.has("Accept")) {
-                headerMap.set("Accept", type);
+            if (!headers.has("Accept")) {
+                headers.set("Accept", "application/json");
             }
-            return headerMap;
+            return await this.getXHR(path, "json", headers, onProgress);
         }
-        async _getObject(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-            const text = await this._getText(path, headerMap, onProgress);
-            return JSON.parse(text);
+        async postObjectForObject(path, obj, contentType, headers, onProgress) {
+            return await this.postXHR(path, "json", obj, contentType, headers, onProgress);
         }
-        async getObject(path, headerMap, onProgress) {
-            return await this._getObject(path, headerMap, onProgress);
+        async postObject(path, obj, contentType, headers, onProgress) {
+            await this.postXHR(path, "", obj, contentType, headers, onProgress);
         }
-        async _postObjectForObject(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
-            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-            return JSON.parse(text);
+        async getXml(path, headers, onProgress) {
+            const doc = await this.getXHR(path, "document", headers, onProgress);
+            return doc.documentElement;
         }
-        async postObjectForObject(path, obj, headerMap, onProgress) {
-            return await this._postObjectForObject(path, obj, headerMap, onProgress);
+        async postObjectForXml(path, obj, contentType, headers, onProgress) {
+            const doc = await this.postXHR(path, "document", obj, contentType, headers, onProgress);
+            return doc.documentElement;
         }
-        async postObject(path, obj, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            if (onProgress instanceof Function) {
-                const [upProg, downProg] = splitProgress(onProgress, 2);
-                let headers = headerMap;
-                const xhr = new XMLHttpRequest();
-                function makeTask(name, target, onProgress, skipLoading, prevTask) {
-                    return new Promise((resolve, reject) => {
-                        let done = false;
-                        let loaded = skipLoading;
-                        function maybeResolve() {
-                            if (loaded && done) {
-                                resolve();
-                            }
-                        }
-                        async function onError() {
-                            await prevTask;
-                            reject(xhr.status);
-                        }
-                        target.addEventListener("loadstart", async () => {
-                            await prevTask;
-                            onProgress(0, 1, name);
-                        });
-                        target.addEventListener("progress", async (ev) => {
-                            const evt = ev;
-                            await prevTask;
-                            onProgress(evt.loaded, evt.total, name);
-                            if (evt.loaded === evt.total) {
-                                loaded = true;
-                                maybeResolve();
-                            }
-                        });
-                        target.addEventListener("load", async () => {
-                            await prevTask;
-                            onProgress(1, 1, name);
-                            done = true;
-                            maybeResolve();
-                        });
-                        target.addEventListener("error", onError);
-                        target.addEventListener("abort", onError);
-                    });
-                }
-                const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
-                const download = makeTask("saving", xhr, downProg, true, upload);
-                xhr.open("POST", path);
-                if (headers) {
-                    for (const [key, value] of headers) {
-                        xhr.setRequestHeader(key, value);
-                    }
-                }
-                if (obj instanceof FormData) {
-                    xhr.send(obj);
-                }
-                else {
-                    const json = JSON.stringify(obj);
-                    xhr.send(json);
-                }
-                await upload;
-                await download;
+        async getImageBitmap(path, headers, onProgress) {
+            const blob = await this.getBlob(path, headers, onProgress);
+            return await createImageBitmap(blob);
+        }
+        async getCanvasImage(path, headers, onProgress) {
+            if (hasImageBitmap) {
+                return await this.getImageBitmap(path, headers, onProgress);
             }
             else {
-                await this.postObjectForResponse(path, obj, headerMap);
+                const file = await this.getFile(path, headers, onProgress);
+                return await fileToImage(file);
             }
         }
-        readTextXml(text) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, "text/xml");
-            return xml.documentElement;
+        async postObjectForImageBitmap(path, obj, contentType, headers, onProgress) {
+            const blob = await this.postObjectForBlob(path, obj, contentType, headers, onProgress);
+            return await createImageBitmap(blob);
         }
-        async _getXml(path, headerMap, onProgress) {
-            onProgress = this.normalizeOnProgress(headerMap, onProgress);
-            headerMap = this.normalizeHeaderMap(headerMap);
-            const text = await this._getText(path, headerMap, onProgress);
-            return this.readTextXml(text);
-        }
-        async getXml(path, headerMap, onProgress) {
-            return await this._getXml(path, headerMap, onProgress);
-        }
-        async postObjectForXml(path, obj, headerMap, onProgress) {
-            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
-            return this.readTextXml(text);
+        async postObjectForCanvasImage(path, obj, contentType, headers, onProgress) {
+            if (hasImageBitmap) {
+                return await this.postObjectForImageBitmap(path, obj, contentType, headers, onProgress);
+            }
+            else {
+                const file = await this.postObjectForFile(path, obj, contentType, headers, onProgress);
+                return await fileToImage(file);
+            }
         }
         async loadScript(path, test, onProgress) {
             if (!test()) {
                 const scriptLoadTask = waitFor(test);
-                const file = await this.getFile(path, onProgress);
+                const file = await this.getFile(path, null, onProgress);
                 createScript(file);
                 await scriptLoadTask;
             }
@@ -1890,7 +1922,7 @@
             }
         }
         async getWASM(path, imports, onProgress) {
-            const wasmBuffer = await this.getBuffer(path, onProgress);
+            const wasmBuffer = await this.getBuffer(path, null, onProgress);
             if (wasmBuffer.contentType !== "application/wasm") {
                 throw new Error("Server did not respond with WASM file. Was: " + wasmBuffer.contentType);
             }
@@ -2007,13 +2039,13 @@
         return removed;
     }
     function isAudioNode(a) {
-        return !isNullOrUndefined(a)
-            && !isNullOrUndefined(a.context);
+        return isDefined(a)
+            && isDefined(a.context);
     }
     function isAudioParam(a) {
         return !isAudioNode(a);
     }
-    function connect(a, b, c, d) {
+    function connect$1(a, b, c, d) {
         if (isAudioNode(b)) {
             a.connect(b, c, d);
             return add$1(a, b);
@@ -2086,7 +2118,7 @@
     }
     window.printGraph = print;
 
-    const audioActivityEvt = new AudioActivityEvent();
+    const audioActivityEvt$2 = new AudioActivityEvent();
     const activityCounterMin = 0;
     const activityCounterMax = 60;
     const activityCounterThresh = 5;
@@ -2109,6 +2141,7 @@
             this.source = source;
             this.wasActive = false;
             this.analyser = null;
+            this.disposed = false;
             if (!isGoodNumber(bufferSize)
                 || bufferSize <= 0) {
                 throw new Error("Buffer size must be greater than 0");
@@ -2124,7 +2157,7 @@
                     this.analyser = audioContext.createAnalyser();
                     this.analyser.fftSize = 2 * this.bufferSize;
                     this.analyser.smoothingTimeConstant = 0.2;
-                    connect(source.source, this.analyser);
+                    connect$1(source.source, this.analyser);
                 }
                 else {
                     setTimeout(checkSource, 0);
@@ -2133,9 +2166,9 @@
             checkSource();
         }
         dispose() {
-            if (this.analyser) {
+            if (!this.disposed) {
                 disconnect(this.source.source, this.analyser);
-                this.analyser = null;
+                this.disposed = true;
             }
             this.buffer = null;
         }
@@ -2152,9 +2185,9 @@
                 const isActive = this.activityCounter > activityCounterThresh;
                 if (this.wasActive !== isActive) {
                     this.wasActive = isActive;
-                    audioActivityEvt.id = this.id;
-                    audioActivityEvt.isActive = isActive;
-                    this.dispatchEvent(audioActivityEvt);
+                    audioActivityEvt$2.id = this.id;
+                    audioActivityEvt$2.isActive = isActive;
+                    this.dispatchEvent(audioActivityEvt$2);
                 }
             }
         }
@@ -2187,7 +2220,7 @@
      * @returns {mat3} a new 3x3 matrix
      */
 
-    function create() {
+    function create$2() {
       var out = new ARRAY_TYPE(9);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -2220,7 +2253,7 @@
      * @returns {mat3} out
      */
 
-    function set(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    function set$2(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
       out[0] = m00;
       out[1] = m01;
       out[2] = m02;
@@ -2341,7 +2374,7 @@
      * @returns {vec3} a new 3D vector
      */
 
-    function create$2() {
+    function create() {
       var out = new ARRAY_TYPE(3);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -2389,7 +2422,7 @@
      * @returns {vec3} out
      */
 
-    function set$2(out, x, y, z) {
+    function set(out, x, y, z) {
       out[0] = x;
       out[1] = y;
       out[2] = z;
@@ -2404,7 +2437,7 @@
      * @returns {vec3} out
      */
 
-    function add$2(out, a, b) {
+    function add(out, a, b) {
       out[0] = a[0] + b[0];
       out[1] = a[1] + b[1];
       out[2] = a[2] + b[2];
@@ -2506,7 +2539,7 @@
      * @returns {vec3} out
      */
 
-    function lerp(out, a, b, t) {
+    function lerp$1(out, a, b, t) {
       var ax = a[0];
       var ay = a[1];
       var az = a[2];
@@ -2547,8 +2580,8 @@
      * @function
      */
 
-    var forEach = function () {
-      var vec = create$2();
+    (function () {
+      var vec = create();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
 
@@ -2578,7 +2611,7 @@
 
         return a;
       };
-    }();
+    })();
 
     /**
      * Translate a value into a range.
@@ -2602,18 +2635,18 @@
          **/
         constructor() {
             this.t = 0;
-            this.p = create$2();
-            this.f = set$2(create$2(), 0, 0, -1);
-            this.u = set$2(create$2(), 0, 1, 0);
+            this.p = create();
+            this.f = set(create(), 0, 0, -1);
+            this.u = set(create(), 0, 1, 0);
             Object.seal(this);
         }
         /**
          * Sets the components of the pose.
          */
         set(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            set$2(this.p, px, py, pz);
-            set$2(this.f, fx, fy, fz);
-            set$2(this.u, ux, uy, uz);
+            set(this.p, px, py, pz);
+            set(this.f, fx, fy, fz);
+            set(this.u, ux, uy, uz);
         }
         /**
          * Copies the components of another pose into this pose.
@@ -2637,9 +2670,9 @@
             else if (start.t < t) {
                 const p = project(t, start.t, end.t);
                 this.copy(start);
-                lerp(this.p, this.p, end.p, p);
-                lerp(this.f, this.f, end.f, p);
-                lerp(this.u, this.u, end.u, p);
+                lerp$1(this.p, this.p, end.p, p);
+                lerp$1(this.f, this.f, end.f, p);
+                lerp$1(this.u, this.u, end.u, p);
                 normalize(this.f, this.f);
                 normalize(this.u, this.u);
                 this.t = t;
@@ -2647,7 +2680,7 @@
         }
     }
 
-    const delta = create$2();
+    const delta$1 = create();
     const k = 2;
     /**
      * A position value that is blended from the current position to
@@ -2658,27 +2691,27 @@
             this.start = new Pose();
             this.current = new Pose();
             this.end = new Pose();
-            this.offset = create$2();
+            this.offset = create();
         }
         /**
          * Set the target comfort offset for the time `t + dt`.
          */
         setOffset(ox, oy, oz) {
-            set$2(delta, ox, oy, oz);
-            sub(delta, delta, this.offset);
-            add$2(this.start.p, this.start.p, delta);
-            add$2(this.current.p, this.current.p, delta);
-            add$2(this.end.p, this.end.p, delta);
+            set(delta$1, ox, oy, oz);
+            sub(delta$1, delta$1, this.offset);
+            add(this.start.p, this.start.p, delta$1);
+            add(this.current.p, this.current.p, delta$1);
+            add(this.end.p, this.end.p, delta$1);
             scale(this.start.f, this.start.f, k);
-            add$2(this.start.f, this.start.f, delta);
+            add(this.start.f, this.start.f, delta$1);
             normalize(this.start.f, this.start.f);
             scale(this.current.f, this.current.f, k);
-            add$2(this.current.f, this.current.f, delta);
+            add(this.current.f, this.current.f, delta$1);
             normalize(this.current.f, this.current.f);
             scale(this.end.f, this.end.f, k);
-            add$2(this.end.f, this.end.f, delta);
+            add(this.end.f, this.end.f, delta$1);
             normalize(this.end.f, this.end.f);
-            set$2(this.offset, ox, oy, oz);
+            set(this.offset, ox, oy, oz);
         }
         /**
          * Set the target position and orientation for the time `t + dt`.
@@ -2749,10 +2782,14 @@
             this.audioContext = audioContext;
             this.pose = new InterpolatedPose();
             this._spatializer = null;
+            this.disposed = false;
             this.volumeControl = audioContext.createGain();
         }
         dispose() {
-            this.spatializer = null;
+            if (!this.disposed) {
+                this.spatializer = null;
+                this.disposed = true;
+            }
         }
         get volume() {
             return this.volumeControl.gain.value;
@@ -2821,18 +2858,17 @@
         /**
          * Creates a spatializer that keeps track of position
          */
-        constructor(audioContext, input, output, destination) {
+        constructor(audioContext, destination) {
             super(audioContext);
-            this.input = input;
-            this.output = output;
             this.destination = destination;
-            if (this.output !== this.destination) {
-                connect(this.output, this.destination);
-            }
+            this.disposed = false;
         }
         dispose() {
-            if (this.output !== this.destination) {
-                disconnect(this.output, this.destination);
+            if (!this.disposed) {
+                if (this.output !== this.destination) {
+                    disconnect(this.output, this.destination);
+                }
+                this.disposed = true;
             }
         }
         copyAudioProperties(from) {
@@ -2850,7 +2886,8 @@
          * Creates a new "spatializer" that performs no panning. An anti-spatializer.
          */
         constructor(audioContext, destination) {
-            super(audioContext, destination, destination, destination);
+            super(audioContext, destination);
+            this.input = this.output = destination;
             Object.seal(this);
         }
         createNew() {
@@ -2868,10 +2905,8 @@
         /**
          * Creates a spatializer that keeps track of position
          */
-        constructor(audioContext, input, output) {
+        constructor(audioContext) {
             super(audioContext);
-            this.input = input;
-            this.output = output;
         }
         /**
          * Creates a spatialzer for an audio source.
@@ -2886,9 +2921,10 @@
 
     class NoSpatializationListener extends BaseListener {
         constructor(audioContext) {
+            super(audioContext);
             const gain = audioContext.createGain();
             gain.gain.value = 0.1;
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
         }
         /**
          * Do nothing
@@ -2906,15 +2942,19 @@
     class AudioDestination extends BaseAudioElement {
         constructor(audioContext, destination) {
             super(audioContext);
+            this.disposed2 = false;
             this._spatializedInput = audioContext.createGain();
             this._nonSpatializedInput = audioContext.createGain();
-            connect(this._nonSpatializedInput, this.volumeControl);
+            connect$1(this._nonSpatializedInput, this.volumeControl);
             this.setDestination(destination);
         }
         dispose() {
-            this.setDestination(null);
-            disconnect(this._nonSpatializedInput, this.volumeControl);
-            super.dispose();
+            if (!this.disposed2) {
+                this.setDestination(null);
+                disconnect(this._nonSpatializedInput, this.volumeControl);
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
         get spatialized() {
             return !(this.spatializer instanceof NoSpatializationListener);
@@ -2932,7 +2972,7 @@
                 }
                 this._trueDestination = v;
                 if (this._trueDestination) {
-                    connect(this.volumeControl, this._trueDestination);
+                    connect$1(this.volumeControl, this._trueDestination);
                 }
             }
         }
@@ -2941,8 +2981,8 @@
             disconnect(this._spatializedInput, this.spatializer.input);
         }
         connectSpatializer() {
-            connect(this._spatializedInput, this.spatializer.input);
-            connect(this.spatializer.output, this.volumeControl);
+            connect$1(this._spatializedInput, this.spatializer.input);
+            connect$1(this.spatializer.output, this.volumeControl);
         }
     }
 
@@ -3726,8 +3766,8 @@
                 1.000000, -0.000000, 0.000000, -0.000000],
         ],
     ];
-    const SPHERICAL_HARMONICS_AZIMUTH_RESOLUTION = SPHERICAL_HARMONICS[0].length;
-    const SPHERICAL_HARMONICS_ELEVATION_RESOLUTION = SPHERICAL_HARMONICS[1].length;
+    SPHERICAL_HARMONICS[0].length;
+    SPHERICAL_HARMONICS[1].length;
     /**
      * The maximum allowed ambisonic order.
      */
@@ -4143,10 +4183,10 @@
      * Maximum outside-the-room distance to attenuate far-field sources by.
      */
     const SOURCE_MAX_OUTSIDE_ROOM_DISTANCE = 1;
-    const DEFAULT_POSITION = zero(create$2());
-    const DEFAULT_FORWARD = set$2(create$2(), 0, 0, -1);
-    const DEFAULT_UP = set$2(create$2(), 0, 1, 0);
-    const DEFAULT_RIGHT = set$2(create$2(), 1, 0, 0);
+    const DEFAULT_POSITION = zero(create());
+    const DEFAULT_FORWARD = set(create(), 0, 0, -1);
+    const DEFAULT_UP = set(create(), 0, 1, 0);
+    set(create(), 1, 0, 0);
     const DEFAULT_SPEED_OF_SOUND = 343;
     /**
      * Default rolloff model ('logarithmic').
@@ -4385,7 +4425,7 @@
     /**
      * ResonanceAudio library logging function.
      */
-    const log = function (...args) {
+    const log$1 = function (...args) {
         window.console.log.apply(window.console, [
             '%c[ResonanceAudio]%c '
                 + args.join(' ') + ' %c(@'
@@ -4445,6 +4485,7 @@
         constructor(context, options) {
             this.channelGain = new Array();
             this.merger = null;
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -4469,15 +4510,15 @@
          */
         static validateAmbisonicOrder(ambisonicOrder) {
             if (isNaN(ambisonicOrder) || ambisonicOrder == null) {
-                log('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
+                log$1('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder < 1) {
-                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
+                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder > SPHERICAL_HARMONICS_MAX_ORDER) {
-                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
+                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
                 ambisonicOrder = SPHERICAL_HARMONICS_MAX_ORDER;
             }
             return ambisonicOrder;
@@ -4495,20 +4536,23 @@
             this.channelGain = new Array(numChannels);
             for (let i = 0; i < numChannels; i++) {
                 this.channelGain[i] = this.context.createGain();
-                connect(this.input, this.channelGain[i]);
-                connect(this.channelGain[i], this.merger, 0, i);
+                connect$1(this.input, this.channelGain[i]);
+                connect$1(this.channelGain[i], this.merger, 0, i);
             }
-            connect(this.merger, this.output);
+            connect$1(this.merger, this.output);
         }
         dispose() {
-            for (let i = 0; i < this.channelGain.length; i++) {
-                disconnect(this.input, this.channelGain[i]);
-                if (this.merger) {
-                    disconnect(this.channelGain[i], this.merger, 0, i);
+            if (!this.disposed) {
+                for (let i = 0; i < this.channelGain.length; i++) {
+                    disconnect(this.input, this.channelGain[i]);
+                    if (this.merger) {
+                        disconnect(this.channelGain[i], this.merger, 0, i);
+                    }
                 }
-            }
-            if (this.merger) {
-                disconnect(this.merger, this.output);
+                if (this.merger) {
+                    disconnect(this.merger, this.output);
+                }
+                this.disposed = true;
             }
         }
         /**
@@ -4591,7 +4635,7 @@
      * Omnitone library logging function.
      * @param Message to be printed out.
      */
-    function log$1(...rest) {
+    function log(...rest) {
         const message = `[Omnitone] ${rest.join(' ')}`;
         window.console.log(message);
     }
@@ -4735,6 +4779,7 @@
          * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
          */
         constructor(context, hrirBufferList) {
+            this.disposed = false;
             this._context = context;
             this._active = false;
             this._isBufferLoaded = false;
@@ -4759,24 +4804,24 @@
             this._mergerBinaural = this._context.createChannelMerger(2);
             this._summingBus = this._context.createGain();
             // Group W and Y, then Z and X.
-            connect(this._splitterWYZX, this._mergerWY, 0, 0);
-            connect(this._splitterWYZX, this._mergerWY, 1, 1);
-            connect(this._splitterWYZX, this._mergerZX, 2, 0);
-            connect(this._splitterWYZX, this._mergerZX, 3, 1);
+            connect$1(this._splitterWYZX, this._mergerWY, 0, 0);
+            connect$1(this._splitterWYZX, this._mergerWY, 1, 1);
+            connect$1(this._splitterWYZX, this._mergerZX, 2, 0);
+            connect$1(this._splitterWYZX, this._mergerZX, 3, 1);
             // Create a network of convolvers using splitter/merger.
-            connect(this._mergerWY, this._convolverWY);
-            connect(this._mergerZX, this._convolverZX);
-            connect(this._convolverWY, this._splitterWY);
-            connect(this._convolverZX, this._splitterZX);
-            connect(this._splitterWY, this._mergerBinaural, 0, 0);
-            connect(this._splitterWY, this._mergerBinaural, 0, 1);
-            connect(this._splitterWY, this._mergerBinaural, 1, 0);
-            connect(this._splitterWY, this._inverter, 1, 0);
-            connect(this._inverter, this._mergerBinaural, 0, 1);
-            connect(this._splitterZX, this._mergerBinaural, 0, 0);
-            connect(this._splitterZX, this._mergerBinaural, 0, 1);
-            connect(this._splitterZX, this._mergerBinaural, 1, 0);
-            connect(this._splitterZX, this._mergerBinaural, 1, 1);
+            connect$1(this._mergerWY, this._convolverWY);
+            connect$1(this._mergerZX, this._convolverZX);
+            connect$1(this._convolverWY, this._splitterWY);
+            connect$1(this._convolverZX, this._splitterZX);
+            connect$1(this._splitterWY, this._mergerBinaural, 0, 0);
+            connect$1(this._splitterWY, this._mergerBinaural, 0, 1);
+            connect$1(this._splitterWY, this._mergerBinaural, 1, 0);
+            connect$1(this._splitterWY, this._inverter, 1, 0);
+            connect$1(this._inverter, this._mergerBinaural, 0, 1);
+            connect$1(this._splitterZX, this._mergerBinaural, 0, 0);
+            connect$1(this._splitterZX, this._mergerBinaural, 0, 1);
+            connect$1(this._splitterZX, this._mergerBinaural, 1, 0);
+            connect$1(this._splitterZX, this._mergerBinaural, 1, 1);
             // By default, WebAudio's convolver does the normalization based on IR's
             // energy. For the precise convolution, it must be disabled before the buffer
             // assignment.
@@ -4789,28 +4834,31 @@
             this.output = this._summingBus;
         }
         dispose() {
-            if (this._active) {
-                this.disable();
+            if (!this.disposed) {
+                if (this._active) {
+                    this.disable();
+                }
+                // Group W and Y, then Z and X.
+                disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+                disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+                disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+                disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
+                // Create a network of convolvers using splitter/merger.
+                disconnect(this._mergerWY, this._convolverWY);
+                disconnect(this._mergerZX, this._convolverZX);
+                disconnect(this._convolverWY, this._splitterWY);
+                disconnect(this._convolverZX, this._splitterZX);
+                disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+                disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+                disconnect(this._splitterWY, this._inverter, 1, 0);
+                disconnect(this._inverter, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+                disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+                disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+                disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
+                this.disposed = true;
             }
-            // Group W and Y, then Z and X.
-            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
-            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
-            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
-            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
-            // Create a network of convolvers using splitter/merger.
-            disconnect(this._mergerWY, this._convolverWY);
-            disconnect(this._mergerZX, this._convolverZX);
-            disconnect(this._convolverWY, this._splitterWY);
-            disconnect(this._convolverZX, this._splitterZX);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterWY, this._inverter, 1, 0);
-            disconnect(this._inverter, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
         }
         /**
          * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
@@ -4837,7 +4885,7 @@
          * the WebAudio engine. (i.e. consume CPU cycle)
          */
         enable() {
-            connect(this._mergerBinaural, this._summingBus);
+            connect$1(this._mergerBinaural, this._summingBus);
             this._active = true;
         }
         /**
@@ -4877,6 +4925,7 @@
          * @param context - Associated BaseAudioContext.
          */
         constructor(context) {
+            this.disposed = false;
             this._context = context;
             this._splitter = this._context.createChannelSplitter(4);
             this._inX = this._context.createGain();
@@ -4897,11 +4946,11 @@
             this._merger = this._context.createChannelMerger(4);
             // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
             // X (from channel 1)
-            connect(this._splitter, this._inX, 1);
+            connect$1(this._splitter, this._inX, 1);
             // Y (from channel 2)
-            connect(this._splitter, this._inY, 2);
+            connect$1(this._splitter, this._inY, 2);
             // Z (from channel 3)
-            connect(this._splitter, this._inZ, 3);
+            connect$1(this._splitter, this._inZ, 3);
             this._inX.gain.value = -1;
             this._inY.gain.value = -1;
             this._inZ.gain.value = -1;
@@ -4909,80 +4958,83 @@
             // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
             // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
             // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            connect(this._inX, this._m0);
-            connect(this._inX, this._m1);
-            connect(this._inX, this._m2);
-            connect(this._inY, this._m3);
-            connect(this._inY, this._m4);
-            connect(this._inY, this._m5);
-            connect(this._inZ, this._m6);
-            connect(this._inZ, this._m7);
-            connect(this._inZ, this._m8);
-            connect(this._m0, this._outX);
-            connect(this._m1, this._outY);
-            connect(this._m2, this._outZ);
-            connect(this._m3, this._outX);
-            connect(this._m4, this._outY);
-            connect(this._m5, this._outZ);
-            connect(this._m6, this._outX);
-            connect(this._m7, this._outY);
-            connect(this._m8, this._outZ);
+            connect$1(this._inX, this._m0);
+            connect$1(this._inX, this._m1);
+            connect$1(this._inX, this._m2);
+            connect$1(this._inY, this._m3);
+            connect$1(this._inY, this._m4);
+            connect$1(this._inY, this._m5);
+            connect$1(this._inZ, this._m6);
+            connect$1(this._inZ, this._m7);
+            connect$1(this._inZ, this._m8);
+            connect$1(this._m0, this._outX);
+            connect$1(this._m1, this._outY);
+            connect$1(this._m2, this._outZ);
+            connect$1(this._m3, this._outX);
+            connect$1(this._m4, this._outY);
+            connect$1(this._m5, this._outZ);
+            connect$1(this._m6, this._outX);
+            connect$1(this._m7, this._outY);
+            connect$1(this._m8, this._outZ);
             // Transform 3: world space to audio space.
             // W -> W (to channel 0)
-            connect(this._splitter, this._merger, 0, 0);
+            connect$1(this._splitter, this._merger, 0, 0);
             // X (to channel 1)
-            connect(this._outX, this._merger, 0, 1);
+            connect$1(this._outX, this._merger, 0, 1);
             // Y (to channel 2)
-            connect(this._outY, this._merger, 0, 2);
+            connect$1(this._outY, this._merger, 0, 2);
             // Z (to channel 3)
-            connect(this._outZ, this._merger, 0, 3);
+            connect$1(this._outZ, this._merger, 0, 3);
             this._outX.gain.value = -1;
             this._outY.gain.value = -1;
             this._outZ.gain.value = -1;
-            this.setRotationMatrix3(identity(create()));
+            this.setRotationMatrix3(identity(create$2()));
             // input/output proxy.
             this.input = this._splitter;
             this.output = this._merger;
         }
         dispose() {
-            // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
-            // X (from channel 1)
-            disconnect(this._splitter, this._inX, 1);
-            // Y (from channel 2)
-            disconnect(this._splitter, this._inY, 2);
-            // Z (from channel 3)
-            disconnect(this._splitter, this._inZ, 3);
-            // Apply the rotation in the world space.
-            // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
-            // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
-            // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            disconnect(this._inX, this._m0);
-            disconnect(this._inX, this._m1);
-            disconnect(this._inX, this._m2);
-            disconnect(this._inY, this._m3);
-            disconnect(this._inY, this._m4);
-            disconnect(this._inY, this._m5);
-            disconnect(this._inZ, this._m6);
-            disconnect(this._inZ, this._m7);
-            disconnect(this._inZ, this._m8);
-            disconnect(this._m0, this._outX);
-            disconnect(this._m1, this._outY);
-            disconnect(this._m2, this._outZ);
-            disconnect(this._m3, this._outX);
-            disconnect(this._m4, this._outY);
-            disconnect(this._m5, this._outZ);
-            disconnect(this._m6, this._outX);
-            disconnect(this._m7, this._outY);
-            disconnect(this._m8, this._outZ);
-            // Transform 3: world space to audio space.
-            // W -> W (to channel 0)
-            disconnect(this._splitter, this._merger, 0, 0);
-            // X (to channel 1)
-            disconnect(this._outX, this._merger, 0, 1);
-            // Y (to channel 2)
-            disconnect(this._outY, this._merger, 0, 2);
-            // Z (to channel 3)
-            disconnect(this._outZ, this._merger, 0, 3);
+            if (!this.disposed) {
+                // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
+                // X (from channel 1)
+                disconnect(this._splitter, this._inX, 1);
+                // Y (from channel 2)
+                disconnect(this._splitter, this._inY, 2);
+                // Z (from channel 3)
+                disconnect(this._splitter, this._inZ, 3);
+                // Apply the rotation in the world space.
+                // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
+                // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
+                // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
+                disconnect(this._inX, this._m0);
+                disconnect(this._inX, this._m1);
+                disconnect(this._inX, this._m2);
+                disconnect(this._inY, this._m3);
+                disconnect(this._inY, this._m4);
+                disconnect(this._inY, this._m5);
+                disconnect(this._inZ, this._m6);
+                disconnect(this._inZ, this._m7);
+                disconnect(this._inZ, this._m8);
+                disconnect(this._m0, this._outX);
+                disconnect(this._m1, this._outY);
+                disconnect(this._m2, this._outZ);
+                disconnect(this._m3, this._outX);
+                disconnect(this._m4, this._outY);
+                disconnect(this._m5, this._outZ);
+                disconnect(this._m6, this._outX);
+                disconnect(this._m7, this._outY);
+                disconnect(this._m8, this._outZ);
+                // Transform 3: world space to audio space.
+                // W -> W (to channel 0)
+                disconnect(this._splitter, this._merger, 0, 0);
+                // X (to channel 1)
+                disconnect(this._outX, this._merger, 0, 1);
+                // Y (to channel 2)
+                disconnect(this._outY, this._merger, 0, 2);
+                // Z (to channel 3)
+                disconnect(this._outZ, this._merger, 0, 3);
+                this.disposed = true;
+            }
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -5019,20 +5071,20 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set(rotationMatrix3, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
-            return rotationMatrix3;
+            set$2(rotationMatrix3$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
+            return rotationMatrix3$1;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4;
+            set$1(rotationMatrix4$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4$1;
         }
     }
-    const rotationMatrix3 = create();
-    const rotationMatrix4 = create$1();
+    const rotationMatrix3$1 = create$2();
+    const rotationMatrix4$1 = create$1();
 
     /**
      * @license
@@ -5080,6 +5132,7 @@
          * @param channelMap - Routing destination array.
          */
         constructor(context, channelMap) {
+            this.disposed = false;
             this._context = context;
             this._splitter = this._context.createChannelSplitter(4);
             this._merger = this._context.createChannelMerger(4);
@@ -5099,16 +5152,19 @@
             else {
                 this._channelMap = ChannelMaps[channelMap];
             }
-            connect(this._splitter, this._merger, 0, this._channelMap[0]);
-            connect(this._splitter, this._merger, 1, this._channelMap[1]);
-            connect(this._splitter, this._merger, 2, this._channelMap[2]);
-            connect(this._splitter, this._merger, 3, this._channelMap[3]);
+            connect$1(this._splitter, this._merger, 0, this._channelMap[0]);
+            connect$1(this._splitter, this._merger, 1, this._channelMap[1]);
+            connect$1(this._splitter, this._merger, 2, this._channelMap[2]);
+            connect$1(this._splitter, this._merger, 3, this._channelMap[3]);
         }
         dispose() {
-            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
-            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
-            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
-            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+            if (!this.disposed) {
+                disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+                disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+                disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+                disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+                this.disposed = true;
+            }
         }
     }
 
@@ -5140,6 +5196,7 @@
          * Omnitone FOA renderer class. Uses the optimized convolution technique.
          */
         constructor(context, options) {
+            this.disposed = false;
             this.context = context;
             this.config = Object.assign({
                 channelMap: ChannelMap.Default,
@@ -5166,27 +5223,30 @@
             this.router = new FOARouter(this.context, this.config.channelMap);
             this.rotator = new FOARotator(this.context);
             this.convolver = new FOAConvolver(this.context);
-            connect(this.input, this.router.input);
-            connect(this.input, this.bypass);
-            connect(this.router.output, this.rotator.input);
-            connect(this.rotator.output, this.convolver.input);
-            connect(this.convolver.output, this.output);
+            connect$1(this.input, this.router.input);
+            connect$1(this.input, this.bypass);
+            connect$1(this.router.output, this.rotator.input);
+            connect$1(this.rotator.output, this.convolver.input);
+            connect$1(this.convolver.output, this.output);
             this.input.channelCount = 4;
             this.input.channelCountMode = 'explicit';
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
-            if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+            if (!this.disposed) {
+                if (this.getRenderingMode() === RenderingMode.Bypass) {
+                    disconnect(this.bypass, this.output);
+                }
+                disconnect(this.input, this.router.input);
+                disconnect(this.input, this.bypass);
+                disconnect(this.router.output, this.rotator.input);
+                disconnect(this.rotator.output, this.convolver.input);
+                disconnect(this.convolver.output, this.output);
+                this.convolver.dispose();
+                this.rotator.dispose();
+                this.router.dispose();
+                this.disposed = true;
             }
-            disconnect(this.input, this.router.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.router.output, this.rotator.input);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
-            this.convolver.dispose();
-            this.rotator.dispose();
-            this.router.dispose();
         }
         /**
          * Initializes and loads the resource for the renderer.
@@ -5211,7 +5271,7 @@
          */
         setChannelMap(channelMap) {
             if (channelMap.toString() !== this.config.channelMap.toString()) {
-                log$1('Remapping channels ([' + this.config.channelMap.toString() +
+                log('Remapping channels ([' + this.config.channelMap.toString() +
                     '] -> [' + channelMap.toString() + ']).');
                 if (channelMap instanceof Array) {
                     this.config.channelMap = channelMap.slice();
@@ -5258,7 +5318,7 @@
                 this.convolver.disable();
             }
             if (mode === RenderingMode.Bypass) {
-                connect(this.bypass, this.output);
+                connect$1(this.bypass, this.output);
             }
             else {
                 disconnect(this.bypass, this.output);
@@ -5344,27 +5404,27 @@
                     const stereoIndex = Math.floor(acnIndex / 2);
                     // Split channels from input into array of stereo convolvers.
                     // Then create a network of mergers that produces the stereo output.
-                    connect(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                    connect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
-                    connect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
+                    connect$1(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+                    connect$1(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
+                    connect$1(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
                     // Positive index (m >= 0) spherical harmonics are symmetrical around the
                     // front axis, while negative index (m < 0) spherical harmonics are
                     // anti-symmetrical around the front axis. We will exploit this symmetry
                     // to reduce the number of convolutions required when rendering to a
                     // symmetrical binaural renderer.
                     if (m >= 0) {
-                        connect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
+                        connect$1(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
                     }
                     else {
-                        connect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
+                        connect$1(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
                     }
                 }
             }
-            connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-            connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
-            connect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-            connect(this._negativeIndexSphericalHarmonics, this._inverter);
-            connect(this._inverter, this._binauralMerger, 0, 1);
+            connect$1(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            connect$1(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
+            connect$1(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+            connect$1(this._negativeIndexSphericalHarmonics, this._inverter);
+            connect$1(this._inverter, this._binauralMerger, 0, 1);
             // For asymmetric index.
             this._inverter.gain.value = -1;
             // Input/Output proxy.
@@ -5431,7 +5491,7 @@
          * the WebAudio engine. (i.e. consume CPU cycle)
          */
         enable() {
-            connect(this._binauralMerger, this._outputGain);
+            connect$1(this._binauralMerger, this._outputGain);
             this._active = true;
         }
         /**
@@ -5607,13 +5667,13 @@
     function computeUVWCoeff(m, n, l) {
         const d = getKroneckerDelta(m, 0);
         const reciprocalDenominator = Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
-        set$2(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
+        set(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
             (l + Math.abs(m) - 1) *
             (l + Math.abs(m)) *
             reciprocalDenominator), -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) * reciprocalDenominator);
         return UVWCoeff;
     }
-    const UVWCoeff = create$2();
+    const UVWCoeff = create();
     /**
      * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
      * This uses the matrices computed for band 1 and band l-1 to compute the
@@ -5689,6 +5749,7 @@
          * @param ambisonicOrder - Ambisonic order.
          */
         constructor(context, ambisonicOrder) {
+            this.disposed = false;
             this._context = context;
             this._ambisonicOrder = ambisonicOrder;
             // We need to determine the number of channels K based on the ambisonic order
@@ -5716,42 +5777,45 @@
                         const outputIndex = orderOffset + k;
                         const matrixIndex = j * rows + k;
                         this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
-                        connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+                        connect$1(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                        connect$1(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                     }
                 }
             }
             // W-channel is not involved in rotation, skip straight to ouput.
-            connect(this._splitter, this._merger, 0, 0);
+            connect$1(this._splitter, this._merger, 0, 0);
             // Default Identity matrix.
-            this.setRotationMatrix3(identity(create()));
+            this.setRotationMatrix3(identity(create$2()));
             // Input/Output proxy.
             this.input = this._splitter;
             this.output = this._merger;
         }
         dispose() {
-            for (let i = 1; i <= this._ambisonicOrder; i++) {
-                // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-                // matrix. We compute the offset value as the first channel index of the
-                // current order where
-                //   k_last = l^2 + l + m,
-                // and m = -l
-                //   k_last = l^2
-                const orderOffset = i * i;
-                // Uses row-major indexing.
-                const rows = (2 * i + 1);
-                for (let j = 0; j < rows; j++) {
-                    const inputIndex = orderOffset + j;
-                    for (let k = 0; k < rows; k++) {
-                        const outputIndex = orderOffset + k;
-                        const matrixIndex = j * rows + k;
-                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+            if (!this.disposed) {
+                for (let i = 1; i <= this._ambisonicOrder; i++) {
+                    // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+                    // matrix. We compute the offset value as the first channel index of the
+                    // current order where
+                    //   k_last = l^2 + l + m,
+                    // and m = -l
+                    //   k_last = l^2
+                    const orderOffset = i * i;
+                    // Uses row-major indexing.
+                    const rows = (2 * i + 1);
+                    for (let j = 0; j < rows; j++) {
+                        const inputIndex = orderOffset + j;
+                        for (let k = 0; k < rows; k++) {
+                            const outputIndex = orderOffset + k;
+                            const matrixIndex = j * rows + k;
+                            disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                            disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
+                        }
                     }
                 }
+                // W-channel is not involved in rotation, skip straight to ouput.
+                disconnect(this._splitter, this._merger, 0, 0);
+                this.disposed = true;
             }
-            // W-channel is not involved in rotation, skip straight to ouput.
-            disconnect(this._splitter, this._merger, 0, 0);
         }
         /**
          * Updates the rotation matrix with 3x3 matrix.
@@ -5790,16 +5854,16 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set(rotationMatrix3$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
-            return rotationMatrix3$1;
+            set$2(rotationMatrix3, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
+            return rotationMatrix3;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4$1;
+            set$1(rotationMatrix4, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4;
         }
         /**
          * Get the current ambisonic order.
@@ -5808,8 +5872,8 @@
             return this._ambisonicOrder;
         }
     }
-    const rotationMatrix3$1 = create();
-    const rotationMatrix4$1 = create$1();
+    const rotationMatrix3 = create$2();
+    const rotationMatrix4 = create$1();
 
     var SOAHrirBase64 = [
         "UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wQA8/8ZAPr/DAD+/wMA/v8KAAQA/f8DAAMABADs//z/8v/z/8f/R/90/ob+//zAAWsDAwY3DKn9//tu93DvkwI6An4CuwJ0/BH7VPux92X0Gu7N/EX9mgfqCkkIiRMgBd4NQQGL/c0G/xBxAKELZATUA/sIHRSx+fkCyAUmBNEJIARlAdHz2AjNACcIsAW4AlECsvtJ/P/7K/tf++n8aP4W+g0FXAElAMn8nQHn/sT+Zv7N+9X2xvzM/O3+EvpqBBD7SQLd+vb/sPlw/JD72/3n+Rr+L/wS/vz6UQGg/Nf+Av5L/5X9Gv2//SP+mf3j/lf+v/2B/ZH/5P05/iL9MP9F/uf9UP4v/qv9mv7o/Xn+wP2k/8L+uP5J/tD+Dv/Y/bL+mP72/n3+pP+7/hAA+/5zAGH+Z/+u/g8Azv2y/6L+//9o/iIADP8VACz/CwCN/pb/1v4yAFP+wf+4/jsAcf5VAP3+bADa/nMA6f4sAOT+IQBd/v7/7v6aAIL+QADe/nEA0P4yAKz+CQCo/moAuf5xAN7+mAC8/jcANf9eAPX+IAA1/1kAAP9hAMz+PQD5/m0A2/4gAPr+UQDh/jQAEv9BAPH+FABN/zkASv9DADP/BABe/1IAGf8oAE3/RQAw/zIAQf8mADn/GgBE/xIAR/8hAD7/BABy/zEAKP/0/07/GwBX/z4ARf8mAFr/QQBV/zUAVP8eAFz/JABt/0EAUP8MAHz/KgBr/ycAYv8EAH3/MABl/x8Agv8bAIj/GgBv//z/ff8AAJX/IABu/+T/jv/r/4z/9/9n/77/pP8JAJD/EQCJ//r/q/8WAJ//GQCU/xYAtv8qAKr/PQCW/ysAwf8+ALb/OgC3/ygAz/8uAM7/OgDH/ygAz/8kAMz/OgC//xsA1f8qAMn/LwDN/xcA1f8oAMv/JQDR/xMAzf8bAM//HgDU/wUA2v8ZANL/EwDW/wEA1f8ZAMz/BwDX/wIA0v8SANT/BQDW/wMA0/8PANT/AADY/wIA1f8MANX/+f/a/wUA0v8IANf/+//Y/wUA0/8DANr/+f/Y/wQA1v8BANr/+f/Z/wUA1//8/9z/+v/Y/wYA2f/8/93//v/Y/wUA2v/9/93////Z/wUA3P/8/97/AgDa/wMA3v/8/97/AwDb/wIA3//9/97/BADd/wEA4f///9//BQDf/wAA4v8AAN//BQDf/wAA4/8CAN//BADh/wAA4/8DAOD/BADi////4/8DAOH/AwDk/wAA5P8FAOL/AgDl/wEA5P8FAOL/AQDl/wEA4/8EAOL/AQDj/wIA4P8DAN//AADg/wIA3v8CAOD/AADh/wEA4v8AAOP/AADm/wAA6P8AAOz/AADu/wAA",
@@ -5855,13 +5919,14 @@
          * Omnitone HOA renderer class. Uses the optimized convolution technique.
          */
         constructor(context, options) {
+            this.disposed = false;
             this.context = context;
             this.config = Object.assign({
                 ambisonicOrder: 3,
                 renderingMode: RenderingMode.Ambisonic,
             }, options);
             if (!SupportedAmbisonicOrder.includes(this.config.ambisonicOrder)) {
-                log$1('HOARenderer: Invalid ambisonic order. (got ' +
+                log('HOARenderer: Invalid ambisonic order. (got ' +
                     this.config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
                 this.config.ambisonicOrder = Math.max(2, Math.min(3, this.config.ambisonicOrder));
             }
@@ -5886,24 +5951,27 @@
             this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
             this.convolver =
                 new HOAConvolver(this.context, this.config.ambisonicOrder);
-            connect(this.input, this.rotator.input);
-            connect(this.input, this.bypass);
-            connect(this.rotator.output, this.convolver.input);
-            connect(this.convolver.output, this.output);
+            connect$1(this.input, this.rotator.input);
+            connect$1(this.input, this.bypass);
+            connect$1(this.rotator.output, this.convolver.input);
+            connect$1(this.convolver.output, this.output);
             this.input.channelCount = this.config.numberOfChannels;
             this.input.channelCountMode = 'explicit';
             this.input.channelInterpretation = 'discrete';
         }
         dispose() {
-            if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+            if (!this.disposed) {
+                if (this.getRenderingMode() === RenderingMode.Bypass) {
+                    disconnect(this.bypass, this.output);
+                }
+                disconnect(this.input, this.rotator.input);
+                disconnect(this.input, this.bypass);
+                disconnect(this.rotator.output, this.convolver.input);
+                disconnect(this.convolver.output, this.output);
+                this.rotator.dispose();
+                this.convolver.dispose();
+                this.disposed = true;
             }
-            disconnect(this.input, this.rotator.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
-            this.rotator.dispose();
-            this.convolver.dispose();
         }
         /**
          * Initializes and loads the resource for the renderer.
@@ -5965,7 +6033,7 @@
                 this.convolver.disable();
             }
             if (mode === RenderingMode.Bypass) {
-                connect(this.bypass, this.output);
+                connect$1(this.bypass, this.output);
             }
             else {
                 disconnect(this.bypass, this.output);
@@ -6027,17 +6095,18 @@
          * Listener model to spatialize sources in an environment.
          */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                position: copy(create$2(), DEFAULT_POSITION),
-                forward: copy(create$2(), DEFAULT_FORWARD),
-                up: copy(create$2(), DEFAULT_UP),
+                position: copy(create(), DEFAULT_POSITION),
+                forward: copy(create(), DEFAULT_FORWARD),
+                up: copy(create(), DEFAULT_UP),
                 renderingMode: DEFAULT_RENDERING_MODE
             }, options);
             // Member variables.
-            this.position = create$2();
-            this.tempMatrix3 = create();
+            this.position = create();
+            this.tempMatrix3 = create$2();
             // Select the appropriate HRIR filters using 2-channel chunks since
             // multichannel audio is not yet supported by a majority of browsers.
             this.ambisonicOrder =
@@ -6062,23 +6131,26 @@
             // Initialize Omnitone (async) and connect to audio graph when complete.
             this.renderer.initialize().then(() => {
                 // Connect pre-rotated soundfield to renderer.
-                connect(this.input, this.renderer.input);
+                connect$1(this.input, this.renderer.input);
                 // Connect rotated soundfield to ambisonic output.
-                connect(this.renderer.rotator.output, this.ambisonicOutput);
+                connect$1(this.renderer.rotator.output, this.ambisonicOutput);
                 // Connect binaurally-rendered soundfield to binaural output.
-                connect(this.renderer.output, this.output);
+                connect$1(this.renderer.output, this.output);
             });
             // Set orientation and update rotation matrix accordingly.
             this.setOrientation(options.forward, options.up);
         }
         dispose() {
-            // Connect pre-rotated soundfield to renderer.
-            disconnect(this.input, this.renderer.input);
-            // Connect rotated soundfield to ambisonic output.
-            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
-            // Connect binaurally-rendered soundfield to binaural output.
-            disconnect(this.renderer.output, this.output);
-            this.renderer.dispose();
+            if (!this.disposed) {
+                // Connect pre-rotated soundfield to renderer.
+                disconnect(this.input, this.renderer.input);
+                // Connect rotated soundfield to ambisonic output.
+                disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+                // Connect binaurally-rendered soundfield to binaural output.
+                disconnect(this.renderer.output, this.output);
+                this.renderer.dispose();
+                this.disposed = true;
+            }
         }
         getRenderingMode() {
             return this.renderer.getRenderingMode();
@@ -6093,13 +6165,13 @@
             copy(F, forward);
             copy(U, up);
             cross(R, F, U);
-            set(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
+            set$2(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
             this.renderer.setRotationMatrix3(this.tempMatrix3);
         }
     }
-    const F = create$2();
-    const U = create$2();
-    const R = create$2();
+    const F = create();
+    const U = create();
+    const R = create();
 
     /**
      * @license
@@ -6124,7 +6196,7 @@
          * Ray-tracing-based early reflections model.
          */
         constructor(context, options) {
-            this.listenerPosition = copy(create$2(), DEFAULT_POSITION);
+            this.listenerPosition = copy(create(), DEFAULT_POSITION);
             this.speedOfSound = DEFAULT_SPEED_OF_SOUND;
             this.coefficients = {
                 left: DEFAULT_REFLECTION_COEFFICIENTS.left,
@@ -6139,6 +6211,7 @@
                 height: 0.5 * DEFAULT_ROOM_DIMENSIONS.height,
                 depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
             };
+            this.disposed = false;
             if (options) {
                 if (isGoodNumber(options.speedOfSound)) {
                     this.speedOfSound = options.speedOfSound;
@@ -6187,9 +6260,9 @@
                 gain.gain.value = 0;
                 this.delays[direction] = delay;
                 this.gains[direction] = gain;
-                connect(this.lowpass, delay);
-                connect(delay, gain);
-                connect(gain, this.merger, 0, 0);
+                connect$1(this.lowpass, delay);
+                connect$1(delay, gain);
+                connect$1(gain, this.merger, 0, 0);
                 // Initialize inverters for opposite walls ('right', 'down', 'back' only).
                 if (direction === Direction.Right
                     || direction == Direction.Back
@@ -6197,7 +6270,7 @@
                     this.inverters[direction].gain.value = -1;
                 }
             }
-            connect(this.input, this.lowpass);
+            connect$1(this.input, this.lowpass);
             // Initialize lowpass filter.
             this.lowpass.type = 'lowpass';
             this.lowpass.frequency.value = DEFAULT_REFLECTION_CUTOFF_FREQUENCY;
@@ -6210,46 +6283,49 @@
             // Down: [1 0 -1 0]
             // Front: [1 0 0 1]
             // Back: [1 0 0 -1]
-            connect(this.gains.left, this.merger, 0, 1);
-            connect(this.gains.right, this.inverters.right);
-            connect(this.inverters.right, this.merger, 0, 1);
-            connect(this.gains.up, this.merger, 0, 2);
-            connect(this.gains.down, this.inverters.down);
-            connect(this.inverters.down, this.merger, 0, 2);
-            connect(this.gains.front, this.merger, 0, 3);
-            connect(this.gains.back, this.inverters.back);
-            connect(this.inverters.back, this.merger, 0, 3);
-            connect(this.merger, this.output);
+            connect$1(this.gains.left, this.merger, 0, 1);
+            connect$1(this.gains.right, this.inverters.right);
+            connect$1(this.inverters.right, this.merger, 0, 1);
+            connect$1(this.gains.up, this.merger, 0, 2);
+            connect$1(this.gains.down, this.inverters.down);
+            connect$1(this.inverters.down, this.merger, 0, 2);
+            connect$1(this.gains.front, this.merger, 0, 3);
+            connect$1(this.gains.back, this.inverters.back);
+            connect$1(this.inverters.back, this.merger, 0, 3);
+            connect$1(this.merger, this.output);
             // Initialize.
             this.setRoomProperties(options && options.dimensions, options && options.coefficients);
         }
         dispose() {
-            // Connect nodes.
-            disconnect(this.input, this.lowpass);
-            for (const property of Object.values(Direction)) {
-                const delay = this.delays[property];
-                const gain = this.gains[property];
-                disconnect(this.lowpass, delay);
-                disconnect(delay, gain);
-                disconnect(gain, this.merger, 0, 0);
+            if (!this.disposed) {
+                // Connect nodes.
+                disconnect(this.input, this.lowpass);
+                for (const property of Object.values(Direction)) {
+                    const delay = this.delays[property];
+                    const gain = this.gains[property];
+                    disconnect(this.lowpass, delay);
+                    disconnect(delay, gain);
+                    disconnect(gain, this.merger, 0, 0);
+                }
+                // Connect gains to ambisonic channel output.
+                // Left: [1 1 0 0]
+                // Right: [1 -1 0 0]
+                // Up: [1 0 1 0]
+                // Down: [1 0 -1 0]
+                // Front: [1 0 0 1]
+                // Back: [1 0 0 -1]
+                disconnect(this.gains.left, this.merger, 0, 1);
+                disconnect(this.gains.right, this.inverters.right);
+                disconnect(this.inverters.right, this.merger, 0, 1);
+                disconnect(this.gains.up, this.merger, 0, 2);
+                disconnect(this.gains.down, this.inverters.down);
+                disconnect(this.inverters.down, this.merger, 0, 2);
+                disconnect(this.gains.front, this.merger, 0, 3);
+                disconnect(this.gains.back, this.inverters.back);
+                disconnect(this.inverters.back, this.merger, 0, 3);
+                disconnect(this.merger, this.output);
+                this.disposed = true;
             }
-            // Connect gains to ambisonic channel output.
-            // Left: [1 1 0 0]
-            // Right: [1 -1 0 0]
-            // Up: [1 0 1 0]
-            // Down: [1 0 -1 0]
-            // Front: [1 0 0 1]
-            // Back: [1 0 0 -1]
-            disconnect(this.gains.left, this.merger, 0, 1);
-            disconnect(this.gains.right, this.inverters.right);
-            disconnect(this.inverters.right, this.merger, 0, 1);
-            disconnect(this.gains.up, this.merger, 0, 2);
-            disconnect(this.gains.down, this.inverters.down);
-            disconnect(this.inverters.down, this.merger, 0, 2);
-            disconnect(this.gains.front, this.merger, 0, 3);
-            disconnect(this.gains.back, this.inverters.back);
-            disconnect(this.inverters.back, this.merger, 0, 3);
-            disconnect(this.merger, this.output);
         }
         /**
          * Set the room's properties which determines the characteristics of
@@ -6349,6 +6425,7 @@
         * Late-reflections reverberation filter for Ambisonic content.
         */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 durations: DEFAULT_REVERB_DURATIONS.slice(),
@@ -6372,16 +6449,19 @@
             // Disable normalization.
             this.convolver.normalize = false;
             // Connect nodes.
-            connect(this.input, this.predelay);
-            connect(this.predelay, this.convolver);
-            connect(this.convolver, this.output);
+            connect$1(this.input, this.predelay);
+            connect$1(this.predelay, this.convolver);
+            connect$1(this.convolver, this.output);
             // Compute IR using RT60 values.
             this.setDurations(options.durations);
         }
         dispose() {
-            disconnect(this.input, this.predelay);
-            disconnect(this.predelay, this.convolver);
-            disconnect(this.convolver, this.output);
+            if (!this.disposed) {
+                disconnect(this.input, this.predelay);
+                disconnect(this.predelay, this.convolver);
+                disconnect(this.convolver, this.output);
+                this.disposed = true;
+            }
         }
         /**
          * Re-compute a new impulse response by providing Multiband RT60 durations.
@@ -6392,7 +6472,7 @@
          */
         setDurations(durations) {
             if (durations.length !== NUMBER_REVERB_FREQUENCY_BANDS) {
-                log('Warning: invalid number of RT60 values provided to reverb.');
+                log$1('Warning: invalid number of RT60 values provided to reverb.');
                 return;
             }
             // Compute impulse response.
@@ -6510,7 +6590,7 @@
                     ROOM_MATERIAL_COEFFICIENTS[materials[property]];
             }
             else {
-                log('Material \"' + materials[property] + '\" on wall \"' +
+                log$1('Material \"' + materials[property] + '\" on wall \"' +
                     property + '\" not found. Using \"' +
                     DEFAULT_ROOM_MATERIALS[property] + '\".');
             }
@@ -6644,7 +6724,7 @@
         constructor(context, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                listenerPosition: copy(create$2(), DEFAULT_POSITION),
+                listenerPosition: copy(create(), DEFAULT_POSITION),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND
@@ -6667,10 +6747,10 @@
             this.speedOfSound = options.speedOfSound;
             // Construct auxillary audio nodes.
             this.output = context.createGain();
-            connect(this.early.output, this.output);
+            connect$1(this.early.output, this.output);
             this._merger = context.createChannelMerger(4);
-            connect(this.late.output, this._merger, 0, 0);
-            connect(this._merger, this.output);
+            connect$1(this.late.output, this._merger, 0, 0);
+            connect$1(this._merger, this.output);
         }
         dispose() {
             disconnect(this.early.output, this.output);
@@ -6834,8 +6914,8 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    const forwardNorm = create$2();
-    const directionNorm = create$2();
+    const forwardNorm = create();
+    const directionNorm = create();
     /**
      * Directivity/occlusion filter.
      **/
@@ -6892,7 +6972,7 @@
             this.alpha = Math.min(1, Math.max(0, alpha));
             this.sharpness = Math.max(1, sharpness);
             // Update angle calculation using new values.
-            this.computeAngle(set$2(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set$2(directionNorm, 1, 0, 0));
+            this.computeAngle(set(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set(directionNorm, 1, 0, 0));
         }
     }
 
@@ -6940,9 +7020,9 @@
         constructor(scene, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                position: copy(create$2(), DEFAULT_POSITION),
-                forward: copy(create$2(), DEFAULT_FORWARD),
-                up: copy(create$2(), DEFAULT_UP),
+                position: copy(create(), DEFAULT_POSITION),
+                forward: copy(create(), DEFAULT_FORWARD),
+                up: copy(create(), DEFAULT_UP),
                 minDistance: DEFAULT_MIN_DISTANCE,
                 maxDistance: DEFAULT_MAX_DISTANCE,
                 rolloff: DEFAULT_ATTENUATION_ROLLOFF,
@@ -6956,8 +7036,8 @@
             this.position = options.position;
             this.forward = options.forward;
             this.up = options.up;
-            this.dx = create$2();
-            this.right = create$2();
+            this.dx = create();
+            this.right = create();
             cross(this.right, this.forward, this.up);
             // Create audio nodes.
             let context = scene.context;
@@ -6978,13 +7058,13 @@
                 sourceWidth: options.sourceWidth,
             });
             // Connect nodes.
-            connect(this.input, this.toLate);
-            connect(this.toLate, scene.room.late.input);
-            connect(this.input, this.attenuation.input);
-            connect(this.attenuation.output, this.toEarly);
-            connect(this.toEarly, scene.room.early.input);
-            connect(this.attenuation.output, this.directivity.input);
-            connect(this.directivity.output, this.encoder.input);
+            connect$1(this.input, this.toLate);
+            connect$1(this.toLate, scene.room.late.input);
+            connect$1(this.input, this.attenuation.input);
+            connect$1(this.attenuation.output, this.toEarly);
+            connect$1(this.toEarly, scene.room.early.input);
+            connect$1(this.attenuation.output, this.directivity.input);
+            connect$1(this.directivity.output, this.encoder.input);
             // Assign initial conditions.
             this.setPosition(options.position);
             this.input.gain.value = options.gain;
@@ -7114,12 +7194,13 @@
          * Options for constructing a new ResonanceAudio scene.
          */
         constructor(context, options) {
+            this.disposed = false;
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                listenerPosition: copy(create$2(), DEFAULT_POSITION),
-                listenerForward: copy(create$2(), DEFAULT_FORWARD),
-                listenerUp: copy(create$2(), DEFAULT_UP),
+                listenerPosition: copy(create(), DEFAULT_POSITION),
+                listenerForward: copy(create(), DEFAULT_FORWARD),
+                listenerUp: copy(create(), DEFAULT_UP),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND,
@@ -7147,9 +7228,9 @@
             this.ambisonicOutput = context.createGain();
             this.ambisonicInput = this.listener.input;
             // Connect audio graph.
-            connect(this.room.output, this.listener.input);
-            connect(this.listener.output, this.output);
-            connect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            connect$1(this.room.output, this.listener.input);
+            connect$1(this.listener.output, this.output);
+            connect$1(this.listener.ambisonicOutput, this.ambisonicOutput);
         }
         getRenderingMode() {
             return this.listener.getRenderingMode();
@@ -7158,9 +7239,12 @@
             this.listener.setRenderingMode(mode);
         }
         dispose() {
-            disconnect(this.room.output, this.listener.input);
-            disconnect(this.listener.output, this.output);
-            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            if (!this.disposed) {
+                disconnect(this.room.output, this.listener.input);
+                disconnect(this.listener.output, this.output);
+                disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+                this.disposed = true;
+            }
         }
         /**
          * Create a new source for the scene.
@@ -7236,10 +7320,12 @@
          * Creates a new spatializer that uses Google's Resonance Audio library.
          */
         constructor(audioContext, destination, res) {
-            const resNode = res.createSource(undefined);
-            super(audioContext, resNode.input, resNode.output, destination);
+            super(audioContext, destination);
             this.resScene = res;
-            this.resNode = resNode;
+            this.resNode = res.createSource(undefined);
+            this.input = this.resNode.input;
+            this.output = this.resNode.output;
+            connect$1(this.output, this.destination);
             Object.seal(this);
         }
         createNew() {
@@ -7281,6 +7367,8 @@
          * Creates a new audio positioner that uses Google's Resonance Audio library
          */
         constructor(audioContext) {
+            super(audioContext);
+            this.disposed = false;
             const scene = new ResonanceAudio(audioContext, {
                 ambisonicOrder: 1,
                 renderingMode: RenderingMode.Bypass
@@ -7297,16 +7385,19 @@
                 [Direction.Down]: Material.Grass,
                 [Direction.Up]: Material.Transparent,
             });
-            super(audioContext, scene.listener.input, scene.output);
+            this.input = scene.listener.input;
+            this.output = scene.output;
             this.scene = scene;
             Object.seal(this);
         }
         dispose() {
-            if (this.scene) {
-                this.scene.dispose();
-                this.scene = null;
+            if (!this.disposed) {
+                if (this.scene) {
+                    this.scene.dispose();
+                }
+                super.dispose();
+                this.disposed = true;
             }
-            super.dispose();
         }
         /**
          * Performs the spatialization operation for the audio source's latest location.
@@ -7329,16 +7420,18 @@
         }
     }
 
-    const delta$1 = create$2();
+    const delta = create();
     class VolumeScalingNode extends BaseEmitter {
         /**
          * Creates a new spatializer that performs no panning, only distance-based volume scaling
          */
         constructor(audioContext, destination, listener) {
+            super(audioContext, destination);
             const gain = audioContext.createGain();
-            super(audioContext, gain, gain, destination);
+            this.input = this.output = gain;
             this.gain = gain;
             this.listener = listener;
+            connect$1(this.output, this.destination);
             Object.seal(this);
         }
         createNew() {
@@ -7346,8 +7439,8 @@
         }
         update(loc, t) {
             const p = this.listener.pose.p;
-            sub(delta$1, p, loc.p);
-            const distance = length(delta$1);
+            sub(delta, p, loc.p);
+            const distance = length(delta);
             let range = clamp(project(distance, this.minDistance, this.maxDistance), 0, 1);
             if (this.algorithm === "logarithmic") {
                 range = Math.sqrt(range);
@@ -7365,8 +7458,9 @@
          * Creates a new positioner that uses WebAudio's playback dependent time progression.
          */
         constructor(audioContext) {
+            super(audioContext);
             const gain = audioContext.createGain();
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
             this.pose = new Pose();
         }
         /**
@@ -7397,14 +7491,15 @@
          * @param audioContext - the output WebAudio context
          */
         constructor(audioContext, destination) {
-            const panner = audioContext.createPanner();
-            super(audioContext, panner, panner, destination);
-            this.panner = panner;
+            super(audioContext, destination);
+            this.panner = audioContext.createPanner();
             this.panner.panningModel = "HRTF";
             this.panner.distanceModel = "inverse";
             this.panner.coneInnerAngle = 360;
             this.panner.coneOuterAngle = 0;
             this.panner.coneOuterGain = 0;
+            this.input = this.output = this.panner;
+            connect$1(this.output, this.destination);
         }
         copyAudioProperties(from) {
             super.copyAudioProperties(from);
@@ -7464,14 +7559,19 @@
          * Creates a new spatializer that uses WebAudio's PannerNode.
          */
         constructor(audioContext) {
+            super(audioContext);
+            this.disposed2 = false;
             const gain = audioContext.createGain();
             gain.gain.value = 0.75;
-            super(audioContext, gain, gain);
+            this.input = this.output = gain;
             this.listener = audioContext.listener;
         }
         dispose() {
-            this.listener = null;
-            super.dispose();
+            if (!this.disposed2) {
+                this.listener = null;
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
     }
 
@@ -7574,10 +7674,14 @@
         constructor(id, audioContext) {
             super(audioContext);
             this.id = id;
+            this.disposed2 = false;
         }
         dispose() {
-            this.source = null;
-            super.dispose();
+            if (!this.disposed2) {
+                this.source = null;
+                super.dispose();
+                this.disposed2 = true;
+            }
         }
         get spatialized() {
             return !(this.spatializer instanceof NoSpatializationNode);
@@ -7592,7 +7696,7 @@
                 }
                 this._source = v;
                 if (this._source) {
-                    connect(this._source, this.volumeControl);
+                    connect$1(this._source, this.volumeControl);
                 }
             }
         }
@@ -7600,7 +7704,7 @@
             disconnect(this.volumeControl, this.spatializer.input);
         }
         connectSpatializer() {
-            connect(this.volumeControl, this.spatializer.input);
+            connect$1(this.volumeControl, this.spatializer.input);
         }
     }
 
@@ -7616,6 +7720,7 @@
         constructor(id, audioContext, source, spatializer) {
             super(id, audioContext, source, spatializer);
             this.isPlaying = false;
+            this.disposed3 = false;
         }
         async play() {
             this.source.start();
@@ -7626,8 +7731,11 @@
             this.source.stop();
         }
         dispose() {
-            this.stop();
-            super.dispose();
+            if (!this.disposed3) {
+                this.stop();
+                super.dispose();
+                this.disposed3 = true;
+            }
         }
     }
 
@@ -7636,6 +7744,7 @@
             super(id, audioContext, source, spatializer);
             this.counter = 0;
             this.playingSources = new Array();
+            this.disposed3 = false;
         }
         connectSpatializer() {
             // do nothing, this node doesn't play on its own
@@ -7675,8 +7784,11 @@
             arrayClear(this.playingSources);
         }
         dispose() {
-            this.stop();
-            super.dispose();
+            if (!this.disposed3) {
+                this.stop();
+                super.dispose();
+                this.disposed3 = true;
+            }
         }
     }
 
@@ -7684,6 +7796,7 @@
         constructor(id, audioContext, source, spatializer) {
             super(id, audioContext);
             this.isPlaying = false;
+            this.disposed3 = false;
             this.source = source;
             this.spatializer = spatializer;
         }
@@ -7701,10 +7814,13 @@
             this.isPlaying = false;
         }
         dispose() {
-            if (this.source.mediaElement.parentElement) {
-                this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+            if (!this.disposed3) {
+                if (this.source.mediaElement.parentElement) {
+                    this.source.mediaElement.parentElement.removeChild(this.source.mediaElement);
+                }
+                super.dispose();
+                this.disposed3 = false;
             }
-            super.dispose();
         }
     }
 
@@ -7716,7 +7832,7 @@
     }
 
     function BackgroundAudio(autoplay, mute, ...rest) {
-        const elem = Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
+        const elem = Audio(playsInline(true), controls$1(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
         //document.body.appendChild(elem);
         return elem;
     }
@@ -7839,14 +7955,12 @@
         get algorithm() {
             return this._algorithm;
         }
-        addEventListener(type, callback, options = null) {
-            if (type === audioReadyEvt.type
-                && this.ready) {
+        checkAddEventListener(type, callback) {
+            if (type === audioReadyEvt.type && this.ready) {
                 callback(audioReadyEvt);
+                return false;
             }
-            else {
-                super.addEventListener(type, callback, options);
-            }
+            return true;
         }
         get ready() {
             return this.audioContext && this.audioContext.state === "running";
@@ -8005,7 +8119,7 @@
         /**
          * Creates a new sound effect from a series of fallback paths
          * for media files.
-         * @param name - the name of the sound effect, to reference when executing playback.
+         * @param id - the name of the sound effect, to reference when executing playback.
          * @param looping - whether or not the sound effect should be played on loop.
          * @param autoPlaying - whether or not the sound effect should be played immediately.
          * @param spatialize - whether or not the sound effect should be spatialized.
@@ -8013,32 +8127,32 @@
          * @param path - a path for loading the media of the sound effect.
          * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
          */
-        async createClip(name, looping, autoPlaying, spatialize, vol, path, onProgress) {
+        async createClip(id, looping, autoPlaying, spatialize, vol, path, onProgress) {
             if (path == null || path.length === 0) {
                 throw new Error("No clip source path provided");
             }
-            const clip =  await this.createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress)
+            const clip = await this.createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress)
                 ;
             clip.volume = vol;
-            this.clips.set(name, clip);
+            this.clips.set(id, clip);
             return clip;
         }
-        async createAudioElementSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+        async createAudioElementSource(id, looping, autoPlaying, spatialize, path, onProgress) {
             if (onProgress) {
                 onProgress(0, 1);
             }
             const elem = BackgroundAudio(autoPlaying, false);
             const task = once(elem, "canplaythrough");
             elem.loop = looping;
-            elem.src = await this.fetcher.getFile(path, onProgress);
+            elem.src = await this.fetcher.getFile(path, null, onProgress);
             await task;
             const source = this.audioContext.createMediaElementSource(elem);
             if (onProgress) {
                 onProgress(1, 1);
             }
-            return new AudioElementSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+            return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
         }
-        async createAudioBufferSource(name, looping, autoPlaying, spatialize, path, onProgress) {
+        async createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress) {
             let goodBlob = null;
             if (!shouldTry(path)) {
                 if (onProgress) {
@@ -8046,7 +8160,7 @@
                 }
             }
             else {
-                const blob = await this.fetcher.getBlob(path, onProgress);
+                const blob = await this.fetcher.getBlob(path, null, onProgress);
                 if (testAudio.canPlayType(blob.type)) {
                     goodBlob = blob;
                 }
@@ -8059,7 +8173,7 @@
             const source = this.audioContext.createBufferSource();
             source.buffer = data;
             source.loop = looping;
-            const clip = new AudioBufferSpawningSource("audio-clip-" + name, this.audioContext, source, this.createSpatializer(spatialize));
+            const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
             if (autoPlaying) {
                 clip.play();
             }
@@ -8096,6 +8210,14 @@
         getClip(id) {
             return this.clips.get(id);
         }
+        renameClip(id, newID) {
+            const clip = this.clips.get(id);
+            if (clip) {
+                clip.id = "audio-clip-" + id;
+                this.clips.delete(id);
+                this.clips.set(newID, clip);
+            }
+        }
         /**
          * Remove an audio source from audio processing.
          * @param sources - the collection of audio sources from which to remove.
@@ -8107,6 +8229,7 @@
                 sources.delete(id);
                 source.dispose();
             }
+            return source;
         }
         /**
          * Remove a user from audio processing.
@@ -8120,7 +8243,7 @@
          * Remove an audio clip from audio processing.
          **/
         removeClip(id) {
-            this.removeSource(this.clips, id);
+            return this.removeSource(this.clips, id);
         }
         createSourceFromStream(stream) {
             if (useTrackSource) {
@@ -8135,7 +8258,7 @@
                 else {
                     const merger = this.audioContext.createChannelMerger(tracks.length);
                     for (const track of tracks) {
-                        connect(track, merger);
+                        connect$1(track, merger);
                     }
                     return merger;
                 }
@@ -8349,7 +8472,7 @@
         ClientState["Prepairing"] = "prepairing";
         ClientState["Unprepared"] = "unprepaired";
     })(ClientState || (ClientState = {}));
-    const audioActivityEvt$2 = new AudioActivityEvent();
+    const audioActivityEvt = new AudioActivityEvent();
     class Calla extends TypedEventBase {
         constructor(_fetcher, _tele, _meta) {
             super();
@@ -8358,6 +8481,7 @@
             this._meta = _meta;
             this.isAudioMuted = null;
             this.isVideoMuted = null;
+            this.disposed = false;
             const fwd = this.dispatchEvent.bind(this);
             this._tele.addEventListener("serverConnected", fwd);
             this._tele.addEventListener("serverDisconnected", fwd);
@@ -8431,9 +8555,9 @@
                 offsetEvt(evt);
             });
             this.audio.addEventListener("audioActivity", (evt) => {
-                audioActivityEvt$2.id = evt.id;
-                audioActivityEvt$2.isActive = evt.isActive;
-                this.dispatchEvent(audioActivityEvt$2);
+                audioActivityEvt.id = evt.id;
+                audioActivityEvt.isActive = evt.isActive;
+                this.dispatchEvent(audioActivityEvt);
             });
             const dispose = this.dispose.bind(this);
             window.addEventListener("beforeunload", dispose);
@@ -8493,8 +8617,11 @@
             return await this._tele.getVideoInputDevices(filterDuplicates);
         }
         dispose() {
-            this.leave();
-            this.disconnect();
+            if (!this.disposed) {
+                this.leave();
+                this.disconnect();
+                this.disposed = true;
+            }
         }
         get offsetRadius() {
             return this.audio.offsetRadius;
@@ -8624,7 +8751,7 @@
             let f = null;
             let a = null;
             let p = null;
-            if (!isNullOrUndefined(fetcher)
+            if (isDefined(fetcher)
                 && !(fetcher instanceof AudioManager)
                 && !isFunction(fetcher)) {
                 f = fetcher;
@@ -8635,7 +8762,7 @@
             if (fetcher instanceof AudioManager) {
                 a = fetcher;
             }
-            else if (!isNullOrUndefined(audio)
+            else if (isDefined(audio)
                 && !isFunction(audio)) {
                 a = audio;
             }
@@ -8670,7 +8797,7 @@
         async _load(fetcher, onProgress) {
             if (!this.loaded) {
                 console.info("Connecting to:", this.host);
-                const progs = splitProgress(onProgress, 2);
+                const progs = splitProgress(onProgress, [1, 3]);
                 await fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
                 await fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
                 {
@@ -8703,7 +8830,7 @@
     /**
      * Pick a value that is proportionally between two values.
      */
-    function lerp$1(a, b, p) {
+    function lerp(a, b, p) {
         return (1 - p) * a + p * b;
     }
 
@@ -8723,7 +8850,7 @@
         set(t, dt) {
             this.t = t;
             this.dt = dt;
-            this.sdt = lerp$1(this.sdt, dt, 0.01);
+            this.sdt = lerp(this.sdt, dt, 0.01);
         }
     }
     class BaseTimer extends TypedEventBase {
@@ -8801,74 +8928,10 @@
     const JVB_HOST = JITSI_HOST;
     const JVB_MUC = "conference." + JITSI_HOST;
 
-    function getTestNumber() {
-        if ("location" in globalThis) {
-            const loc = new URL(globalThis.location.href);
-            const testNumber = loc.searchParams.get("testUserNumber");
-            return testNumber;
-        }
-        else {
-            return null;
-        }
-    }
-    /**
-     * The test instance value that the current window has loaded. This is
-     * figured out either from a number in the query string parameter "testUserNumber",
-     * or the default value of 1.
-     **/
-    function getUserNumber() {
-        const testNumber = getTestNumber();
-        return !isNullOrUndefined(testNumber)
-            ? parseInt(testNumber, 10)
-            : 1;
-    }
-
-    const windows = [];
-    if ("window" in globalThis) {
-        // Closes all the windows.
-        window.addEventListener("unload", () => {
-            for (const w of windows) {
-                w.close();
-            }
-        });
-    }
-    /**
-     * Opens a window that will be closed when the window that opened it is closed.
-     * @param href - the location to load in the window
-     * @param x - the screen position horizontal component
-     * @param y - the screen position vertical component
-     * @param width - the screen size horizontal component
-     * @param height - the screen size vertical component
-     */
-    function openWindow(href, x, y, width, height) {
-        if ("window" in globalThis) {
-            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-            if (w) {
-                windows.push(w);
-            }
-        }
-        else {
-            throw new Error("Cannot open a window from a Worker.");
-        }
-    }
-    /**
-     * Opens a new window with a query string parameter that can be used to differentiate different test instances.
-     **/
-    function openSideTest() {
-        if ("window" in globalThis) {
-            const loc = new URL(location.href);
-            loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
-            openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
-        }
-        else {
-            throw new Error("Cannot open a window from a Worker.");
-        }
-    }
-
     // Chromium-based browsers give the user the option of changing
     // Gets all the named elements in the document so we can
     // setup event handlers on them.
-    const controls$1 = {
+    const controls = {
         roomName: document.getElementById("roomName"),
         userName: document.getElementById("userName"),
         connect: document.getElementById("connect"),
@@ -8902,9 +8965,9 @@
      * We need a "user gesture" to create AudioContext objects. The user clicking
      * on the login button is the most natural place for that.
      **/
-    async function connect$1() {
-        const roomName = controls$1.roomName.value;
-        const userName = controls$1.userName.value;
+    async function connect() {
+        const roomName = controls.roomName.value;
+        const userName = controls.userName.value;
         // Validate the user input values...
         let message = "";
         if (roomName.length === 0) {
@@ -8918,9 +8981,9 @@
             alert(message);
             return;
         }
-        controls$1.roomName.disabled = true;
-        controls$1.userName.disabled = true;
-        controls$1.connect.disabled = true;
+        controls.roomName.disabled = true;
+        controls.userName.disabled = true;
+        controls.connect.disabled = true;
         // and start the connection.
         await client.join(roomName);
         await client.identify(userName);
@@ -8932,15 +8995,15 @@
     function startGame(id, pose) {
         // Enable the leave button once the user has connected
         // to a conference.
-        controls$1.leave.disabled = false;
+        controls.leave.disabled = false;
         // Start the renderer
         timer.start();
         // Create a user graphic for the local user.
-        addUser(id, controls$1.userName.value, pose, true);
+        addUser(id, controls.userName.value, pose, true);
         // For testing purposes, we place the user at a random location 
         // on the page. Ideally, you'd have a starting location for users
         // so you could design a predictable onboarding path for them.
-        setPosition(Math.random() * (controls$1.space.clientWidth - 100) + 50, Math.random() * (controls$1.space.clientHeight - 100) + 50);
+        setPosition(Math.random() * (controls.space.clientWidth - 100) + 50, Math.random() * (controls.space.clientHeight - 100) + 50);
     }
     /**
      * Create the graphic for a new user.
@@ -8953,7 +9016,7 @@
         }
         user = new User(id, displayName, pose, isLocal);
         users.set(id, user);
-        controls$1.space.append(user.container);
+        controls.space.append(user.container);
         if (!isLocal) {
             const local = users.get(client.localUserID);
             if (local) {
@@ -9130,11 +9193,11 @@
         }
     }
     // =========== BEGIN Wire up events ================
-    controls$1.connect.addEventListener("click", connect$1);
-    controls$1.leave.addEventListener("click", leave);
-    controls$1.space.addEventListener("click", (evt) => {
-        const x = evt.clientX - controls$1.space.offsetLeft;
-        const y = evt.clientY - controls$1.space.offsetTop;
+    controls.connect.addEventListener("click", connect);
+    controls.leave.addEventListener("click", leave);
+    controls.space.addEventListener("click", (evt) => {
+        const x = evt.clientX - controls.space.offsetLeft;
+        const y = evt.clientY - controls.space.offsetTop;
         setPosition(x, y);
     });
     client.addEventListener("conferenceJoined", (evt) => startGame(evt.id, evt.pose));
@@ -9145,8 +9208,8 @@
     client.addEventListener("conferenceLeft", (evt) => {
         removeUser(evt.id);
         timer.stop();
-        controls$1.leave.disabled = true;
-        controls$1.connect.disabled = false;
+        controls.leave.disabled = true;
+        controls.connect.disabled = false;
     });
     client.addEventListener("participantJoined", (evt) => addUser(evt.id, evt.displayName, evt.source.pose, false));
     client.addEventListener("participantLeft", (evt) => removeUser(evt.id));
@@ -9202,16 +9265,16 @@
         // Chromium is pretty much the only browser that can change
         // audio outputs at this time, so disable the control if we
         // detect there is no option to change outputs.
-        controls$1.speakers.disabled = !canChangeAudioOutput;
+        controls.speakers.disabled = !canChangeAudioOutput;
         client = await loader.load();
         await client.getMediaPermissions();
-        deviceSelector(true, controls$1.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
-        deviceSelector(true, controls$1.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
-        deviceSelector(false, controls$1.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
+        deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
+        deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
+        deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
         await client.connect();
         // At this point, everything is ready, so we can let 
         // the user attempt to connect to the conference now.
-        controls$1.connect.disabled = false;
+        controls.connect.disabled = false;
     })();
     const sideTest = document.getElementById("sideTest");
     const userNumber = getUserNumber();
@@ -9221,8 +9284,8 @@
     else {
         sideTest.style.display = "none";
     }
-    controls$1.roomName.value = "TestRoom";
-    controls$1.userName.value = `TestUser${userNumber}`;
+    controls.roomName.value = "TestRoom";
+    controls.userName.value = `TestUser${userNumber}`;
     window.client = client;
 
 }());
