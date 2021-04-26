@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { sleep } from "kudzu/events/sleep";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
@@ -70,7 +69,7 @@ export abstract class BaseMetadataClient
         this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    setAvatarEmoji(emoji: Emoji): void {
+    setAvatarEmoji(emoji: string): void {
         this.callImmediate("setAvatarEmoji", emoji);
     }
 
@@ -78,7 +77,7 @@ export abstract class BaseMetadataClient
         this.callImmediate("avatarChanged", url);
     }
 
-    emote(emoji: Emoji): void {
+    emote(emoji: string): void {
         this.callImmediate("emote", emoji);
     }
 

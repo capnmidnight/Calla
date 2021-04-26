@@ -140,12 +140,13 @@ export class Game extends TypedEventBase {
                     this.dispatchEvent(emojiNeededEvt);
                 }
                 else {
-                    emoteEvt.emoji = this.currentEmoji = emoji;
+                    this.currentEmoji = emoji;
+                    emoteEvt.emoji = emoji.value;
                     this.dispatchEvent(emoteEvt);
                 }
             }
             if (emoji) {
-                this.emotes.push(new Emote(emoji, user.x, user.y));
+                this.emotes.push(new Emote(emoji.value, user.x, user.y));
             }
         }
     }

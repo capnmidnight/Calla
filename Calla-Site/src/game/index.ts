@@ -182,7 +182,7 @@ function refreshUser(userID: string) {
     options.addEventListener("selectAvatar", async () => {
         await withEmojiSelection((e) => {
             settings.avatarEmoji = e.value;
-            client.setAvatarEmoji(e);
+            client.setAvatarEmoji(e.value);
             game.me.setAvatarEmoji(e.value);
             refreshUser(client.localUserID);
         });
@@ -273,7 +273,7 @@ function refreshUser(userID: string) {
 
         settings.avatarEmoji = settings.avatarEmoji || people.random().value;
         rawGameStartEmoji.value = settings.avatarEmoji;
-        client.setAvatarEmoji(rawGameStartEmoji);
+        client.setAvatarEmoji(settings.avatarEmoji);
         game.me.setAvatarEmoji(settings.avatarEmoji);
 
         refreshUser(client.localUserID);

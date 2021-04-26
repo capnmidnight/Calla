@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEvent } from "kudzu/events/EventBase";
 import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
@@ -8,7 +7,7 @@ import type { TileMap } from "./TileMap";
 const EMOJI_LIFE = 3;
 
 export class EmoteEvent extends TypedEvent<"emote"> {
-    constructor(public emoji: Emoji) {
+    constructor(public emoji: string) {
         super("emote");
     }
 }
@@ -21,12 +20,12 @@ export class Emote {
     width = -1;
     emoteText: TextImage = null;
 
-    constructor(public emoji: Emoji, public x: number, public y: number) {
+    constructor(public emoji: string, public x: number, public y: number) {
         this.dx = Math.random() - 0.5;
         this.dy = -Math.random() * 0.5 - 0.5;
         this.emoteText = new TextImage();
         this.emoteText.fontFamily = "Noto Color Emoji";
-        this.emoteText.value = emoji.value;
+        this.emoteText.value = emoji;
     }
 
     isDead() {

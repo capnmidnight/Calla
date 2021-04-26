@@ -258,7 +258,7 @@
         onDispatching(_evt) { }
     }
 
-    function add$2(a, b) {
+    function add(a, b) {
         return async (v) => {
             await a(v);
             await b(v);
@@ -276,20 +276,20 @@
             const remove = () => {
                 target.removeEventListener(resolveEvt, resolve);
             };
-            resolve = add$2(remove, resolve);
-            reject = add$2(remove, reject);
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
             if (isString(rejectEvt)) {
                 const rejectEvt2 = rejectEvt;
                 const remove = () => {
                     target.removeEventListener(rejectEvt2, reject);
                 };
-                resolve = add$2(remove, resolve);
-                reject = add$2(remove, reject);
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
             }
             if (hasTimeout) {
                 const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add$2(cancel, resolve);
-                reject = add$2(cancel, reject);
+                resolve = add(cancel, resolve);
+                reject = add(cancel, reject);
             }
             target.addEventListener(resolveEvt, resolve);
             if (isString(rejectEvt)) {
@@ -404,7 +404,7 @@
     /**
      * Indicates whether the browser should show playback controls to the user.
       **/
-    function controls$1(value) { return new Attr("controls", value, "audio", "video"); }
+    function controls(value) { return new Attr("controls", value, "audio", "video"); }
     /**
      * Indicates whether the user can interact with the element.
       **/
@@ -1688,7 +1688,7 @@
     }
     window.printGraph = print;
 
-    const audioActivityEvt$2 = new AudioActivityEvent();
+    const audioActivityEvt = new AudioActivityEvent();
     const activityCounterMin = 0;
     const activityCounterMax = 60;
     const activityCounterThresh = 5;
@@ -1755,9 +1755,9 @@
                 const isActive = this.activityCounter > activityCounterThresh;
                 if (this.wasActive !== isActive) {
                     this.wasActive = isActive;
-                    audioActivityEvt$2.id = this.id;
-                    audioActivityEvt$2.isActive = isActive;
-                    this.dispatchEvent(audioActivityEvt$2);
+                    audioActivityEvt.id = this.id;
+                    audioActivityEvt.isActive = isActive;
+                    this.dispatchEvent(audioActivityEvt);
                 }
             }
         }
@@ -1790,7 +1790,7 @@
      * @returns {mat3} a new 3x3 matrix
      */
 
-    function create$2() {
+    function create() {
       var out = new ARRAY_TYPE(9);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -1823,7 +1823,7 @@
      * @returns {mat3} out
      */
 
-    function set$2(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    function set(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
       out[0] = m00;
       out[1] = m01;
       out[2] = m02;
@@ -1944,7 +1944,7 @@
      * @returns {vec3} a new 3D vector
      */
 
-    function create() {
+    function create$2() {
       var out = new ARRAY_TYPE(3);
 
       if (ARRAY_TYPE != Float32Array) {
@@ -1992,7 +1992,7 @@
      * @returns {vec3} out
      */
 
-    function set(out, x, y, z) {
+    function set$2(out, x, y, z) {
       out[0] = x;
       out[1] = y;
       out[2] = z;
@@ -2007,7 +2007,7 @@
      * @returns {vec3} out
      */
 
-    function add(out, a, b) {
+    function add$2(out, a, b) {
       out[0] = a[0] + b[0];
       out[1] = a[1] + b[1];
       out[2] = a[2] + b[2];
@@ -2109,7 +2109,7 @@
      * @returns {vec3} out
      */
 
-    function lerp$1(out, a, b, t) {
+    function lerp(out, a, b, t) {
       var ax = a[0];
       var ay = a[1];
       var az = a[2];
@@ -2151,7 +2151,7 @@
      */
 
     (function () {
-      var vec = create();
+      var vec = create$2();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
 
@@ -2205,18 +2205,18 @@
          **/
         constructor() {
             this.t = 0;
-            this.p = create();
-            this.f = set(create(), 0, 0, -1);
-            this.u = set(create(), 0, 1, 0);
+            this.p = create$2();
+            this.f = set$2(create$2(), 0, 0, -1);
+            this.u = set$2(create$2(), 0, 1, 0);
             Object.seal(this);
         }
         /**
          * Sets the components of the pose.
          */
         set(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            set(this.p, px, py, pz);
-            set(this.f, fx, fy, fz);
-            set(this.u, ux, uy, uz);
+            set$2(this.p, px, py, pz);
+            set$2(this.f, fx, fy, fz);
+            set$2(this.u, ux, uy, uz);
         }
         /**
          * Copies the components of another pose into this pose.
@@ -2240,9 +2240,9 @@
             else if (start.t < t) {
                 const p = project(t, start.t, end.t);
                 this.copy(start);
-                lerp$1(this.p, this.p, end.p, p);
-                lerp$1(this.f, this.f, end.f, p);
-                lerp$1(this.u, this.u, end.u, p);
+                lerp(this.p, this.p, end.p, p);
+                lerp(this.f, this.f, end.f, p);
+                lerp(this.u, this.u, end.u, p);
                 normalize(this.f, this.f);
                 normalize(this.u, this.u);
                 this.t = t;
@@ -2250,7 +2250,7 @@
         }
     }
 
-    const delta$1 = create();
+    const delta = create$2();
     const k = 2;
     /**
      * A position value that is blended from the current position to
@@ -2261,27 +2261,27 @@
             this.start = new Pose();
             this.current = new Pose();
             this.end = new Pose();
-            this.offset = create();
+            this.offset = create$2();
         }
         /**
          * Set the target comfort offset for the time `t + dt`.
          */
         setOffset(ox, oy, oz) {
-            set(delta$1, ox, oy, oz);
-            sub(delta$1, delta$1, this.offset);
-            add(this.start.p, this.start.p, delta$1);
-            add(this.current.p, this.current.p, delta$1);
-            add(this.end.p, this.end.p, delta$1);
+            set$2(delta, ox, oy, oz);
+            sub(delta, delta, this.offset);
+            add$2(this.start.p, this.start.p, delta);
+            add$2(this.current.p, this.current.p, delta);
+            add$2(this.end.p, this.end.p, delta);
             scale(this.start.f, this.start.f, k);
-            add(this.start.f, this.start.f, delta$1);
+            add$2(this.start.f, this.start.f, delta);
             normalize(this.start.f, this.start.f);
             scale(this.current.f, this.current.f, k);
-            add(this.current.f, this.current.f, delta$1);
+            add$2(this.current.f, this.current.f, delta);
             normalize(this.current.f, this.current.f);
             scale(this.end.f, this.end.f, k);
-            add(this.end.f, this.end.f, delta$1);
+            add$2(this.end.f, this.end.f, delta);
             normalize(this.end.f, this.end.f);
-            set(this.offset, ox, oy, oz);
+            set$2(this.offset, ox, oy, oz);
         }
         /**
          * Set the target position and orientation for the time `t + dt`.
@@ -3753,10 +3753,10 @@
      * Maximum outside-the-room distance to attenuate far-field sources by.
      */
     const SOURCE_MAX_OUTSIDE_ROOM_DISTANCE = 1;
-    const DEFAULT_POSITION = zero(create());
-    const DEFAULT_FORWARD = set(create(), 0, 0, -1);
-    const DEFAULT_UP = set(create(), 0, 1, 0);
-    set(create(), 1, 0, 0);
+    const DEFAULT_POSITION = zero(create$2());
+    const DEFAULT_FORWARD = set$2(create$2(), 0, 0, -1);
+    const DEFAULT_UP = set$2(create$2(), 0, 1, 0);
+    set$2(create$2(), 1, 0, 0);
     const DEFAULT_SPEED_OF_SOUND = 343;
     /**
      * Default rolloff model ('logarithmic').
@@ -3995,7 +3995,7 @@
     /**
      * ResonanceAudio library logging function.
      */
-    const log$1 = function (...args) {
+    const log = function (...args) {
         window.console.log.apply(window.console, [
             '%c[ResonanceAudio]%c '
                 + args.join(' ') + ' %c(@'
@@ -4080,15 +4080,15 @@
          */
         static validateAmbisonicOrder(ambisonicOrder) {
             if (isNaN(ambisonicOrder) || ambisonicOrder == null) {
-                log$1('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
+                log('Error: Invalid ambisonic order', ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder < 1) {
-                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
+                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Min order is 1)', '\nUsing min order instead.');
                 ambisonicOrder = 1;
             }
             else if (ambisonicOrder > SPHERICAL_HARMONICS_MAX_ORDER) {
-                log$1('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
+                log('Error: Unable to render ambisonic order', ambisonicOrder, '(Max order is', SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
                 ambisonicOrder = SPHERICAL_HARMONICS_MAX_ORDER;
             }
             return ambisonicOrder;
@@ -4205,7 +4205,7 @@
      * Omnitone library logging function.
      * @param Message to be printed out.
      */
-    function log(...rest) {
+    function log$1(...rest) {
         const message = `[Omnitone] ${rest.join(' ')}`;
         window.console.log(message);
     }
@@ -4558,7 +4558,7 @@
             this._outX.gain.value = -1;
             this._outY.gain.value = -1;
             this._outZ.gain.value = -1;
-            this.setRotationMatrix3(identity(create$2()));
+            this.setRotationMatrix3(identity(create()));
             // input/output proxy.
             this.input = this._splitter;
             this.output = this._merger;
@@ -4641,20 +4641,20 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set$2(rotationMatrix3$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
-            return rotationMatrix3$1;
+            set(rotationMatrix3, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value);
+            return rotationMatrix3;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4$1, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4$1;
+            set$1(rotationMatrix4, this._m0.gain.value, this._m1.gain.value, this._m2.gain.value, 0, this._m3.gain.value, this._m4.gain.value, this._m5.gain.value, 0, this._m6.gain.value, this._m7.gain.value, this._m8.gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4;
         }
     }
-    const rotationMatrix3$1 = create$2();
-    const rotationMatrix4$1 = create$1();
+    const rotationMatrix3 = create();
+    const rotationMatrix4 = create$1();
 
     /**
      * @license
@@ -4841,7 +4841,7 @@
          */
         setChannelMap(channelMap) {
             if (channelMap.toString() !== this.config.channelMap.toString()) {
-                log('Remapping channels ([' + this.config.channelMap.toString() +
+                log$1('Remapping channels ([' + this.config.channelMap.toString() +
                     '] -> [' + channelMap.toString() + ']).');
                 if (channelMap instanceof Array) {
                     this.config.channelMap = channelMap.slice();
@@ -5237,13 +5237,13 @@
     function computeUVWCoeff(m, n, l) {
         const d = getKroneckerDelta(m, 0);
         const reciprocalDenominator = Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
-        set(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
+        set$2(UVWCoeff, Math.sqrt((l + m) * (l - m) * reciprocalDenominator), 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
             (l + Math.abs(m) - 1) *
             (l + Math.abs(m)) *
             reciprocalDenominator), -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) * reciprocalDenominator);
         return UVWCoeff;
     }
-    const UVWCoeff = create();
+    const UVWCoeff = create$2();
     /**
      * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
      * This uses the matrices computed for band 1 and band l-1 to compute the
@@ -5355,7 +5355,7 @@
             // W-channel is not involved in rotation, skip straight to ouput.
             connect(this._splitter, this._merger, 0, 0);
             // Default Identity matrix.
-            this.setRotationMatrix3(identity(create$2()));
+            this.setRotationMatrix3(identity(create()));
             // Input/Output proxy.
             this.input = this._splitter;
             this.output = this._merger;
@@ -5424,16 +5424,16 @@
          * @return A 3x3 rotation matrix. (column-major)
          */
         getRotationMatrix3() {
-            set$2(rotationMatrix3, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
-            return rotationMatrix3;
+            set(rotationMatrix3$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value);
+            return rotationMatrix3$1;
         }
         /**
          * Returns the current 4x4 rotation matrix.
          * @return A 4x4 rotation matrix. (column-major)
          */
         getRotationMatrix4() {
-            set$1(rotationMatrix4, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
-            return rotationMatrix4;
+            set$1(rotationMatrix4$1, this._gainNodeMatrix[0][0].gain.value, this._gainNodeMatrix[0][1].gain.value, this._gainNodeMatrix[0][2].gain.value, 0, this._gainNodeMatrix[0][3].gain.value, this._gainNodeMatrix[0][4].gain.value, this._gainNodeMatrix[0][5].gain.value, 0, this._gainNodeMatrix[0][6].gain.value, this._gainNodeMatrix[0][7].gain.value, this._gainNodeMatrix[0][8].gain.value, 0, 0, 0, 0, 1);
+            return rotationMatrix4$1;
         }
         /**
          * Get the current ambisonic order.
@@ -5442,8 +5442,8 @@
             return this._ambisonicOrder;
         }
     }
-    const rotationMatrix3 = create$2();
-    const rotationMatrix4 = create$1();
+    const rotationMatrix3$1 = create();
+    const rotationMatrix4$1 = create$1();
 
     var SOAHrirBase64 = [
         "UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wQA8/8ZAPr/DAD+/wMA/v8KAAQA/f8DAAMABADs//z/8v/z/8f/R/90/ob+//zAAWsDAwY3DKn9//tu93DvkwI6An4CuwJ0/BH7VPux92X0Gu7N/EX9mgfqCkkIiRMgBd4NQQGL/c0G/xBxAKELZATUA/sIHRSx+fkCyAUmBNEJIARlAdHz2AjNACcIsAW4AlECsvtJ/P/7K/tf++n8aP4W+g0FXAElAMn8nQHn/sT+Zv7N+9X2xvzM/O3+EvpqBBD7SQLd+vb/sPlw/JD72/3n+Rr+L/wS/vz6UQGg/Nf+Av5L/5X9Gv2//SP+mf3j/lf+v/2B/ZH/5P05/iL9MP9F/uf9UP4v/qv9mv7o/Xn+wP2k/8L+uP5J/tD+Dv/Y/bL+mP72/n3+pP+7/hAA+/5zAGH+Z/+u/g8Azv2y/6L+//9o/iIADP8VACz/CwCN/pb/1v4yAFP+wf+4/jsAcf5VAP3+bADa/nMA6f4sAOT+IQBd/v7/7v6aAIL+QADe/nEA0P4yAKz+CQCo/moAuf5xAN7+mAC8/jcANf9eAPX+IAA1/1kAAP9hAMz+PQD5/m0A2/4gAPr+UQDh/jQAEv9BAPH+FABN/zkASv9DADP/BABe/1IAGf8oAE3/RQAw/zIAQf8mADn/GgBE/xIAR/8hAD7/BABy/zEAKP/0/07/GwBX/z4ARf8mAFr/QQBV/zUAVP8eAFz/JABt/0EAUP8MAHz/KgBr/ycAYv8EAH3/MABl/x8Agv8bAIj/GgBv//z/ff8AAJX/IABu/+T/jv/r/4z/9/9n/77/pP8JAJD/EQCJ//r/q/8WAJ//GQCU/xYAtv8qAKr/PQCW/ysAwf8+ALb/OgC3/ygAz/8uAM7/OgDH/ygAz/8kAMz/OgC//xsA1f8qAMn/LwDN/xcA1f8oAMv/JQDR/xMAzf8bAM//HgDU/wUA2v8ZANL/EwDW/wEA1f8ZAMz/BwDX/wIA0v8SANT/BQDW/wMA0/8PANT/AADY/wIA1f8MANX/+f/a/wUA0v8IANf/+//Y/wUA0/8DANr/+f/Y/wQA1v8BANr/+f/Z/wUA1//8/9z/+v/Y/wYA2f/8/93//v/Y/wUA2v/9/93////Z/wUA3P/8/97/AgDa/wMA3v/8/97/AwDb/wIA3//9/97/BADd/wEA4f///9//BQDf/wAA4v8AAN//BQDf/wAA4/8CAN//BADh/wAA4/8DAOD/BADi////4/8DAOH/AwDk/wAA5P8FAOL/AgDl/wEA5P8FAOL/AQDl/wEA4/8EAOL/AQDj/wIA4P8DAN//AADg/wIA3v8CAOD/AADh/wEA4v8AAOP/AADm/wAA6P8AAOz/AADu/wAA",
@@ -5496,7 +5496,7 @@
                 renderingMode: RenderingMode.Ambisonic,
             }, options);
             if (!SupportedAmbisonicOrder.includes(this.config.ambisonicOrder)) {
-                log('HOARenderer: Invalid ambisonic order. (got ' +
+                log$1('HOARenderer: Invalid ambisonic order. (got ' +
                     this.config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
                 this.config.ambisonicOrder = Math.max(2, Math.min(3, this.config.ambisonicOrder));
             }
@@ -5669,14 +5669,14 @@
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                position: copy(create(), DEFAULT_POSITION),
-                forward: copy(create(), DEFAULT_FORWARD),
-                up: copy(create(), DEFAULT_UP),
+                position: copy(create$2(), DEFAULT_POSITION),
+                forward: copy(create$2(), DEFAULT_FORWARD),
+                up: copy(create$2(), DEFAULT_UP),
                 renderingMode: DEFAULT_RENDERING_MODE
             }, options);
             // Member variables.
-            this.position = create();
-            this.tempMatrix3 = create$2();
+            this.position = create$2();
+            this.tempMatrix3 = create();
             // Select the appropriate HRIR filters using 2-channel chunks since
             // multichannel audio is not yet supported by a majority of browsers.
             this.ambisonicOrder =
@@ -5735,13 +5735,13 @@
             copy(F, forward);
             copy(U, up);
             cross(R, F, U);
-            set$2(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
+            set(this.tempMatrix3, R[0], R[1], R[2], U[0], U[1], U[2], -F[0], -F[1], -F[2]);
             this.renderer.setRotationMatrix3(this.tempMatrix3);
         }
     }
-    const F = create();
-    const U = create();
-    const R = create();
+    const F = create$2();
+    const U = create$2();
+    const R = create$2();
 
     /**
      * @license
@@ -5766,7 +5766,7 @@
          * Ray-tracing-based early reflections model.
          */
         constructor(context, options) {
-            this.listenerPosition = copy(create(), DEFAULT_POSITION);
+            this.listenerPosition = copy(create$2(), DEFAULT_POSITION);
             this.speedOfSound = DEFAULT_SPEED_OF_SOUND;
             this.coefficients = {
                 left: DEFAULT_REFLECTION_COEFFICIENTS.left,
@@ -6042,7 +6042,7 @@
          */
         setDurations(durations) {
             if (durations.length !== NUMBER_REVERB_FREQUENCY_BANDS) {
-                log$1('Warning: invalid number of RT60 values provided to reverb.');
+                log('Warning: invalid number of RT60 values provided to reverb.');
                 return;
             }
             // Compute impulse response.
@@ -6160,7 +6160,7 @@
                     ROOM_MATERIAL_COEFFICIENTS[materials[property]];
             }
             else {
-                log$1('Material \"' + materials[property] + '\" on wall \"' +
+                log('Material \"' + materials[property] + '\" on wall \"' +
                     property + '\" not found. Using \"' +
                     DEFAULT_ROOM_MATERIALS[property] + '\".');
             }
@@ -6294,7 +6294,7 @@
         constructor(context, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                listenerPosition: copy(create(), DEFAULT_POSITION),
+                listenerPosition: copy(create$2(), DEFAULT_POSITION),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND
@@ -6484,8 +6484,8 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    const forwardNorm = create();
-    const directionNorm = create();
+    const forwardNorm = create$2();
+    const directionNorm = create$2();
     /**
      * Directivity/occlusion filter.
      **/
@@ -6542,7 +6542,7 @@
             this.alpha = Math.min(1, Math.max(0, alpha));
             this.sharpness = Math.max(1, sharpness);
             // Update angle calculation using new values.
-            this.computeAngle(set(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set(directionNorm, 1, 0, 0));
+            this.computeAngle(set$2(forwardNorm, this.cosTheta * this.cosTheta, 0, 0), set$2(directionNorm, 1, 0, 0));
         }
     }
 
@@ -6590,9 +6590,9 @@
         constructor(scene, options) {
             // Use defaults for undefined arguments.
             options = Object.assign({
-                position: copy(create(), DEFAULT_POSITION),
-                forward: copy(create(), DEFAULT_FORWARD),
-                up: copy(create(), DEFAULT_UP),
+                position: copy(create$2(), DEFAULT_POSITION),
+                forward: copy(create$2(), DEFAULT_FORWARD),
+                up: copy(create$2(), DEFAULT_UP),
                 minDistance: DEFAULT_MIN_DISTANCE,
                 maxDistance: DEFAULT_MAX_DISTANCE,
                 rolloff: DEFAULT_ATTENUATION_ROLLOFF,
@@ -6606,8 +6606,8 @@
             this.position = options.position;
             this.forward = options.forward;
             this.up = options.up;
-            this.dx = create();
-            this.right = create();
+            this.dx = create$2();
+            this.right = create$2();
             cross(this.right, this.forward, this.up);
             // Create audio nodes.
             let context = scene.context;
@@ -6768,9 +6768,9 @@
             // Use defaults for undefined arguments.
             options = Object.assign({
                 ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-                listenerPosition: copy(create(), DEFAULT_POSITION),
-                listenerForward: copy(create(), DEFAULT_FORWARD),
-                listenerUp: copy(create(), DEFAULT_UP),
+                listenerPosition: copy(create$2(), DEFAULT_POSITION),
+                listenerForward: copy(create$2(), DEFAULT_FORWARD),
+                listenerUp: copy(create$2(), DEFAULT_UP),
                 dimensions: Object.assign({}, options.dimensions, DEFAULT_ROOM_DIMENSIONS),
                 materials: Object.assign({}, options.materials, DEFAULT_ROOM_MATERIALS),
                 speedOfSound: DEFAULT_SPEED_OF_SOUND,
@@ -6990,7 +6990,7 @@
         }
     }
 
-    const delta = create();
+    const delta$1 = create$2();
     class VolumeScalingNode extends BaseEmitter {
         /**
          * Creates a new spatializer that performs no panning, only distance-based volume scaling
@@ -7009,8 +7009,8 @@
         }
         update(loc, t) {
             const p = this.listener.pose.p;
-            sub(delta, p, loc.p);
-            const distance = length(delta);
+            sub(delta$1, p, loc.p);
+            const distance = length(delta$1);
             let range = clamp(project(distance, this.minDistance, this.maxDistance), 0, 1);
             if (this.algorithm === "logarithmic") {
                 range = Math.sqrt(range);
@@ -7409,7 +7409,7 @@
     }
 
     function BackgroundAudio(autoplay, mute, ...rest) {
-        const elem = Audio(playsInline(true), controls$1(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
+        const elem = Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
         //document.body.appendChild(elem);
         return elem;
     }
@@ -8597,7 +8597,7 @@
         ClientState["Prepairing"] = "prepairing";
         ClientState["Unprepared"] = "unprepaired";
     })(ClientState || (ClientState = {}));
-    const audioActivityEvt = new AudioActivityEvent();
+    const audioActivityEvt$2 = new AudioActivityEvent();
     class Calla extends TypedEventBase {
         constructor(_fetcher, _tele, _meta) {
             super();
@@ -8680,9 +8680,9 @@
                 offsetEvt(evt);
             });
             this.audio.addEventListener("audioActivity", (evt) => {
-                audioActivityEvt.id = evt.id;
-                audioActivityEvt.isActive = evt.isActive;
-                this.dispatchEvent(audioActivityEvt);
+                audioActivityEvt$2.id = evt.id;
+                audioActivityEvt$2.isActive = evt.isActive;
+                this.dispatchEvent(audioActivityEvt$2);
             });
             const dispose = this.dispose.bind(this);
             window.addEventListener("beforeunload", dispose);
@@ -13925,7 +13925,7 @@
     /**
      * Pick a value that is proportionally between two values.
      */
-    function lerp(a, b, p) {
+    function lerp$1(a, b, p) {
         return (1 - p) * a + p * b;
     }
 
@@ -13945,7 +13945,7 @@
         set(t, dt) {
             this.t = t;
             this.dt = dt;
-            this.sdt = lerp(this.sdt, dt, 0.01);
+            this.sdt = lerp$1(this.sdt, dt, 0.01);
         }
     }
     class BaseTimer extends TypedEventBase {
@@ -14144,20 +14144,20 @@
     function isLockable(obj) {
         return isFunction(obj.setLocked);
     }
-    const disabler$4 = disabled(true), enabler$4 = disabled(false);
+    const disabler = disabled(true), enabler = disabled(false);
     function setLocked(target, value) {
         if (isLockable(target)) {
             target.setLocked(value);
         }
         else if (value) {
-            disabler$4.apply(target);
+            disabler.apply(target);
         }
         else {
-            enabler$4.apply(target);
+            enabler.apply(target);
         }
     }
 
-    const toggleOptionsEvt = new TypedEvent("toggleOptions"), tweetEvt = new TypedEvent("tweet"), leaveEvt = new TypedEvent("leave"), toggleFullscreenEvt = new TypedEvent("toggleFullscreen"), toggleInstructionsEvt = new TypedEvent("toggleInstructions"), toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"), toggleAudioEvt$1 = new TypedEvent("toggleAudio"), toggleVideoEvt$2 = new TypedEvent("toggleVideo"), changeDevicesEvt = new TypedEvent("changeDevices"), emoteEvt$1 = new TypedEvent("emote"), selectEmojiEvt = new TypedEvent("selectEmoji"), zoomChangedEvt$1 = new TypedEvent("zoomChanged");
+    const toggleOptionsEvt = new TypedEvent("toggleOptions"), tweetEvt = new TypedEvent("tweet"), leaveEvt = new TypedEvent("leave"), toggleFullscreenEvt = new TypedEvent("toggleFullscreen"), toggleInstructionsEvt = new TypedEvent("toggleInstructions"), toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), changeDevicesEvt = new TypedEvent("changeDevices"), emoteEvt = new TypedEvent("emote"), selectEmojiEvt = new TypedEvent("selectEmoji"), zoomChangedEvt = new TypedEvent("zoomChanged");
     class ButtonLayer extends TypedEventBase {
         constructor(zoomMin, zoomMax) {
             super();
@@ -14165,10 +14165,10 @@
             this._videoEnabled = false;
             const changeZoom = (dz) => {
                 this.zoom += dz;
-                this.dispatchEvent(zoomChangedEvt$1);
+                this.dispatchEvent(zoomChangedEvt);
             };
             this.element = Div(id("controls"));
-            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt$1)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt$2)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt$1)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt$1)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
             Object.seal(this);
         }
         get isFullscreen() {
@@ -14329,8 +14329,8 @@
         }
     }
 
-    const disabler$3 = disabled(true);
-    const enabler$3 = disabled(false);
+    const disabler$1 = disabled(true);
+    const enabler$1 = disabled(false);
     /**
      * Creates a select box that can bind to collections
      * @param id - the ID to use for the select box
@@ -14374,7 +14374,7 @@
             elementClearChildren(this.element);
             if (this.values.length === 0) {
                 this.element.append(Option(this.noSelectionText));
-                disabler$3.apply(this.element);
+                disabler$1.apply(this.element);
             }
             else {
                 if (this.emptySelectionEnabled) {
@@ -14383,7 +14383,7 @@
                 for (let v of this.values) {
                     this.element.append(Option(value(this.makeID(v)), this.makeLabel(v)));
                 }
-                enabler$3.apply(this.element);
+                enabler$1.apply(this.element);
             }
         }
         /**
@@ -15422,7 +15422,7 @@
             super("inputBindingChanged");
         }
     }
-    const inputBindingChangedEvt$1 = new InputBindingChangedEvent();
+    const inputBindingChangedEvt = new InputBindingChangedEvent();
     class InputBinding extends TypedEventBase {
         constructor() {
             super();
@@ -15453,7 +15453,7 @@
                         if (this.bindings.has(id)
                             && v !== this.bindings.get(id)) {
                             this.bindings.set(id, v);
-                            this.dispatchEvent(inputBindingChangedEvt$1);
+                            this.dispatchEvent(inputBindingChangedEvt);
                         }
                     }
                 });
@@ -15506,7 +15506,7 @@
             if (this.bindings.has(key)
                 && v !== this.bindings.get(key)) {
                 this.bindings.set(key, v);
-                this.dispatchEvent(inputBindingChangedEvt$1);
+                this.dispatchEvent(inputBindingChangedEvt);
             }
         }
         toJSON() {
@@ -15982,8 +15982,8 @@
             this.axis = 0;
         }
     }
-    const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt$1 = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
-    const disabler$1 = disabled(true), enabler$1 = disabled(false);
+    const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt$1 = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt$1 = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
+    const disabler$3 = disabled(true), enabler$3 = disabled(false);
     class OptionsForm extends FormDialog {
         constructor() {
             super("options");
@@ -15998,7 +15998,7 @@
                     if (keyEvt.key !== "Tab"
                         && keyEvt.key !== "Shift") {
                         this._inputBinding.set(id, keyEvt.key);
-                        this.dispatchEvent(inputBindingChangedEvt);
+                        this.dispatchEvent(inputBindingChangedEvt$1);
                     }
                 }));
                 key.value = this._inputBinding.get(id).toString();
@@ -16009,7 +16009,7 @@
                 this.addEventListener("gamepadButtonUp", (evt) => {
                     if (document.activeElement === gp.input) {
                         this._inputBinding.set(id, evt.button);
-                        this.dispatchEvent(inputBindingChangedEvt);
+                        this.dispatchEvent(inputBindingChangedEvt$1);
                     }
                 });
                 gp.value = this._inputBinding.get(id).toString();
@@ -16020,7 +16020,7 @@
                 this.addEventListener("gamepadAxisMaxed", (evt) => {
                     if (document.activeElement === gp.input) {
                         this._inputBinding.set(id, evt.axis);
-                        this.dispatchEvent(inputBindingChangedEvt);
+                        this.dispatchEvent(inputBindingChangedEvt$1);
                     }
                 });
                 gp.value = this._inputBinding.get(id).toString();
@@ -16118,11 +16118,11 @@
         set avatarURL(v) {
             if (isString(v)) {
                 this.avatarURLInput.value = v;
-                enabler$1.apply(this.clearAvatarURLButton);
+                enabler$3.apply(this.clearAvatarURLButton);
             }
             else {
                 this.avatarURLInput.value = "";
-                disabler$1.apply(this.clearAvatarURLButton);
+                disabler$3.apply(this.clearAvatarURLButton);
             }
         }
         setAvatarVideo(v) {
@@ -16996,7 +16996,7 @@
             this.dy = -Math.random() * 0.5 - 0.5;
             this.emoteText = new TextImage();
             this.emoteText.fontFamily = "Noto Color Emoji";
-            this.emoteText.value = emoji.value;
+            this.emoteText.value = emoji;
         }
         isDead() {
             return this.life <= 0.01;
@@ -18249,7 +18249,7 @@
         }
     }
 
-    const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new TypedEvent("gameStarted"), gameEndedEvt = new TypedEvent("gameEnded"), zoomChangedEvt = new TypedEvent("zoomChanged"), emojiNeededEvt = new TypedEvent("emojiNeeded"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), userJoinedEvt = new UserJoinedEvent(null), moveEvent = new UserMovedEvent(null), emoteEvt = new EmoteEvent(null);
+    const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new TypedEvent("gameStarted"), gameEndedEvt = new TypedEvent("gameEnded"), zoomChangedEvt$1 = new TypedEvent("zoomChanged"), emojiNeededEvt = new TypedEvent("emojiNeeded"), toggleAudioEvt$1 = new TypedEvent("toggleAudio"), toggleVideoEvt$2 = new TypedEvent("toggleVideo"), userJoinedEvt = new UserJoinedEvent(null), moveEvent = new UserMovedEvent(null), emoteEvt$1 = new EmoteEvent(null);
     /** @type {Map<Game, EventedGamepad>} */
     const gamepads = new Map();
     class Game extends TypedEventBase {
@@ -18341,7 +18341,7 @@
             this.screenControls.addEventListener("move", (evt) => {
                 if (Math.abs(evt.dz) > 0) {
                     this.zoom += evt.dz;
-                    this.dispatchEvent(zoomChangedEvt);
+                    this.dispatchEvent(zoomChangedEvt$1);
                 }
             });
             this.screenControls.addEventListener("drag", (evt) => {
@@ -18375,12 +18375,13 @@
                         this.dispatchEvent(emojiNeededEvt);
                     }
                     else {
-                        emoteEvt.emoji = this.currentEmoji = emoji;
-                        this.dispatchEvent(emoteEvt);
+                        this.currentEmoji = emoji;
+                        emoteEvt$1.emoji = emoji.value;
+                        this.dispatchEvent(emoteEvt$1);
                     }
                 }
                 if (emoji) {
-                    this.emotes.push(new Emote(emoji, user.x, user.y));
+                    this.emotes.push(new Emote(emoji.value, user.x, user.y));
                 }
             }
         }
@@ -18449,10 +18450,10 @@
             this.dispatchEvent(userJoinedEvt);
         }
         toggleMyAudio() {
-            this.dispatchEvent(toggleAudioEvt);
+            this.dispatchEvent(toggleAudioEvt$1);
         }
         toggleMyVideo() {
-            this.dispatchEvent(toggleVideoEvt);
+            this.dispatchEvent(toggleVideoEvt$2);
         }
         muteUserAudio(id, muted) {
             this.withUser("mute audio", id, (user) => {
@@ -18544,7 +18545,7 @@
                 console.error("Couldn't load any maps!");
             }
             this.startLoop();
-            this.dispatchEvent(zoomChangedEvt);
+            this.dispatchEvent(zoomChangedEvt$1);
             this.dispatchEvent(gameStartedEvt);
         }
         startLoop() {
@@ -18634,7 +18635,7 @@
                         dz += 2 * (pad.buttons[this.inputBinding.gpButtonZoomIn].value - pad.buttons[this.inputBinding.gpButtonZoomOut].value);
                         this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                         this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
-                        this.dispatchEvent(zoomChangedEvt);
+                        this.dispatchEvent(zoomChangedEvt$1);
                     }
                     dx = clamp(dx, -1, 1);
                     dy = clamp(dy, -1, 1);
@@ -18645,7 +18646,7 @@
                     }
                     if (dz !== 0) {
                         this.zoom += dz;
-                        this.dispatchEvent(zoomChangedEvt);
+                        this.dispatchEvent(zoomChangedEvt$1);
                     }
                     this.lastMove = 0;
                 }
@@ -18669,11 +18670,11 @@
         }
         render() {
             const targetCameraX = -this.me.x * this.map.tileWidth, targetCameraY = -this.me.y * this.map.tileHeight;
-            this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
-            this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
-            this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
-            this.offsetCameraX = lerp(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
-            this.offsetCameraY = lerp(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
+            this.cameraZ = lerp$1(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
+            this.cameraX = lerp$1(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
+            this.cameraY = lerp$1(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
+            this.offsetCameraX = lerp$1(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
+            this.offsetCameraY = lerp$1(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
             this.gFront.resetTransform();
             this.gFront.imageSmoothingEnabled = false;
             this.gFront.clearRect(0, 0, this.element.width, this.element.height);
@@ -18717,7 +18718,7 @@
         }
     }
 
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
     let waitingForEmoji = false;
     async function recordJoin(Name, Email, Room) {
         await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
@@ -18742,17 +18743,17 @@
     async function withEmojiSelection(callback) {
         if (!isOpen(emoji)) {
             waitingForEmoji = true;
-            disabler.apply(controls.optionsButton);
-            disabler.apply(controls.instructionsButton);
-            disabler.apply(controls.changeDevicesButton);
+            disabler$4.apply(controls$1.optionsButton);
+            disabler$4.apply(controls$1.instructionsButton);
+            disabler$4.apply(controls$1.changeDevicesButton);
             hide(options);
             const e = await emoji.selectAsync();
             if (e) {
                 callback(e);
             }
-            enabler.apply(controls.optionsButton);
-            enabler.apply(controls.instructionsButton);
-            enabler.apply(controls.changeDevicesButton);
+            enabler$4.apply(controls$1.optionsButton);
+            enabler$4.apply(controls$1.instructionsButton);
+            enabler$4.apply(controls$1.changeDevicesButton);
             waitingForEmoji = false;
         }
     }
@@ -18767,7 +18768,7 @@
         async function selectEmojiAsync() {
             await withEmojiSelection((e) => {
                 game.emote(client.localUserID, e);
-                controls.setEmojiButton(e);
+                controls$1.setEmojiButton(e);
             });
         }
         function setAudioProperties() {
@@ -18781,30 +18782,30 @@
         window.addEventListener("gamepadconnected", refreshGamepads);
         window.addEventListener("gamepaddisconnected", refreshGamepads);
         window.addEventListener("resize", () => game.resize());
-        controls.addEventListener("toggleOptions", _showView(options));
-        controls.addEventListener("toggleInstructions", _showView(instructions));
-        controls.addEventListener("toggleUserDirectory", _showView(directory));
-        controls.addEventListener("changeDevices", _showView(devices));
-        controls.addEventListener("tweet", () => {
+        controls$1.addEventListener("toggleOptions", _showView(options));
+        controls$1.addEventListener("toggleInstructions", _showView(instructions));
+        controls$1.addEventListener("toggleUserDirectory", _showView(directory));
+        controls$1.addEventListener("changeDevices", _showView(devices));
+        controls$1.addEventListener("tweet", () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`), url = "https://twitter.com/intent/tweet?text=" + message;
             window.open(url);
         });
-        controls.addEventListener("leave", async () => {
+        controls$1.addEventListener("leave", async () => {
             directory.clear();
             await client.leave();
         });
-        controls.addEventListener("selectEmoji", selectEmojiAsync);
-        controls.addEventListener("emote", () => {
+        controls$1.addEventListener("selectEmoji", selectEmojiAsync);
+        controls$1.addEventListener("emote", () => {
             game.emote(client.localUserID, game.currentEmoji);
         });
-        controls.addEventListener("toggleAudio", async () => {
+        controls$1.addEventListener("toggleAudio", async () => {
             await client.toggleAudioMuted();
         });
-        controls.addEventListener("toggleVideo", async () => {
+        controls$1.addEventListener("toggleVideo", async () => {
             await client.toggleVideoMuted();
         });
-        controls.addEventListener("zoomChanged", () => {
-            settings.zoom = game.zoom = controls.zoom;
+        controls$1.addEventListener("zoomChanged", () => {
+            settings.zoom = game.zoom = controls$1.zoom;
         });
         login.addEventListener("login", async () => {
             await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
@@ -18826,7 +18827,7 @@
         options.addEventListener("selectAvatar", async () => {
             await withEmojiSelection((e) => {
                 settings.avatarEmoji = e.value;
-                client.setAvatarEmoji(e);
+                client.setAvatarEmoji(e.value);
                 game.me.setAvatarEmoji(e.value);
                 refreshUser(client.localUserID);
             });
@@ -18894,12 +18895,12 @@
         game.addEventListener("gameStarted", () => {
             game.resize();
             hide(login);
-            show(controls);
+            show(controls$1);
             options.user = game.me;
-            controls.enabled = true;
+            controls$1.enabled = true;
             settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
             rawGameStartEmoji.value = settings.avatarEmoji;
-            client.setAvatarEmoji(rawGameStartEmoji);
+            client.setAvatarEmoji(settings.avatarEmoji);
             game.me.setAvatarEmoji(settings.avatarEmoji);
             refreshUser(client.localUserID);
         });
@@ -18911,7 +18912,7 @@
             showView(login);
         });
         game.addEventListener("zoomChanged", () => {
-            settings.zoom = controls.zoom = game.zoom;
+            settings.zoom = controls$1.zoom = game.zoom;
         });
         directory.addEventListener("warpTo", (evt) => {
             game.visit(evt.id);
@@ -18933,10 +18934,10 @@
             devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
             const audioMuted = client.isAudioMuted;
             game.muteUserAudio(client.localUserID, audioMuted);
-            controls.audioEnabled = !audioMuted;
+            controls$1.audioEnabled = !audioMuted;
             const videoMuted = client.isVideoMuted;
             game.muteUserVideo(client.localUserID, videoMuted);
-            controls.videoEnabled = !videoMuted;
+            controls$1.videoEnabled = !videoMuted;
         });
         client.addEventListener("conferenceLeft", () => {
             game.end();
@@ -18970,7 +18971,7 @@
         });
         client.addEventListener("audioMuteStatusChanged", async (evt) => {
             if (evt.id === client.localUserID) {
-                controls.audioEnabled = !evt.muted;
+                controls$1.audioEnabled = !evt.muted;
                 devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
                 settings.preferredAudioInputID = client.preferredAudioInputID;
             }
@@ -18978,7 +18979,7 @@
         });
         client.addEventListener("videoMuteStatusChanged", async (evt) => {
             if (evt.id === client.localUserID) {
-                controls.videoEnabled = !evt.muted;
+                controls$1.videoEnabled = !evt.muted;
                 if (evt.muted) {
                     options.setAvatarVideo(null);
                 }
@@ -19018,13 +19019,13 @@
         options.gamepads = navigator.getGamepads();
         options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
         options.inputBinding = game.inputBinding = settings.inputBinding;
-        controls.zoom = game.zoom = settings.zoom;
+        controls$1.zoom = game.zoom = settings.zoom;
         game.cameraZ = game.targetCameraZ;
         game.transitionSpeed = settings.transitionSpeed = 0.5;
         login.userName = settings.userName;
         login.roomName = settings.roomName;
         login.email = settings.email;
-        controls.enabled = false;
+        controls$1.enabled = false;
         showView(login);
         login.ready = true;
         timer.start();
@@ -19037,7 +19038,7 @@
             game,
             login,
             directory,
-            controls,
+            controls: controls$1,
             devices,
             options,
             emoji,

@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
@@ -57,9 +56,9 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
-    setAvatarEmoji(emoji: Emoji): void;
+    setAvatarEmoji(emoji: string): void;
     setAvatarURL(url: string): void;
-    emote(emoji: Emoji): void;
+    emote(emoji: string): void;
     chat(text: string): void;
     setPreferredDevices(): Promise<void>;
     setAudioInputDevice(device: MediaDeviceInfo): Promise<void>;

@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import type { TypedEventBase } from "kudzu/events/EventBase";
 import type { CallaMetadataEvents } from "../CallaEvents";
 import type { ConnectionState } from "../ConnectionState";
@@ -56,7 +55,7 @@ export interface IMetadataClient
      * Use an Emoji character as the user's avatar.
      * @param emoji
      */
-    setAvatarEmoji(emoji: Emoji): void;
+    setAvatarEmoji(emoji: string): void;
 
     /**
      * Use an image, found somewhere on the public Internet, as the user's avatar.
@@ -68,7 +67,7 @@ export interface IMetadataClient
      * Express an emotion to the other users in the teleconferencing session.
      * @param emoji
      */
-    emote(emoji: Emoji): void;
+    emote(emoji: string): void;
 
     /**
      * Send a text message to the other users in the teleconferencing session.

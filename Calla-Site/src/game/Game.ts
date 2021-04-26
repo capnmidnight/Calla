@@ -160,6 +160,7 @@ export class Game extends TypedEventBase<GameEvents> {
                 this.dispatchEvent(zoomChangedEvt);
             }
         });
+
         this.screenControls.addEventListener("drag", (evt) => {
             this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
             this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
@@ -201,13 +202,14 @@ export class Game extends TypedEventBase<GameEvents> {
                     this.dispatchEvent(emojiNeededEvt);
                 }
                 else {
-                    emoteEvt.emoji = this.currentEmoji = emoji;
+                    this.currentEmoji = emoji;
+                    emoteEvt.emoji = emoji.value;
                     this.dispatchEvent(emoteEvt);
                 }
             }
 
             if (emoji) {
-                this.emotes.push(new Emote(emoji, user.x, user.y));
+                this.emotes.push(new Emote(emoji.value, user.x, user.y));
             }
         }
     }

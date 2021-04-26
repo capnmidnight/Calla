@@ -245,13 +245,13 @@ export class CallaEmojiEvent<T extends CallaMetadataEventType> extends CallaUser
 }
 
 export class CallaEmoteEvent extends CallaEmojiEvent<"emote"> {
-    constructor(id: string, emoji: Emoji | string) {
+    constructor(id: string, emoji: string) {
         super("emote", id, emoji);
     }
 }
 
 export class CallaEmojiAvatarEvent extends CallaEmojiEvent<"setAvatarEmoji"> {
-    constructor(id: string, emoji: Emoji | string) {
+    constructor(id: string, emoji: string) {
         super("setAvatarEmoji", id, emoji);
     }
 }

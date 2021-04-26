@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
@@ -16,9 +15,9 @@ export declare abstract class BaseMetadataClient extends TypedEventBase<CallaMet
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
-    setAvatarEmoji(emoji: Emoji): void;
+    setAvatarEmoji(emoji: string): void;
     setAvatarURL(url: string): void;
-    emote(emoji: Emoji): void;
+    emote(emoji: string): void;
     chat(text: string): void;
     abstract connect(): Promise<void>;
     abstract join(roomName: string): Promise<void>;

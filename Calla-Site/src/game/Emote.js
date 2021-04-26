@@ -20,7 +20,7 @@ export class Emote {
         this.dy = -Math.random() * 0.5 - 0.5;
         this.emoteText = new TextImage();
         this.emoteText.fontFamily = "Noto Color Emoji";
-        this.emoteText.value = emoji.value;
+        this.emoteText.value = emoji;
     }
     isDead() {
         return this.life <= 0.01;

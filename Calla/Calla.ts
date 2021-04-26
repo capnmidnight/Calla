@@ -1,4 +1,3 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
@@ -265,7 +264,7 @@ export class Calla
         this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    setAvatarEmoji(emoji: Emoji): void {
+    setAvatarEmoji(emoji: string): void {
         this._meta.setAvatarEmoji(emoji);
     }
 
@@ -273,7 +272,7 @@ export class Calla
         this._meta.setAvatarURL(url);
     }
 
-    emote(emoji: Emoji): void {
+    emote(emoji: string): void {
         this._meta.emote(emoji);
     }
 

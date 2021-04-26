@@ -127,10 +127,10 @@ export declare class CallaEmojiEvent<T extends CallaMetadataEventType> extends C
     constructor(type: T, id: string, emoji: Emoji | string);
 }
 export declare class CallaEmoteEvent extends CallaEmojiEvent<"emote"> {
-    constructor(id: string, emoji: Emoji | string);
+    constructor(id: string, emoji: string);
 }
 export declare class CallaEmojiAvatarEvent extends CallaEmojiEvent<"setAvatarEmoji"> {
-    constructor(id: string, emoji: Emoji | string);
+    constructor(id: string, emoji: string);
 }
 export declare class CallaAvatarChangedEvent extends CallaUserEvent<"avatarChanged"> {
     url: string;
