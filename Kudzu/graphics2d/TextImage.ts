@@ -165,6 +165,8 @@ export class TextImage
                 left: 0
             };
         }
+
+        this.redraw();
     }
 
     get scale() {

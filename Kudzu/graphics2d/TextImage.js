@@ -97,6 +97,7 @@ export class TextImage extends CanvasImage {
                 left: 0
             };
         }
+        this.redraw();
     }
     get scale() {
         return this._scale;
