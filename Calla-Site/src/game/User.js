@@ -52,7 +52,7 @@ export class User extends TypedEventBase {
         this.setAvatarEmoji(bustInSilhouette.value);
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.userNameText = new TextImage();
-        this.userNameText.fillColor = "white";
+        this.userNameText.textFillColor = "white";
         this.userNameText.fontSize = 128;
         this.displayName = displayName;
         Object.seal(this);

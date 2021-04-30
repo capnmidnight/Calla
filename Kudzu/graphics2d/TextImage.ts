@@ -17,13 +17,15 @@ export interface TextImageOptions {
     maxWidth: number;
     minHeight: number;
     maxHeight: number;
-    strokeColor: string;
-    strokeSize: number;
-    bgColor: string;
-    value: string;
-
     scale: number;
-    fillColor: string;
+
+    bgFillColor: string;
+    bgStrokeColor: string;
+    bgStrokeSize: number;
+
+    textStrokeColor: string;
+    textStrokeSize: number;
+    textFillColor: string;
     textDirection: string;
     wrapWords: boolean;
 
@@ -34,6 +36,8 @@ export interface TextImageOptions {
     fontSize: number;
 
     padding: PaddingRect;
+
+    value: string;
 }
 
 export class TextImage
@@ -44,13 +48,15 @@ export class TextImage
     private _maxWidth: number | null = null;
     private _minHeight: number | null = null;
     private _maxHeight: number | null = null;
-    private _strokeColor: string | null = null;
-    private _strokeSize: number | null = null;
-    private _bgColor: string | null = null;
-    private _value: string | null = null;
-
     private _scale = 1;
-    private _fillColor = "black";
+
+    private _bgFillColor: string | null = null;
+    private _bgStrokeColor: string | null = null;
+    private _bgStrokeSize: number | null = null;
+
+    private _textStrokeColor: string | null = null;
+    private _textStrokeSize: number | null = null;
+    private _textFillColor = "black";
     private _textDirection = "horizontal";
     private _wrapWords = true;
 
@@ -62,6 +68,8 @@ export class TextImage
 
     private _padding: PaddingRect;
 
+    private _value: string | null = null;
+
     private notReadyEvt = new TypedEvent("notready");
 
     constructor(options?: Partial<TextImageOptions>) {
@@ -71,7 +79,6 @@ export class TextImage
             if (isDefined(options.minWidth)) {
                 this._minWidth = options.minWidth;
             }
-
 
             if (isDefined(options.maxWidth)) {
                 this._maxWidth = options.maxWidth;
@@ -85,16 +92,24 @@ export class TextImage
                 this._maxHeight = options.maxHeight;
             }
 
-            if (isDefined(options.strokeColor)) {
-                this._strokeColor = options.strokeColor;
+            if (isDefined(options.textStrokeColor)) {
+                this._textStrokeColor = options.textStrokeColor;
             }
 
-            if (isDefined(options.strokeSize)) {
-                this._strokeSize = options.strokeSize;
+            if (isDefined(options.textStrokeSize)) {
+                this._textStrokeSize = options.textStrokeSize;
             }
 
-            if (isDefined(options.bgColor)) {
-                this._bgColor = options.bgColor;
+            if (isDefined(options.bgFillColor)) {
+                this._bgFillColor = options.bgFillColor;
+            }
+
+            if (isDefined(options.bgStrokeColor)) {
+                this._bgStrokeColor = options.bgStrokeColor;
+            }
+
+            if (isDefined(options.bgStrokeSize)) {
+                this._bgStrokeSize = options.bgStrokeSize;
             }
 
             if (isDefined(options.value)) {
@@ -105,8 +120,8 @@ export class TextImage
                 this._scale = options.scale;
             }
 
-            if (isDefined(options.fillColor)) {
-                this._fillColor = options.fillColor;
+            if (isDefined(options.textFillColor)) {
+                this._textFillColor = options.textFillColor;
             }
 
             if (isDefined(options.textDirection)) {
@@ -310,46 +325,68 @@ export class TextImage
         }
     }
 
-    get fillColor() {
-        return this._fillColor;
+    get textFillColor() {
+        return this._textFillColor;
     }
 
-    set fillColor(v) {
-        if (this.fillColor !== v) {
-            this._fillColor = v;
+    set textFillColor(v) {
+        if (this.textFillColor !== v) {
+            this._textFillColor = v;
             this.redraw();
         }
     }
 
-    get strokeColor() {
-        return this._strokeColor;
+    get textStrokeColor() {
+        return this._textStrokeColor;
     }
 
-    set strokeColor(v) {
-        if (this.strokeColor !== v) {
-            this._strokeColor = v;
+    set textStrokeColor(v) {
+        if (this.textStrokeColor !== v) {
+            this._textStrokeColor = v;
             this.redraw();
         }
     }
 
-    get strokeSize() {
-        return this._strokeSize;
+    get textStrokeSize() {
+        return this._textStrokeSize;
     }
 
-    set strokeSize(v) {
-        if (this.strokeSize !== v) {
-            this._strokeSize = v;
+    set textStrokeSize(v) {
+        if (this.textStrokeSize !== v) {
+            this._textStrokeSize = v;
             this.redraw();
         }
     }
 
-    get bgColor() {
-        return this._bgColor;
+    get bgFillColor() {
+        return this._bgFillColor;
     }
 
-    set bgColor(v) {
-        if (this.bgColor !== v) {
-            this._bgColor = v;
+    set bgFillColor(v) {
+        if (this.bgFillColor !== v) {
+            this._bgFillColor = v;
+            this.redraw();
+        }
+    }
+
+    get bgStrokeColor() {
+        return this._bgStrokeColor;
+    }
+
+    set bgStrokeColor(v) {
+        if (this.bgStrokeColor !== v) {
+            this._bgStrokeColor = v;
+            this.redraw();
+        }
+    }
+
+    get bgStrokeSize() {
+        return this._bgStrokeSize;
+    }
+
+    set bgStrokeSize(v) {
+        if (this.bgStrokeSize !== v) {
+            this._bgStrokeSize = v;
             this.redraw();
         }
     }
@@ -392,7 +429,7 @@ export class TextImage
 
         if (this.fontFamily
             && this.fontSize
-            && (this.fillColor || (this.strokeColor && this.strokeSize))
+            && (this.textFillColor || (this.textStrokeColor && this.textStrokeSize))
             && this.value) {
 
             const isVertical = this.textDirection && this.textDirection.indexOf("vertical") === 0;
@@ -521,21 +558,21 @@ export class TextImage
                 throw exp;
             }
 
-            if (this.bgColor) {
-                this.g.fillStyle = this.bgColor;
+            if (this.bgFillColor) {
+                this.g.fillStyle = this.bgFillColor;
                 this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
             else {
                 this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
 
-            if (this.strokeColor && this.strokeSize) {
-                this.g.lineWidth = this.strokeSize * this.scale;
-                this.g.strokeStyle = this.strokeColor;
+            if (this.textStrokeColor && this.textStrokeSize) {
+                this.g.lineWidth = this.textStrokeSize * this.scale;
+                this.g.strokeStyle = this.textStrokeColor;
             }
 
-            if (this.fillColor) {
-                this.g.fillStyle = this.fillColor;
+            if (this.textFillColor) {
+                this.g.fillStyle = this.textFillColor;
             }
 
             const di = 0.5 * (lines.length - 1);
@@ -546,13 +583,20 @@ export class TextImage
                 const x = dx + this.canvas.width / 2;
                 const y = dy + this.canvas.height / 2;
 
-                if (this.strokeColor && this.strokeSize) {
+                if (this.textStrokeColor && this.textStrokeSize) {
                     this.g.strokeText(line, x, y);
                 }
 
-                if (this.fillColor) {
+                if (this.textFillColor) {
                     this.g.fillText(line, x, y);
                 }
+            }
+
+            if (this.bgStrokeColor && this.bgStrokeSize) {
+                this.g.strokeStyle = this.bgStrokeColor;
+                this.g.lineWidth = this.bgStrokeSize;
+                const s = this.bgStrokeSize / 2;
+                this.g.strokeRect(s, s, this.canvas.width - this.bgStrokeSize, this.canvas.height - this.bgStrokeSize);
             }
 
             if (isVertical) {

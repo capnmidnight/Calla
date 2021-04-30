@@ -19,7 +19,7 @@ export class EmojiAvatar extends BaseAvatar {
         super(AvatarMode.Emoji, isSurfer(emoji));
         this.value = emoji;
         const emojiText = new TextImage();
-        emojiText.fillColor = emoji.color || "black";
+        emojiText.textFillColor = emoji.color || "black";
         emojiText.fontFamily = "Noto Color Emoji";
         emojiText.fontSize = 256;
         emojiText.value = this.value;
