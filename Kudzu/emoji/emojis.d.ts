@@ -2273,6 +2273,7 @@ export declare const rightArrowCurvingUp: Emoji;
 export declare const rightArrowCurvingDown: Emoji;
 export declare const leftArrow: Emoji;
 export declare const upArrow: Emoji;
+export declare const upArrowText: Emoji;
 export declare const downArrow: Emoji;
 export declare const cLButton: Emoji;
 export declare const coolButton: Emoji;

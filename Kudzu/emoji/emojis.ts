@@ -2508,6 +2508,7 @@ export const rightArrowCurvingUp = new Emoji("\u2934\uFE0F", "Right Arrow Curvin
 export const rightArrowCurvingDown = new Emoji("\u2935\uFE0F", "Right Arrow Curving Down");
 export const leftArrow = new Emoji("\u2B05\uFE0F", "Left Arrow");
 export const upArrow = new Emoji("\u2B06\uFE0F", "Up Arrow");
+export const upArrowText = new Emoji("\u2B06\uFE0E", "Up Arrow: Text");
 export const downArrow = new Emoji("\u2B07\uFE0F", "Down Arrow");
 
 export const cLButton = new Emoji("\u{1F191}", "CL Button");
