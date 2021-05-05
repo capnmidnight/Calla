@@ -1,3 +1,10 @@
+// NOTE: This field gets overwritten in a build process.
+//
+// see: MyRollup/index.js, function makeBundle(), with the configuration for
+//  the replace plugin (replaceOpts object).
+//
+// Doing it this way ensures that Rollup will trim dead-code due to lazy
+// logic evaluation.
 export const isWorker = false;
 
 export const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
