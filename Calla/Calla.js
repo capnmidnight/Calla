@@ -170,11 +170,11 @@ export class Calla extends TypedEventBase {
         this.audio.offsetRadius = v;
     }
     setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
@@ -260,9 +260,6 @@ export class Calla extends TypedEventBase {
     async disconnect() {
         await this._meta.disconnect();
         await this._tele.disconnect();
-    }
-    update() {
-        this.audio.update();
     }
     async setAudioOutputDevice(device) {
         this._tele.setAudioOutputDevice(device);

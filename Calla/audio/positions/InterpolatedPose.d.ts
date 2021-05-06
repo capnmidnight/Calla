@@ -5,7 +5,7 @@ import { Pose } from "./Pose";
  * a target position over time.
  */
 export declare class InterpolatedPose {
-    private start;
+    start: Pose;
     current: Pose;
     end: Pose;
     offset: vec3;

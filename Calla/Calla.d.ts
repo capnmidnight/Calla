@@ -80,7 +80,6 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     identify(userName: string): Promise<void>;
     leave(): Promise<void>;
     disconnect(): Promise<void>;
-    update(): void;
     setAudioOutputDevice(device: MediaDeviceInfo): Promise<void>;
     setAudioMuted(muted: boolean): Promise<boolean>;
     setVideoMuted(muted: boolean): Promise<boolean>;

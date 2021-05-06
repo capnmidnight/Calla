@@ -55,7 +55,7 @@ if (!("OfflineAudioContext" in globalThis) && "webkitOfflineAudioContext" in glo
 }
 
 
-type withPoseCallback<T> = (pose: InterpolatedPose, dt: number) => T;
+type withPoseCallback<T> = (pose: InterpolatedPose) => T;
 
 const BUFFER_SIZE = 1024;
 const audioActivityEvt = new AudioActivityEvent();
@@ -124,7 +124,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private maxDistance = 10;
     private rolloff = 1;
     private _algorithm = "logarithmic";
-    private transitionTime = 0.5;
+    transitionTime = 0.5;
     private _offsetRadius = 0;
 
     private clips = new Map<string, IPlayableSource>();
@@ -654,10 +654,9 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Get a pose, normalize the transition time, and perform on operation on it, if it exists.
      * @param sources - the collection of poses from which to retrieve the pose.
      * @param id - the id of the pose for which to perform the operation.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      * @param poseCallback
      */
-    private withPose<ElementT extends IPoseable, ResultT>(sources: Map<string, ElementT>, id: string, dt: number, poseCallback: withPoseCallback<ResultT>): ResultT {
+    private withPose<ElementT extends IPoseable, ResultT>(sources: Map<string, ElementT>, id: string, poseCallback: withPoseCallback<ResultT>): ResultT {
         const source = sources.get(id);
         let pose: InterpolatedPose = null;
         if (source) {
@@ -671,21 +670,16 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             return null;
         }
 
-        if (dt == null) {
-            dt = this.transitionTime;
-        }
-
-        return poseCallback(pose, dt);
+        return poseCallback(pose);
     }
 
     /**
      * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
      * @param id - the id of the user for which to perform the operation.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      * @param poseCallback
      */
-    private withUser<T>(id: string, dt: number, poseCallback: withPoseCallback<T>): T {
-        return this.withPose(this.users, id, dt, poseCallback);
+    private withUser<T>(id: string, poseCallback: withPoseCallback<T>): T {
+        return this.withPose(this.users, id, poseCallback);
     }
 
     /**
@@ -696,7 +690,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param z - the lateral component of the offset.
      */
     private setUserOffset(id: string, x: number, y: number, z: number): void {
-        this.withUser(id, null, (pose) => {
+        this.withUser(id, (pose) => {
             pose.setOffset(x, y, z);
         });
     }
@@ -706,9 +700,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param id - the id of the user for which to set the offset.
      */
     public getUserOffset(id: string): vec3 {
-        return this.withUser(id, null, (pose) => {
-            return pose.offset;
-        });
+        return this.withUser(id, pose => pose.offset);
     }
 
     /**
@@ -725,9 +717,9 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param uz - the lateral component of the up vector.
      * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setUserPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt: number = null): void {
-        this.withUser(id, dt, (pose, dt) => {
-            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+    setUserPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.withUser(id, (pose) => {
+            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
         });
     }
 
@@ -737,8 +729,8 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      * @param poseCallback
      */
-    private withClip<T>(id: string, dt: number, poseCallback: withPoseCallback<T>): T {
-        return this.withPose(this.clips, id, dt, poseCallback);
+    private withClip<T>(id: string, poseCallback: withPoseCallback<T>): T {
+        return this.withPose(this.clips, id, poseCallback);
     }
 
     /**
@@ -747,11 +739,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param x - the horizontal component of the position.
      * @param y - the vertical component of the position.
      * @param z - the lateral component of the position.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipPosition(id: string, x: number, y: number, z: number, dt: number = null): void {
-        this.withClip(id, dt, (pose, dt) => {
-            pose.setTargetPosition(x, y, z, this.currentTime, dt);
+    setClipPosition(id: string, x: number, y: number, z: number): void {
+        this.withClip(id, (pose) => {
+            pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
         });
     }
 
@@ -764,11 +755,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param ux - the horizontal component of the up vector.
      * @param uy - the vertical component of the up vector.
      * @param uz - the lateral component of the up vector.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipOrientation(id: string, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt: number = null): void {
-        this.withClip(id, dt, (pose, dt) => {
-            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+    setClipOrientation(id: string, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.withClip(id, (pose) => {
+            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
         });
     }
 
@@ -784,11 +774,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param ux - the horizontal component of the up vector.
      * @param uy - the vertical component of the up vector.
      * @param uz - the lateral component of the up vector.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt: number = null): void {
-        this.withClip(id, dt, (pose, dt) => {
-            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+    setClipPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.withClip(id, (pose) => {
+            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, 0.5);
         });
     }
 }

@@ -305,7 +305,7 @@ function refreshUser(userID) {
         game.updateAudioActivity(evt.id, evt.isActive);
     });
     timer.addEventListener("tick", (evt) => {
-        client.update();
+        client.audio.update();
         options.update();
         directory.update();
         game.update(evt.dt);

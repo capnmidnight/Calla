@@ -27,7 +27,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private maxDistance;
     private rolloff;
     private _algorithm;
-    private transitionTime;
+    transitionTime: number;
     private _offsetRadius;
     private clips;
     private users;
@@ -134,14 +134,12 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Get a pose, normalize the transition time, and perform on operation on it, if it exists.
      * @param sources - the collection of poses from which to retrieve the pose.
      * @param id - the id of the pose for which to perform the operation.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      * @param poseCallback
      */
     private withPose;
     /**
      * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
      * @param id - the id of the user for which to perform the operation.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      * @param poseCallback
      */
     private withUser;
@@ -172,7 +170,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param uz - the lateral component of the up vector.
      * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setUserPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt?: number): void;
+    setUserPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     /**
      * Get an audio clip pose, normalize the transition time, and perform on operation on it, if it exists.
      * @param id - the id of the audio clip for which to perform the operation.
@@ -186,9 +184,8 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param x - the horizontal component of the position.
      * @param y - the vertical component of the position.
      * @param z - the lateral component of the position.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipPosition(id: string, x: number, y: number, z: number, dt?: number): void;
+    setClipPosition(id: string, x: number, y: number, z: number): void;
     /**
      * Set the orientation of an audio clip.
      * @param id - the id of the audio clip for which to set the position.
@@ -198,9 +195,8 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param ux - the horizontal component of the up vector.
      * @param uy - the vertical component of the up vector.
      * @param uz - the lateral component of the up vector.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipOrientation(id: string, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt?: number): void;
+    setClipOrientation(id: string, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     /**
      * Set the position and orientation of an audio clip.
      * @param id - the id of the audio clip for which to set the position.
@@ -213,8 +209,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param ux - the horizontal component of the up vector.
      * @param uy - the vertical component of the up vector.
      * @param uz - the lateral component of the up vector.
-     * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setClipPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number, dt?: number): void;
+    setClipPose(id: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
 }
 export {};

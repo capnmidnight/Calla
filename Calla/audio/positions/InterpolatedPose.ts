@@ -1,14 +1,16 @@
 import { vec3 } from "gl-matrix";
 import { Pose } from "./Pose";
 
+
 const delta = vec3.create();
 const k = 2;
+
 /**
  * A position value that is blended from the current position to
  * a target position over time.
  */
 export class InterpolatedPose {
-    private start = new Pose();
+    start = new Pose();
     current = new Pose();
     end = new Pose();
     offset = vec3.create();
@@ -57,17 +59,18 @@ export class InterpolatedPose {
         const ox = this.offset[0];
         const oy = this.offset[1];
         const oz = this.offset[2];
-        this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
+
         this.end.t = t + dt;
-        if (dt > 0) {
-            this.start.copy(this.current);
-            this.start.t = t;
+        this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
+
+        this.start.t = t;
+        this.current.t = t;
+
+        if (dt <= 0 || this.current.t === 0) {
+            this.start.copy(this.end);
         }
         else {
-            this.start.copy(this.end);
-            this.start.t = t;
-            this.current.copy(this.end);
-            this.current.t = t;
+            this.start.copy(this.current);
         }
     }
 

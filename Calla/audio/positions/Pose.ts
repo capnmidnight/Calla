@@ -47,7 +47,7 @@ export class Pose {
         else if (end.t <= t) {
             this.copy(end);
         }
-        else if (start.t < t) {
+        else {
             const p = project(t, start.t, end.t);
 
             this.copy(start);

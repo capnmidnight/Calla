@@ -406,7 +406,7 @@ function refreshUser(userID: string) {
     });
 
     timer.addEventListener("tick", (evt: TimerTickEvent) => {
-        client.update();
+        client.audio.update();
         options.update();
         directory.update();
         game.update(evt.dt);

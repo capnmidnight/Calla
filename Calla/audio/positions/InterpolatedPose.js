@@ -51,17 +51,15 @@ export class InterpolatedPose {
         const ox = this.offset[0];
         const oy = this.offset[1];
         const oz = this.offset[2];
-        this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
         this.end.t = t + dt;
-        if (dt > 0) {
-            this.start.copy(this.current);
-            this.start.t = t;
+        this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
+        this.start.t = t;
+        this.current.t = t;
+        if (dt <= 0 || this.current.t === 0) {
+            this.start.copy(this.end);
         }
         else {
-            this.start.copy(this.end);
-            this.start.t = t;
-            this.current.copy(this.end);
-            this.current.t = t;
+            this.start.copy(this.current);
         }
     }
     /**

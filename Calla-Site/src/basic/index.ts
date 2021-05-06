@@ -206,7 +206,7 @@ function setPosition(x: number, y: number) {
  * be moved.
  **/
 function update() {
-    client.update();
+    client.audio.update();
     for (let user of users.values()) {
         user.update();
     }

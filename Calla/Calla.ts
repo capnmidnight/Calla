@@ -251,12 +251,12 @@ export class Calla
     }
 
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
@@ -367,10 +367,6 @@ export class Calla
     async disconnect(): Promise<void> {
         await this._meta.disconnect();
         await this._tele.disconnect();
-    }
-
-    update(): void {
-        this.audio.update();
     }
 
     async setAudioOutputDevice(device: MediaDeviceInfo) {
