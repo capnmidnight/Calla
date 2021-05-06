@@ -4,6 +4,7 @@ import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioDestination } from "./destinations/AudioDestination";
+import type { BaseListener } from "./destinations/spatializers/BaseListener";
 import { AudioStreamSource } from "./sources/AudioStreamSource";
 import { IPlayableSource } from "./sources/IPlayableSource";
 import { BaseEmitter } from "./sources/spatializers/BaseEmitter";
@@ -33,8 +34,8 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private analysers;
     localUserID: string;
     private sortedUserIDs;
-    private localUser;
-    private listener;
+    localUser: AudioDestination;
+    listener: BaseListener;
     private audioContext;
     private element;
     private destination;

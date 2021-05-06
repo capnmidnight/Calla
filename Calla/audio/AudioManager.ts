@@ -134,8 +134,8 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     public localUserID: string = null;
     private sortedUserIDs = new Array<string>();
 
-    private localUser: AudioDestination = null;
-    private listener: BaseListener = null;
+    localUser: AudioDestination = null;
+    listener: BaseListener = null;
     private audioContext: AudioContext = null;
     private element: HTMLAudioElementWithSinkID = null;
     private destination: AudioDestinationNode | MediaStreamAudioDestinationNode = null;
