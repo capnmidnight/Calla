@@ -1,25 +1,21 @@
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+
 using Calla.ActionFilters;
 using Calla.Data;
 using Calla.Models;
 
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Calla.Controllers
 {
     public class GameController : Controller
     {
         private readonly CallaContext db;
-        private readonly IWebHostEnvironment env;
 
-        public GameController(IWebHostEnvironment env, CallaContext db)
+        public GameController(CallaContext db)
         {
-            this.env = env;
             this.db = db;
         }
 
@@ -29,7 +25,7 @@ namespace Calla.Controllers
         public IActionResult Index()
         {
             var rooms = db.Rooms
-                .Where(room => room.Visible || env.IsDevelopment())
+                .Where(room => room.Visible)
                 .ToArray();
             return View(rooms);
         }
@@ -64,7 +60,5 @@ namespace Calla.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
-
     }
 }
