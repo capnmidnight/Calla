@@ -1,10 +1,11 @@
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { ErsatzElement } from "kudzu/html/tags";
 import { IOpenable } from "./ops";
 export interface FormDialogEvents {
     hidden: TypedEvent<"hidden">;
     shown: TypedEvent<"shown">;
 }
-export declare class FormDialog<T extends FormDialogEvents> extends TypedEventBase<T> implements IOpenable {
+export declare class FormDialog<T extends FormDialogEvents> extends TypedEventBase<T> implements IOpenable, ErsatzElement {
     element: HTMLElement;
     header: HTMLElement;
     content: HTMLElement;

@@ -1,7 +1,7 @@
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { id } from "kudzu/html/attrs";
-import { Div } from "kudzu/html/tags";
+import { Div, ErsatzElement } from "kudzu/html/tags";
 import { hide, IOpenable, show } from "./ops";
 
 export interface FormDialogEvents {
@@ -14,7 +14,8 @@ const hiddenEvt = new TypedEvent("hidden"),
 
 export class FormDialog<T extends FormDialogEvents>
     extends TypedEventBase<T>
-    implements IOpenable {
+    implements IOpenable,
+        ErsatzElement {
     element: HTMLElement;
     header: HTMLElement;
     content: HTMLElement;
