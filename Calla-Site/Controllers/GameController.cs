@@ -34,7 +34,7 @@ namespace Calla.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Rooms([FromBody] string roomName)
         {
-            if(roomName is null)
+            if (roomName is null)
             {
                 return Error();
             }
@@ -46,7 +46,8 @@ namespace Calla.Controllers
                 await db.Rooms.AddAsync(new Rooms
                 {
                     Name = roomName,
-                    ShortName = shortName
+                    ShortName = shortName,
+                    Visible = false
                 }).ConfigureAwait(false);
 
                 await db.SaveChangesAsync().ConfigureAwait(false);
