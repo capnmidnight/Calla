@@ -17,7 +17,7 @@ import {
 } from "kudzu/emoji/emojis";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { alt, className, id, max, min, role, src, step, title, value } from "kudzu/html/attrs";
-import { height, margin, textAlign } from "kudzu/html/css";
+import { height, margin, styles, textAlign } from "kudzu/html/css";
 import { onClick, onInput } from "kudzu/html/evts";
 import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
 import { IOpenable, updateLabel } from "./ops";
@@ -52,8 +52,7 @@ const toggleOptionsEvt = new TypedEvent("toggleOptions"),
 
 export class ButtonLayer
     extends TypedEventBase<ButtonLayerEvents>
-    implements IOpenable
-{
+    implements IOpenable {
     element: HTMLDivElement;
     optionsButton: HTMLButtonElement;
     instructionsButton: HTMLButtonElement;
@@ -107,8 +106,9 @@ export class ButtonLayer
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    height("25px"),
-                    margin("2px auto -2px auto")),
+                    styles(
+                        height("25px"),
+                        margin("2px auto -2px auto"))),
                 Run("Tweet")),
 
             this.showUsersButton = Button(
