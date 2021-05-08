@@ -33,11 +33,16 @@ export class EmojiForm extends FormDialog<EmojiFormEvents> {
     confirmButton: HTMLElement;
     selectAsync: () => Promise<Emoji>;
     constructor() {
-        super("emoji");
+        super("emoji", "Emoji");
 
-        this.header.append(
+        this.element.classList.add("dialog-3");
+
+        const header = Div(
+            className("header"),
             H2("Recent"),
             this.recent = P("(None)"));
+
+        this.content.insertAdjacentElement("beforebegin", header);
 
         const previousEmoji = new Array<Emoji>(),
             allAlts = new Array<HTMLDivElement>();
@@ -148,7 +153,8 @@ export class EmojiForm extends FormDialog<EmojiFormEvents> {
             }
         }
 
-        this.footer.append(
+
+        this.element.append(Div(
 
             this.confirmButton = Button(className("confirm"),
                 "OK",
@@ -172,7 +178,7 @@ export class EmojiForm extends FormDialog<EmojiFormEvents> {
                     hide(this);
                 })),
 
-            this.preview = Span(gridPos(1, 4, 3, 1)));
+            this.preview = Span(gridPos(1, 4, 3, 1))));
 
         disabler.apply(this.confirmButton);
 

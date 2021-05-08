@@ -24,10 +24,7 @@ namespace Calla.Controllers
         [ServiceFilter(typeof(LogHitsAttribute))]
         public IActionResult Index()
         {
-            var rooms = db.Rooms
-                .Where(room => room.Visible)
-                .ToArray();
-            return View(rooms);
+            return View();
         }
 
         [HttpPost]

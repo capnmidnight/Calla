@@ -20,8 +20,10 @@ class EmojiSelectedEvent extends TypedEvent {
 const cancelEvt = new TypedEvent("emojiCanceled");
 export class EmojiForm extends FormDialog {
     constructor() {
-        super("emoji");
-        this.header.append(H2("Recent"), this.recent = P("(None)"));
+        super("emoji", "Emoji");
+        this.element.classList.add("dialog-3");
+        const header = Div(className("header"), H2("Recent"), this.recent = P("(None)"));
+        this.content.insertAdjacentElement("beforebegin", header);
         const previousEmoji = new Array(), allAlts = new Array();
         let selectedEmoji = null, idCounter = 0;
         const closeAll = () => {
@@ -102,7 +104,7 @@ export class EmojiForm extends FormDialog {
                 this.content.appendChild(container);
             }
         }
-        this.footer.append(this.confirmButton = Button(className("confirm"), "OK", onClick(() => {
+        this.element.append(Div(this.confirmButton = Button(className("confirm"), "OK", onClick(() => {
             const idx = previousEmoji.indexOf(selectedEmoji);
             if (idx === -1) {
                 previousEmoji.push(selectedEmoji);
@@ -115,7 +117,7 @@ export class EmojiForm extends FormDialog {
             disabler.apply(this.confirmButton);
             this.dispatchEvent(cancelEvt);
             hide(this);
-        })), this.preview = Span(gridPos(1, 4, 3, 1)));
+        })), this.preview = Span(gridPos(1, 4, 3, 1))));
         disabler.apply(this.confirmButton);
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {

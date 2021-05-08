@@ -2,7 +2,7 @@ import { htmlHeight, htmlWidth, id } from "kudzu/html/attrs";
 import { backgroundColor, styles, zIndex } from "kudzu/html/css";
 import { onClick, onMouseOut, onMouseOver } from "kudzu/html/evts";
 import { gridPos, row } from "kudzu/html/grid";
-import { Canvas, Div } from "kudzu/html/tags";
+import { Button, Canvas, Div, InputText } from "kudzu/html/tags";
 import { FormDialog } from "./FormDialog";
 import { hide, isOpen } from "./ops";
 const newRowColor = backgroundColor("lightgreen");
@@ -18,14 +18,14 @@ const warpToEvt = new UserDirectoryFormWarpToEvent();
 const ROW_TIMEOUT = 3000;
 export class UserDirectoryForm extends FormDialog {
     constructor() {
-        super("users");
+        super("users", "Users");
         this.roomName = null;
         this.userName = null;
         this.rows = new Map();
         this.users = new Map();
         this.avatarGs = new Map();
         this.lastUser = null;
-        this.usersList = Div(id("chatUsers"));
+        this.content.append(this.usersList = Div(id("chatUsers")), Div(id("chatMessages")), InputText(id("chatEntry")), Button(id("chatSend"), "Send"));
         Object.seal(this);
     }
     async startAsync(roomName, userName) {

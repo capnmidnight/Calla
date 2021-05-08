@@ -262,7 +262,7 @@ export function autoCapitalize(value) { return new Attr("autocapitalize", value,
 /**
  * Indicates whether controls in this form can by default have their values automatically completed by the browser.
   **/
-export function autoComplete(value) { return new Attr("autocomplete", value, false, "form", "input", "select", "textarea"); }
+export function autoComplete(value) { return new Attr("autocomplete", value ? "on" : "off", false, "form", "input", "select", "textarea"); }
 /**
  * The element should be automatically focused after the page loaded.
   **/
@@ -639,6 +639,10 @@ export function scoped(value) { return new Attr("scoped", value, false, "style")
  * Defines a value which will be selected on page load.
   **/
 export function selected(value) { return new Attr("selected", value, false, "option"); }
+/**
+ * An ersatz attribute for selecting existing elements by query selector.
+ */
+export function selector(value) { return new Attr("selector", value, false); }
 /**
  * The shape attribute
   **/

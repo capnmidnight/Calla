@@ -1,17 +1,32 @@
-#login form > div {
+#login form {
     display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-columns: auto auto;
+    grid-row-gap: 5px;
+    row-gap: 5px;
+    grid-column-gap: 5px;
+    column-gap: 5px;
     margin-bottom: 0.5em;
+    align-items: center;
+    justify-items: end;
 }
 
-    #login form > div > * {
-        grid-column: 1/4;
+    #login form > *:nth-child(2n+1) {
+        grid-column: 1/2;
     }
 
-body,
-#frontBuffer {
-    background-image: url("../images/starfield.jpg");
-}
+    #login form > *:nth-child(2n) {
+        grid-column: -2/-1;
+    }
+
+    #login form > *:last-child {
+        grid-column: 1/-1;
+        justify-self: stretch;
+    }
+
+    body,
+    #frontBuffer {
+        background-image: url("../images/starfield.jpg");
+    }
 
 #frontBuffer {
     position: fixed;
@@ -200,7 +215,7 @@ button,
         grid-template-rows: auto auto 1fr auto;
     }
 
-.dialogTitle {
+.dialog > .title {
     padding: 0.5em;
     background-color: rgba(0, 0, 127, 0.5);
     display: grid;

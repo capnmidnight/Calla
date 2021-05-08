@@ -1,4 +1,4 @@
-@{ 
+@{
     Layout = "_Layout";
     ViewData["Title"] = "Chat";
     ViewData["Description"] = "Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!";
@@ -42,8 +42,6 @@
     <link rel="manifest" href="~/manifest.json">
 }
 
-@model Rooms[]
-
 @section HeadScripts {
     <link rel="stylesheet" type="text/css" href="~/stylesheets/game.css" />
     <environment names="Staging,Production">
@@ -53,119 +51,3 @@
         <script type="module" src="~/scripts/game.js"></script>
     </environment>
 }
-
-<canvas id="frontBuffer"></canvas>
-
-
-<div id="options" class="dialog dialog-2">
-    <div class="dialogTitle">
-        <h1>Options</h1>
-        <button type="button" class="closeButton">🗙</button>
-    </div>
-    <div class="header"></div>
-    <div class="content"></div>
-</div>
-
-
-<div id="devices" class="dialog dialog-1">
-    <div class="dialogTitle">
-        <h1>Devices</h1>
-        <button type="button" class="closeButton">🗙</button>
-    </div>
-    <div class="content">
-        <label for="videoInputDevices">Video Input:</label>
-        <select id="videoInputDevices"></select>
-
-        <label for="audioInputDevices">Audio Input:</label>
-        <select id="audioInputDevices"></select>
-
-        <label for="audioOutputDevices">Audio Output:</label>
-        <select id="audioOutputDevices"></select>
-    </div>
-</div>
-
-
-<div id="users" class="dialog dialog-1">
-    <div class="dialogTitle">
-        <h1>Users</h1>
-        <button type="button" class="closeButton">🗙</button>
-    </div>
-    <div class="content">
-        <div id="chatUsers"></div>
-        <div id="chatMessages"></div>
-        <input type="text" id="chatEntry" />
-        <button type="button" id="chatSend">Send</button>
-    </div>
-</div>
-
-
-<div id="instructions" class="dialog dialog-1">
-    <div class="dialogTitle">
-        <h1>Instructions</h1>
-        <button type="button" class="closeButton">🗙</button>
-    </div>
-    <div class="content">
-        <ul>
-            <li><strong>Be careful in picking your room name</strong>, if you don't want randos to join. Traffic is low right now, but you never know.</li>
-            <li>Try to <strong>pick a unique user name</strong>. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
-            <li><strong>Open the Options view</strong> to set your avatar, or to change your microphone settings.</li>
-            <li><strong>Click on the map</strong> to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
-            <li>Or, <strong>use the arrow keys</strong> on your keyboard to move.</li>
-            <li><strong>Click on yourself</strong> to open a list of Emoji. Select an Emoji to float it out into the map.</li>
-            <li><strong>Hit the E key</strong> to re-emote with your last selected Emoji.</li>
-            <li>You can <strong>roll your mouse wheel</strong> or <strong>pinch your touchscreen</strong> to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.</li>
-        </ul>
-    </div>
-</div>
-
-
-<div id="emoji" class="dialog dialog-3">
-    <div class="dialogTitle">
-        <h1>Emoji</h1>
-        <button type="button" class="closeButton">🗙</button>
-    </div>
-    <div class="header"></div>
-    <div class="content"></div>
-    <div class="footer"></div>
-</div>
-
-
-<div id="login" class="dialog dialog-1">
-    <div class="dialogTitle">
-        <h1>Login</h1>
-    </div>
-    <div class="content">
-        <form autocomplete="on">
-            <div id="userNameControl">
-                <label for="userName">User:</label>
-                <input type="text" id="userName" placeholder="(Required)" />
-            </div>
-
-            <div id="emailControl">
-                <label for="email">Email:</label>
-                <input id="email" type="email" placeholder="(Optional)" />
-            </div>
-
-            <div id="roomControl">
-                <label for="roomName">Room:</label>
-                <datalist id="roomsList">
-                    @foreach (var room in Model)
-                    {
-                        <option value="@room.ShortName">@room.Name</option>
-                    }
-                </datalist>
-                <input type="text"
-                       id="roomName"
-                       autocomplete="on"
-                       list="roomsList"
-                       placeholder="Room name" />
-            </div>
-
-            <div id="connectButtonControl">
-                <button type="button" id="connect" title="Login" disabled>Loading...</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="controls"></div>

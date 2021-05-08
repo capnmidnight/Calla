@@ -6,11 +6,10 @@ export interface FormDialogEvents {
     shown: TypedEvent<"shown">;
 }
 export declare class FormDialog<T extends FormDialogEvents> extends TypedEventBase<T> implements IOpenable, ErsatzElement {
+    title: HTMLElement;
     element: HTMLElement;
-    header: HTMLElement;
     content: HTMLElement;
-    footer: HTMLElement;
-    constructor(tagId: string);
+    constructor(tagId: string, title: string, addCloseButton?: boolean);
     isOpen(): boolean;
     setOpen(v: boolean, displayType?: string): void;
     toggleOpen(displayType?: string): void;

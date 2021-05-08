@@ -1,5 +1,6 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { ErsatzElement } from "kudzu/html/tags";
 import { IOpenable } from "./ops";
 interface ButtonLayerEvents {
     toggleOptions: TypedEvent<"toggleOptions">;
@@ -15,7 +16,7 @@ interface ButtonLayerEvents {
     selectEmoji: TypedEvent<"selectEmoji">;
     zoomChanged: TypedEvent<"zoomChanged">;
 }
-export declare class ButtonLayer extends TypedEventBase<ButtonLayerEvents> implements IOpenable {
+export declare class ButtonLayer extends TypedEventBase<ButtonLayerEvents> implements IOpenable, ErsatzElement {
     element: HTMLDivElement;
     optionsButton: HTMLButtonElement;
     instructionsButton: HTMLButtonElement;

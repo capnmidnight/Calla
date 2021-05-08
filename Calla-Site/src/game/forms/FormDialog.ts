@@ -1,7 +1,9 @@
+import { multiply } from "kudzu/emoji/emojis";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
-import { id } from "kudzu/html/attrs";
-import { Div, ErsatzElement } from "kudzu/html/tags";
+import { className, id, selector } from "kudzu/html/attrs";
+import { onClick } from "kudzu/html/evts";
+import { Button, Div, ErsatzElement, H1 } from "kudzu/html/tags";
 import { hide, IOpenable, show } from "./ops";
 
 export interface FormDialogEvents {
@@ -15,23 +17,39 @@ const hiddenEvt = new TypedEvent("hidden"),
 export class FormDialog<T extends FormDialogEvents>
     extends TypedEventBase<T>
     implements IOpenable,
-        ErsatzElement {
+    ErsatzElement {
+
+    title: HTMLElement;
     element: HTMLElement;
-    header: HTMLElement;
     content: HTMLElement;
-    footer: HTMLElement;
 
-    constructor(tagId: string) {
+    constructor(tagId: string, title: string, addCloseButton = true) {
         super();
-        this.element = Div(id(tagId));
-        this.header = this.element.querySelector(".header");
-        this.content = this.element.querySelector(".content");
-        this.footer = this.element.querySelector(".footer");
 
-        const closeButton = this.element.querySelector(".dialogTitle > button.closeButton");
-        if (closeButton) {
-            closeButton.addEventListener("click", () => hide(this));
+        this.element = Div(
+            id(tagId),
+            className("dialog"),
+
+            this.title = Div(
+                selector(`#${tagId} > .title`),
+                className("title"),
+                H1(
+                    selector(`#${tagId} > .title > h1`),
+                    title)),
+
+            this.content = Div(
+                selector(`#${tagId} > .content`),
+                className("content")));
+
+        if (addCloseButton) {
+            this.title.append(
+                Button(
+                    className("closeButton"),
+                    multiply.value,
+                    onClick(() => hide(this))));
         }
+
+        this.hide();
     }
 
     isOpen(): boolean {

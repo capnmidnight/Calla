@@ -12,6 +12,7 @@ import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
 import { FormDialog } from "./forms/FormDialog";
+import { InstructionsForm } from "./forms/InstructionsDialog";
 import { LoginForm } from "./forms/LoginForm";
 import { hide, isOpen, show } from "./forms/ops";
 import { OptionsForm } from "./forms/OptionsForm";
@@ -26,16 +27,33 @@ const CAMERA_ZOOM_MIN = 0.5,
     audio = new AudioManager(fetcher, SpatializerType.High),
     loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC),
     game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-    login = new LoginForm(),
+    login = new LoginForm([
+        { value: "calla", text: "Calla" },
+        { value: "alxcc", text: "Alexandria Code & Coffee" },
+        { value: "island", text: "Island" },
+        { value: "vurv", text: "Vurv" }
+    ]),
     directory = new UserDirectoryForm(),
     controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
     devices = new DevicesDialog(),
     options = new OptionsForm(),
-    instructions = new FormDialog("instructions"),
+    instructions = new InstructionsForm(),
     emoji = new EmojiForm(),
     timer = new RequestAnimationFrameTimer(),
     disabler = disabled(true),
     enabler = disabled(false);
+
+document.body.append(
+    controls.element,
+    game.element,
+    login.element,
+    directory.element,
+    controls.element,
+    devices.element,
+    options.element,
+    emoji.element,
+    instructions.element
+);
 
 let waitingForEmoji = false;
 
@@ -59,6 +77,9 @@ function showView(view: FormDialog<any>) {
         hide(devices);
         hide(emoji);
         hide(instructions);
+        if (view === login) {
+            hide(controls);
+        }
         show(view);
     }
 }

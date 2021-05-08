@@ -79,10 +79,15 @@ export function tag(name: string, ...rest: TagChild[]) {
     let elem: HTMLElement | null = null;
 
     for (const attr of rest) {
-        if (attr instanceof Attr
-            && attr.key === "id") {
-            elem = document.getElementById(attr.value);
-            break;
+        if (attr instanceof Attr) {
+            if (attr.key === "id") {
+                elem = document.getElementById(attr.value);
+                break;
+            }
+            else if (attr.key === "selector") {
+                elem = document.querySelector(attr.value);
+                break;
+            }
         }
     }
 
@@ -116,7 +121,9 @@ export function tag(name: string, ...rest: TagChild[]) {
                     x = x(true);
                 }
 
-                x.apply(elem);
+                if (!(x instanceof Attr) || x.key !== "selector") {
+                    x.apply(elem);
+                }
             }
         }
     }

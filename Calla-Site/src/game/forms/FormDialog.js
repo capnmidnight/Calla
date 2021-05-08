@@ -1,20 +1,19 @@
+import { multiply } from "kudzu/emoji/emojis";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
-import { id } from "kudzu/html/attrs";
-import { Div } from "kudzu/html/tags";
+import { className, id, selector } from "kudzu/html/attrs";
+import { onClick } from "kudzu/html/evts";
+import { Button, Div, H1 } from "kudzu/html/tags";
 import { hide, show } from "./ops";
 const hiddenEvt = new TypedEvent("hidden"), shownEvt = new TypedEvent("shown");
 export class FormDialog extends TypedEventBase {
-    constructor(tagId) {
+    constructor(tagId, title, addCloseButton = true) {
         super();
-        this.element = Div(id(tagId));
-        this.header = this.element.querySelector(".header");
-        this.content = this.element.querySelector(".content");
-        this.footer = this.element.querySelector(".footer");
-        const closeButton = this.element.querySelector(".dialogTitle > button.closeButton");
-        if (closeButton) {
-            closeButton.addEventListener("click", () => hide(this));
+        this.element = Div(id(tagId), className("dialog"), this.title = Div(selector(`#${tagId} > .title`), className("title"), H1(selector(`#${tagId} > .title > h1`), title)), this.content = Div(selector(`#${tagId} > .content`), className("content")));
+        if (addCloseButton) {
+            this.title.append(Button(className("closeButton"), multiply.value, onClick(() => hide(this))));
         }
+        this.hide();
     }
     isOpen() {
         return this.style.display !== "none";

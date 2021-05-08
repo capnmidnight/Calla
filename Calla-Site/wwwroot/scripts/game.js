@@ -400,7 +400,7 @@
     /**
      * Indicates whether controls in this form can by default have their values automatically completed by the browser.
       **/
-    function autoComplete(value) { return new Attr("autocomplete", value, false, "form", "input", "select", "textarea"); }
+    function autoComplete(value) { return new Attr("autocomplete", value ? "on" : "off", false, "form", "input", "select", "textarea"); }
     /**
      * The audio or video should play as soon as possible.
       **/
@@ -465,6 +465,10 @@
      * Defines the number of rows in a text area.
       **/
     function role(value) { return new Attr("role", value, false); }
+    /**
+     * An ersatz attribute for selecting existing elements by query selector.
+     */
+    function selector(value) { return new Attr("selector", value, false); }
     /**
      * The URL of the embeddable content.
       **/
@@ -563,10 +567,15 @@
     function tag(name, ...rest) {
         let elem = null;
         for (const attr of rest) {
-            if (attr instanceof Attr
-                && attr.key === "id") {
-                elem = document.getElementById(attr.value);
-                break;
+            if (attr instanceof Attr) {
+                if (attr.key === "id") {
+                    elem = document.getElementById(attr.value);
+                    break;
+                }
+                else if (attr.key === "selector") {
+                    elem = document.querySelector(attr.value);
+                    break;
+                }
             }
         }
         if (elem == null) {
@@ -595,7 +604,9 @@
                     if (x instanceof Function) {
                         x = x(true);
                     }
-                    x.apply(elem);
+                    if (!(x instanceof Attr) || x.key !== "selector") {
+                        x.apply(elem);
+                    }
                 }
             }
         }
@@ -614,7 +625,9 @@
     function ButtonRaw(...rest) { return tag("button", ...rest); }
     function Button(...rest) { return ButtonRaw(...rest, type("button")); }
     function Canvas(...rest) { return tag("canvas", ...rest); }
+    function DataList(...rest) { return tag("datalist", ...rest); }
     function Div(...rest) { return tag("div", ...rest); }
+    function Form(...rest) { return tag("form", ...rest); }
     function H1(...rest) { return tag("h1", ...rest); }
     function H2(...rest) { return tag("h2", ...rest); }
     function Img(...rest) { return tag("img", ...rest); }
@@ -624,7 +637,9 @@
     function Option(...rest) { return tag("option", ...rest); }
     function P(...rest) { return tag("p", ...rest); }
     function Script(...rest) { return tag("script", ...rest); }
+    function Select(...rest) { return tag("select", ...rest); }
     function Span(...rest) { return tag("span", ...rest); }
+    function Strong(...rest) { return tag("strong", ...rest); }
     function UL(...rest) { return tag("ul", ...rest); }
     function Video(...rest) { return tag("video", ...rest); }
     /**
@@ -14172,8 +14187,8 @@
                 this.zoom += dz;
                 this.dispatchEvent(zoomChangedEvt);
             };
-            this.element = Div(id("controls"));
-            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), styles(height("25px"), margin("2px auto -2px auto"))), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.element = Div(id("controls"), this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), styles(height("25px"), margin("2px auto -2px auto"))), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.hide();
             Object.seal(this);
         }
         get isFullscreen() {
@@ -14499,16 +14514,13 @@
 
     const hiddenEvt = new TypedEvent("hidden"), shownEvt = new TypedEvent("shown");
     class FormDialog extends TypedEventBase {
-        constructor(tagId) {
+        constructor(tagId, title, addCloseButton = true) {
             super();
-            this.element = Div(id(tagId));
-            this.header = this.element.querySelector(".header");
-            this.content = this.element.querySelector(".content");
-            this.footer = this.element.querySelector(".footer");
-            const closeButton = this.element.querySelector(".dialogTitle > button.closeButton");
-            if (closeButton) {
-                closeButton.addEventListener("click", () => hide(this));
+            this.element = Div(id(tagId), className("dialog"), this.title = Div(selector(`#${tagId} > .title`), className("title"), H1(selector(`#${tagId} > .title > h1`), title)), this.content = Div(selector(`#${tagId} > .content`), className("content")));
+            if (addCloseButton) {
+                this.title.append(Button(className("closeButton"), multiply.value, onClick(() => hide(this))));
             }
+            this.hide();
         }
         isOpen() {
             return this.style.display !== "none";
@@ -14555,7 +14567,8 @@
     const audioInputChangedEvt = new TypedEvent("audioInputChanged"), audioOutputChangedEvt = new TypedEvent("audioOutputChanged"), videoInputChangedEvt = new TypedEvent("videoInputChanged");
     class DevicesDialog extends FormDialog {
         constructor() {
-            super("devices");
+            super("devices", "Devices");
+            this.content.append(Label(htmlFor("videoInputDevices"), "Video Input:"), Select(id("videoInputDevices")), Label(htmlFor("audioInputDevices"), "Audio Input:"), Select(id("audioInputDevices")), Label(htmlFor("audioOutputDevices"), "Audio Output:"), Select(id("audioOutputDevices")));
             this.videoInputSelect = SelectBox("videoInputDevices", "No video input", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(videoInputChangedEvt)));
             this.audioInputSelect = SelectBox("audioInputDevices", "No audio input", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(audioInputChangedEvt)));
             this.audioOutputSelect = SelectBox("audioOutputDevices", "No audio output", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(audioOutputChangedEvt)));
@@ -14998,8 +15011,10 @@
     const cancelEvt = new TypedEvent("emojiCanceled");
     class EmojiForm extends FormDialog {
         constructor() {
-            super("emoji");
-            this.header.append(H2("Recent"), this.recent = P("(None)"));
+            super("emoji", "Emoji");
+            this.element.classList.add("dialog-3");
+            const header = Div(className("header"), H2("Recent"), this.recent = P("(None)"));
+            this.content.insertAdjacentElement("beforebegin", header);
             const previousEmoji = new Array(), allAlts = new Array();
             let selectedEmoji = null, idCounter = 0;
             const closeAll = () => {
@@ -15080,7 +15095,7 @@
                     this.content.appendChild(container);
                 }
             }
-            this.footer.append(this.confirmButton = Button(className("confirm"), "OK", onClick(() => {
+            this.element.append(Div(this.confirmButton = Button(className("confirm"), "OK", onClick(() => {
                 const idx = previousEmoji.indexOf(selectedEmoji);
                 if (idx === -1) {
                     previousEmoji.push(selectedEmoji);
@@ -15093,7 +15108,7 @@
                 disabler$2.apply(this.confirmButton);
                 this.dispatchEvent(cancelEvt);
                 hide(this);
-            })), this.preview = Span(gridPos(1, 4, 3, 1)));
+            })), this.preview = Span(gridPos(1, 4, 3, 1))));
             disabler$2.apply(this.confirmButton);
             this.selectAsync = () => {
                 return new Promise((resolve, reject) => {
@@ -15126,6 +15141,15 @@
         }
     }
 
+    class InstructionsForm extends FormDialog {
+        constructor() {
+            super("instructions", "Instructions");
+            this.element.classList.add("dialog-1");
+            this.content.append(UL(LI(Strong("Be careful in picking your room name"), ", if you don't want randos to join. Traffic is low right now, but you never know."), LI("Try to ", Strong("pick a unique user name"), ". A lot of people use \"Test\" and then there are a bunch of people with the same name running around."), LI(Strong("Open the Options view"), " to set your avatar, or to change your microphone settings."), LI(Strong("Click on the map"), " to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls."), LI("Or, ", Strong("use the arrow keys"), " on your keyboard to move."), LI(Strong("Click on yourself"), " to open a list of Emoji. Select an Emoji to float it out into the map."), LI(Strong("Hit the E key"), " to re-emote with your last selected Emoji."), LI("You can ", Strong("roll your mouse wheel"), " or ", Strong("pinch your touchscreen"), " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.")));
+            Object.seal(this);
+        }
+    }
+
     const loginEvt = new TypedEvent("login");
     function isEnter(evt) {
         return !evt.shiftKey
@@ -15135,21 +15159,13 @@
             && evt.key === "Enter";
     }
     class LoginForm extends FormDialog {
-        constructor() {
-            super("login");
+        constructor(rooms) {
+            super("login", "Login", false);
             this._ready = false;
             this._connecting = false;
             this._connected = false;
+            this.element.classList.add("dialog-1");
             this.addEventListener("shown", () => this._ready = true);
-            const curRooms = new Array();
-            const curOpts = this.element.querySelectorAll("#roomSelector option");
-            for (let i = 0; i < curOpts.length; ++i) {
-                const opt = curOpts[i];
-                curRooms.push({
-                    ShortName: opt.value,
-                    Name: opt.textContent || opt.innerText
-                });
-            }
             const validator = () => this.validate();
             const onLoginAttempt = () => {
                 if (this.userName.length > 0
@@ -15159,7 +15175,7 @@
                 }
             };
             let lastRoomName = null;
-            Div(id("userNameControl"), this.userNameInput = InputText(id("userName"), autoComplete(true), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
+            this.content.append(DataList(id("roomsList"), ...rooms.map(room => Option(value(room.value), room.text))), Form(id("loginForm"), autoComplete(true), Label(htmlFor("userName"), "User:"), this.userNameInput = InputText(id("userName"), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
                 if (isEnter(evt)) {
                     if (this.userName.length === 0) {
                         this.userNameInput.focus();
@@ -15171,8 +15187,7 @@
                         onLoginAttempt();
                     }
                 }
-            })));
-            Div(id("emailControl"), this.emailInput = InputEmail(id("email"), autoComplete(true), placeHolder("Email address (Optional)"), title("Email addresses are used to send updates about Calla."), onInput(validator), onKeyPress((evt) => {
+            })), Label(htmlFor("email"), "Email:"), this.emailInput = InputEmail(id("email"), placeHolder("Email address (Optional)"), title("Email addresses are used to send updates about Calla."), onInput(validator), onKeyPress((evt) => {
                 if (isEnter(evt)) {
                     if (this.userName.length === 0) {
                         this.userNameInput.focus();
@@ -15184,8 +15199,7 @@
                         onLoginAttempt();
                     }
                 }
-            })));
-            Div(id("roomControl"), this.roomNameInput = InputText(id("roomName"), autoComplete(true), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
+            })), Label(htmlFor("roomName"), "Room:"), this.roomNameInput = InputText(id("roomName"), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
                 lastRoomName = this.roomName;
                 this.roomName = "";
             }, { capture: true }), onBlur(() => {
@@ -15204,8 +15218,7 @@
                         onLoginAttempt();
                     }
                 }
-            })));
-            Div(id("connectButtonControl"), this.connectButton = Button(id("connect"), onClick(onLoginAttempt)));
+            })), this.connectButton = Button(id("connect"), onClick(onLoginAttempt))));
             this.validate();
         }
         validate() {
@@ -15951,10 +15964,11 @@
     const disabler$3 = disabled(true), enabler$3 = disabled(false);
     class OptionsForm extends FormDialog {
         constructor() {
-            super("options");
+            super("options", "Options");
             this._drawHearing = false;
             this._inputBinding = new InputBinding();
             this.user = null;
+            this.element.classList.add("dialog-2");
             const _ = (evt) => () => this.dispatchEvent(evt);
             const audioPropsChanged = onInput(_(audioPropsChangedEvt));
             const makeKeyboardBinder = (id, label) => {
@@ -16011,8 +16025,8 @@
                 cols[i] = "1fr";
                 panels[i].style.gridColumnStart = (i + 1).toFixed(0);
             }
-            gridColsDef(...cols).apply(this.header.style);
-            this.header.append(...panels.map(p => p.button));
+            const header = Div(className("header"), styles(gridColsDef(...cols)), ...panels.map(p => p.button));
+            this.content.insertAdjacentElement("beforebegin", header);
             this.content.append(...panels.map(p => p.element));
             const showPanel = (p) => () => {
                 for (let i = 0; i < panels.length; ++i) {
@@ -16328,14 +16342,14 @@
     const ROW_TIMEOUT = 3000;
     class UserDirectoryForm extends FormDialog {
         constructor() {
-            super("users");
+            super("users", "Users");
             this.roomName = null;
             this.userName = null;
             this.rows = new Map();
             this.users = new Map();
             this.avatarGs = new Map();
             this.lastUser = null;
-            this.usersList = Div(id("chatUsers"));
+            this.content.append(this.usersList = Div(id("chatUsers")), Div(id("chatMessages")), InputText(id("chatEntry")), Button(id("chatSend"), "Send"));
             Object.seal(this);
         }
         async startAsync(roomName, userName) {
@@ -18716,7 +18730,13 @@
         }
     }
 
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm([
+        { value: "calla", text: "Calla" },
+        { value: "alxcc", text: "Alexandria Code & Coffee" },
+        { value: "island", text: "Island" },
+        { value: "vurv", text: "Vurv" }
+    ]), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
+    document.body.append(controls$1.element, game.element, login.element, directory.element, controls$1.element, devices.element, options.element, emoji.element, instructions.element);
     let waitingForEmoji = false;
     async function recordJoin(Name, Email, Room) {
         await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
@@ -18735,6 +18755,9 @@
             hide(devices);
             hide(emoji);
             hide(instructions);
+            if (view === login) {
+                hide(controls$1);
+            }
             show(view);
         }
     }

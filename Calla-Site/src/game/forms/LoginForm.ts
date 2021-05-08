@@ -1,13 +1,13 @@
 import { TypedEvent } from "kudzu/events/EventBase";
-import { autoComplete, id, list, placeHolder, required, title, value } from "kudzu/html/attrs";
+import { autoComplete, htmlFor, id, list, placeHolder, required, title, value } from "kudzu/html/attrs";
 import { onBlur, onClick, onInput, onKeyPress, onMouseDown } from "kudzu/html/evts";
-import { Button, Div, InputEmail, InputText } from "kudzu/html/tags";
+import { Button, DataList, Form, InputEmail, InputText, Option, Label } from "kudzu/html/tags";
 import { FormDialog, FormDialogEvents } from "./FormDialog";
 import { setLocked } from "./ops";
 
 interface RoomEntry {
-    ShortName: string;
-    Name?: string;
+    value: string;
+    text: string;
 }
 
 interface LoginFormEvents extends FormDialogEvents {
@@ -35,20 +35,12 @@ export class LoginForm extends FormDialog<LoginFormEvents> {
     private emailInput: HTMLInputElement;
     private connectButton: HTMLButtonElement;
 
-    constructor() {
-        super("login");
+    constructor(rooms: RoomEntry[]) {
+        super("login", "Login", false);
+
+        this.element.classList.add("dialog-1");
 
         this.addEventListener("shown", () => this._ready = true);
-
-        const curRooms = new Array<RoomEntry>();
-        const curOpts = this.element.querySelectorAll("#roomSelector option");
-        for (let i = 0; i < curOpts.length; ++i) {
-            const opt = curOpts[i] as HTMLOptionElement;
-            curRooms.push({
-                ShortName: opt.value,
-                Name: opt.textContent || opt.innerText
-            });
-        }
 
         const validator = () => this.validate();
 
@@ -62,88 +54,96 @@ export class LoginForm extends FormDialog<LoginFormEvents> {
 
         let lastRoomName: string = null;
 
-        Div(
-            id("userNameControl"),
-            this.userNameInput = InputText(
-                id("userName"),
+        this.content.append(
+            DataList(
+                id("roomsList"),
+                ...rooms.map(room =>
+                    Option(
+                        value(room.value),
+                        room.text))),
+            Form(
+                id("loginForm"),
                 autoComplete(true),
-                placeHolder("User name"),
-                required(true),
-                onInput(validator),
-                onKeyPress((evt) => {
-                    if (isEnter(evt)) {
-                        if (this.userName.length === 0) {
-                            this.userNameInput.focus();
+                Label(
+                    htmlFor("userName"),
+                    "User:"),
+                this.userNameInput = InputText(
+                    id("userName"),
+                    placeHolder("User name"),
+                    required(true),
+                    onInput(validator),
+                    onKeyPress((evt) => {
+                        if (isEnter(evt)) {
+                            if (this.userName.length === 0) {
+                                this.userNameInput.focus();
+                            }
+                            else if (this.roomName.length === 0) {
+                                this.roomNameInput.focus();
+                            }
+                            else {
+                                onLoginAttempt();
+                            }
                         }
-                        else if (this.roomName.length === 0) {
-                            this.roomNameInput.focus();
-                        }
-                        else {
-                            onLoginAttempt();
-                        }
-                    }
-                })));
+                    })),
 
-        Div(
-            id("emailControl"),
-            this.emailInput = InputEmail(
-                id("email"),
-                autoComplete(true),
-                placeHolder("Email address (Optional)"),
-                title("Email addresses are used to send updates about Calla."),
-                onInput(validator),
-                onKeyPress((evt) => {
-                    if (isEnter(evt)) {
-                        if (this.userName.length === 0) {
-                            this.userNameInput.focus();
+                Label(
+                    htmlFor("email"),
+                    "Email:"),
+                this.emailInput = InputEmail(
+                    id("email"),
+                    placeHolder("Email address (Optional)"),
+                    title("Email addresses are used to send updates about Calla."),
+                    onInput(validator),
+                    onKeyPress((evt) => {
+                        if (isEnter(evt)) {
+                            if (this.userName.length === 0) {
+                                this.userNameInput.focus();
+                            }
+                            else if (this.roomName.length === 0) {
+                                this.roomNameInput.focus();
+                            }
+                            else {
+                                onLoginAttempt();
+                            }
                         }
-                        else if (this.roomName.length === 0) {
-                            this.roomNameInput.focus();
-                        }
-                        else {
-                            onLoginAttempt();
-                        }
-                    }
-                })));
+                    })),
 
-        Div(
-            id("roomControl"),
-            this.roomNameInput = InputText(
-                id("roomName"),
-                autoComplete(true),
-                list("roomsList"),
-                placeHolder("Room name"),
-                value("Calla"),
-                required(true),
-                onMouseDown(() => {
-                    lastRoomName = this.roomName;
-                    this.roomName = "";
-                }, { capture: true }),
-                onBlur(() => {
-                    if (this.roomName.length === 0) {
-                        this.roomName = lastRoomName;
-                    }
-                }),
-                onInput(validator),
-                onKeyPress((evt) => {
-                    if (isEnter(evt)) {
-                        if (this.userName.length === 0) {
-                            this.userNameInput.focus();
+                Label(
+                    htmlFor("roomName"),
+                    "Room:"),
+                this.roomNameInput = InputText(
+                    id("roomName"),
+                    list("roomsList"),
+                    placeHolder("Room name"),
+                    value("Calla"),
+                    required(true),
+                    onMouseDown(() => {
+                        lastRoomName = this.roomName;
+                        this.roomName = "";
+                    }, { capture: true }),
+                    onBlur(() => {
+                        if (this.roomName.length === 0) {
+                            this.roomName = lastRoomName;
                         }
-                        else if (this.email.length === 0) {
-                            this.emailInput.focus();
+                    }),
+                    onInput(validator),
+                    onKeyPress((evt) => {
+                        if (isEnter(evt)) {
+                            if (this.userName.length === 0) {
+                                this.userNameInput.focus();
+                            }
+                            else if (this.email.length === 0) {
+                                this.emailInput.focus();
+                            }
+                            else {
+                                onLoginAttempt();
+                            }
                         }
-                        else {
-                            onLoginAttempt();
-                        }
-                    }
-                })));
+                    })),
 
-        Div(
-            id("connectButtonControl"),
-            this.connectButton = Button(
-                id("connect"),
-                onClick(onLoginAttempt)));
+                this.connectButton = Button(
+                    id("connect"),
+                    onClick(onLoginAttempt))));
 
         this.validate();
     }

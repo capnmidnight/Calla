@@ -1,6 +1,6 @@
-import { disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value} from "kudzu/html/attrs";
+import { className, disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value} from "kudzu/html/attrs";
 import { CanvasTypes } from "kudzu/html/canvas";
-import { width } from "kudzu/html/css";
+import { styles, width } from "kudzu/html/css";
 import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
 import { gridColsDef } from "kudzu/html/grid";
 import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
@@ -108,7 +108,9 @@ export class OptionsForm
     private _avatarG: CanvasRenderingContext2D;
 
     constructor() {
-        super("options");
+        super("options", "Options");
+
+        this.element.classList.add("dialog-2");
 
         const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
@@ -296,9 +298,13 @@ export class OptionsForm
             panels[i].style.gridColumnStart = (i + 1).toFixed(0);
         }
 
-        gridColsDef(...cols).apply(this.header.style);
+        const header = Div(
+            className("header"),
+            styles(gridColsDef(...cols)),
+            ...panels.map(p => p.button));
 
-        this.header.append(...panels.map(p => p.button));
+        this.content.insertAdjacentElement("beforebegin", header);
+
         this.content.append(...panels.map(p => p.element));
 
         const showPanel = (p: number) =>

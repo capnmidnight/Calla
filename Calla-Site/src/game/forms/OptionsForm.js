@@ -1,5 +1,5 @@
-import { disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value } from "kudzu/html/attrs";
-import { width } from "kudzu/html/css";
+import { className, disabled, htmlFor, htmlHeight, htmlWidth, id, max, min, placeHolder, step, value } from "kudzu/html/attrs";
+import { styles, width } from "kudzu/html/css";
 import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
 import { gridColsDef } from "kudzu/html/grid";
 import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
@@ -51,10 +51,11 @@ const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlCh
 const disabler = disabled(true), enabler = disabled(false);
 export class OptionsForm extends FormDialog {
     constructor() {
-        super("options");
+        super("options", "Options");
         this._drawHearing = false;
         this._inputBinding = new InputBinding();
         this.user = null;
+        this.element.classList.add("dialog-2");
         const _ = (evt) => () => this.dispatchEvent(evt);
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));
         const makeKeyboardBinder = (id, label) => {
@@ -111,8 +112,8 @@ export class OptionsForm extends FormDialog {
             cols[i] = "1fr";
             panels[i].style.gridColumnStart = (i + 1).toFixed(0);
         }
-        gridColsDef(...cols).apply(this.header.style);
-        this.header.append(...panels.map(p => p.button));
+        const header = Div(className("header"), styles(gridColsDef(...cols)), ...panels.map(p => p.button));
+        this.content.insertAdjacentElement("beforebegin", header);
         this.content.append(...panels.map(p => p.element));
         const showPanel = (p) => () => {
             for (let i = 0; i < panels.length; ++i) {

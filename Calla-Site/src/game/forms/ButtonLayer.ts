@@ -19,7 +19,7 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { alt, className, id, max, min, role, src, step, title, value } from "kudzu/html/attrs";
 import { height, margin, styles, textAlign } from "kudzu/html/css";
 import { onClick, onInput } from "kudzu/html/evts";
-import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
+import { Button, Div, ErsatzElement, Img, InputRange, Run } from "kudzu/html/tags";
 import { IOpenable, updateLabel } from "./ops";
 
 interface ButtonLayerEvents {
@@ -52,7 +52,7 @@ const toggleOptionsEvt = new TypedEvent("toggleOptions"),
 
 export class ButtonLayer
     extends TypedEventBase<ButtonLayerEvents>
-    implements IOpenable {
+    implements IOpenable, ErsatzElement {
     element: HTMLDivElement;
     optionsButton: HTMLButtonElement;
     instructionsButton: HTMLButtonElement;
@@ -81,9 +81,8 @@ export class ButtonLayer
             this.dispatchEvent(zoomChangedEvt);
         };
 
-        this.element = Div(id("controls"));
-
-        this.element.append(
+        this.element = Div(
+            id("controls"),
 
             this.optionsButton = Button(
                 id("optionsButton"),
@@ -198,6 +197,8 @@ export class ButtonLayer
                 onClick(() => changeZoom(-0.5)),
                 Run(magnifyingGlassTiltedRight.value),
                 Run("-")));
+
+        this.hide();
 
         Object.seal(this);
     }

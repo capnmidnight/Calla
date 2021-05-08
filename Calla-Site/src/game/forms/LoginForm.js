@@ -1,7 +1,7 @@
 import { TypedEvent } from "kudzu/events/EventBase";
-import { autoComplete, id, list, placeHolder, required, title, value } from "kudzu/html/attrs";
+import { autoComplete, htmlFor, id, list, placeHolder, required, title, value } from "kudzu/html/attrs";
 import { onBlur, onClick, onInput, onKeyPress, onMouseDown } from "kudzu/html/evts";
-import { Button, Div, InputEmail, InputText } from "kudzu/html/tags";
+import { Button, DataList, Form, InputEmail, InputText, Option, Label } from "kudzu/html/tags";
 import { FormDialog } from "./FormDialog";
 import { setLocked } from "./ops";
 const loginEvt = new TypedEvent("login");
@@ -13,21 +13,13 @@ function isEnter(evt) {
         && evt.key === "Enter";
 }
 export class LoginForm extends FormDialog {
-    constructor() {
-        super("login");
+    constructor(rooms) {
+        super("login", "Login", false);
         this._ready = false;
         this._connecting = false;
         this._connected = false;
+        this.element.classList.add("dialog-1");
         this.addEventListener("shown", () => this._ready = true);
-        const curRooms = new Array();
-        const curOpts = this.element.querySelectorAll("#roomSelector option");
-        for (let i = 0; i < curOpts.length; ++i) {
-            const opt = curOpts[i];
-            curRooms.push({
-                ShortName: opt.value,
-                Name: opt.textContent || opt.innerText
-            });
-        }
         const validator = () => this.validate();
         const onLoginAttempt = () => {
             if (this.userName.length > 0
@@ -37,7 +29,7 @@ export class LoginForm extends FormDialog {
             }
         };
         let lastRoomName = null;
-        Div(id("userNameControl"), this.userNameInput = InputText(id("userName"), autoComplete(true), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
+        this.content.append(DataList(id("roomsList"), ...rooms.map(room => Option(value(room.value), room.text))), Form(id("loginForm"), autoComplete(true), Label(htmlFor("userName"), "User:"), this.userNameInput = InputText(id("userName"), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
             if (isEnter(evt)) {
                 if (this.userName.length === 0) {
                     this.userNameInput.focus();
@@ -49,8 +41,7 @@ export class LoginForm extends FormDialog {
                     onLoginAttempt();
                 }
             }
-        })));
-        Div(id("emailControl"), this.emailInput = InputEmail(id("email"), autoComplete(true), placeHolder("Email address (Optional)"), title("Email addresses are used to send updates about Calla."), onInput(validator), onKeyPress((evt) => {
+        })), Label(htmlFor("email"), "Email:"), this.emailInput = InputEmail(id("email"), placeHolder("Email address (Optional)"), title("Email addresses are used to send updates about Calla."), onInput(validator), onKeyPress((evt) => {
             if (isEnter(evt)) {
                 if (this.userName.length === 0) {
                     this.userNameInput.focus();
@@ -62,8 +53,7 @@ export class LoginForm extends FormDialog {
                     onLoginAttempt();
                 }
             }
-        })));
-        Div(id("roomControl"), this.roomNameInput = InputText(id("roomName"), autoComplete(true), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
+        })), Label(htmlFor("roomName"), "Room:"), this.roomNameInput = InputText(id("roomName"), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
             lastRoomName = this.roomName;
             this.roomName = "";
         }, { capture: true }), onBlur(() => {
@@ -82,8 +72,7 @@ export class LoginForm extends FormDialog {
                     onLoginAttempt();
                 }
             }
-        })));
-        Div(id("connectButtonControl"), this.connectButton = Button(id("connect"), onClick(onLoginAttempt)));
+        })), this.connectButton = Button(id("connect"), onClick(onLoginAttempt))));
         this.validate();
     }
     validate() {

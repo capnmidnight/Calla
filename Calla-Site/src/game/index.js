@@ -10,14 +10,20 @@ import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
-import { FormDialog } from "./forms/FormDialog";
+import { InstructionsForm } from "./forms/InstructionsDialog";
 import { LoginForm } from "./forms/LoginForm";
 import { hide, isOpen, show } from "./forms/ops";
 import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
 import { Settings } from "./Settings";
-const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm([
+    { value: "calla", text: "Calla" },
+    { value: "alxcc", text: "Alexandria Code & Coffee" },
+    { value: "island", text: "Island" },
+    { value: "vurv", text: "Vurv" }
+]), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+document.body.append(controls.element, game.element, login.element, directory.element, controls.element, devices.element, options.element, emoji.element, instructions.element);
 let waitingForEmoji = false;
 async function recordJoin(Name, Email, Room) {
     await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
@@ -36,6 +42,9 @@ function showView(view) {
         hide(devices);
         hide(emoji);
         hide(instructions);
+        if (view === login) {
+            hide(controls);
+        }
         show(view);
     }
 }

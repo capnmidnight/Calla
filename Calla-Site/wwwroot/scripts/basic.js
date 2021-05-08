@@ -1637,10 +1637,15 @@
     function tag(name, ...rest) {
         let elem = null;
         for (const attr of rest) {
-            if (attr instanceof Attr
-                && attr.key === "id") {
-                elem = document.getElementById(attr.value);
-                break;
+            if (attr instanceof Attr) {
+                if (attr.key === "id") {
+                    elem = document.getElementById(attr.value);
+                    break;
+                }
+                else if (attr.key === "selector") {
+                    elem = document.querySelector(attr.value);
+                    break;
+                }
             }
         }
         if (elem == null) {
@@ -1669,7 +1674,9 @@
                     if (x instanceof Function) {
                         x = x(true);
                     }
-                    x.apply(elem);
+                    if (!(x instanceof Attr) || x.key !== "selector") {
+                        x.apply(elem);
+                    }
                 }
             }
         }

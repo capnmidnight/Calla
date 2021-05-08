@@ -613,6 +613,10 @@ export declare function scoped(value: boolean): Attr;
   **/
 export declare function selected(value: boolean): Attr;
 /**
+ * An ersatz attribute for selecting existing elements by query selector.
+ */
+export declare function selector(value: string): Attr;
+/**
  * The shape attribute
   **/
 export declare function shape(value: string): Attr;
