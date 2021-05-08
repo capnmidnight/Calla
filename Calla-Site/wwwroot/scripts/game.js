@@ -17639,7 +17639,7 @@
             this._tileset = null;
             this._tiles = null;
             this._graph = null;
-            this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
+            this._url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.baseURI);
         }
         async load() {
             const map = await this.fetcher.getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = Array.from(map.querySelectorAll("layer > data"));
@@ -18829,8 +18829,8 @@
             settings.zoom = game.zoom = controls$1.zoom;
         });
         login.addEventListener("login", async () => {
-            await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
-            await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
+            await client.audio.createClip("join", false, false, false, 0.5, "/audio/door-open.mp3");
+            await client.audio.createClip("leave", false, false, true, 0.5, "/audio/door-close.mp3");
             setAudioProperties();
             let roomName = await recordRoom(login.roomName);
             await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);

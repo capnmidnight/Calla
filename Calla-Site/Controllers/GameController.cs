@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Calla.ActionFilters;
 using Calla.Data;
 using Calla.Models;
 
@@ -17,14 +16,6 @@ namespace Calla.Controllers
         public GameController(CallaContext db)
         {
             this.db = db;
-        }
-
-        [HttpGet]
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        [ServiceFilter(typeof(LogHitsAttribute))]
-        public IActionResult Index()
-        {
-            return View();
         }
 
         [HttpPost]

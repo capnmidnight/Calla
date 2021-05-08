@@ -22,7 +22,7 @@ export class TileMap {
     private _graph: astar.Graph = null;
 
     constructor(tilemapName: string, private fetcher: IFetcher) {
-        this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
+        this._url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
 
     async load() {

@@ -175,8 +175,8 @@ function refreshUser(userID: string) {
     });
 
     login.addEventListener("login", async () => {
-        await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
-        await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
+        await client.audio.createClip("join", false, false, false, 0.5, "/audio/door-open.mp3");
+        await client.audio.createClip("leave", false, false, true, 0.5, "/audio/door-close.mp3");
         setAudioProperties();
 
         let roomName = await recordRoom(login.roomName);

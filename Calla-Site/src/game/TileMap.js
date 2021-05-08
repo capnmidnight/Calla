@@ -16,7 +16,7 @@ export class TileMap {
         this._tileset = null;
         this._tiles = null;
         this._graph = null;
-        this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
+        this._url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
     async load() {
         const map = await this.fetcher.getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = Array.from(map.querySelectorAll("layer > data"));
