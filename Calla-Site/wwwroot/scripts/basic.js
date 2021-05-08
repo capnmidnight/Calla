@@ -1429,9 +1429,10 @@
          * @param value - the value to set for the attribute.
          * @param tags - the HTML tags that support this attribute.
          */
-        constructor(key, value, ...tags) {
+        constructor(key, value, bySetAttribute, ...tags) {
             this.key = key;
             this.value = value;
+            this.bySetAttribute = bySetAttribute;
             this.tags = tags.map(t => t.toLocaleUpperCase());
             Object.freeze(this);
         }
@@ -1447,6 +1448,9 @@
             }
             else if (this.key === "style") {
                 Object.assign(elem.style, this.value);
+            }
+            else if (this.bySetAttribute) {
+                elem.setAttribute(this.key, this.value);
             }
             else if (this.key in elem) {
                 elem[this.key] = this.value;
@@ -1465,35 +1469,35 @@
     /**
      * The audio or video should play as soon as possible.
       **/
-    function autoPlay(value) { return new Attr("autoplay", value, "audio", "video"); }
+    function autoPlay(value) { return new Attr("autoplay", value, false, "audio", "video"); }
     /**
      * Indicates whether the browser should show playback controls to the user.
       **/
-    function controls(value) { return new Attr("controls", value, "audio", "video"); }
+    function controls(value) { return new Attr("controls", value, false, "audio", "video"); }
     /**
      * Specifies the height of elements listed here. For all other elements, use the CSS height property.
       **/
-    function htmlHeight(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+    function htmlHeight(value) { return new Attr("height", value, false, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
     /**
      * Indicates whether the audio will be initially silenced on page load.
       **/
-    function muted(value) { return new Attr("muted", value, "audio", "video"); }
+    function muted(value) { return new Attr("muted", value, false, "audio", "video"); }
     /**
      * Indicates that the media element should play automatically on iOS.
       **/
-    function playsInline(value) { return new Attr("playsInline", value, "audio", "video"); }
+    function playsInline(value) { return new Attr("playsInline", value, false, "audio", "video"); }
     /**
      * The URL of the embeddable content.
       **/
-    function src(value) { return new Attr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+    function src(value) { return new Attr("src", value, false, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
     /**
      * A MediaStream object to use as a source for an HTML video or audio element
       **/
-    function srcObject(value) { return new Attr("srcObject", value, "audio", "video"); }
+    function srcObject(value) { return new Attr("srcObject", value, false, "audio", "video"); }
     /**
      * For the elements listed here, this establishes the element's width.
       **/
-    function htmlWidth(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+    function htmlWidth(value) { return new Attr("width", value, false, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
     function getTestNumber() {
         if ("location" in globalThis) {
@@ -1559,6 +1563,7 @@
         }
     }
 
+    // NOTE: This field gets overwritten in a build process.
     "chrome" in globalThis && !navigator.userAgent.match("CriOS");
     /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     /Opera/.test(navigator.userAgent);
@@ -2667,7 +2672,7 @@
             else if (end.t <= t) {
                 this.copy(end);
             }
-            else if (start.t < t) {
+            else {
                 const p = project(t, start.t, end.t);
                 this.copy(start);
                 lerp(this.p, this.p, end.p, p);
@@ -2731,17 +2736,15 @@
             const ox = this.offset[0];
             const oy = this.offset[1];
             const oz = this.offset[2];
-            this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
             this.end.t = t + dt;
-            if (dt > 0) {
-                this.start.copy(this.current);
-                this.start.t = t;
+            this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
+            this.start.t = t;
+            this.current.t = t;
+            if (dt <= 0 || this.current.t === 0) {
+                this.start.copy(this.end);
             }
             else {
-                this.start.copy(this.end);
-                this.start.t = t;
-                this.current.copy(this.end);
-                this.current.t = t;
+                this.start.copy(this.current);
             }
         }
         /**
@@ -8334,10 +8337,9 @@
          * Get a pose, normalize the transition time, and perform on operation on it, if it exists.
          * @param sources - the collection of poses from which to retrieve the pose.
          * @param id - the id of the pose for which to perform the operation.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withPose(sources, id, dt, poseCallback) {
+        withPose(sources, id, poseCallback) {
             const source = sources.get(id);
             let pose = null;
             if (source) {
@@ -8349,19 +8351,15 @@
             if (!pose) {
                 return null;
             }
-            if (dt == null) {
-                dt = this.transitionTime;
-            }
-            return poseCallback(pose, dt);
+            return poseCallback(pose);
         }
         /**
          * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
          * @param id - the id of the user for which to perform the operation.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withUser(id, dt, poseCallback) {
-            return this.withPose(this.users, id, dt, poseCallback);
+        withUser(id, poseCallback) {
+            return this.withPose(this.users, id, poseCallback);
         }
         /**
          * Set the comfort position offset for a given user.
@@ -8371,7 +8369,7 @@
          * @param z - the lateral component of the offset.
          */
         setUserOffset(id, x, y, z) {
-            this.withUser(id, null, (pose) => {
+            this.withUser(id, (pose) => {
                 pose.setOffset(x, y, z);
             });
         }
@@ -8380,9 +8378,7 @@
          * @param id - the id of the user for which to set the offset.
          */
         getUserOffset(id) {
-            return this.withUser(id, null, (pose) => {
-                return pose.offset;
-            });
+            return this.withUser(id, pose => pose.offset);
         }
         /**
          * Set the position and orientation of a user.
@@ -8398,9 +8394,9 @@
          * @param uz - the lateral component of the up vector.
          * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withUser(id, dt, (pose, dt) => {
-                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.withUser(id, (pose) => {
+                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -8409,8 +8405,8 @@
          * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withClip(id, dt, poseCallback) {
-            return this.withPose(this.clips, id, dt, poseCallback);
+        withClip(id, poseCallback) {
+            return this.withPose(this.clips, id, poseCallback);
         }
         /**
          * Set the position of an audio clip.
@@ -8418,11 +8414,10 @@
          * @param x - the horizontal component of the position.
          * @param y - the vertical component of the position.
          * @param z - the lateral component of the position.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipPosition(id, x, y, z, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTargetPosition(x, y, z, this.currentTime, dt);
+        setClipPosition(id, x, y, z) {
+            this.withClip(id, (pose) => {
+                pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -8434,11 +8429,10 @@
          * @param ux - the horizontal component of the up vector.
          * @param uy - the vertical component of the up vector.
          * @param uz - the lateral component of the up vector.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipOrientation(id, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setClipOrientation(id, fx, fy, fz, ux, uy, uz) {
+            this.withClip(id, (pose) => {
+                pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -8453,11 +8447,10 @@
          * @param ux - the horizontal component of the up vector.
          * @param uy - the vertical component of the up vector.
          * @param uz - the lateral component of the up vector.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setClipPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.withClip(id, (pose) => {
+                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, 0.5);
             });
         }
     }
@@ -8630,11 +8623,11 @@
             this.audio.offsetRadius = v;
         }
         setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
             this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
             this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
@@ -8720,9 +8713,6 @@
         async disconnect() {
             await this._meta.disconnect();
             await this._tele.disconnect();
-        }
-        update() {
-            this.audio.update();
         }
         async setAudioOutputDevice(device) {
             this._tele.setAudioOutputDevice(device);
@@ -9078,7 +9068,7 @@
      * be moved.
      **/
     function update() {
-        client.update();
+        client.audio.update();
         for (let user of users.values()) {
             user.update();
         }

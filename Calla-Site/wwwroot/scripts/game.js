@@ -356,9 +356,10 @@
          * @param value - the value to set for the attribute.
          * @param tags - the HTML tags that support this attribute.
          */
-        constructor(key, value, ...tags) {
+        constructor(key, value, bySetAttribute, ...tags) {
             this.key = key;
             this.value = value;
+            this.bySetAttribute = bySetAttribute;
             this.tags = tags.map(t => t.toLocaleUpperCase());
             Object.freeze(this);
         }
@@ -374,6 +375,9 @@
             }
             else if (this.key === "style") {
                 Object.assign(elem.style, this.value);
+            }
+            else if (this.bySetAttribute) {
+                elem.setAttribute(this.key, this.value);
             }
             else if (this.key in elem) {
                 elem[this.key] = this.value;
@@ -392,95 +396,107 @@
     /**
      * Alternative text in case an image can't be displayed.
      **/
-    function alt(value) { return new Attr("alt", value, "applet", "area", "img", "input"); }
+    function alt(value) { return new Attr("alt", value, false, "applet", "area", "img", "input"); }
+    /**
+     * Indicates whether controls in this form can by default have their values automatically completed by the browser.
+      **/
+    function autoComplete(value) { return new Attr("autocomplete", value, false, "form", "input", "select", "textarea"); }
     /**
      * The audio or video should play as soon as possible.
       **/
-    function autoPlay(value) { return new Attr("autoplay", value, "audio", "video"); }
+    function autoPlay(value) { return new Attr("autoplay", value, false, "audio", "video"); }
     /**
      * Often used with CSS to style elements with common properties.
       **/
-    function className(value) { return new Attr("className", value); }
+    function className(value) { return new Attr("className", value, false); }
     /**
      * Indicates whether the browser should show playback controls to the user.
       **/
-    function controls(value) { return new Attr("controls", value, "audio", "video"); }
+    function controls(value) { return new Attr("controls", value, false, "audio", "video"); }
     /**
      * Indicates whether the user can interact with the element.
       **/
-    function disabled(value) { return new Attr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
+    function disabled(value) { return new Attr("disabled", value, false, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
     /**
      * Describes elements which belongs to this one.
       **/
-    function htmlFor(value) { return new Attr("htmlFor", value, "label", "output"); }
+    function htmlFor(value) { return new Attr("htmlFor", value, false, "label", "output"); }
     /**
      * Specifies the height of elements listed here. For all other elements, use the CSS height property.
       **/
-    function htmlHeight(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+    function htmlHeight(value) { return new Attr("height", value, false, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
     /**
      * The URL of a linked resource.
       **/
-    function href(value) { return new Attr("href", value, "a", "area", "base", "link"); }
+    function href(value) { return new Attr("href", value, false, "a", "area", "base", "link"); }
     /**
      * Often used with CSS to style a specific element. The value of this attribute must be unique.
       **/
-    function id(value) { return new Attr("id", value); }
+    function id(value) { return new Attr("id", value, false); }
+    /**
+     * Identifies a list of pre-defined options to suggest to the user.
+      **/
+    function list(value) { return new Attr("list", value, true, "input"); }
     /**
      * Indicates the maximum value allowed.
       **/
-    function max(value) { return new Attr("max", value, "input", "meter", "progress"); }
+    function max(value) { return new Attr("max", value, false, "input", "meter", "progress"); }
     /**
      * Indicates the minimum value allowed.
       **/
-    function min(value) { return new Attr("min", value, "input", "meter"); }
+    function min(value) { return new Attr("min", value, false, "input", "meter"); }
     /**
      * Indicates whether the audio will be initially silenced on page load.
       **/
-    function muted(value) { return new Attr("muted", value, "audio", "video"); }
+    function muted(value) { return new Attr("muted", value, false, "audio", "video"); }
     /**
      * Provides a hint to the user of what can be entered in the field.
       **/
-    function placeHolder(value) { return new Attr("placeholder", value, "input", "textarea"); }
+    function placeHolder(value) { return new Attr("placeholder", value, false, "input", "textarea"); }
     /**
      * Indicates that the media element should play automatically on iOS.
       **/
-    function playsInline(value) { return new Attr("playsInline", value, "audio", "video"); }
+    function playsInline(value) { return new Attr("playsInline", value, false, "audio", "video"); }
+    /**
+     * Indicates whether this element is required to fill out or not.
+      **/
+    function required(value) { return new Attr("required", value, false, "input", "select", "textarea"); }
     /**
      * Defines the number of rows in a text area.
       **/
-    function role(value) { return new Attr("role", value); }
+    function role(value) { return new Attr("role", value, false); }
     /**
      * The URL of the embeddable content.
       **/
-    function src(value) { return new Attr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+    function src(value) { return new Attr("src", value, false, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
     /**
      * A MediaStream object to use as a source for an HTML video or audio element
       **/
-    function srcObject(value) { return new Attr("srcObject", value, "audio", "video"); }
+    function srcObject(value) { return new Attr("srcObject", value, false, "audio", "video"); }
     /**
      * The step attribute
       **/
-    function step(value) { return new Attr("step", value, "input"); }
+    function step(value) { return new Attr("step", value, false, "input"); }
     /**
      * Text to be displayed in a tooltip when hovering over the element.
       **/
-    function title(value) { return new Attr("title", value); }
+    function title(value) { return new Attr("title", value, false); }
     /**
      * Defines the type of the element.
       **/
-    function type(value) { return new Attr("type", value, "button", "input", "command", "embed", "link", "object", "script", "source", "style", "menu"); }
+    function type(value) { return new Attr("type", value, false, "button", "input", "command", "embed", "link", "object", "script", "source", "style", "menu"); }
     /**
      * Defines a default value which will be displayed in the element on page load.
       **/
-    function value(value) { return new Attr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+    function value(value) { return new Attr("value", value, false, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
     /**
      * setting the volume at which a media element plays.
       **/
-    function volume(value) { return new Attr("volume", value, "audio", "video"); }
+    function volume(value) { return new Attr("volume", value, false, "audio", "video"); }
     /**
      * For the elements listed here, this establishes the element's width.
       **/
-    function htmlWidth(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+    function htmlWidth(value) { return new Attr("width", value, false, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
     class CssProp {
         constructor(key, value) {
@@ -644,6 +660,7 @@
         });
     }
 
+    // NOTE: This field gets overwritten in a build process.
     "chrome" in globalThis && !navigator.userAgent.match("CriOS");
     const isFirefox = "InstallTrigger" in globalThis;
     /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -2237,7 +2254,7 @@
             else if (end.t <= t) {
                 this.copy(end);
             }
-            else if (start.t < t) {
+            else {
                 const p = project(t, start.t, end.t);
                 this.copy(start);
                 lerp(this.p, this.p, end.p, p);
@@ -2301,17 +2318,15 @@
             const ox = this.offset[0];
             const oy = this.offset[1];
             const oz = this.offset[2];
-            this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
             this.end.t = t + dt;
-            if (dt > 0) {
-                this.start.copy(this.current);
-                this.start.t = t;
+            this.end.set(px + ox, py + oy, pz + oz, fx, fy, fz, ux, uy, uz);
+            this.start.t = t;
+            this.current.t = t;
+            if (dt <= 0 || this.current.t === 0) {
+                this.start.copy(this.end);
             }
             else {
-                this.start.copy(this.end);
-                this.start.t = t;
-                this.current.copy(this.end);
-                this.current.t = t;
+                this.start.copy(this.current);
             }
         }
         /**
@@ -7911,10 +7926,9 @@
          * Get a pose, normalize the transition time, and perform on operation on it, if it exists.
          * @param sources - the collection of poses from which to retrieve the pose.
          * @param id - the id of the pose for which to perform the operation.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withPose(sources, id, dt, poseCallback) {
+        withPose(sources, id, poseCallback) {
             const source = sources.get(id);
             let pose = null;
             if (source) {
@@ -7926,19 +7940,15 @@
             if (!pose) {
                 return null;
             }
-            if (dt == null) {
-                dt = this.transitionTime;
-            }
-            return poseCallback(pose, dt);
+            return poseCallback(pose);
         }
         /**
          * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
          * @param id - the id of the user for which to perform the operation.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withUser(id, dt, poseCallback) {
-            return this.withPose(this.users, id, dt, poseCallback);
+        withUser(id, poseCallback) {
+            return this.withPose(this.users, id, poseCallback);
         }
         /**
          * Set the comfort position offset for a given user.
@@ -7948,7 +7958,7 @@
          * @param z - the lateral component of the offset.
          */
         setUserOffset(id, x, y, z) {
-            this.withUser(id, null, (pose) => {
+            this.withUser(id, (pose) => {
                 pose.setOffset(x, y, z);
             });
         }
@@ -7957,9 +7967,7 @@
          * @param id - the id of the user for which to set the offset.
          */
         getUserOffset(id) {
-            return this.withUser(id, null, (pose) => {
-                return pose.offset;
-            });
+            return this.withUser(id, pose => pose.offset);
         }
         /**
          * Set the position and orientation of a user.
@@ -7975,9 +7983,9 @@
          * @param uz - the lateral component of the up vector.
          * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withUser(id, dt, (pose, dt) => {
-                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.withUser(id, (pose) => {
+                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -7986,8 +7994,8 @@
          * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          * @param poseCallback
          */
-        withClip(id, dt, poseCallback) {
-            return this.withPose(this.clips, id, dt, poseCallback);
+        withClip(id, poseCallback) {
+            return this.withPose(this.clips, id, poseCallback);
         }
         /**
          * Set the position of an audio clip.
@@ -7995,11 +8003,10 @@
          * @param x - the horizontal component of the position.
          * @param y - the vertical component of the position.
          * @param z - the lateral component of the position.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipPosition(id, x, y, z, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTargetPosition(x, y, z, this.currentTime, dt);
+        setClipPosition(id, x, y, z) {
+            this.withClip(id, (pose) => {
+                pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -8011,11 +8018,10 @@
          * @param ux - the horizontal component of the up vector.
          * @param uy - the vertical component of the up vector.
          * @param uz - the lateral component of the up vector.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipOrientation(id, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setClipOrientation(id, fx, fy, fz, ux, uy, uz) {
+            this.withClip(id, (pose) => {
+                pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
             });
         }
         /**
@@ -8030,11 +8036,10 @@
          * @param ux - the horizontal component of the up vector.
          * @param uy - the vertical component of the up vector.
          * @param uz - the lateral component of the up vector.
-         * @param dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
          **/
-        setClipPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
-            this.withClip(id, dt, (pose, dt) => {
-                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        setClipPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.withClip(id, (pose) => {
+                pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, 0.5);
             });
         }
     }
@@ -8755,11 +8760,11 @@
             this.audio.offsetRadius = v;
         }
         setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
             this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
             this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
@@ -8845,9 +8850,6 @@
         async disconnect() {
             await this._meta.disconnect();
             await this._tele.disconnect();
-        }
-        update() {
-            this.audio.update();
         }
         async setAudioOutputDevice(device) {
             this._tele.setAudioOutputDevice(device);
@@ -14060,9 +14062,12 @@
             elem.removeEventListener(this.name, this.callback);
         }
     }
+    function onBlur(callback, opts) { return new HtmlEvt("blur", callback, opts); }
     function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
     function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
-    function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+    function onKeyPress(callback, opts) { return new HtmlEvt("keypress", (evt) => callback(evt), opts); }
+    function onKeyUp(callback, opts) { return new HtmlEvt("keyup", (evt) => callback(evt), opts); }
+    function onMouseDown(callback, opts) { return new HtmlEvt("mousedown", callback, opts); }
     function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
     function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
 
@@ -14168,7 +14173,7 @@
                 this.dispatchEvent(zoomChangedEvt);
             };
             this.element = Div(id("controls"));
-            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), height("25px"), margin("2px auto -2px auto")), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
+            this.element.append(this.optionsButton = Button(id("optionsButton"), title("Show/hide options"), onClick(() => this.dispatchEvent(toggleOptionsEvt)), Run(gear.value), Run("Options")), this.instructionsButton = Button(id("instructionsButton"), title("Show/hide instructions"), onClick(() => this.dispatchEvent(toggleInstructionsEvt)), Run(questionMark.value), Run("Info")), this.shareButton = Button(id("shareButton"), title("Share your current room to twitter"), onClick(() => this.dispatchEvent(tweetEvt)), Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"), alt("icon"), role("presentation"), styles(height("25px"), margin("2px auto -2px auto"))), Run("Tweet")), this.showUsersButton = Button(id("showUsersButton"), title("View user directory"), onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)), Run(speakingHead.value), Run("Users")), this.fullscreenButton = Button(id("fullscreenButton"), title("Toggle fullscreen"), onClick(() => this.dispatchEvent(toggleFullscreenEvt)), onClick(() => this.isFullscreen = !this.isFullscreen), Run(squareFourCorners.value), Run("Expand")), this.leaveButton = Button(id("leaveButton"), title("Leave the room"), onClick(() => this.dispatchEvent(leaveEvt)), Run(door.value), Run("Leave")), Div(id("toggleAudioControl"), className("comboButton"), this.toggleAudioButton = Button(id("toggleAudioButton"), title("Toggle audio mute/unmute"), onClick(() => this.dispatchEvent(toggleAudioEvt)), this.toggleAudioLabel = Run(speakerHighVolume.value), Run("Audio")), this.toggleVideoButton = Button(id("toggleVideoButton"), title("Toggle video mute/unmute"), onClick(() => this.dispatchEvent(toggleVideoEvt)), this.toggleVideoLabel = Run(noMobilePhone.value), Run("Video")), this.changeDevicesButton = Button(id("changeDevicesButton"), title("Change devices"), onClick(() => this.dispatchEvent(changeDevicesEvt)), Run(upwardsButton.value), Run("Change"))), Div(id("emojiControl"), className("comboButton"), textAlign("center"), Button(id("emoteButton"), title("Emote"), onClick(() => this.dispatchEvent(emoteEvt)), this.emoteButton = Run(whiteFlower.value), Run("Emote")), Button(id("selectEmoteButton"), title("Select Emoji"), onClick(() => this.dispatchEvent(selectEmojiEvt)), Run(upwardsButton.value), Run("Change"))), this.zoomInButton = Button(id("zoomInButton"), title("Zoom in"), onClick(() => changeZoom(0.5)), Run(magnifyingGlassTiltedLeft.value), Run("+")), Div(id("zoomSliderContainer"), this.slider = InputRange(id("zoomSlider"), title("Zoom"), min(zoomMin), max(zoomMax), step(0.1), value("0"), onInput(() => this.dispatchEvent(zoomChangedEvt)))), this.zoomOutButton = Button(id("zoomOutButton"), title("Zoom out"), onClick(() => changeZoom(-0.5)), Run(magnifyingGlassTiltedRight.value), Run("-")));
             Object.seal(this);
         }
         get isFullscreen() {
@@ -15122,6 +15127,13 @@
     }
 
     const loginEvt = new TypedEvent("login");
+    function isEnter(evt) {
+        return !evt.shiftKey
+            && !evt.ctrlKey
+            && !evt.altKey
+            && !evt.metaKey
+            && evt.key === "Enter";
+    }
     class LoginForm extends FormDialog {
         constructor() {
             super("login");
@@ -15129,8 +15141,6 @@
             this._connecting = false;
             this._connected = false;
             this.addEventListener("shown", () => this._ready = true);
-            this.roomSelectControl = Div(id("roomSelectorControl"));
-            this.roomEntryControl = Div(id("roomEntryControl"));
             const curRooms = new Array();
             const curOpts = this.element.querySelectorAll("#roomSelector option");
             for (let i = 0; i < curOpts.length; ++i) {
@@ -15140,15 +15150,24 @@
                     Name: opt.textContent || opt.innerText
                 });
             }
-            this.roomSelect = SelectBox("roomSelector", "No rooms available", v => v.ShortName, v => v.Name);
-            this.roomSelect.addEventListener("input", () => this.validate());
-            this.roomSelect.emptySelectionEnabled = false;
-            this.roomSelect.values = curRooms;
-            this.roomSelect.selectedIndex = 0;
-            this.roomInput = InputText(id("roomName"));
-            this.roomInput.addEventListener("input", () => this.validate());
-            this.roomInput.addEventListener("keypress", (evt) => {
-                if (evt.key === "Enter") {
+            const validator = () => this.validate();
+            const checkInput = (evt) => {
+                if (isEnter(evt)
+                    && this.userName.length > 0
+                    && this.roomName.length > 0) {
+                    this.dispatchEvent(loginEvt);
+                }
+            };
+            let lastRoomName = null;
+            this.roomNameInput = InputText(id("roomName"), autoComplete(true), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
+                lastRoomName = this.roomName;
+                this.roomName = "";
+            }, { capture: true }), onBlur(() => {
+                if (this.roomName.length === 0) {
+                    this.roomName = lastRoomName;
+                }
+            }), onInput(validator), onKeyPress((evt) => {
+                if (isEnter(evt)) {
                     if (this.userName.length === 0) {
                         this.userNameInput.focus();
                     }
@@ -15156,67 +15175,31 @@
                         this.emailInput.focus();
                     }
                 }
-            });
-            this.userNameInput = InputText(id("userName"));
-            this.userNameInput.addEventListener("input", () => this.validate());
-            this.userNameInput.addEventListener("keypress", (evt) => {
-                if (evt.key === "Enter") {
+            }), onKeyPress(checkInput));
+            this.userNameInput = InputText(id("userName"), autoComplete(true), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
+                if (isEnter(evt)) {
                     if (this.userName.length === 0) {
                         this.userNameInput.focus();
                     }
                     else if (this.roomName.length === 0) {
-                        if (this.roomSelectMode) {
-                            this.roomSelect.focus();
-                        }
-                        else {
-                            this.roomInput.focus();
-                        }
+                        this.roomNameInput.focus();
                     }
                 }
-            });
-            this.emailInput = InputEmail(id("email"));
-            this.emailInput.addEventListener("keypress", (evt) => {
-                if (evt.key === "Enter") {
+            }), onKeyPress(checkInput));
+            this.emailInput = InputEmail(id("email"), autoComplete(true), placeHolder("Email address (Optional)"), onInput(validator), onKeyPress((evt) => {
+                if (isEnter(evt)) {
                     if (this.userName.length === 0) {
                         this.userNameInput.focus();
                     }
                     else if (this.roomName.length === 0) {
-                        if (this.roomSelectMode) {
-                            this.roomSelect.focus();
-                        }
-                        else {
-                            this.roomInput.focus();
-                        }
+                        this.roomNameInput.focus();
                     }
                 }
-            });
-            const createRoomButton = Button(id("createNewRoom"));
-            createRoomButton.addEventListener("click", () => {
-                this.roomSelectMode = false;
-            });
-            const selectRoomButton = Button(id("selectRoom"));
-            selectRoomButton.addEventListener("click", () => {
-                this.roomSelectMode = true;
-            });
-            this.connectButton = Button(id("connect"));
-            const checkInput = (evt) => {
-                if (!evt.shiftKey
-                    && !evt.ctrlKey
-                    && !evt.altKey
-                    && !evt.metaKey
-                    && evt.key === "Enter"
-                    && this.userName.length > 0
-                    && this.roomName.length > 0) {
-                    this.dispatchEvent(loginEvt);
-                }
-            };
-            this.connectButton.addEventListener("click", () => this.dispatchEvent(loginEvt));
-            this.roomInput.addEventListener("keypress", checkInput);
-            this.userNameInput.addEventListener("keypress", checkInput);
+            }), onKeyPress(checkInput));
+            this.connectButton = Button(id("connect"), onClick(() => this.dispatchEvent(loginEvt)));
             this.addEventListener("login", () => {
                 this.connecting = true;
             });
-            this.roomSelectMode = true;
             this.validate();
         }
         validate() {
@@ -15235,35 +15218,11 @@
                             ? "Connect"
                             : "Loading...";
         }
-        get roomSelectMode() {
-            return this.roomSelectControl.style.display !== "none";
-        }
-        set roomSelectMode(value) {
-            setOpen(this.roomSelectControl, value);
-            setOpen(this.roomEntryControl, !value);
-            if (value) {
-                this.roomSelect.selectedValue = { ShortName: this.roomInput.value };
-            }
-            else if (this.roomSelect.selectedIndex >= 0) {
-                this.roomInput.value = this.roomSelect.selectedValue.ShortName;
-            }
-            this.validate();
-        }
         get roomName() {
-            const room = this.roomSelectMode
-                ? this.roomSelect.selectedValue && this.roomSelect.selectedValue.ShortName
-                : this.roomInput.value;
-            return room || "";
+            return this.roomNameInput.value;
         }
         set roomName(v) {
-            if (v === null
-                || v === undefined
-                || v.length === 0) {
-                v = this.roomSelect.values[0].ShortName;
-            }
-            this.roomInput.value = v;
-            this.roomSelect.selectedValue = { ShortName: v };
-            this.roomSelectMode = this.roomSelect.selectedIndex > -1;
+            this.roomNameInput.value = v;
             this.validate();
         }
         set userName(value) {
@@ -16543,12 +16502,13 @@
             this._maxWidth = null;
             this._minHeight = null;
             this._maxHeight = null;
-            this._strokeColor = null;
-            this._strokeSize = null;
-            this._bgColor = null;
-            this._value = null;
             this._scale = 1;
-            this._fillColor = "black";
+            this._bgFillColor = null;
+            this._bgStrokeColor = null;
+            this._bgStrokeSize = null;
+            this._textStrokeColor = null;
+            this._textStrokeSize = null;
+            this._textFillColor = "black";
             this._textDirection = "horizontal";
             this._wrapWords = true;
             this._fontStyle = "normal";
@@ -16556,6 +16516,7 @@
             this._fontWeight = "normal";
             this._fontFamily = "sans-serif";
             this._fontSize = 20;
+            this._value = null;
             this.notReadyEvt = new TypedEvent("notready");
             if (isDefined(options)) {
                 if (isDefined(options.minWidth)) {
@@ -16570,14 +16531,20 @@
                 if (isDefined(options.maxHeight)) {
                     this._maxHeight = options.maxHeight;
                 }
-                if (isDefined(options.strokeColor)) {
-                    this._strokeColor = options.strokeColor;
+                if (isDefined(options.textStrokeColor)) {
+                    this._textStrokeColor = options.textStrokeColor;
                 }
-                if (isDefined(options.strokeSize)) {
-                    this._strokeSize = options.strokeSize;
+                if (isDefined(options.textStrokeSize)) {
+                    this._textStrokeSize = options.textStrokeSize;
                 }
-                if (isDefined(options.bgColor)) {
-                    this._bgColor = options.bgColor;
+                if (isDefined(options.bgFillColor)) {
+                    this._bgFillColor = options.bgFillColor;
+                }
+                if (isDefined(options.bgStrokeColor)) {
+                    this._bgStrokeColor = options.bgStrokeColor;
+                }
+                if (isDefined(options.bgStrokeSize)) {
+                    this._bgStrokeSize = options.bgStrokeSize;
                 }
                 if (isDefined(options.value)) {
                     this._value = options.value;
@@ -16585,8 +16552,8 @@
                 if (isDefined(options.scale)) {
                     this._scale = options.scale;
                 }
-                if (isDefined(options.fillColor)) {
-                    this._fillColor = options.fillColor;
+                if (isDefined(options.textFillColor)) {
+                    this._textFillColor = options.textFillColor;
                 }
                 if (isDefined(options.textDirection)) {
                     this._textDirection = options.textDirection;
@@ -16621,6 +16588,7 @@
                     left: 0
                 };
             }
+            this.redraw();
         }
         get scale() {
             return this._scale;
@@ -16751,39 +16719,57 @@
                 this.redraw();
             }
         }
-        get fillColor() {
-            return this._fillColor;
+        get textFillColor() {
+            return this._textFillColor;
         }
-        set fillColor(v) {
-            if (this.fillColor !== v) {
-                this._fillColor = v;
+        set textFillColor(v) {
+            if (this.textFillColor !== v) {
+                this._textFillColor = v;
                 this.redraw();
             }
         }
-        get strokeColor() {
-            return this._strokeColor;
+        get textStrokeColor() {
+            return this._textStrokeColor;
         }
-        set strokeColor(v) {
-            if (this.strokeColor !== v) {
-                this._strokeColor = v;
+        set textStrokeColor(v) {
+            if (this.textStrokeColor !== v) {
+                this._textStrokeColor = v;
                 this.redraw();
             }
         }
-        get strokeSize() {
-            return this._strokeSize;
+        get textStrokeSize() {
+            return this._textStrokeSize;
         }
-        set strokeSize(v) {
-            if (this.strokeSize !== v) {
-                this._strokeSize = v;
+        set textStrokeSize(v) {
+            if (this.textStrokeSize !== v) {
+                this._textStrokeSize = v;
                 this.redraw();
             }
         }
-        get bgColor() {
-            return this._bgColor;
+        get bgFillColor() {
+            return this._bgFillColor;
         }
-        set bgColor(v) {
-            if (this.bgColor !== v) {
-                this._bgColor = v;
+        set bgFillColor(v) {
+            if (this.bgFillColor !== v) {
+                this._bgFillColor = v;
+                this.redraw();
+            }
+        }
+        get bgStrokeColor() {
+            return this._bgStrokeColor;
+        }
+        set bgStrokeColor(v) {
+            if (this.bgStrokeColor !== v) {
+                this._bgStrokeColor = v;
+                this.redraw();
+            }
+        }
+        get bgStrokeSize() {
+            return this._bgStrokeSize;
+        }
+        set bgStrokeSize(v) {
+            if (this.bgStrokeSize !== v) {
+                this._bgStrokeSize = v;
                 this.redraw();
             }
         }
@@ -16820,7 +16806,7 @@
             this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
             if (this.fontFamily
                 && this.fontSize
-                && (this.fillColor || (this.strokeColor && this.strokeSize))
+                && (this.textFillColor || (this.textStrokeColor && this.textStrokeSize))
                 && this.value) {
                 const isVertical = this.textDirection && this.textDirection.indexOf("vertical") === 0;
                 const autoResize = this.minWidth != null
@@ -16920,19 +16906,19 @@
                     console.error(exp);
                     throw exp;
                 }
-                if (this.bgColor) {
-                    this.g.fillStyle = this.bgColor;
+                if (this.bgFillColor) {
+                    this.g.fillStyle = this.bgFillColor;
                     this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
                 else {
                     this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 }
-                if (this.strokeColor && this.strokeSize) {
-                    this.g.lineWidth = this.strokeSize * this.scale;
-                    this.g.strokeStyle = this.strokeColor;
+                if (this.textStrokeColor && this.textStrokeSize) {
+                    this.g.lineWidth = this.textStrokeSize * this.scale;
+                    this.g.strokeStyle = this.textStrokeColor;
                 }
-                if (this.fillColor) {
-                    this.g.fillStyle = this.fillColor;
+                if (this.textFillColor) {
+                    this.g.fillStyle = this.textFillColor;
                 }
                 const di = 0.5 * (lines.length - 1);
                 for (let i = 0; i < lines.length; ++i) {
@@ -16940,12 +16926,18 @@
                     const dy = (i - di) * fontSize;
                     const x = dx + this.canvas.width / 2;
                     const y = dy + this.canvas.height / 2;
-                    if (this.strokeColor && this.strokeSize) {
+                    if (this.textStrokeColor && this.textStrokeSize) {
                         this.g.strokeText(line, x, y);
                     }
-                    if (this.fillColor) {
+                    if (this.textFillColor) {
                         this.g.fillText(line, x, y);
                     }
+                }
+                if (this.bgStrokeColor && this.bgStrokeSize) {
+                    this.g.strokeStyle = this.bgStrokeColor;
+                    this.g.lineWidth = this.bgStrokeSize;
+                    const s = this.bgStrokeSize / 2;
+                    this.g.strokeRect(s, s, this.canvas.width - this.bgStrokeSize, this.canvas.height - this.bgStrokeSize);
                 }
                 if (isVertical) {
                     const canv = createUtilityCanvas(this.canvas.height, this.canvas.width);
@@ -17856,7 +17848,7 @@
             super(AvatarMode.Emoji, isSurfer(emoji));
             this.value = emoji;
             const emojiText = new TextImage();
-            emojiText.fillColor = emoji.color || "black";
+            emojiText.textFillColor = emoji.color || "black";
             emojiText.fontFamily = "Noto Color Emoji";
             emojiText.fontSize = 256;
             emojiText.value = this.value;
@@ -17982,7 +17974,7 @@
             this.setAvatarEmoji(bustInSilhouette.value);
             this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
             this.userNameText = new TextImage();
-            this.userNameText.fillColor = "white";
+            this.userNameText.textFillColor = "white";
             this.userNameText.fontSize = 128;
             this.displayName = displayName;
             Object.seal(this);
@@ -18811,10 +18803,7 @@
             await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
             await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
             setAudioProperties();
-            let roomName = login.roomName;
-            if (!login.roomSelectMode) {
-                roomName = await recordRoom(roomName);
-            }
+            let roomName = await recordRoom(login.roomName);
             await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
             const title = `Calla - chatting in ${roomName}`;
             const path = `${window.location.pathname}#${roomName}`;
@@ -19006,7 +18995,7 @@
             game.updateAudioActivity(evt.id, evt.isActive);
         });
         timer.addEventListener("tick", (evt) => {
-            client.update();
+            client.audio.update();
             options.update();
             directory.update();
             game.update(evt.dt);
