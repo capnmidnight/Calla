@@ -116,8 +116,6 @@ function refreshUser(userID) {
         settings.zoom = game.zoom = controls.zoom;
     });
     login.addEventListener("login", async () => {
-        await client.audio.createClip("join", false, false, false, 0.5, "/audio/door-open.mp3");
-        await client.audio.createClip("leave", false, false, true, 0.5, "/audio/door-close.mp3");
         setAudioProperties();
         let roomName = await recordRoom(login.roomName);
         await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
@@ -331,11 +329,15 @@ function refreshUser(userID) {
     login.roomName = settings.roomName;
     login.email = settings.email;
     controls.enabled = false;
-    showView(login);
     login.ready = true;
     timer.start();
+    await Promise.all([
+        client.audio.createClip("join", false, false, false, 0.5, "/audio/door-open.mp3"),
+        client.audio.createClip("leave", false, false, true, 0.5, "/audio/door-close.mp3"),
+        client.connect()
+    ]);
+    showView(login);
     await client.getMediaPermissions();
-    await client.connect();
     Object.assign(window, {
         settings,
         fetcher,
