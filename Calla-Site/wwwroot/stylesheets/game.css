@@ -30,17 +30,9 @@ body,
     text-align: right;
 }
 
-#roomSelectorControl > select,
-#roomEntryControl > input {
-    grid-column: 1/3 !important;
+#roomControl > input {
+    grid-column: 1/4 !important;
 }
-
-#roomSelectorControl > button,
-#roomEntryControl > button {
-    grid-column: 3/4 !important;
-}
-
-
 
 #controls {
     position: fixed;

@@ -7,17 +7,12 @@ export declare class LoginForm extends FormDialog<LoginFormEvents> {
     private _ready;
     private _connecting;
     private _connected;
-    private roomSelectControl;
-    private roomEntryControl;
-    private roomSelect;
-    private roomInput;
+    private roomNameInput;
     private userNameInput;
     private emailInput;
     private connectButton;
     constructor();
     private validate;
-    get roomSelectMode(): boolean;
-    set roomSelectMode(value: boolean);
     get roomName(): string;
     set roomName(v: string);
     set userName(value: string);

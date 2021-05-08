@@ -109,21 +109,19 @@
                 <div>Email addresses are used to send updates about Calla.</div>
             </div>
 
-            <div id="roomSelectorControl">
-                <label for="roomSelector">Room:</label>
-                <select id="roomSelector">
+            <div id="roomControl">
+                <label for="roomName">Room:</label>
+                <datalist id="roomsList">
                     @foreach (var room in Model)
                     {
                         <option value="@room.ShortName">@room.Name</option>
                     }
-                </select>
-                <button type="button" id="createNewRoom" title="Create a new, temporary room">New</button>
-            </div>
-
-            <div id="roomEntryControl" style="display: none;">
-                <label for="roomName">Room:</label>
-                <input type="text" id="roomName" autocomplete="off" placeholder="(Required)" />
-                <button type="button" id="selectRoom" title="Select an existing room">Cancel</button>
+                </datalist>
+                <input type="text"
+                       id="roomName"
+                       autocomplete="on"
+                       list="roomsList"
+                       placeholder="Room name" />
             </div>
 
             <div>

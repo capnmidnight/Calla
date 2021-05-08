@@ -120,9 +120,9 @@ export function onHashChange(callback: (evt: Event) => void, opts?: EventListene
 export function onLostPointerCapture(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("lostpointercapture", callback, opts); }
 export function onInput(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("input", callback, opts); }
 export function onInvalid(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("invalid", callback, opts); }
-export function onKeyDown(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keydown", callback, opts); }
-export function onKeyPress(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keypress", callback, opts); }
-export function onKeyUp(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keyup", callback, opts); }
+export function onKeyDown(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keydown", (evt: Event) => callback(evt as KeyboardEvent), opts); }
+export function onKeyPress(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keypress", (evt: Event) => callback(evt as KeyboardEvent), opts); }
+export function onKeyUp(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keyup", (evt: Event) => callback(evt as KeyboardEvent), opts); }
 export function onLanguageChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("languagechange", callback, opts); }
 export function onLevelChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("levelchange", callback, opts); }
 export function onLoad(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("load", callback, opts); }

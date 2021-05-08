@@ -110,10 +110,7 @@ function refreshUser(userID) {
         await client.audio.createClip("join", false, false, false, 0.5, "audio/door-open.mp3");
         await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
         setAudioProperties();
-        let roomName = login.roomName;
-        if (!login.roomSelectMode) {
-            roomName = await recordRoom(roomName);
-        }
+        let roomName = await recordRoom(login.roomName);
         await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
         const title = `Calla - chatting in ${roomName}`;
         const path = `${window.location.pathname}#${roomName}`;

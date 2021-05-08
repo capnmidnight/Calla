@@ -110,9 +110,9 @@ export function onHashChange(callback, opts) { return new HtmlEvt("hashchange", 
 export function onLostPointerCapture(callback, opts) { return new HtmlEvt("lostpointercapture", callback, opts); }
 export function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
 export function onInvalid(callback, opts) { return new HtmlEvt("invalid", callback, opts); }
-export function onKeyDown(callback, opts) { return new HtmlEvt("keydown", callback, opts); }
-export function onKeyPress(callback, opts) { return new HtmlEvt("keypress", callback, opts); }
-export function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+export function onKeyDown(callback, opts) { return new HtmlEvt("keydown", (evt) => callback(evt), opts); }
+export function onKeyPress(callback, opts) { return new HtmlEvt("keypress", (evt) => callback(evt), opts); }
+export function onKeyUp(callback, opts) { return new HtmlEvt("keyup", (evt) => callback(evt), opts); }
 export function onLanguageChange(callback, opts) { return new HtmlEvt("languagechange", callback, opts); }
 export function onLevelChange(callback, opts) { return new HtmlEvt("levelchange", callback, opts); }
 export function onLoad(callback, opts) { return new HtmlEvt("load", callback, opts); }

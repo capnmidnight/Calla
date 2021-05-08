@@ -158,10 +158,7 @@ function refreshUser(userID: string) {
         await client.audio.createClip("leave", false, false, true, 0.5, "audio/door-close.mp3");
         setAudioProperties();
 
-        let roomName = login.roomName;
-        if (!login.roomSelectMode) {
-            roomName = await recordRoom(roomName);
-        }
+        let roomName = await recordRoom(login.roomName);
 
         await recordJoin(
             settings.userName = login.userName,

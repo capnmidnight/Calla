@@ -4,6 +4,7 @@
 export declare class Attr {
     readonly key: string;
     readonly value: any;
+    private readonly bySetAttribute;
     readonly tags: readonly string[];
     /**
      * Creates a new setter functor for HTML Attributes
@@ -11,7 +12,7 @@ export declare class Attr {
      * @param value - the value to set for the attribute.
      * @param tags - the HTML tags that support this attribute.
      */
-    constructor(key: string, value: any, ...tags: string[]);
+    constructor(key: string, value: any, bySetAttribute: boolean, ...tags: string[]);
     /**
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
