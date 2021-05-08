@@ -15151,15 +15151,41 @@
                 });
             }
             const validator = () => this.validate();
-            const checkInput = (evt) => {
-                if (isEnter(evt)
-                    && this.userName.length > 0
+            const onLoginAttempt = () => {
+                if (this.userName.length > 0
                     && this.roomName.length > 0) {
+                    this.connecting = true;
                     this.dispatchEvent(loginEvt);
                 }
             };
             let lastRoomName = null;
-            this.roomNameInput = InputText(id("roomName"), autoComplete(true), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
+            Div(id("userNameControl"), this.userNameInput = InputText(id("userName"), autoComplete(true), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
+                if (isEnter(evt)) {
+                    if (this.userName.length === 0) {
+                        this.userNameInput.focus();
+                    }
+                    else if (this.roomName.length === 0) {
+                        this.roomNameInput.focus();
+                    }
+                    else {
+                        onLoginAttempt();
+                    }
+                }
+            })));
+            Div(id("emailControl"), this.emailInput = InputEmail(id("email"), autoComplete(true), placeHolder("Email address (Optional)"), title("Email addresses are used to send updates about Calla."), onInput(validator), onKeyPress((evt) => {
+                if (isEnter(evt)) {
+                    if (this.userName.length === 0) {
+                        this.userNameInput.focus();
+                    }
+                    else if (this.roomName.length === 0) {
+                        this.roomNameInput.focus();
+                    }
+                    else {
+                        onLoginAttempt();
+                    }
+                }
+            })));
+            Div(id("roomControl"), this.roomNameInput = InputText(id("roomName"), autoComplete(true), list("roomsList"), placeHolder("Room name"), value("Calla"), required(true), onMouseDown(() => {
                 lastRoomName = this.roomName;
                 this.roomName = "";
             }, { capture: true }), onBlur(() => {
@@ -15174,32 +15200,12 @@
                     else if (this.email.length === 0) {
                         this.emailInput.focus();
                     }
-                }
-            }), onKeyPress(checkInput));
-            this.userNameInput = InputText(id("userName"), autoComplete(true), placeHolder("User name"), required(true), onInput(validator), onKeyPress((evt) => {
-                if (isEnter(evt)) {
-                    if (this.userName.length === 0) {
-                        this.userNameInput.focus();
-                    }
-                    else if (this.roomName.length === 0) {
-                        this.roomNameInput.focus();
+                    else {
+                        onLoginAttempt();
                     }
                 }
-            }), onKeyPress(checkInput));
-            this.emailInput = InputEmail(id("email"), autoComplete(true), placeHolder("Email address (Optional)"), onInput(validator), onKeyPress((evt) => {
-                if (isEnter(evt)) {
-                    if (this.userName.length === 0) {
-                        this.userNameInput.focus();
-                    }
-                    else if (this.roomName.length === 0) {
-                        this.roomNameInput.focus();
-                    }
-                }
-            }), onKeyPress(checkInput));
-            this.connectButton = Button(id("connect"), onClick(() => this.dispatchEvent(loginEvt)));
-            this.addEventListener("login", () => {
-                this.connecting = true;
-            });
+            })));
+            Div(id("connectButtonControl"), this.connectButton = Button(id("connect"), onClick(onLoginAttempt)));
             this.validate();
         }
         validate() {

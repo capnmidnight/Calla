@@ -22,18 +22,6 @@ body,
     touch-action: none;
 }
 
-#emailControl > *:last-child {
-    opacity: 0.5;
-    font-size: 80%;
-    padding-left: 2em;
-    font-style: italic;
-    text-align: right;
-}
-
-#roomControl > input {
-    grid-column: 1/4 !important;
-}
-
 #controls {
     position: fixed;
     width: 100%;
@@ -226,7 +214,7 @@ button,
 
 .dialog > .content {
     padding: 0.5em;
-    overflow-y: scroll;
+    overflow-y: auto;
     height: 100%;
 }
 

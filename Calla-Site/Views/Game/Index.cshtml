@@ -136,7 +136,7 @@
     </div>
     <div class="content">
         <form autocomplete="on">
-            <div>
+            <div id="userNameControl">
                 <label for="userName">User:</label>
                 <input type="text" id="userName" placeholder="(Required)" />
             </div>
@@ -144,7 +144,6 @@
             <div id="emailControl">
                 <label for="email">Email:</label>
                 <input id="email" type="email" placeholder="(Optional)" />
-                <div>Email addresses are used to send updates about Calla.</div>
             </div>
 
             <div id="roomControl">
@@ -162,7 +161,7 @@
                        placeholder="Room name" />
             </div>
 
-            <div>
+            <div id="connectButtonControl">
                 <button type="button" id="connect" title="Login" disabled>Loading...</button>
             </div>
         </form>
