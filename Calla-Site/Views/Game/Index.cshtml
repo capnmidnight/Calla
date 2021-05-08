@@ -1,7 +1,45 @@
-@{
-    Layout = "_PWA";
+@{ 
+    Layout = "_Layout";
     ViewData["Title"] = "Chat";
     ViewData["Description"] = "Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!";
+}
+
+@section Meta {
+    <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+    <meta name="description" content="@ViewData["Description"]" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.calla.chat" />
+    <meta property="og:site_name" content="Calla.chat" />
+    <meta property="og:title" content="Calla: Spatialized Voice Chat for Meetups" />
+    <meta property="og:description" content="Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!" />
+    <meta property="og:image" content="https://www.calla.chat/repo-preview.jpg" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:domain" content="Calla.chat" />
+    <meta name="twitter:title" content="Calla: Spatialized Voice Chat for Meetups" />
+    <meta name="twitter:description" content="Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!" />
+    <meta name="twitter:image" content="https://www.calla.chat/repo-preview.jpg" />
+    <meta name="twitter:creator" content="@@Sean_McBeth" />
+    <meta name="keywords" content="peer-to-peer, networking, Web applications, WebRTC">
+    <meta name="msapplication-TileColor" content="#6684f1">
+    <meta name="msapplication-TileImage" content="~/icons/icon144.png">
+    <meta name="theme-color" content="#6684f1">
+    <link rel="apple-touch-icon" sizes="57x57" href="~/icons/icon057.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="~/icons/icon060.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="~/icons/icon072.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="~/icons/icon076.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="~/icons/icon114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="~/icons/icon120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="~/icons/icon144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="~/icons/icon152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="~/icons/icon180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="~/icons/icon192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="~/icons/icon032.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="~/icons/icon096.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="~/icons/icon016.png">
+    <link rel="manifest" href="~/manifest.json">
 }
 
 @model Rooms[]
