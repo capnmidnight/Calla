@@ -23,10 +23,10 @@
         justify-self: stretch;
     }
 
-    body,
-    #frontBuffer {
-        background-image: url("../images/starfield.jpg");
-    }
+body,
+#frontBuffer {
+    background-image: url("../images/starfield.jpg");
+}
 
 #frontBuffer {
     position: fixed;
@@ -157,10 +157,15 @@ button:hover {
 button,
 #controls .comboButton,
 .dialog {
-    border: solid 1px rgba(255, 255, 255, 0.5);
+    border: solid 1px gray;
     color: white;
     border-radius: 0;
 }
+
+    button:disabled {
+        color: gray;
+        border: dashed 1px gray;
+    }
 
 #controls button,
 .dialog {
@@ -215,51 +220,51 @@ button,
         grid-template-rows: auto auto 1fr auto;
     }
 
-.dialog > .title {
-    padding: 0.5em;
-    background-color: rgba(0, 0, 127, 0.5);
-    display: grid;
-    grid-template-columns: auto 3em;
-    grid-row: 1/2;
-}
+    .dialog > .title {
+        padding: 0.5em;
+        background-color: rgba(0, 0, 127, 0.5);
+        display: grid;
+        grid-template-columns: auto 3em;
+        grid-row: 1/2;
+    }
 
-.dialog > .header {
-    grid-row: 2/3;
-}
+    .dialog > .header {
+        grid-row: 2/3;
+    }
 
-.dialog > .content {
-    padding: 0.5em;
-    overflow-y: auto;
-    height: 100%;
-}
+    .dialog > .content {
+        padding: 0.5em;
+        overflow-y: auto;
+        height: 100%;
+    }
 
-.dialog.dialog-1 > .content {
-    grid-row: 2/3;
-}
+    .dialog.dialog-1 > .content {
+        grid-row: 2/3;
+    }
 
-.dialog.dialog-2 > .content,
-.dialog.dialog-3 > .content {
-    grid-row: 3/4;
-}
+    .dialog.dialog-2 > .content,
+    .dialog.dialog-3 > .content {
+        grid-row: 3/4;
+    }
 
-.dialog > .footer {
-    grid-row: 4/5;
-}
+    .dialog > .footer {
+        grid-row: 4/5;
+    }
 
-.dialog h1,
-.dialog h1 a,
-.dialog h2,
-.dialog h2 a,
-.dialog h3,
-.dialog h3 a,
-.dialog h4,
-.dialog h4 a,
-.dialog h5,
-.dialog h5 a,
-.dialog h6,
-.dialog h6 a {
-    color: white;
-}
+    .dialog h1,
+    .dialog h1 a,
+    .dialog h2,
+    .dialog h2 a,
+    .dialog h3,
+    .dialog h3 a,
+    .dialog h4,
+    .dialog h4 a,
+    .dialog h5,
+    .dialog h5 a,
+    .dialog h6,
+    .dialog h6 a {
+        color: white;
+    }
 
 .dialogTitle > h1 {
     display: inline-block;
