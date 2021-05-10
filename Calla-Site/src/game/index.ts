@@ -9,6 +9,7 @@ import { Fetcher } from "kudzu/io/Fetcher";
 import { TimerTickEvent } from "kudzu/timers/BaseTimer";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { audioClips, emojiFont, JITSI_HOST, JVB_HOST, JVB_MUC, rooms } from "../configuration";
+import { AvatarMode } from "./avatars/AvatarMode";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
@@ -359,6 +360,9 @@ import { Settings } from "./Settings";
 
     client.addEventListener("participantJoined", (evt) => {
         game.addUser(evt.id, evt.displayName, evt.source.pose);
+        if (game.me.avatarMode === AvatarMode.Emoji) {
+            client.tellAvatarEmoji(evt.id, game.me.avatarEmoji.value);
+        }
         audio.playClip("join");
     });
 

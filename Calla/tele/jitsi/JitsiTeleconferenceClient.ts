@@ -1,3 +1,4 @@
+import { Logger } from "kudzu/debugging/Logger";
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
@@ -36,6 +37,8 @@ import {
     BaseTeleconferenceClient,
     DEFAULT_LOCAL_USER_ID
 } from "../BaseTeleconferenceClient";
+import { isNullOrUndefined } from "kudzu/typeChecks";
+import { sleep } from "kudzu/events/sleep";
 
 
 function encodeUserName(v: string) {
@@ -48,13 +51,20 @@ function encodeUserName(v: string) {
 }
 
 function decodeUserName(v: string) {
-    try {
-        return decodeURIComponent(v);
+    if (isNullOrUndefined(v)) {
+        return "unknown";
     }
-    catch (exp) {
-        return v;
+    else {
+        try {
+            return decodeURIComponent(v);
+        }
+        catch (exp) {
+            return v;
+        }
     }
 }
+
+const logger = new Logger();
 
 export class JitsiTeleconferenceClient
     extends BaseTeleconferenceClient {
@@ -165,6 +175,10 @@ export class JitsiTeleconferenceClient
             });
 
             const conferenceEvents = JitsiMeetJS.events.conference;
+            this.conference.addEventListener(conferenceEvents.DATA_CHANNEL_OPENED, (...params: any[]) => {
+                logger.log("DataChannel", ...params);
+            });
+
             for (const evtName of Object.values(conferenceEvents)) {
                 if (evtName !== "conference.audioLevelsChanged") {
                     addLogger(this.conference, evtName);
@@ -217,9 +231,12 @@ export class JitsiTeleconferenceClient
             this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
 
             this._on(this.conference, conferenceEvents.USER_JOINED, (id: string, jitsiUser: JitsiParticipant) => {
+                const displayName = jitsiUser.getDisplayName();
+                const decodedUserName = decodeUserName(displayName);
+                logger.log(`${conferenceEvents.USER_JOINED}:${id}`, displayName, decodedUserName);
                 this.dispatchEvent(new CallaParticipantJoinedEvent(
                     id,
-                    decodeUserName(jitsiUser.getDisplayName()),
+                    decodedUserName,
                     null));
             });
 
@@ -228,7 +245,9 @@ export class JitsiTeleconferenceClient
             });
 
             this._on(this.conference, conferenceEvents.DISPLAY_NAME_CHANGED, (id: string, displayName: string) => {
-                this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodeUserName(displayName)));
+                const decodedUserName = decodeUserName(displayName);
+                logger.log(`${conferenceEvents.DISPLAY_NAME_CHANGED}:${id}`, displayName, decodedUserName);
+                this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodedUserName));
             });
 
             const onTrackMuteChanged = (track: JitsiLocalTrack | JitsiRemoteTrack, muted: boolean) => {
@@ -310,7 +329,11 @@ export class JitsiTeleconferenceClient
 
     async identify(userName: string): Promise<void> {
         this.localUserName = userName;
-        this.conference.setDisplayName(encodeUserName(userName));
+        const encodedUserName = encodeUserName(userName);
+        await sleep(350);
+        const logger = new Logger();
+        logger.log("identify:" + this.localUserID, userName, encodedUserName);
+        this.conference.setDisplayName(encodedUserName);
     }
 
     private async tryRemoveTrack(userID: string, kind: StreamType) {

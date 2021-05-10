@@ -57,6 +57,8 @@ export interface IMetadataClient
      */
     setAvatarEmoji(emoji: string): void;
 
+    tellAvatarEmoji(userid: string, emoji: string): void;
+
     /**
      * Use an image, found somewhere on the public Internet, as the user's avatar.
      * @param url

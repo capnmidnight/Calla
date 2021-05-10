@@ -1,3 +1,4 @@
+import { Logger } from "kudzu/debugging/Logger";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
@@ -268,6 +269,10 @@ export class Calla
         this._meta.setAvatarEmoji(emoji);
     }
 
+    tellAvatarEmoji(userid: string, emoji: string): void {
+        this._meta.tellAvatarEmoji(userid, emoji);
+    }
+
     setAvatarURL(url: string): void {
         this._meta.setAvatarURL(url);
     }
@@ -348,10 +353,14 @@ export class Calla
     }
 
     async join(roomName: string): Promise<void> {
+        const logger = new Logger();
+        logger.log("Calla.join:tele", roomName);
         await this._tele.join(roomName);
         if (this._tele.conferenceState === ConnectionState.Connected) {
+            logger.log("Calla.join:meta", roomName);
             await this._meta.join(roomName);
         }
+        logger.log("Calla.joined");
     }
 
     async identify(userName: string): Promise<void> {

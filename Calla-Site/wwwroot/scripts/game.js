@@ -539,13 +539,26 @@
         return new CssPropSet(...rest);
     }
     function backgroundColor(v) { return new CssProp("backgroundColor", v); }
+    function color(v) { return new CssProp("color", v); }
+    function columnGap(v) { return new CssProp("columnGap", v); }
     function display(v) { return new CssProp("display", v); }
+    function fontFamily(v) { return new CssProp("fontFamily", v); }
     function gridArea(v) { return new CssProp("gridArea", v); }
+    function gridAutoFlow(v) { return new CssProp("gridAutoFlow", v); }
+    function gridColumn(v) { return new CssProp("gridColumn", v); }
     function gridRow(v) { return new CssProp("gridRow", v); }
     function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
     function height(v) { return new CssProp("height", v); }
+    function left(v) { return new CssProp("left", v); }
     function margin(v) { return new CssProp("margin", v); }
+    function opacity(v) { return new CssProp("opacity", v); }
+    function overflow(v) { return new CssProp("overflow", v); }
+    function overflowY(v) { return new CssProp("overflowY", v); }
+    function padding(v) { return new CssProp("padding", v); }
+    function pointerEvents(v) { return new CssProp("pointerEvents", v); }
+    function position(v) { return new CssProp("position", v); }
     function textAlign(v) { return new CssProp("textAlign", v); }
+    function top(v) { return new CssProp("top", v); }
     function width(v) { return new CssProp("width", v); }
     function zIndex(v) { return new CssProp("zIndex", v.toFixed(0)); }
 
@@ -553,6 +566,9 @@
         return isObject(obj)
             && "element" in obj
             && obj.element instanceof Node;
+    }
+    function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
+        elem.style.display = visible ? visibleDisplayType : "none";
     }
     /**
      * Creates an HTML element for a given tag name.
@@ -658,6 +674,12 @@
      * creates an HTML Input tag that is a URL entry field.
      */
     function InputURL(...rest) { return Input(type("url"), ...rest); }
+    /**
+     * Creates a text node out of the give input.
+     */
+    function TextNode(txt) {
+        return document.createTextNode(txt);
+    }
     /**
      * Creates a Div element with margin: auto.
      */
@@ -8103,6 +8125,9 @@
         async callImmediate(command, ...args) {
             await this.callInternal(command, ...args);
         }
+        async callImmediateSingle(userid, command, ...args) {
+            await this.callInternalSingle(userid, command, ...args);
+        }
         setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
             this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
         }
@@ -8114,6 +8139,9 @@
         }
         setAvatarEmoji(emoji) {
             this.callImmediate("setAvatarEmoji", emoji);
+        }
+        tellAvatarEmoji(userid, emoji) {
+            this.callImmediateSingle(userid, "tellAvatarEmoji", emoji);
         }
         setAvatarURL(url) {
             this.callImmediate("avatarChanged", url);
@@ -8162,6 +8190,7 @@
                             this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
                             break;
                         case "setAvatarEmoji":
+                        case "tellAvatarEmoji":
                             this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
                             break;
                         case "userPosed":
@@ -8178,7 +8207,7 @@
                     }
                 }
             });
-            await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
+            await sleep(250);
             this._status = ConnectionState.Connected;
         }
         async leave() {
@@ -8191,6 +8220,17 @@
         async disconnect() {
             // JitsiTeleconferenceClient will already disconnect
         }
+        async callInternal(command, ...values) {
+            const tasks = [];
+            for (const toUserID of this.remoteUserIDs) {
+                tasks.push(this.callInternalSingle(toUserID, command, values));
+            }
+            await Promise.all(tasks);
+        }
+        callInternalSingle(toUserID, command, values) {
+            this.sendJitsiHax(toUserID, command, ...values);
+            return Promise.resolve();
+        }
         sendJitsiHax(toUserID, command, ...values) {
             this.tele.conference.sendMessage({
                 hax: JITSI_HAX_FINGERPRINT,
@@ -8198,15 +8238,140 @@
                 values
             }, toUserID);
         }
-        callInternal(command, ...values) {
-            for (const toUserID of this.remoteUserIDs) {
-                this.sendJitsiHax(toUserID, command, ...values);
-            }
-            return Promise.resolve();
-        }
         async stopInternal() {
             this._status = ConnectionState.Disconnecting;
             await waitFor(() => this.metadataState === ConnectionState.Disconnected);
+        }
+    }
+
+    function isModifierless(evt) {
+        return !(evt.shiftKey || evt.altKey || evt.ctrlKey || evt.metaKey);
+    }
+
+    var MessageType;
+    (function (MessageType) {
+        MessageType["Log"] = "log";
+        MessageType["Delete"] = "delete";
+        MessageType["Clear"] = "clear";
+    })(MessageType || (MessageType = {}));
+    const KEY = "XXX_QUAKE_LOGGER_XXX";
+    function isWorkerLoggerMessageData(data) {
+        return isDefined(data)
+            && "key" in data
+            && data.key === KEY;
+    }
+
+    function track(a, b) {
+        return styles(gridColumn(`${a}/${b}`), fontFamily("monospace"));
+    }
+    class WindowLogger {
+        constructor() {
+            this.logs = new Map();
+            this.rows = new Map();
+            this.workerCount = 0;
+            this.container = Div(styles(position("fixed"), 
+            //display("none"),
+            top("0"), left("0"), width("100%"), height("100%"), zIndex(9001), padding("1em"), opacity("0.5"), backgroundColor("black"), color("white"), overflow("hidden"), pointerEvents("none")), this.grid = Div(styles(display("grid"), overflowY("auto"), columnGap("0.5em"), gridAutoFlow("row"))));
+            document.body.appendChild(this.container);
+            window.addEventListener("keypress", (evt) => {
+                if (isModifierless(evt) && evt.key === '`') {
+                    elementSetDisplay(this.container, this.container.style.display === "none");
+                }
+            });
+        }
+        render() {
+            const toRemove = new Array();
+            for (const [id, row] of this.rows) {
+                if (!this.logs.has(id)) {
+                    for (const cell of row) {
+                        this.grid.removeChild(cell);
+                    }
+                    toRemove.push(id);
+                }
+            }
+            for (const id of toRemove) {
+                this.rows.delete(id);
+            }
+            let maxWidth = 0;
+            for (const values of this.logs.values()) {
+                maxWidth = Math.max(maxWidth, values.length);
+            }
+            this.grid.style.gridTemplateColumns = `auto repeat(${maxWidth}, 1fr)`;
+            for (const [id, values] of this.logs) {
+                let row = this.rows.get(id);
+                if (!row) {
+                    row = [
+                        Div(id, track(1, 2)),
+                        ...values.map((_, i) => {
+                            const isLast = i === values.length - 1;
+                            const endTrack = isLast ? -1 : i + 3;
+                            const cell = Div(track(i + 2, endTrack));
+                            return cell;
+                        })
+                    ];
+                    this.rows.set(id, row);
+                    this.grid.append(...row);
+                }
+                for (let i = 0; i < values.length; ++i) {
+                    const value = values[i];
+                    const cell = row[i + 1];
+                    elementClearChildren(cell);
+                    cell.appendChild(TextNode(JSON.stringify(value)));
+                }
+            }
+        }
+        log(id, ...values) {
+            this.logs.set(id, values);
+            this.render();
+        }
+        delete(id) {
+            this.logs.delete(id);
+            this.render();
+        }
+        clear() {
+            this.logs.clear();
+            this.render();
+        }
+        addWorker(name, worker) {
+            worker.addEventListener("message", (evt) => {
+                const slug = `worker:${name || this.workerCount.toFixed(0)}:`;
+                if (isWorkerLoggerMessageData(evt.data)) {
+                    switch (evt.data.method) {
+                        case MessageType.Log:
+                            this.log(slug + evt.data.id, ...evt.data.values);
+                            break;
+                        case MessageType.Delete:
+                            this.delete(slug + evt.data.id);
+                            break;
+                        case MessageType.Clear:
+                            for (const key of this.logs.keys()) {
+                                if (key.startsWith(slug)) {
+                                    this.delete(key);
+                                }
+                            }
+                            break;
+                        default:
+                            assertNever(evt.data.method);
+                    }
+                }
+            });
+            ++this.workerCount;
+        }
+    }
+
+    const logger = new WindowLogger();
+    class Logger {
+        log(id, ...values) {
+            logger.log(id, ...values);
+        }
+        delete(id) {
+            logger.delete(id);
+        }
+        clear() {
+            logger.clear();
+        }
+        addWorker(name, worker) {
+            logger.addWorker(name, worker);
         }
     }
 
@@ -8219,13 +8384,19 @@
         }
     }
     function decodeUserName(v) {
-        try {
-            return decodeURIComponent(v);
+        if (isNullOrUndefined(v)) {
+            return "unknown";
         }
-        catch (exp) {
-            return v;
+        else {
+            try {
+                return decodeURIComponent(v);
+            }
+            catch (exp) {
+                return v;
+            }
         }
     }
+    const logger$1 = new Logger();
     class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
             super(fetcher, audio);
@@ -8315,6 +8486,9 @@
                     startVideoMuted: true
                 });
                 const conferenceEvents = JitsiMeetJS.events.conference;
+                this.conference.addEventListener(conferenceEvents.DATA_CHANNEL_OPENED, (...params) => {
+                    logger$1.log("DataChannel", ...params);
+                });
                 for (const evtName of Object.values(conferenceEvents)) {
                     if (evtName !== "conference.audioLevelsChanged") {
                         addLogger(this.conference, evtName);
@@ -8357,13 +8531,18 @@
                 });
                 this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
                 this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
-                    this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodeUserName(jitsiUser.getDisplayName()), null));
+                    const displayName = jitsiUser.getDisplayName();
+                    const decodedUserName = decodeUserName(displayName);
+                    logger$1.log(`${conferenceEvents.USER_JOINED}:${id}`, displayName, decodedUserName);
+                    this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodedUserName, null));
                 });
                 this._on(this.conference, conferenceEvents.USER_LEFT, (id) => {
                     this.dispatchEvent(new CallaParticipantLeftEvent(id));
                 });
                 this._on(this.conference, conferenceEvents.DISPLAY_NAME_CHANGED, (id, displayName) => {
-                    this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodeUserName(displayName)));
+                    const decodedUserName = decodeUserName(displayName);
+                    logger$1.log(`${conferenceEvents.DISPLAY_NAME_CHANGED}:${id}`, displayName, decodedUserName);
+                    this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodedUserName));
                 });
                 const onTrackMuteChanged = (track, muted) => {
                     const userID = track.getParticipantId() || this.localUserID, trackKind = track.getType(), evt = trackKind === StreamType.Audio
@@ -8424,7 +8603,11 @@
         }
         async identify(userName) {
             this.localUserName = userName;
-            this.conference.setDisplayName(encodeUserName(userName));
+            const encodedUserName = encodeUserName(userName);
+            await sleep(350);
+            const logger = new Logger();
+            logger.log("identify:" + this.localUserID, userName, encodedUserName);
+            this.conference.setDisplayName(encodedUserName);
         }
         async tryRemoveTrack(userID, kind) {
             const userTracks = this.tracks.get(userID);
@@ -8800,6 +8983,9 @@
         setAvatarEmoji(emoji) {
             this._meta.setAvatarEmoji(emoji);
         }
+        tellAvatarEmoji(userid, emoji) {
+            this._meta.tellAvatarEmoji(userid, emoji);
+        }
         setAvatarURL(url) {
             this._meta.setAvatarURL(url);
         }
@@ -8861,10 +9047,14 @@
             }
         }
         async join(roomName) {
+            const logger = new Logger();
+            logger.log("Calla.join:tele", roomName);
             await this._tele.join(roomName);
             if (this._tele.conferenceState === ConnectionState.Connected) {
+                logger.log("Calla.join:meta", roomName);
                 await this._meta.join(roomName);
             }
+            logger.log("Calla.joined");
         }
         async identify(userName) {
             await this._tele.identify(userName);
@@ -14067,6 +14257,17 @@
     };
 
     /**
+     * Types of avatars.
+     **/
+    var AvatarMode;
+    (function (AvatarMode) {
+        AvatarMode["None"] = "none";
+        AvatarMode["Emoji"] = "emoji";
+        AvatarMode["Photo"] = "photo";
+        AvatarMode["Video"] = "video";
+    })(AvatarMode || (AvatarMode = {}));
+
+    /**
      * A setter functor for HTML element events.
      **/
     class HtmlEvt {
@@ -15419,7 +15620,7 @@
         }
     }
 
-    const KEY = "CallaSettings";
+    const KEY$1 = "CallaSettings";
     class InputBindingChangedEvent extends Event {
         constructor() {
             super("inputBindingChanged");
@@ -15652,7 +15853,7 @@
             this._preferredAudioOutputID = null;
             this._preferredAudioInputID = null;
             this._preferredVideoInputID = null;
-            const thisStr = localStorage.getItem(KEY);
+            const thisStr = localStorage.getItem(KEY$1);
             if (thisStr) {
                 const obj = JSON.parse(thisStr);
                 const inputBindings = obj._inputBinding;
@@ -15676,7 +15877,7 @@
             Object.seal(this);
         }
         commit() {
-            localStorage.setItem(KEY, JSON.stringify(this));
+            localStorage.setItem(KEY$1, JSON.stringify(this));
         }
         get preferredAudioOutputID() {
             return this._preferredAudioOutputID;
@@ -17838,17 +18039,6 @@
         }
     }
 
-    /**
-     * Types of avatars.
-     **/
-    var AvatarMode;
-    (function (AvatarMode) {
-        AvatarMode["None"] = "none";
-        AvatarMode["Emoji"] = "emoji";
-        AvatarMode["Photo"] = "photo";
-        AvatarMode["Video"] = "video";
-    })(AvatarMode || (AvatarMode = {}));
-
     function isSurfer(e) {
         return allSurfersGroup.contains(e)
             || allBoatRowersGroup.contains(e)
@@ -18990,6 +19180,9 @@
         });
         client.addEventListener("participantJoined", (evt) => {
             game.addUser(evt.id, evt.displayName, evt.source.pose);
+            if (game.me.avatarMode === AvatarMode.Emoji) {
+                client.tellAvatarEmoji(evt.id, game.me.avatarEmoji.value);
+            }
             audio.playClip("join");
         });
         client.addEventListener("participantLeft", (evt) => {

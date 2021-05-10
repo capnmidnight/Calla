@@ -38,6 +38,8 @@ export abstract class BaseMetadataClient
 
     protected abstract callInternal(command: CallaEventType, ...args: any[]): Promise<void>;
 
+    protected abstract callInternalSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void>;
+
     private async callThrottled(key: string, command: CallaEventType, ...args: any[]): Promise<void> {
         if (!this.tasks.has(key)) {
             const start = performance.now();
@@ -57,6 +59,10 @@ export abstract class BaseMetadataClient
         await this.callInternal(command, ...args);
     }
 
+    private async callImmediateSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void> {
+        await this.callInternalSingle(userid, command, ...args);
+    }
+
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
@@ -71,6 +77,10 @@ export abstract class BaseMetadataClient
 
     setAvatarEmoji(emoji: string): void {
         this.callImmediate("setAvatarEmoji", emoji);
+    }
+
+    tellAvatarEmoji(userid: string, emoji: string): void {
+        this.callImmediateSingle(userid, "tellAvatarEmoji", emoji);
     }
 
     setAvatarURL(url: string): void {

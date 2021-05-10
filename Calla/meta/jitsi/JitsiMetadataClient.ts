@@ -1,6 +1,6 @@
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
-import { once } from "kudzu/events/once";
+import { sleep } from "kudzu/events/sleep";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";
 import {
@@ -8,6 +8,7 @@ import {
     CallaChatEvent,
     CallaEmojiAvatarEvent,
     CallaEmoteEvent,
+    CallaEventType,
     CallaMetadataEventType,
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
@@ -68,6 +69,7 @@ export class JitsiMetadataClient
                         this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
                         break;
                     case "setAvatarEmoji":
+                    case "tellAvatarEmoji":
                         this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
                         break;
                     case "userPosed":
@@ -84,8 +86,7 @@ export class JitsiMetadataClient
                 }
             }
         });
-
-        await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
+        await sleep(250);
         this._status = ConnectionState.Connected;
     }
 
@@ -102,20 +103,26 @@ export class JitsiMetadataClient
         // JitsiTeleconferenceClient will already disconnect
     }
 
-    private sendJitsiHax(toUserID: string, command: CallaMetadataEventType, ...values: any[]): void {
+    protected async callInternal(command: CallaEventType, ...values: any[]): Promise<void> {
+        const tasks = [];
+        for (const toUserID of this.remoteUserIDs) {
+            tasks.push(this.callInternalSingle(toUserID, command, values));
+        }
+
+        await Promise.all(tasks);
+    }
+
+    protected callInternalSingle(toUserID: string, command: CallaEventType, values: any[]): Promise<void> {
+        this.sendJitsiHax(toUserID, command, ...values);
+        return Promise.resolve();
+    }
+
+    private sendJitsiHax(toUserID: string, command: CallaEventType, ...values: any[]): void {
         this.tele.conference.sendMessage({
             hax: JITSI_HAX_FINGERPRINT,
             command,
             values
         }, toUserID);
-    }
-
-    protected callInternal(command: CallaMetadataEventType, ...values: any[]): Promise<void> {
-        for (const toUserID of this.remoteUserIDs) {
-            this.sendJitsiHax(toUserID, command, ...values);
-        }
-
-        return Promise.resolve();
     }
 
     protected async stopInternal(): Promise<void> {

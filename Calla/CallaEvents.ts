@@ -25,6 +25,7 @@ export type CallaTeleconferenceEventType = "serverConnected"
 export type CallaMetadataEventType = "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
+    | "tellAvatarEmoji"
     | "avatarChanged"
     | "emote"
     | "chat";

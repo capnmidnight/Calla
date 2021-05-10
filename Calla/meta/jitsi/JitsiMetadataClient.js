@@ -1,6 +1,6 @@
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
-import { once } from "kudzu/events/once";
+import { sleep } from "kudzu/events/sleep";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";
 import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
@@ -42,6 +42,7 @@ export class JitsiMetadataClient extends BaseMetadataClient {
                         this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
                         break;
                     case "setAvatarEmoji":
+                    case "tellAvatarEmoji":
                         this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
                         break;
                     case "userPosed":
@@ -58,7 +59,7 @@ export class JitsiMetadataClient extends BaseMetadataClient {
                 }
             }
         });
-        await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
+        await sleep(250);
         this._status = ConnectionState.Connected;
     }
     async leave() {
@@ -71,18 +72,23 @@ export class JitsiMetadataClient extends BaseMetadataClient {
     async disconnect() {
         // JitsiTeleconferenceClient will already disconnect
     }
+    async callInternal(command, ...values) {
+        const tasks = [];
+        for (const toUserID of this.remoteUserIDs) {
+            tasks.push(this.callInternalSingle(toUserID, command, values));
+        }
+        await Promise.all(tasks);
+    }
+    callInternalSingle(toUserID, command, values) {
+        this.sendJitsiHax(toUserID, command, ...values);
+        return Promise.resolve();
+    }
     sendJitsiHax(toUserID, command, ...values) {
         this.tele.conference.sendMessage({
             hax: JITSI_HAX_FINGERPRINT,
             command,
             values
         }, toUserID);
-    }
-    callInternal(command, ...values) {
-        for (const toUserID of this.remoteUserIDs) {
-            this.sendJitsiHax(toUserID, command, ...values);
-        }
-        return Promise.resolve();
     }
     async stopInternal() {
         this._status = ConnectionState.Disconnecting;

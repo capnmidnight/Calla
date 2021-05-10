@@ -40,6 +40,9 @@ export class BaseMetadataClient extends TypedEventBase {
     async callImmediate(command, ...args) {
         await this.callInternal(command, ...args);
     }
+    async callImmediateSingle(userid, command, ...args) {
+        await this.callInternalSingle(userid, command, ...args);
+    }
     setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
         this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
@@ -51,6 +54,9 @@ export class BaseMetadataClient extends TypedEventBase {
     }
     setAvatarEmoji(emoji) {
         this.callImmediate("setAvatarEmoji", emoji);
+    }
+    tellAvatarEmoji(userid, emoji) {
+        this.callImmediateSingle(userid, "tellAvatarEmoji", emoji);
     }
     setAvatarURL(url) {
         this.callImmediate("avatarChanged", url);

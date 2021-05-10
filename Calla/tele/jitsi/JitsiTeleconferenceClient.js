@@ -1,3 +1,4 @@
+import { Logger } from "kudzu/debugging/Logger";
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { once } from "kudzu/events/once";
 import { using } from "kudzu/using";
@@ -5,6 +6,8 @@ import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferen
 import { ConnectionState } from "../../ConnectionState";
 import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
 import { addLogger, BaseTeleconferenceClient, DEFAULT_LOCAL_USER_ID } from "../BaseTeleconferenceClient";
+import { isNullOrUndefined } from "kudzu/typeChecks";
+import { sleep } from "kudzu/events/sleep";
 function encodeUserName(v) {
     try {
         return encodeURIComponent(v);
@@ -14,13 +17,19 @@ function encodeUserName(v) {
     }
 }
 function decodeUserName(v) {
-    try {
-        return decodeURIComponent(v);
+    if (isNullOrUndefined(v)) {
+        return "unknown";
     }
-    catch (exp) {
-        return v;
+    else {
+        try {
+            return decodeURIComponent(v);
+        }
+        catch (exp) {
+            return v;
+        }
     }
 }
+const logger = new Logger();
 export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
         super(fetcher, audio);
@@ -110,6 +119,9 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                 startVideoMuted: true
             });
             const conferenceEvents = JitsiMeetJS.events.conference;
+            this.conference.addEventListener(conferenceEvents.DATA_CHANNEL_OPENED, (...params) => {
+                logger.log("DataChannel", ...params);
+            });
             for (const evtName of Object.values(conferenceEvents)) {
                 if (evtName !== "conference.audioLevelsChanged") {
                     addLogger(this.conference, evtName);
@@ -152,13 +164,18 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             });
             this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
             this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
-                this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodeUserName(jitsiUser.getDisplayName()), null));
+                const displayName = jitsiUser.getDisplayName();
+                const decodedUserName = decodeUserName(displayName);
+                logger.log(`${conferenceEvents.USER_JOINED}:${id}`, displayName, decodedUserName);
+                this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodedUserName, null));
             });
             this._on(this.conference, conferenceEvents.USER_LEFT, (id) => {
                 this.dispatchEvent(new CallaParticipantLeftEvent(id));
             });
             this._on(this.conference, conferenceEvents.DISPLAY_NAME_CHANGED, (id, displayName) => {
-                this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodeUserName(displayName)));
+                const decodedUserName = decodeUserName(displayName);
+                logger.log(`${conferenceEvents.DISPLAY_NAME_CHANGED}:${id}`, displayName, decodedUserName);
+                this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodedUserName));
             });
             const onTrackMuteChanged = (track, muted) => {
                 const userID = track.getParticipantId() || this.localUserID, trackKind = track.getType(), evt = trackKind === StreamType.Audio
@@ -219,7 +236,11 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     }
     async identify(userName) {
         this.localUserName = userName;
-        this.conference.setDisplayName(encodeUserName(userName));
+        const encodedUserName = encodeUserName(userName);
+        await sleep(350);
+        const logger = new Logger();
+        logger.log("identify:" + this.localUserID, userName, encodedUserName);
+        this.conference.setDisplayName(encodedUserName);
     }
     async tryRemoveTrack(userID, kind) {
         const userTracks = this.tracks.get(userID);

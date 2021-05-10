@@ -10,12 +10,15 @@ export declare abstract class BaseMetadataClient extends TypedEventBase<CallaMet
     abstract get metadataState(): ConnectionState;
     get isConnected(): boolean;
     protected abstract callInternal(command: CallaEventType, ...args: any[]): Promise<void>;
+    protected abstract callInternalSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void>;
     private callThrottled;
     private callImmediate;
+    private callImmediateSingle;
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setAvatarEmoji(emoji: string): void;
+    tellAvatarEmoji(userid: string, emoji: string): void;
     setAvatarURL(url: string): void;
     emote(emoji: string): void;
     chat(text: string): void;

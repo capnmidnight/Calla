@@ -1,3 +1,4 @@
+import { Logger } from "kudzu/debugging/Logger";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
@@ -183,6 +184,9 @@ export class Calla extends TypedEventBase {
     setAvatarEmoji(emoji) {
         this._meta.setAvatarEmoji(emoji);
     }
+    tellAvatarEmoji(userid, emoji) {
+        this._meta.tellAvatarEmoji(userid, emoji);
+    }
     setAvatarURL(url) {
         this._meta.setAvatarURL(url);
     }
@@ -244,10 +248,14 @@ export class Calla extends TypedEventBase {
         }
     }
     async join(roomName) {
+        const logger = new Logger();
+        logger.log("Calla.join:tele", roomName);
         await this._tele.join(roomName);
         if (this._tele.conferenceState === ConnectionState.Connected) {
+            logger.log("Calla.join:meta", roomName);
             await this._meta.join(roomName);
         }
+        logger.log("Calla.joined");
     }
     async identify(userName) {
         await this._tele.identify(userName);

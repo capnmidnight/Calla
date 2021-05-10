@@ -49,6 +49,7 @@ export interface IMetadataClient extends TypedEventBase<CallaMetadataEvents>, IC
      * @param emoji
      */
     setAvatarEmoji(emoji: string): void;
+    tellAvatarEmoji(userid: string, emoji: string): void;
     /**
      * Use an image, found somewhere on the public Internet, as the user's avatar.
      * @param url
