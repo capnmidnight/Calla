@@ -2,13 +2,12 @@ import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { splitProgress } from "kudzu/tasks/splitProgress";
 import type { AudioManager } from "../audio/AudioManager";
-import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import { JitsiTeleconferenceClient } from "../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseClientLoader } from "./BaseClientLoader";
 
 const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
 
-export abstract class BaseJitsiClientLoader<MetaT extends IMetadataClientExt> extends BaseClientLoader <JitsiTeleconferenceClient, MetaT> {
+export abstract class BaseJitsiClientLoader extends BaseClientLoader<JitsiTeleconferenceClient> {
 
     protected loaded = false;
 

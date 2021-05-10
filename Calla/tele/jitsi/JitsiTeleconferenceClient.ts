@@ -1,8 +1,10 @@
-import { Logger } from "kudzu/debugging/Logger";
 import { arrayClear } from "kudzu/arrays/arrayClear";
+import { Logger } from "kudzu/debugging/Logger";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
+import { sleep } from "kudzu/events/sleep";
 import { IFetcher } from "kudzu/io/IFetcher";
+import { isNullOrUndefined } from "kudzu/typeChecks";
 import { using } from "kudzu/using";
 import { AudioManager } from "../../audio/AudioManager";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
@@ -30,15 +32,11 @@ import type { JitsiConnection } from "../../lib-jitsi-meet/JitsiMeetJS";
 import type JitsiParticipant from "../../lib-jitsi-meet/JitsiParticipant";
 import type JitsiLocalTrack from "../../lib-jitsi-meet/modules/RTC/JitsiLocalTrack";
 import type JitsiRemoteTrack from "../../lib-jitsi-meet/modules/RTC/JitsiRemoteTrack";
-import type { IMetadataClientExt } from "../../meta/IMetadataClient";
-import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
 import {
     addLogger,
     BaseTeleconferenceClient,
     DEFAULT_LOCAL_USER_ID
 } from "../BaseTeleconferenceClient";
-import { isNullOrUndefined } from "kudzu/typeChecks";
-import { sleep } from "kudzu/events/sleep";
 
 
 function encodeUserName(v: string) {
@@ -69,7 +67,7 @@ const logger = new Logger();
 export class JitsiTeleconferenceClient
     extends BaseTeleconferenceClient {
 
-    private usingDefaultMetadataClient = false;
+    useDefaultMetadataClient = false;
     private connection: JitsiConnection = null;
     conference: JitsiConference = null;
 
@@ -107,11 +105,6 @@ export class JitsiTeleconferenceClient
             }
             objListeners.clear();
         }
-    }
-
-    getDefaultMetadataClient(): IMetadataClientExt {
-        this.usingDefaultMetadataClient = true;
-        return new JitsiMetadataClient(this);
     }
 
     async connect(): Promise<void> {
@@ -169,7 +162,7 @@ export class JitsiTeleconferenceClient
             this.roomName = isoRoomName;
 
             this.conference = this.connection.initJitsiConference(this.roomName, {
-                openBridgeChannel: this.usingDefaultMetadataClient,
+                openBridgeChannel: this.useDefaultMetadataClient,
                 p2p: { enabled: false },
                 startVideoMuted: true,
             });

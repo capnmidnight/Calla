@@ -8344,7 +8344,7 @@
             this.host = host;
             this.bridgeHost = bridgeHost;
             this.bridgeMUC = bridgeMUC;
-            this.usingDefaultMetadataClient = false;
+            this.useDefaultMetadataClient = false;
             this.connection = null;
             this.conference = null;
             this.tracks = new Map();
@@ -8374,10 +8374,6 @@
                 }
                 objListeners.clear();
             }
-        }
-        getDefaultMetadataClient() {
-            this.usingDefaultMetadataClient = true;
-            return new JitsiMetadataClient(this);
         }
         async connect() {
             await super.connect();
@@ -8422,7 +8418,7 @@
                 }
                 this.roomName = isoRoomName;
                 this.conference = this.connection.initJitsiConference(this.roomName, {
-                    openBridgeChannel: this.usingDefaultMetadataClient,
+                    openBridgeChannel: this.useDefaultMetadataClient,
                     p2p: { enabled: false },
                     startVideoMuted: true,
                 });
@@ -9110,7 +9106,8 @@
             if (!this.loaded) {
                 throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
             }
-            return tele.getDefaultMetadataClient();
+            tele.useDefaultMetadataClient = true;
+            return new JitsiMetadataClient(tele);
         }
     }
 

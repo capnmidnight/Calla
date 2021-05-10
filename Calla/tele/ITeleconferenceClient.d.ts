@@ -4,7 +4,6 @@ import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import type { ConnectionState } from "../ConnectionState";
 import type { IClient } from "../IClient";
-import type { IMetadataClientExt } from "../meta/IMetadataClient";
 export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenceEvents>, IClient {
     audio: AudioManager;
     localUserID: string;
@@ -35,5 +34,4 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
 }
 export interface ITeleconferenceClientExt extends ITeleconferenceClient {
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
-    getDefaultMetadataClient(): IMetadataClientExt;
 }

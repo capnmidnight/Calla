@@ -5,7 +5,6 @@ import { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
-import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 export declare function addLogger(obj: ErsatzEventTarget, evtName: string): void;
 export declare const DEFAULT_LOCAL_USER_ID = "local-user";
@@ -65,5 +64,4 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     abstract toggleVideoMuted(): Promise<boolean>;
     abstract getAudioMuted(): Promise<boolean>;
     abstract getVideoMuted(): Promise<boolean>;
-    abstract getDefaultMetadataClient(): IMetadataClientExt;
 }

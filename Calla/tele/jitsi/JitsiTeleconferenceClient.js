@@ -1,13 +1,12 @@
-import { Logger } from "kudzu/debugging/Logger";
 import { arrayClear } from "kudzu/arrays/arrayClear";
+import { Logger } from "kudzu/debugging/Logger";
 import { once } from "kudzu/events/once";
+import { sleep } from "kudzu/events/sleep";
+import { isNullOrUndefined } from "kudzu/typeChecks";
 import { using } from "kudzu/using";
 import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
-import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
 import { addLogger, BaseTeleconferenceClient, DEFAULT_LOCAL_USER_ID } from "../BaseTeleconferenceClient";
-import { isNullOrUndefined } from "kudzu/typeChecks";
-import { sleep } from "kudzu/events/sleep";
 function encodeUserName(v) {
     try {
         return encodeURIComponent(v);
@@ -36,7 +35,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         this.host = host;
         this.bridgeHost = bridgeHost;
         this.bridgeMUC = bridgeMUC;
-        this.usingDefaultMetadataClient = false;
+        this.useDefaultMetadataClient = false;
         this.connection = null;
         this.conference = null;
         this.tracks = new Map();
@@ -66,10 +65,6 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             }
             objListeners.clear();
         }
-    }
-    getDefaultMetadataClient() {
-        this.usingDefaultMetadataClient = true;
-        return new JitsiMetadataClient(this);
     }
     async connect() {
         await super.connect();
@@ -114,7 +109,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             }
             this.roomName = isoRoomName;
             this.conference = this.connection.initJitsiConference(this.roomName, {
-                openBridgeChannel: this.usingDefaultMetadataClient,
+                openBridgeChannel: this.useDefaultMetadataClient,
                 p2p: { enabled: false },
                 startVideoMuted: true,
             });

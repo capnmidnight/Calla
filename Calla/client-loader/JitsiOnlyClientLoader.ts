@@ -1,10 +1,11 @@
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { AudioManager } from "../audio/AudioManager";
 import { IMetadataClientExt } from "../meta/IMetadataClient";
+import { JitsiMetadataClient } from "../meta/jitsi/JitsiMetadataClient";
 import type { JitsiTeleconferenceClient } from "../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseJitsiClientLoader } from "./BaseJitsiClientLoader";
 
-export class JitsiOnlyClientLoader extends BaseJitsiClientLoader<IMetadataClientExt> {
+export class JitsiOnlyClientLoader extends BaseJitsiClientLoader {
     constructor(host: string, bridgeHost: string, bridgeMUC: string) {
         super(host, bridgeHost, bridgeMUC);
     }
@@ -14,6 +15,7 @@ export class JitsiOnlyClientLoader extends BaseJitsiClientLoader<IMetadataClient
             throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
         }
 
-        return tele.getDefaultMetadataClient();
+        tele.useDefaultMetadataClient = true
+        return new JitsiMetadataClient(tele);
     }
 }

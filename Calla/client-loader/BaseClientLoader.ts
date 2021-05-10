@@ -8,7 +8,7 @@ import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "../tele/ITeleconferenceClient";
 import type { IClientLoader } from "./IClientLoader";
 
-export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt, MetaT extends IMetadataClientExt> implements IClientLoader {
+export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt> implements IClientLoader {
     async load(fetcher?: IFetcher | AudioManager | progressCallback, audio?: AudioManager | progressCallback, onProgress?: progressCallback): Promise<Calla> {
         let f: IFetcher = null;
         let a: AudioManager = null;
@@ -52,5 +52,5 @@ export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt, M
 
     protected abstract _load(fetcher: IFetcher, onProgress?: progressCallback): Promise<void>;
     protected abstract createTeleconferenceClient(fetcher: IFetcher, audio: AudioManager): TeleT;
-    protected abstract createMetadataClient(fetcher: IFetcher, audio: AudioManager, tele: TeleT): MetaT;
+    protected abstract createMetadataClient(fetcher: IFetcher, audio: AudioManager, tele: TeleT): IMetadataClientExt;
 }

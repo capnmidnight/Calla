@@ -1,13 +1,12 @@
 import { IFetcher } from "kudzu/io/IFetcher";
 import { AudioManager } from "../../audio/AudioManager";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
-import type { IMetadataClientExt } from "../../meta/IMetadataClient";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";
 export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     private host;
     private bridgeHost;
     private bridgeMUC;
-    private usingDefaultMetadataClient;
+    useDefaultMetadataClient: boolean;
     private connection;
     conference: JitsiConference;
     private tracks;
@@ -15,7 +14,6 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     constructor(fetcher: IFetcher, audio: AudioManager, host: string, bridgeHost: string, bridgeMUC: string);
     private _on;
     private _off;
-    getDefaultMetadataClient(): IMetadataClientExt;
     connect(): Promise<void>;
     join(roomName: string, password?: string): Promise<void>;
     identify(userName: string): Promise<void>;

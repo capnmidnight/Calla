@@ -8,7 +8,6 @@ import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
-import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 
 export function addLogger(obj: ErsatzEventTarget, evtName: string): void {
@@ -338,5 +337,4 @@ export abstract class BaseTeleconferenceClient
     abstract toggleVideoMuted(): Promise<boolean>;
     abstract getAudioMuted(): Promise<boolean>;
     abstract getVideoMuted(): Promise<boolean>;
-    abstract getDefaultMetadataClient(): IMetadataClientExt;
 }
