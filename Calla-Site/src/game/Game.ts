@@ -1,4 +1,4 @@
-import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
@@ -11,7 +11,6 @@ import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
 import { project } from "kudzu/math/project";
 import { unproject } from "kudzu/math/unproject";
-import { isString } from "kudzu/typeChecks";
 import { Emote, EmoteEvent } from "./Emote";
 import { hide, show } from "./forms/ops";
 import { ScreenPointerControls } from "./ScreenPointerControls";
@@ -78,11 +77,11 @@ export class Game extends TypedEventBase<GameEvents> {
     transitionSpeed = 0.125;
     keyboardEnabled = true;
 
-    me: User = null;
     map: TileMap = null;
     currentRoomName: string = null;
     currentEmoji: Emoji = null;
 
+    me: User;
     element: HTMLCanvasElement;
     gFront: CanvasRenderingContext2D;
     inputBinding: IInputBinding;
@@ -91,6 +90,7 @@ export class Game extends TypedEventBase<GameEvents> {
     constructor(private fetcher: IFetcher, public zoomMin: number, public zoomMax: number) {
         super();
 
+        this.me = new User("local", "Me", new InterpolatedPose(), true);
         this.element = Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
 
@@ -391,12 +391,12 @@ export class Game extends TypedEventBase<GameEvents> {
         });
     }
 
-    async startAsync(id: string, displayName: string, pose: InterpolatedPose, avatarURL: string, roomName: string) {
+    async startAsync(id: string, displayName: string, pose: InterpolatedPose, roomName: string) {
         this.currentRoomName = roomName.toLowerCase();
-        this.me = new User(id, displayName, pose, true);
-        if (isString(avatarURL)) {
-            this.me.setAvatarImage(avatarURL);
-        }
+        this.me.id = id;
+        this.me.displayName = displayName;
+        this.me.pose = pose;
+
         this.users.set(id, this.me);
 
         this.map = new TileMap(this.currentRoomName, this.fetcher);
@@ -441,7 +441,6 @@ export class Game extends TypedEventBase<GameEvents> {
         this.currentRoomName = null;
         this.map = null;
         this.users.clear();
-        this.me = null;
         hide(this.element);
         this.dispatchEvent(gameEndedEvt);
     }

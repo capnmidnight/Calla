@@ -102,7 +102,7 @@ function addUser(id, displayName, pose, isLocal) {
         const local = users.get(client.localUserID);
         if (local) {
             const { p, f, u } = local.pose.end;
-            client.setLocalPoseImmediate(p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
+            client.setLocalPose(p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
         }
     }
 }

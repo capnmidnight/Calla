@@ -1,5 +1,4 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { sleep } from "kudzu/events/sleep";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
@@ -9,12 +8,6 @@ import type { IMetadataClientExt } from "./IMetadataClient";
 export abstract class BaseMetadataClient
     extends TypedEventBase<CallaMetadataEvents>
     implements IMetadataClientExt {
-
-    private tasks = new Map<string, Promise<any>>();
-
-    constructor(private sleepTime: number) {
-        super();
-    }
 
     async getNext<T extends keyof CallaMetadataEvents>(evtName: T, userID: string): Promise<CallaMetadataEvents[T]> {
         return new Promise((resolve) => {
@@ -40,59 +33,40 @@ export abstract class BaseMetadataClient
 
     protected abstract callInternalSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void>;
 
-    private async callThrottled(key: string, command: CallaEventType, ...args: any[]): Promise<void> {
-        if (!this.tasks.has(key)) {
-            const start = performance.now();
-            const task = this.callInternal(command, ...args);
-            this.tasks.set(key, task);
-            await task;
-            const delta = performance.now() - start;
-            const sleepTime = this.sleepTime - delta;
-            if (sleepTime > 0) {
-                await sleep(this.sleepTime);
-            }
-            this.tasks.delete(key);
-        }
-    }
-
-    private async callImmediate(command: CallaEventType, ...args: any[]): Promise<void> {
-        await this.callInternal(command, ...args);
-    }
-
-    private async callImmediateSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void> {
-        await this.callInternalSingle(userid, command, ...args);
-    }
-
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.callInternalSingle(userid, "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callInternal("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setAvatarEmoji(emoji: string): void {
-        this.callImmediate("setAvatarEmoji", emoji);
+        this.callInternal("setAvatarEmoji", emoji);
     }
 
     tellAvatarEmoji(userid: string, emoji: string): void {
-        this.callImmediateSingle(userid, "tellAvatarEmoji", emoji);
+        this.callInternalSingle(userid, "setAvatarEmoji", emoji);
     }
 
     setAvatarURL(url: string): void {
-        this.callImmediate("avatarChanged", url);
+        this.callInternal("setAvatarURL", url);
+    }
+
+    tellAvatarURL(userid: string, url: string): void {
+        this.callInternalSingle(userid, "setAvatarURL", url);
     }
 
     emote(emoji: string): void {
-        this.callImmediate("emote", emoji);
+        this.callInternal("emote", emoji);
     }
 
     chat(text: string): void {
-        this.callImmediate("chat", text);
+        this.callInternal("chat", text);
     }
 
     abstract connect(): Promise<void>;

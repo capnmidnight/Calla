@@ -1,4 +1,3 @@
-import { JitsiMetadataClient } from "../meta/jitsi/JitsiMetadataClient";
 import { BaseJitsiClientLoader } from "./BaseJitsiClientLoader";
 export class JitsiOnlyClientLoader extends BaseJitsiClientLoader {
     constructor(host, bridgeHost, bridgeMUC) {
@@ -8,7 +7,7 @@ export class JitsiOnlyClientLoader extends BaseJitsiClientLoader {
         if (!this.loaded) {
             throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
         }
-        return new JitsiMetadataClient(tele);
+        return tele.getDefaultMetadataClient();
     }
 }
 //# sourceMappingURL=JitsiOnlyClientLoader.js.map

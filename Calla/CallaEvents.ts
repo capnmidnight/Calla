@@ -1,4 +1,3 @@
-import { Emoji } from "kudzu/emoji/Emoji";
 import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
@@ -25,8 +24,7 @@ export type CallaTeleconferenceEventType = "serverConnected"
 export type CallaMetadataEventType = "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
-    | "tellAvatarEmoji"
-    | "avatarChanged"
+    | "setAvatarURL"
     | "emote"
     | "chat";
 
@@ -233,15 +231,8 @@ export class CallaUserPointerEvent extends CallaPoseEvent<"userPointer"> {
 }
 
 export class CallaEmojiEvent<T extends CallaMetadataEventType> extends CallaUserEvent<T> {
-    emoji: string;
-    constructor(type: T, id: string, emoji: Emoji | string) {
+    constructor(type: T, id: string, public readonly emoji: string) {
         super(type, id);
-        if (emoji instanceof Emoji) {
-            this.emoji = emoji.value;
-        }
-        else {
-            this.emoji = emoji;
-        }
     }
 }
 
@@ -257,9 +248,9 @@ export class CallaEmojiAvatarEvent extends CallaEmojiEvent<"setAvatarEmoji"> {
     }
 }
 
-export class CallaAvatarChangedEvent extends CallaUserEvent<"avatarChanged"> {
-    constructor(id: string, public url: string) {
-        super("avatarChanged", id);
+export class CallaPhotoAvatarEvent extends CallaUserEvent<"setAvatarURL"> {
+    constructor(id: string, public readonly url: string) {
+        super("setAvatarURL", id);
     }
 }
 
@@ -295,7 +286,7 @@ export interface CallaMetadataEvents {
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;
     setAvatarEmoji: CallaEmojiAvatarEvent;
-    avatarChanged: CallaAvatarChangedEvent;
+    setAvatarURL: CallaPhotoAvatarEvent;
     chat: CallaChatEvent;
 }
 

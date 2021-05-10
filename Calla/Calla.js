@@ -77,10 +77,10 @@ export class Calla extends TypedEventBase {
             }
             this.dispatchEvent(evt);
         });
-        this._meta.addEventListener("avatarChanged", fwd);
         this._meta.addEventListener("chat", fwd);
         this._meta.addEventListener("emote", fwd);
         this._meta.addEventListener("setAvatarEmoji", fwd);
+        this._meta.addEventListener("setAvatarURL", fwd);
         const offsetEvt = (poseEvt) => {
             const O = this.audio.getUserOffset(poseEvt.id);
             if (O) {
@@ -174,9 +174,8 @@ export class Calla extends TypedEventBase {
         this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
-    setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
-        this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
+    tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this._meta.tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
         this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
@@ -189,6 +188,9 @@ export class Calla extends TypedEventBase {
     }
     setAvatarURL(url) {
         this._meta.setAvatarURL(url);
+    }
+    tellAvatarURL(userid, url) {
+        this._meta.tellAvatarURL(userid, url);
     }
     emote(emoji) {
         this._meta.emote(emoji);

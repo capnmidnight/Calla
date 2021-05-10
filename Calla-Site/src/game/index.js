@@ -1,8 +1,10 @@
 import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
 import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
+import { Logger } from "kudzu/debugging/Logger";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeopleGroup as people } from "kudzu/emoji/people";
 import { once } from "kudzu/events/once";
+import { sleep } from "kudzu/events/sleep";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
 import { Fetcher } from "kudzu/io/Fetcher";
@@ -76,7 +78,7 @@ import { Settings } from "./Settings";
     function setAudioProperties() {
         audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, audio.algorithm, settings.transitionSpeed);
     }
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(rooms), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false), client = await loader.load(fetcher, audio), rawGameStartEmoji = new Emoji(null, ""), rawEmoteEmoji = new Emoji(null, ""), rawAvatarEmoji = new Emoji(null, "");
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, logger = new Logger(), settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(rooms), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false), client = await loader.load(fetcher, audio), rawGameStartEmoji = new Emoji(null, ""), rawEmoteEmoji = new Emoji(null, ""), rawAvatarEmoji = new Emoji(null, "");
     let waitingForEmoji = false;
     Object.assign(window, {
         settings,
@@ -208,10 +210,6 @@ import { Settings } from "./Settings";
         show(controls);
         options.user = game.me;
         controls.enabled = true;
-        settings.avatarEmoji = settings.avatarEmoji || people.random().value;
-        rawGameStartEmoji.value = settings.avatarEmoji;
-        client.setAvatarEmoji(settings.avatarEmoji);
-        game.me.setAvatarEmoji(settings.avatarEmoji);
         refreshUser(client.localUserID);
     });
     game.addEventListener("userMoved", (evt) => {
@@ -229,10 +227,11 @@ import { Settings } from "./Settings";
     });
     client.addEventListener("conferenceJoined", async (evt) => {
         login.connected = true;
-        await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
-        options.avatarURL = settings.avatarURL;
-        client.setAvatarURL(settings.avatarURL);
+        await game.startAsync(evt.id, login.userName, evt.pose, login.roomName);
+        game.me.setAvatarEmoji(settings.avatarEmoji);
         game.me.setAvatarImage(settings.avatarURL);
+        client.setAvatarEmoji(settings.avatarEmoji);
+        client.setAvatarURL(settings.avatarURL);
         devices.audioInputDevices = await client.getAudioInputDevices(true);
         devices.audioOutputDevices = await client.getAudioOutputDevices(true);
         devices.videoInputDevices = await client.getVideoInputDevices(true);
@@ -252,11 +251,19 @@ import { Settings } from "./Settings";
     client.addEventListener("conferenceLeft", () => {
         game.end();
     });
-    client.addEventListener("participantJoined", (evt) => {
+    client.addEventListener("participantJoined", async (evt) => {
         game.addUser(evt.id, evt.displayName, evt.source.pose);
+        await sleep(250);
         if (game.me.avatarMode === AvatarMode.Emoji) {
             client.tellAvatarEmoji(evt.id, game.me.avatarEmoji.value);
+            await sleep(250);
         }
+        else if (game.me.avatarMode === AvatarMode.Photo) {
+            client.tellAvatarURL(evt.id, game.me.avatarImage.url);
+            await sleep(250);
+        }
+        const { p, f, u } = game.me.pose.end;
+        client.tellLocalPose(evt.id, p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
         audio.playClip("join");
     });
     client.addEventListener("participantLeft", (evt) => {
@@ -272,10 +279,6 @@ import { Settings } from "./Settings";
     });
     client.addEventListener("videoRemoved", (evt) => {
         game.setAvatarVideo(evt.id, null);
-        refreshUser(evt.id);
-    });
-    client.addEventListener("avatarChanged", (evt) => {
-        game.setAvatarURL(evt.id, evt.url);
         refreshUser(evt.id);
     });
     client.addEventListener("userNameChanged", (evt) => {
@@ -313,6 +316,11 @@ import { Settings } from "./Settings";
         game.setAvatarEmoji(evt.id, rawAvatarEmoji);
         refreshUser(evt.id);
     });
+    client.addEventListener("setAvatarURL", (evt) => {
+        logger.log("got setAvatarURL:" + evt.id, evt.url);
+        game.setAvatarURL(evt.id, evt.url);
+        refreshUser(evt.id);
+    });
     client.addEventListener("audioActivity", (evt) => {
         game.updateAudioActivity(evt.id, evt.isActive);
     });
@@ -322,6 +330,9 @@ import { Settings } from "./Settings";
         directory.update();
         game.update(evt.dt);
     });
+    settings.avatarEmoji = settings.avatarEmoji || people.random().value;
+    rawGameStartEmoji.value = settings.avatarEmoji;
+    options.avatarURL = settings.avatarURL;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;

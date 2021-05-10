@@ -126,10 +126,10 @@ export class Calla
             this.dispatchEvent(evt);
         });
 
-        this._meta.addEventListener("avatarChanged", fwd);
         this._meta.addEventListener("chat", fwd);
         this._meta.addEventListener("emote", fwd);
         this._meta.addEventListener("setAvatarEmoji", fwd);
+        this._meta.addEventListener("setAvatarURL", fwd);
 
         const offsetEvt = (poseEvt: CallaUserPointerEvent | CallaUserPosedEvent): void => {
             const O = this.audio.getUserOffset(poseEvt.id);
@@ -256,9 +256,8 @@ export class Calla
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
-        this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
+    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this._meta.tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
@@ -275,6 +274,10 @@ export class Calla
 
     setAvatarURL(url: string): void {
         this._meta.setAvatarURL(url);
+    }
+
+    tellAvatarURL(userid: string, url: string): void {
+        this._meta.tellAvatarURL(userid, url);
     }
 
     emote(emoji: string): void {

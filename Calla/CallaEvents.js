@@ -1,4 +1,3 @@
-import { Emoji } from "kudzu/emoji/Emoji";
 export class CallaEvent extends Event {
     constructor(eventType) {
         super(eventType);
@@ -189,12 +188,7 @@ export class CallaUserPointerEvent extends CallaPoseEvent {
 export class CallaEmojiEvent extends CallaUserEvent {
     constructor(type, id, emoji) {
         super(type, id);
-        if (emoji instanceof Emoji) {
-            this.emoji = emoji.value;
-        }
-        else {
-            this.emoji = emoji;
-        }
+        this.emoji = emoji;
     }
 }
 export class CallaEmoteEvent extends CallaEmojiEvent {
@@ -207,9 +201,9 @@ export class CallaEmojiAvatarEvent extends CallaEmojiEvent {
         super("setAvatarEmoji", id, emoji);
     }
 }
-export class CallaAvatarChangedEvent extends CallaUserEvent {
+export class CallaPhotoAvatarEvent extends CallaUserEvent {
     constructor(id, url) {
-        super("avatarChanged", id);
+        super("setAvatarURL", id);
         this.url = url;
     }
 }

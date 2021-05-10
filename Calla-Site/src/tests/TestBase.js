@@ -149,7 +149,7 @@ export class TestBase extends TestCase {
     }
 
     async recvPhotoAvatar() {
-        const evt = await once(this.client, "avatarChanged", 5000);
+        const evt = await once(this.client, "setAvatarURL", 5000);
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isEqualTo(evt.url, "https://www.seanmcbeth.com/2015-05.min.jpg", "Avatar URL");

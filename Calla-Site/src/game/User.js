@@ -30,8 +30,6 @@ speakerActivityIcon.value = speakerMediumVolume.value;
 export class User extends TypedEventBase {
     constructor(id, displayName, pose, isMe) {
         super();
-        this.id = id;
-        this.pose = pose;
         this.isMe = isMe;
         this.audioMuted = false;
         this.videoMuted = true;
@@ -47,8 +45,8 @@ export class User extends TypedEventBase {
         this._avatarVideo = null;
         this._avatarImage = null;
         this._avatarEmoji = null;
-        this.userMovedEvt = new UserMovedEvent(id);
-        this.label = isMe ? "(Me)" : `(${this.id})`;
+        this.id = id;
+        this.pose = pose;
         this.setAvatarEmoji(bustInSilhouette.value);
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.userNameText = new TextImage();
@@ -56,6 +54,23 @@ export class User extends TypedEventBase {
         this.userNameText.fontSize = 128;
         this.displayName = displayName;
         Object.seal(this);
+    }
+    get id() {
+        return this._id;
+    }
+    set id(v) {
+        if (v !== this.id) {
+            this._id = v;
+            this.userMovedEvt = new UserMovedEvent(this.id);
+        }
+    }
+    get pose() {
+        return this._pose;
+    }
+    set pose(v) {
+        if (v !== this.pose) {
+            this._pose = v;
+        }
     }
     get x() {
         return this.pose.current.p[0];
@@ -190,6 +205,9 @@ export class User extends TypedEventBase {
                 return null;
             default: assertNever(this.avatarMode);
         }
+    }
+    get label() {
+        return this.isMe ? "(Me)" : `(${this.id})`;
     }
     get displayName() {
         return this._displayName || this.label;

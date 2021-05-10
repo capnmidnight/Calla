@@ -116,7 +116,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             this.conference = this.connection.initJitsiConference(this.roomName, {
                 openBridgeChannel: this.usingDefaultMetadataClient,
                 p2p: { enabled: false },
-                startVideoMuted: true
+                startVideoMuted: true,
             });
             const conferenceEvents = JitsiMeetJS.events.conference;
             this.conference.addEventListener(conferenceEvents.DATA_CHANNEL_OPENED, (...params) => {

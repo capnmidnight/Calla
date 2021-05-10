@@ -171,7 +171,7 @@ export class JitsiTeleconferenceClient
             this.conference = this.connection.initJitsiConference(this.roomName, {
                 openBridgeChannel: this.usingDefaultMetadataClient,
                 p2p: { enabled: false },
-                startVideoMuted: true
+                startVideoMuted: true,
             });
 
             const conferenceEvents = JitsiMeetJS.events.conference;

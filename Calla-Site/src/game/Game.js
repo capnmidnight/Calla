@@ -1,3 +1,4 @@
+import { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { id } from "kudzu/html/attrs";
@@ -8,7 +9,6 @@ import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
 import { project } from "kudzu/math/project";
 import { unproject } from "kudzu/math/unproject";
-import { isString } from "kudzu/typeChecks";
 import { Emote, EmoteEvent } from "./Emote";
 import { hide, show } from "./forms/ops";
 import { ScreenPointerControls } from "./ScreenPointerControls";
@@ -48,10 +48,10 @@ export class Game extends TypedEventBase {
         this.gamepadIndex = -1;
         this.transitionSpeed = 0.125;
         this.keyboardEnabled = true;
-        this.me = null;
         this.map = null;
         this.currentRoomName = null;
         this.currentEmoji = null;
+        this.me = new User("local", "Me", new InterpolatedPose(), true);
         this.element = Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
         this.audioDistanceMin = 2;
@@ -281,12 +281,11 @@ export class Game extends TypedEventBase {
             user.setAvatarEmoji(emoji.value);
         });
     }
-    async startAsync(id, displayName, pose, avatarURL, roomName) {
+    async startAsync(id, displayName, pose, roomName) {
         this.currentRoomName = roomName.toLowerCase();
-        this.me = new User(id, displayName, pose, true);
-        if (isString(avatarURL)) {
-            this.me.setAvatarImage(avatarURL);
-        }
+        this.me.id = id;
+        this.me.displayName = displayName;
+        this.me.pose = pose;
         this.users.set(id, this.me);
         this.map = new TileMap(this.currentRoomName, this.fetcher);
         let success = false;
@@ -325,7 +324,6 @@ export class Game extends TypedEventBase {
         this.currentRoomName = null;
         this.map = null;
         this.users.clear();
-        this.me = null;
         hide(this.element);
         this.dispatchEvent(gameEndedEvt);
     }

@@ -1110,37 +1110,6 @@
      **/
     const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
 
-    /**
-     * Unicode-standardized pictograms.
-     **/
-    class Emoji {
-        /**
-         * Creates a new Unicode-standardized pictograms.
-         * @param value - a Unicode sequence.
-         * @param desc - an English text description of the pictogram.
-         * @param props - an optional set of properties to store with the emoji.
-         */
-        constructor(value, desc, props = null) {
-            this.value = value;
-            this.desc = desc;
-            this.value = value;
-            this.desc = desc;
-            this.props = props || {};
-        }
-        /**
-         * Determines of the provided Emoji or EmojiGroup is a subset of
-         * this emoji.
-         */
-        contains(e) {
-            if (e instanceof Emoji) {
-                return this.contains(e.value);
-            }
-            else {
-                return this.value.indexOf(e) >= 0;
-            }
-        }
-    }
-
     class CallaEvent extends Event {
         constructor(eventType) {
             super(eventType);
@@ -1310,12 +1279,7 @@
     class CallaEmojiEvent extends CallaUserEvent {
         constructor(type, id, emoji) {
             super(type, id);
-            if (emoji instanceof Emoji) {
-                this.emoji = emoji.value;
-            }
-            else {
-                this.emoji = emoji;
-            }
+            this.emoji = emoji;
         }
     }
     class CallaEmoteEvent extends CallaEmojiEvent {
@@ -1328,9 +1292,9 @@
             super("setAvatarEmoji", id, emoji);
         }
     }
-    class CallaAvatarChangedEvent extends CallaUserEvent {
+    class CallaPhotoAvatarEvent extends CallaUserEvent {
         constructor(id, url) {
-            super("avatarChanged", id);
+            super("setAvatarURL", id);
             this.url = url;
         }
     }
@@ -8081,169 +8045,6 @@
         }
     }
 
-    function sleep(dt) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, dt);
-        });
-    }
-
-    class BaseMetadataClient extends TypedEventBase {
-        constructor(sleepTime) {
-            super();
-            this.sleepTime = sleepTime;
-            this.tasks = new Map();
-        }
-        async getNext(evtName, userID) {
-            return new Promise((resolve) => {
-                const getter = (evt) => {
-                    if (evt instanceof CallaUserEvent
-                        && evt.id === userID) {
-                        this.removeEventListener(evtName, getter);
-                        resolve(evt);
-                    }
-                };
-                this.addEventListener(evtName, getter);
-            });
-        }
-        get isConnected() {
-            return this.metadataState === ConnectionState.Connected;
-        }
-        async callThrottled(key, command, ...args) {
-            if (!this.tasks.has(key)) {
-                const start = performance.now();
-                const task = this.callInternal(command, ...args);
-                this.tasks.set(key, task);
-                await task;
-                const delta = performance.now() - start;
-                const sleepTime = this.sleepTime - delta;
-                if (sleepTime > 0) {
-                    await sleep(this.sleepTime);
-                }
-                this.tasks.delete(key);
-            }
-        }
-        async callImmediate(command, ...args) {
-            await this.callInternal(command, ...args);
-        }
-        async callImmediateSingle(userid, command, ...args) {
-            await this.callInternalSingle(userid, command, ...args);
-        }
-        setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setAvatarEmoji(emoji) {
-            this.callImmediate("setAvatarEmoji", emoji);
-        }
-        tellAvatarEmoji(userid, emoji) {
-            this.callImmediateSingle(userid, "tellAvatarEmoji", emoji);
-        }
-        setAvatarURL(url) {
-            this.callImmediate("avatarChanged", url);
-        }
-        emote(emoji) {
-            this.callImmediate("emote", emoji);
-        }
-        chat(text) {
-            this.callImmediate("chat", text);
-        }
-    }
-
-    const JITSI_HAX_FINGERPRINT = "Calla";
-    class JitsiMetadataClient extends BaseMetadataClient {
-        constructor(tele) {
-            super(250);
-            this.tele = tele;
-            this._status = ConnectionState.Disconnected;
-            this.remoteUserIDs = new Array();
-            this.tele.addEventListener("participantJoined", (evt) => {
-                arraySortedInsert(this.remoteUserIDs, evt.id, false);
-            });
-            this.tele.addEventListener("participantLeft", (evt) => {
-                arrayRemove(this.remoteUserIDs, evt.id);
-            });
-        }
-        get metadataState() {
-            return this._status;
-        }
-        async connect() {
-            // JitsiTeleconferenceClient will already connect
-        }
-        async join(_roomName) {
-            // JitsiTeleconferenceClient will already join
-            this._status = ConnectionState.Connecting;
-            this.tele.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
-                if (data.hax === JITSI_HAX_FINGERPRINT) {
-                    const fromUserID = user.getId();
-                    const command = data.command;
-                    const values = data.values;
-                    switch (command) {
-                        case "avatarChanged":
-                            this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, values[0]));
-                            break;
-                        case "emote":
-                            this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
-                            break;
-                        case "setAvatarEmoji":
-                        case "tellAvatarEmoji":
-                            this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
-                            break;
-                        case "userPosed":
-                            this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
-                            break;
-                        case "userPointer":
-                            this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
-                            break;
-                        case "chat":
-                            this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
-                            break;
-                        default:
-                            assertNever(command);
-                    }
-                }
-            });
-            await sleep(250);
-            this._status = ConnectionState.Connected;
-        }
-        async leave() {
-            // JitsiTeleconferenceClient will already leave
-            this._status = ConnectionState.Disconnected;
-        }
-        async identify(_userName) {
-            // JitsiTeleconferenceClient will already identify the user
-        }
-        async disconnect() {
-            // JitsiTeleconferenceClient will already disconnect
-        }
-        async callInternal(command, ...values) {
-            const tasks = [];
-            for (const toUserID of this.remoteUserIDs) {
-                tasks.push(this.callInternalSingle(toUserID, command, values));
-            }
-            await Promise.all(tasks);
-        }
-        callInternalSingle(toUserID, command, values) {
-            this.sendJitsiHax(toUserID, command, ...values);
-            return Promise.resolve();
-        }
-        sendJitsiHax(toUserID, command, ...values) {
-            this.tele.conference.sendMessage({
-                hax: JITSI_HAX_FINGERPRINT,
-                command,
-                values
-            }, toUserID);
-        }
-        async stopInternal() {
-            this._status = ConnectionState.Disconnecting;
-            await waitFor(() => this.metadataState === ConnectionState.Disconnected);
-        }
-    }
-
     function isModifierless(evt) {
         return !(evt.shiftKey || evt.altKey || evt.ctrlKey || evt.metaKey);
     }
@@ -8375,6 +8176,146 @@
         }
     }
 
+    class BaseMetadataClient extends TypedEventBase {
+        async getNext(evtName, userID) {
+            return new Promise((resolve) => {
+                const getter = (evt) => {
+                    if (evt instanceof CallaUserEvent
+                        && evt.id === userID) {
+                        this.removeEventListener(evtName, getter);
+                        resolve(evt);
+                    }
+                };
+                this.addEventListener(evtName, getter);
+            });
+        }
+        get isConnected() {
+            return this.metadataState === ConnectionState.Connected;
+        }
+        setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callInternalSingle(userid, "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callInternal("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        setAvatarEmoji(emoji) {
+            this.callInternal("setAvatarEmoji", emoji);
+        }
+        tellAvatarEmoji(userid, emoji) {
+            this.callInternalSingle(userid, "setAvatarEmoji", emoji);
+        }
+        setAvatarURL(url) {
+            this.callInternal("setAvatarURL", url);
+        }
+        tellAvatarURL(userid, url) {
+            this.callInternalSingle(userid, "setAvatarURL", url);
+        }
+        emote(emoji) {
+            this.callInternal("emote", emoji);
+        }
+        chat(text) {
+            this.callInternal("chat", text);
+        }
+    }
+
+    const JITSI_HAX_FINGERPRINT = "Calla";
+    const logger$1 = new Logger();
+    class JitsiMetadataClient extends BaseMetadataClient {
+        constructor(tele) {
+            super();
+            this.tele = tele;
+            this._status = ConnectionState.Disconnected;
+            this.remoteUserIDs = new Array();
+            this.tele.addEventListener("participantJoined", (evt) => {
+                arraySortedInsert(this.remoteUserIDs, evt.id, false);
+            });
+            this.tele.addEventListener("participantLeft", (evt) => {
+                arrayRemove(this.remoteUserIDs, evt.id);
+            });
+        }
+        get metadataState() {
+            return this._status;
+        }
+        async connect() {
+            // JitsiTeleconferenceClient will already connect
+        }
+        async join(_roomName) {
+            // JitsiTeleconferenceClient will already join
+            this._status = ConnectionState.Connecting;
+            this.tele.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
+                if (data.hax === JITSI_HAX_FINGERPRINT) {
+                    const fromUserID = user.getId();
+                    const command = data.command;
+                    const values = data.values;
+                    switch (command) {
+                        case "emote":
+                            this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
+                            break;
+                        case "setAvatarEmoji":
+                            this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
+                            break;
+                        case "setAvatarURL":
+                            this.dispatchEvent(new CallaPhotoAvatarEvent(fromUserID, values[0]));
+                            break;
+                        case "userPosed":
+                            this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
+                            break;
+                        case "userPointer":
+                            this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
+                            break;
+                        case "chat":
+                            this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
+                            break;
+                        default:
+                            assertNever(command);
+                    }
+                }
+            });
+            this._status = ConnectionState.Connected;
+        }
+        async leave() {
+            // JitsiTeleconferenceClient will already leave
+            this._status = ConnectionState.Disconnected;
+        }
+        async identify(_userName) {
+            // JitsiTeleconferenceClient will already identify the user
+        }
+        async disconnect() {
+            // JitsiTeleconferenceClient will already disconnect
+        }
+        async callInternal(command, ...values) {
+            logger$1.log(`callInternal:${command}`, ...values);
+            this.tele.conference.broadcastEndpointMessage({
+                hax: JITSI_HAX_FINGERPRINT,
+                command,
+                values
+            });
+            return Promise.resolve();
+        }
+        callInternalSingle(toUserID, command, ...values) {
+            logger$1.log(`callInternalSingle:${toUserID}:${command}`, ...values);
+            this.tele.conference.sendMessage({
+                hax: JITSI_HAX_FINGERPRINT,
+                command,
+                values
+            }, toUserID);
+            return Promise.resolve();
+        }
+        async stopInternal() {
+            this._status = ConnectionState.Disconnecting;
+            await waitFor(() => this.metadataState === ConnectionState.Disconnected);
+        }
+    }
+
+    function sleep(dt) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, dt);
+        });
+    }
+
     function encodeUserName(v) {
         try {
             return encodeURIComponent(v);
@@ -8396,7 +8337,7 @@
             }
         }
     }
-    const logger$1 = new Logger();
+    const logger$2 = new Logger();
     class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
             super(fetcher, audio);
@@ -8483,11 +8424,11 @@
                 this.conference = this.connection.initJitsiConference(this.roomName, {
                     openBridgeChannel: this.usingDefaultMetadataClient,
                     p2p: { enabled: false },
-                    startVideoMuted: true
+                    startVideoMuted: true,
                 });
                 const conferenceEvents = JitsiMeetJS.events.conference;
                 this.conference.addEventListener(conferenceEvents.DATA_CHANNEL_OPENED, (...params) => {
-                    logger$1.log("DataChannel", ...params);
+                    logger$2.log("DataChannel", ...params);
                 });
                 for (const evtName of Object.values(conferenceEvents)) {
                     if (evtName !== "conference.audioLevelsChanged") {
@@ -8533,7 +8474,7 @@
                 this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
                     const displayName = jitsiUser.getDisplayName();
                     const decodedUserName = decodeUserName(displayName);
-                    logger$1.log(`${conferenceEvents.USER_JOINED}:${id}`, displayName, decodedUserName);
+                    logger$2.log(`${conferenceEvents.USER_JOINED}:${id}`, displayName, decodedUserName);
                     this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodedUserName, null));
                 });
                 this._on(this.conference, conferenceEvents.USER_LEFT, (id) => {
@@ -8541,7 +8482,7 @@
                 });
                 this._on(this.conference, conferenceEvents.DISPLAY_NAME_CHANGED, (id, displayName) => {
                     const decodedUserName = decodeUserName(displayName);
-                    logger$1.log(`${conferenceEvents.DISPLAY_NAME_CHANGED}:${id}`, displayName, decodedUserName);
+                    logger$2.log(`${conferenceEvents.DISPLAY_NAME_CHANGED}:${id}`, displayName, decodedUserName);
                     this.dispatchEvent(new CallaParticipantNameChangeEvent(id, decodedUserName));
                 });
                 const onTrackMuteChanged = (track, muted) => {
@@ -8876,10 +8817,10 @@
                 }
                 this.dispatchEvent(evt);
             });
-            this._meta.addEventListener("avatarChanged", fwd);
             this._meta.addEventListener("chat", fwd);
             this._meta.addEventListener("emote", fwd);
             this._meta.addEventListener("setAvatarEmoji", fwd);
+            this._meta.addEventListener("setAvatarURL", fwd);
             const offsetEvt = (poseEvt) => {
                 const O = this.audio.getUserOffset(poseEvt.id);
                 if (O) {
@@ -8973,9 +8914,8 @@
             this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
             this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
         }
-        setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
-            this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
+        tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this._meta.tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz);
         }
         setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
             this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
@@ -8988,6 +8928,9 @@
         }
         setAvatarURL(url) {
             this._meta.setAvatarURL(url);
+        }
+        tellAvatarURL(userid, url) {
+            this._meta.tellAvatarURL(userid, url);
         }
         emote(emoji) {
             this._meta.emote(emoji);
@@ -9167,7 +9110,38 @@
             if (!this.loaded) {
                 throw new Error("lib-jitsi-meet has not been loaded. Call clientFactory.load().");
             }
-            return new JitsiMetadataClient(tele);
+            return tele.getDefaultMetadataClient();
+        }
+    }
+
+    /**
+     * Unicode-standardized pictograms.
+     **/
+    class Emoji {
+        /**
+         * Creates a new Unicode-standardized pictograms.
+         * @param value - a Unicode sequence.
+         * @param desc - an English text description of the pictogram.
+         * @param props - an optional set of properties to store with the emoji.
+         */
+        constructor(value, desc, props = null) {
+            this.value = value;
+            this.desc = desc;
+            this.value = value;
+            this.desc = desc;
+            this.props = props || {};
+        }
+        /**
+         * Determines of the provided Emoji or EmojiGroup is a subset of
+         * this emoji.
+         */
+        contains(e) {
+            if (e instanceof Emoji) {
+                return this.contains(e.value);
+            }
+            else {
+                return this.value.indexOf(e) >= 0;
+            }
         }
     }
 
@@ -18187,8 +18161,6 @@
     class User extends TypedEventBase {
         constructor(id, displayName, pose, isMe) {
             super();
-            this.id = id;
-            this.pose = pose;
             this.isMe = isMe;
             this.audioMuted = false;
             this.videoMuted = true;
@@ -18204,8 +18176,8 @@
             this._avatarVideo = null;
             this._avatarImage = null;
             this._avatarEmoji = null;
-            this.userMovedEvt = new UserMovedEvent(id);
-            this.label = isMe ? "(Me)" : `(${this.id})`;
+            this.id = id;
+            this.pose = pose;
             this.setAvatarEmoji(bustInSilhouette.value);
             this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
             this.userNameText = new TextImage();
@@ -18213,6 +18185,23 @@
             this.userNameText.fontSize = 128;
             this.displayName = displayName;
             Object.seal(this);
+        }
+        get id() {
+            return this._id;
+        }
+        set id(v) {
+            if (v !== this.id) {
+                this._id = v;
+                this.userMovedEvt = new UserMovedEvent(this.id);
+            }
+        }
+        get pose() {
+            return this._pose;
+        }
+        set pose(v) {
+            if (v !== this.pose) {
+                this._pose = v;
+            }
         }
         get x() {
             return this.pose.current.p[0];
@@ -18347,6 +18336,9 @@
                     return null;
                 default: assertNever(this.avatarMode);
             }
+        }
+        get label() {
+            return this.isMe ? "(Me)" : `(${this.id})`;
         }
         get displayName() {
             return this._displayName || this.label;
@@ -18510,10 +18502,10 @@
             this.gamepadIndex = -1;
             this.transitionSpeed = 0.125;
             this.keyboardEnabled = true;
-            this.me = null;
             this.map = null;
             this.currentRoomName = null;
             this.currentEmoji = null;
+            this.me = new User("local", "Me", new InterpolatedPose(), true);
             this.element = Canvas(id("frontBuffer"));
             this.gFront = this.element.getContext("2d");
             this.audioDistanceMin = 2;
@@ -18743,12 +18735,11 @@
                 user.setAvatarEmoji(emoji.value);
             });
         }
-        async startAsync(id, displayName, pose, avatarURL, roomName) {
+        async startAsync(id, displayName, pose, roomName) {
             this.currentRoomName = roomName.toLowerCase();
-            this.me = new User(id, displayName, pose, true);
-            if (isString(avatarURL)) {
-                this.me.setAvatarImage(avatarURL);
-            }
+            this.me.id = id;
+            this.me.displayName = displayName;
+            this.me.pose = pose;
             this.users.set(id, this.me);
             this.map = new TileMap(this.currentRoomName, this.fetcher);
             let success = false;
@@ -18787,7 +18778,6 @@
             this.currentRoomName = null;
             this.map = null;
             this.users.clear();
-            this.me = null;
             hide(this.element);
             this.dispatchEvent(gameEndedEvt);
         }
@@ -19002,7 +18992,7 @@
         function setAudioProperties() {
             audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, audio.algorithm, settings.transitionSpeed);
         }
-        const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(rooms), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false), client = await loader.load(fetcher, audio), rawGameStartEmoji = new Emoji(null, ""), rawEmoteEmoji = new Emoji(null, ""), rawAvatarEmoji = new Emoji(null, "");
+        const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, logger = new Logger(), settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(rooms), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false), client = await loader.load(fetcher, audio), rawGameStartEmoji = new Emoji(null, ""), rawEmoteEmoji = new Emoji(null, ""), rawAvatarEmoji = new Emoji(null, "");
         let waitingForEmoji = false;
         Object.assign(window, {
             settings,
@@ -19134,10 +19124,6 @@
             show(controls);
             options.user = game.me;
             controls.enabled = true;
-            settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
-            rawGameStartEmoji.value = settings.avatarEmoji;
-            client.setAvatarEmoji(settings.avatarEmoji);
-            game.me.setAvatarEmoji(settings.avatarEmoji);
             refreshUser(client.localUserID);
         });
         game.addEventListener("userMoved", (evt) => {
@@ -19155,10 +19141,11 @@
         });
         client.addEventListener("conferenceJoined", async (evt) => {
             login.connected = true;
-            await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
-            options.avatarURL = settings.avatarURL;
-            client.setAvatarURL(settings.avatarURL);
+            await game.startAsync(evt.id, login.userName, evt.pose, login.roomName);
+            game.me.setAvatarEmoji(settings.avatarEmoji);
             game.me.setAvatarImage(settings.avatarURL);
+            client.setAvatarEmoji(settings.avatarEmoji);
+            client.setAvatarURL(settings.avatarURL);
             devices.audioInputDevices = await client.getAudioInputDevices(true);
             devices.audioOutputDevices = await client.getAudioOutputDevices(true);
             devices.videoInputDevices = await client.getVideoInputDevices(true);
@@ -19178,11 +19165,19 @@
         client.addEventListener("conferenceLeft", () => {
             game.end();
         });
-        client.addEventListener("participantJoined", (evt) => {
+        client.addEventListener("participantJoined", async (evt) => {
             game.addUser(evt.id, evt.displayName, evt.source.pose);
+            await sleep(250);
             if (game.me.avatarMode === AvatarMode.Emoji) {
                 client.tellAvatarEmoji(evt.id, game.me.avatarEmoji.value);
+                await sleep(250);
             }
+            else if (game.me.avatarMode === AvatarMode.Photo) {
+                client.tellAvatarURL(evt.id, game.me.avatarImage.url);
+                await sleep(250);
+            }
+            const { p, f, u } = game.me.pose.end;
+            client.tellLocalPose(evt.id, p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
             audio.playClip("join");
         });
         client.addEventListener("participantLeft", (evt) => {
@@ -19198,10 +19193,6 @@
         });
         client.addEventListener("videoRemoved", (evt) => {
             game.setAvatarVideo(evt.id, null);
-            refreshUser(evt.id);
-        });
-        client.addEventListener("avatarChanged", (evt) => {
-            game.setAvatarURL(evt.id, evt.url);
             refreshUser(evt.id);
         });
         client.addEventListener("userNameChanged", (evt) => {
@@ -19239,6 +19230,11 @@
             game.setAvatarEmoji(evt.id, rawAvatarEmoji);
             refreshUser(evt.id);
         });
+        client.addEventListener("setAvatarURL", (evt) => {
+            logger.log("got setAvatarURL:" + evt.id, evt.url);
+            game.setAvatarURL(evt.id, evt.url);
+            refreshUser(evt.id);
+        });
         client.addEventListener("audioActivity", (evt) => {
             game.updateAudioActivity(evt.id, evt.isActive);
         });
@@ -19248,6 +19244,9 @@
             directory.update();
             game.update(evt.dt);
         });
+        settings.avatarEmoji = settings.avatarEmoji || allPeopleGroup.random().value;
+        rawGameStartEmoji.value = settings.avatarEmoji;
+        options.avatarURL = settings.avatarURL;
         options.drawHearing = game.drawHearing = settings.drawHearing;
         options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
         options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;

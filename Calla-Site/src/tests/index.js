@@ -38,7 +38,7 @@ echoEvts(
     "videoConferenceLeft",
     "participantJoined",
     "participantLeft",
-    "avatarChanged",
+    "setAvatarURL",
     "displayNameChange",
     "audioActivity",
     "participantRoleChanged");

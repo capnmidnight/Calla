@@ -54,11 +54,12 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     get offsetRadius(): number;
     set offsetRadius(v: number);
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
-    setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setAvatarEmoji(emoji: string): void;
     tellAvatarEmoji(userid: string, emoji: string): void;
     setAvatarURL(url: string): void;
+    tellAvatarURL(userid: string, url: string): void;
     emote(emoji: string): void;
     chat(text: string): void;
     setPreferredDevices(): Promise<void>;

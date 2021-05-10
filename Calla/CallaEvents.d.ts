@@ -1,9 +1,8 @@
-import { Emoji } from "kudzu/emoji/Emoji";
 import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
 export declare type CallaTeleconferenceEventType = "serverConnected" | "serverDisconnected" | "serverFailed" | "conferenceConnected" | "conferenceJoined" | "conferenceFailed" | "conferenceRestored" | "conferenceLeft" | "participantJoined" | "participantLeft" | "userNameChanged" | "audioMuteStatusChanged" | "videoMuteStatusChanged" | "audioActivity" | "audioAdded" | "audioRemoved" | "videoAdded" | "videoRemoved";
-export declare type CallaMetadataEventType = "userPosed" | "userPointer" | "setAvatarEmoji" | "tellAvatarEmoji" | "avatarChanged" | "emote" | "chat";
+export declare type CallaMetadataEventType = "userPosed" | "userPointer" | "setAvatarEmoji" | "setAvatarURL" | "emote" | "chat";
 export declare type CallaEventType = CallaTeleconferenceEventType | CallaMetadataEventType;
 export declare class CallaEvent<T extends CallaEventType> extends Event {
     eventType: T;
@@ -123,8 +122,8 @@ export declare class CallaUserPointerEvent extends CallaPoseEvent<"userPointer">
     constructor(id: string, name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number);
 }
 export declare class CallaEmojiEvent<T extends CallaMetadataEventType> extends CallaUserEvent<T> {
-    emoji: string;
-    constructor(type: T, id: string, emoji: Emoji | string);
+    readonly emoji: string;
+    constructor(type: T, id: string, emoji: string);
 }
 export declare class CallaEmoteEvent extends CallaEmojiEvent<"emote"> {
     constructor(id: string, emoji: string);
@@ -132,8 +131,8 @@ export declare class CallaEmoteEvent extends CallaEmojiEvent<"emote"> {
 export declare class CallaEmojiAvatarEvent extends CallaEmojiEvent<"setAvatarEmoji"> {
     constructor(id: string, emoji: string);
 }
-export declare class CallaAvatarChangedEvent extends CallaUserEvent<"avatarChanged"> {
-    url: string;
+export declare class CallaPhotoAvatarEvent extends CallaUserEvent<"setAvatarURL"> {
+    readonly url: string;
     constructor(id: string, url: string);
 }
 export declare class CallaChatEvent extends CallaUserEvent<"chat"> {
@@ -165,7 +164,7 @@ export interface CallaMetadataEvents {
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;
     setAvatarEmoji: CallaEmojiAvatarEvent;
-    avatarChanged: CallaAvatarChangedEvent;
+    setAvatarURL: CallaPhotoAvatarEvent;
     chat: CallaChatEvent;
 }
 export interface CallaClientEvents extends CallaTeleconferenceEvents, CallaMetadataEvents {

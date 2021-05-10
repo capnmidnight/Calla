@@ -19,7 +19,6 @@ export declare class JitsiMetadataClient extends BaseMetadataClient {
     identify(_userName: string): Promise<void>;
     disconnect(): Promise<void>;
     protected callInternal(command: CallaEventType, ...values: any[]): Promise<void>;
-    protected callInternalSingle(toUserID: string, command: CallaEventType, values: any[]): Promise<void>;
-    private sendJitsiHax;
+    protected callInternalSingle(toUserID: string, command: CallaEventType, ...values: any[]): Promise<void>;
     protected stopInternal(): Promise<void>;
 }

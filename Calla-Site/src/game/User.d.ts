@@ -22,10 +22,7 @@ interface UserEvents {
     userMoved: UserMovedEvent;
 }
 export declare class User extends TypedEventBase<UserEvents> {
-    id: string;
-    private pose;
-    isMe: boolean;
-    label: string;
+    readonly isMe: boolean;
     audioMuted: boolean;
     videoMuted: boolean;
     isActive: boolean;
@@ -42,8 +39,14 @@ export declare class User extends TypedEventBase<UserEvents> {
     private _avatarVideo;
     private _avatarImage;
     private _avatarEmoji;
+    private _id;
+    private _pose;
     private userMovedEvt;
     constructor(id: string, displayName: string, pose: InterpolatedPose, isMe: boolean);
+    get id(): string;
+    set id(v: string);
+    get pose(): InterpolatedPose;
+    set pose(v: InterpolatedPose);
     get x(): number;
     get y(): number;
     get gridX(): number;
@@ -91,6 +94,7 @@ export declare class User extends TypedEventBase<UserEvents> {
      * Returns the current avatar
      **/
     get avatar(): EmojiAvatar | PhotoAvatar | VideoAvatar;
+    get label(): string;
     get displayName(): string;
     set displayName(name: string);
     moveTo(x: number, y: number): void;

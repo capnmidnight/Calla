@@ -1,4 +1,4 @@
-import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { IFetcher } from "kudzu/io/IFetcher";
@@ -51,10 +51,10 @@ export declare class Game extends TypedEventBase<GameEvents> {
     gamepadIndex: number;
     transitionSpeed: number;
     keyboardEnabled: boolean;
-    me: User;
     map: TileMap;
     currentRoomName: string;
     currentEmoji: Emoji;
+    me: User;
     element: HTMLCanvasElement;
     gFront: CanvasRenderingContext2D;
     inputBinding: IInputBinding;
@@ -97,7 +97,7 @@ export declare class Game extends TypedEventBase<GameEvents> {
     setAvatarVideo(id: string, stream: MediaStream): void;
     setAvatarURL(id: string, url: string): void;
     setAvatarEmoji(id: string, emoji: Emoji): void;
-    startAsync(id: string, displayName: string, pose: InterpolatedPose, avatarURL: string, roomName: string): Promise<void>;
+    startAsync(id: string, displayName: string, pose: InterpolatedPose, roomName: string): Promise<void>;
     startLoop(): void;
     resize(): void;
     end(): void;
