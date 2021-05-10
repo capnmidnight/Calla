@@ -2,11 +2,12 @@ import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
 import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeopleGroup as people } from "kudzu/emoji/people";
+import { once } from "kudzu/events/once";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
 import { Fetcher } from "kudzu/io/Fetcher";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { audioClips, emojiFont, JITSI_HOST, JVB_HOST, JVB_MUC, rooms } from "../configuration";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
@@ -17,62 +18,54 @@ import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
 import { Settings } from "./Settings";
-const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm([
-    { value: "calla", text: "Calla" },
-    { value: "alxcc", text: "Alexandria Code & Coffee" },
-    { value: "island", text: "Island" },
-    { value: "vurv", text: "Vurv" }
-]), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
-document.body.append(controls.element, game.element, login.element, directory.element, controls.element, devices.element, options.element, emoji.element, instructions.element);
-let waitingForEmoji = false;
-async function recordJoin(Name, Email, Room) {
-    await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
-}
-async function recordRoom(roomName) {
-    return await fetcher.postObjectForText("/Game/Rooms", roomName, "application/json");
-}
-function _showView(view) {
-    return () => showView(view);
-}
-function showView(view) {
-    if (!waitingForEmoji) {
-        hide(login);
-        hide(directory);
-        hide(options);
-        hide(devices);
-        hide(emoji);
-        hide(instructions);
-        if (view === login) {
-            hide(controls);
-        }
-        show(view);
-    }
-}
-async function withEmojiSelection(callback) {
-    if (!isOpen(emoji)) {
-        waitingForEmoji = true;
-        disabler.apply(controls.optionsButton);
-        disabler.apply(controls.instructionsButton);
-        disabler.apply(controls.changeDevicesButton);
-        hide(options);
-        const e = await emoji.selectAsync();
-        if (e) {
-            callback(e);
-        }
-        enabler.apply(controls.optionsButton);
-        enabler.apply(controls.instructionsButton);
-        enabler.apply(controls.changeDevicesButton);
-        waitingForEmoji = false;
-    }
-}
-function refreshGamepads() {
-    options.gamepads = navigator.getGamepads();
-    options.gamepadIndex = game.gamepadIndex;
-}
-function refreshUser(userID) {
-    game.withUser("list user in directory", userID, (user) => directory.set(user));
-}
 (async function () {
+    async function recordJoin(Name, Email, Room) {
+        await fetcher.postObject("/Contacts", { Name, Email, Room }, "application/json");
+    }
+    async function recordRoom(roomName) {
+        return await fetcher.postObjectForText("/Game/Rooms", roomName, "application/json");
+    }
+    function _showView(view) {
+        return () => showView(view);
+    }
+    function showView(view) {
+        if (!waitingForEmoji) {
+            hide(login);
+            hide(directory);
+            hide(options);
+            hide(devices);
+            hide(emoji);
+            hide(instructions);
+            if (view === login) {
+                hide(controls);
+            }
+            show(view);
+        }
+    }
+    async function withEmojiSelection(callback) {
+        if (!isOpen(emoji)) {
+            waitingForEmoji = true;
+            disabler.apply(controls.optionsButton);
+            disabler.apply(controls.instructionsButton);
+            disabler.apply(controls.changeDevicesButton);
+            hide(options);
+            const e = await emoji.selectAsync();
+            if (e) {
+                callback(e);
+            }
+            enabler.apply(controls.optionsButton);
+            enabler.apply(controls.instructionsButton);
+            enabler.apply(controls.changeDevicesButton);
+            waitingForEmoji = false;
+        }
+    }
+    function refreshGamepads() {
+        options.gamepads = navigator.getGamepads();
+        options.gamepadIndex = game.gamepadIndex;
+    }
+    function refreshUser(userID) {
+        game.withUser("list user in directory", userID, (user) => directory.set(user));
+    }
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUserID, e);
@@ -80,13 +73,24 @@ function refreshUser(userID) {
         });
     }
     function setAudioProperties() {
-        client.audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, client.audio.algorithm, settings.transitionSpeed);
+        audio.setAudioProperties(settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin, settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax, settings.audioRolloff = options.audioRolloff, audio.algorithm, settings.transitionSpeed);
     }
-    await loadFont(makeFont({
-        fontFamily: "Noto Color Emoji",
-        fontSize: 100
-    }));
-    const client = await loader.load(fetcher, audio);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(rooms), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new InstructionsForm(), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false), client = await loader.load(fetcher, audio), rawGameStartEmoji = new Emoji(null, ""), rawEmoteEmoji = new Emoji(null, ""), rawAvatarEmoji = new Emoji(null, "");
+    let waitingForEmoji = false;
+    Object.assign(window, {
+        settings,
+        fetcher,
+        client,
+        game,
+        login,
+        directory,
+        controls,
+        devices,
+        options,
+        emoji,
+        instructions
+    });
+    document.body.append(controls.element, game.element, login.element, directory.element, controls.element, devices.element, options.element, emoji.element, instructions.element);
     window.addEventListener("gamepadconnected", refreshGamepads);
     window.addEventListener("gamepaddisconnected", refreshGamepads);
     window.addEventListener("resize", () => game.resize());
@@ -116,7 +120,10 @@ function refreshUser(userID) {
         settings.zoom = game.zoom = controls.zoom;
     });
     login.addEventListener("login", async () => {
-        setAudioProperties();
+        if (!audio.ready) {
+            await once(audio, "audioready");
+            setAudioProperties();
+        }
         let roomName = await recordRoom(login.roomName);
         await recordJoin(settings.userName = login.userName, settings.email = login.email, settings.roomName = roomName);
         const title = `Calla - chatting in ${roomName}`;
@@ -194,7 +201,6 @@ function refreshUser(userID) {
         await client.toggleVideoMuted();
         settings.preferredVideoInputID = client.preferredVideoInputID;
     });
-    const rawGameStartEmoji = new Emoji(null, "");
     game.addEventListener("gameStarted", () => {
         game.resize();
         hide(login);
@@ -246,11 +252,11 @@ function refreshUser(userID) {
         game.end();
     });
     client.addEventListener("participantJoined", (evt) => {
-        client.audio.playClip("join");
         game.addUser(evt.id, evt.displayName, evt.source.pose);
+        audio.playClip("join");
     });
     client.addEventListener("participantLeft", (evt) => {
-        client.audio.playClip("leave");
+        audio.playClip("leave");
         game.removeUser(evt.id);
         directory.delete(evt.id);
     });
@@ -294,12 +300,10 @@ function refreshUser(userID) {
         game.muteUserVideo(evt.id, evt.muted);
         settings.preferredVideoInputID = client.preferredVideoInputID;
     });
-    const rawEmoteEmoji = new Emoji(null, "");
     client.addEventListener("emote", (evt) => {
         rawEmoteEmoji.value = evt.emoji;
         game.emote(evt.id, rawEmoteEmoji);
     });
-    const rawAvatarEmoji = new Emoji(null, "");
     client.addEventListener("setAvatarEmoji", (evt) => {
         rawAvatarEmoji.value = evt.emoji;
         game.setAvatarEmoji(evt.id, rawAvatarEmoji);
@@ -309,7 +313,7 @@ function refreshUser(userID) {
         game.updateAudioActivity(evt.id, evt.isActive);
     });
     timer.addEventListener("tick", (evt) => {
-        client.audio.update();
+        audio.update();
         options.update();
         directory.update();
         game.update(evt.dt);
@@ -319,37 +323,24 @@ function refreshUser(userID) {
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
     options.audioRolloff = settings.audioRolloff;
     options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepads = navigator.getGamepads();
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
+    options.gamepads = navigator.getGamepads();
     controls.zoom = game.zoom = settings.zoom;
     game.cameraZ = game.targetCameraZ;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
     login.email = settings.email;
-    controls.enabled = false;
-    login.ready = true;
-    timer.start();
+    showView(login);
     await Promise.all([
-        client.audio.createClip("join", false, false, false, 0.5, "/audio/door-open.mp3"),
-        client.audio.createClip("leave", false, false, true, 0.5, "/audio/door-close.mp3"),
+        loadFont(makeFont(emojiFont)),
+        audio.createClip("join", false, false, false, 0.5, audioClips.join),
+        audio.createClip("leave", false, false, true, 0.5, audioClips.leave),
         client.connect()
     ]);
-    showView(login);
     await client.getMediaPermissions();
-    Object.assign(window, {
-        settings,
-        fetcher,
-        client,
-        game,
-        login,
-        directory,
-        controls,
-        devices,
-        options,
-        emoji,
-        instructions
-    });
+    login.ready = true;
+    timer.start();
 })();
 //# sourceMappingURL=index.js.map
