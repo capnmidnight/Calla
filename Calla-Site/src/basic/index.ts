@@ -27,7 +27,7 @@ import type {
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 
 // Import the configuration parameters.
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../configuration";
 
 
 

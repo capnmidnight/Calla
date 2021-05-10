@@ -9,7 +9,7 @@ import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader
 // Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 // Import the configuration parameters.
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../configuration";
 // Gets all the named elements in the document so we can
 // setup event handlers on them.
 const controls = {
