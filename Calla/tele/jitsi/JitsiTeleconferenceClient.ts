@@ -357,6 +357,10 @@ export class JitsiTeleconferenceClient
         catch (exp) {
             console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
         }
+        finally {
+            this.conference = null;
+            this.roomName = null;
+        }
     }
 
     async disconnect(): Promise<void> {
@@ -365,9 +369,17 @@ export class JitsiTeleconferenceClient
             await this.leave();
         }
 
-        const disconnectTask = once(this, "serverDisconnected");
-        this.connection.disconnect();
-        await disconnectTask;
+        try {
+            const disconnectTask = once(this, "serverDisconnected");
+            this.connection.disconnect();
+            await disconnectTask;
+        }
+        catch (exp) {
+            console.warn("><> CALLA <>< ---- Failed to disconnect from teleconference server.", exp);
+        }
+        finally {
+            this.connection = null;
+        }
     }
 
     userExists(id: string): boolean {
