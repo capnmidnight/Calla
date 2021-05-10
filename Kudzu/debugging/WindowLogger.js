@@ -11,7 +11,9 @@ export class WindowLogger {
         this.logs = new Map();
         this.rows = new Map();
         this.workerCount = 0;
-        this.container = Div(styles(position("fixed"), display("none"), top("0"), left("0"), width("100%"), height("100%"), zIndex(9001), padding("1em"), opacity("0.5"), backgroundColor("black"), color("white"), overflow("hidden"), pointerEvents("none")), this.grid = Div(styles(display("grid"), overflowY("auto"), columnGap("0.5em"), gridAutoFlow("row"))));
+        this.container = Div(styles(position("fixed"), 
+        //display("none"),
+        top("0"), left("0"), width("100%"), height("100%"), zIndex(9001), padding("1em"), opacity("0.5"), backgroundColor("black"), color("white"), overflow("hidden"), pointerEvents("none")), this.grid = Div(styles(display("grid"), overflowY("auto"), columnGap("0.5em"), gridAutoFlow("row"))));
         document.body.appendChild(this.container);
         window.addEventListener("keypress", (evt) => {
             if (isModifierless(evt) && evt.key === '`') {
