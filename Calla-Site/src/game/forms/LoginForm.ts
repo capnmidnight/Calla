@@ -1,9 +1,8 @@
 import { TypedEvent } from "kudzu/events/EventBase";
 import { autoComplete, htmlFor, id, list, placeHolder, required, title, value } from "kudzu/html/attrs";
 import { onBlur, onClick, onInput, onKeyPress, onMouseDown } from "kudzu/html/evts";
-import { Button, DataList, Form, InputEmail, InputText, Option, Label } from "kudzu/html/tags";
+import { Button, DataList, Form, InputEmail, InputText, Label, Option } from "kudzu/html/tags";
 import { FormDialog, FormDialogEvents } from "./FormDialog";
-import { setLocked } from "./ops";
 
 interface RoomEntry {
     value: string;
@@ -149,15 +148,12 @@ export class LoginForm extends FormDialog<LoginFormEvents> {
     }
 
     private validate() {
-        const canConnect = this.roomName.length > 0
-            && this.userName.length > 0;
 
-        setLocked(
-            this.connectButton,
-            !this.ready
+        this.connectButton.disabled = !this.ready
+            || this.roomName.length === 0
+            || this.userName.length === 0
             || this.connecting
-            || this.connected
-            || !canConnect);
+            || this.connected;
 
         this.connectButton.innerHTML =
             this.connected
