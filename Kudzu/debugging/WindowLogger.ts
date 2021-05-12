@@ -21,7 +21,7 @@ export class WindowLogger implements ILogger {
         this.container = Div(
             styles(
                 position("fixed"),
-                //display("none"),
+                display("none"),
                 top("0"),
                 left("0"),
                 width("100%"),
