@@ -1,8 +1,10 @@
+import { isWorker } from "../html/flags";
+import { isNumber } from "../typeChecks";
 import { getUserNumber } from "./userNumber";
 
 const windows: Window[] = [];
 
-if ("window" in globalThis) {
+if (!isWorker) {
     // Closes all the windows.
     window.addEventListener("unload", () => {
         for (const w of windows) {
@@ -19,15 +21,26 @@ if ("window" in globalThis) {
  * @param width - the screen size horizontal component
  * @param height - the screen size vertical component
  */
-export function openWindow(href: string, x: number, y: number, width: number, height: number) {
-    if ("window" in globalThis) {
-        const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-        if (w) {
-            windows.push(w);
-        }
-    }
-    else {
+export function openWindow(href: string): void;
+export function openWindow(href: string, width: number, height: number): void;
+export function openWindow(href: string, x: number, y: number, width: number, height: number): void;
+export function openWindow(href: string, xOrWidth?: number, yOrHeight?: number, width?: number, height?: number): void {
+    if (isWorker) {
         throw new Error("Cannot open a window from a Worker.");
+    }
+
+    let opts: string = undefined;
+    if (isNumber(width) && isNumber(height)) {
+        opts = `left=${xOrWidth},top=${yOrHeight},width=${width},height=${height}`;
+    }
+    else if (isNumber(xOrWidth) && isNumber(yOrHeight)) {
+        opts = `width=${xOrWidth},height=${yOrHeight}`;
+    }
+
+    const w = window.open(href, "_blank", opts);
+
+    if (w) {
+        windows.push(w);
     }
 }
 
@@ -35,17 +48,16 @@ export function openWindow(href: string, x: number, y: number, width: number, he
  * Opens a new window with a query string parameter that can be used to differentiate different test instances.
  **/
 export function openSideTest() {
-    if ("window" in globalThis) {
-        const loc = new URL(location.href);
-        loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
-        openWindow(
-            loc.href,
-            window.screenLeft + window.outerWidth,
-            0,
-            window.innerWidth,
-            window.innerHeight);
-    }
-    else {
+    if (isWorker) {
         throw new Error("Cannot open a window from a Worker.");
     }
+
+    const loc = new URL(location.href);
+    loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
+    openWindow(
+        loc.href,
+        window.screenLeft + window.outerWidth,
+        0,
+        window.innerWidth,
+        window.innerHeight);
 }
