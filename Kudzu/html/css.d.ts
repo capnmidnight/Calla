@@ -397,6 +397,11 @@ export declare function getSystemFonts(): string;
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
 export declare function getSystemFamily(): CssProp;
+/**
+ * A selection of serif fonts.
+ **/
+export declare function getSerifFonts(): string;
+export declare function getSerifFamily(): CssProp;
 export declare class CSSInJSRule {
     private selector;
     private props;

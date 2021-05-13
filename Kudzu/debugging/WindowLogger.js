@@ -1,10 +1,10 @@
 import { isModifierless } from "../events/isModifierless";
-import { backgroundColor, color, columnGap, display, fontFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
+import { backgroundColor, color, columnGap, display, getMonospaceFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
 import { Div, elementClearChildren, elementSetDisplay, TextNode } from "../html/tags";
 import { assertNever } from "../typeChecks";
 import { isWorkerLoggerMessageData, MessageType } from "./models";
 function track(a, b) {
-    return styles(gridColumn(`${a}/${b}`), fontFamily("monospace"));
+    return styles(gridColumn(`${a}/${b}`), getMonospaceFamily());
 }
 export class WindowLogger {
     constructor() {

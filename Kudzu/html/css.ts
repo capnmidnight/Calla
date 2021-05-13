@@ -406,7 +406,7 @@ export function zoom(v: number) { return new CssProp("zoom", v.toFixed(0)); }
  * A selection of fonts for preferred monospace rendering.
  **/
 export function getMonospaceFonts() {
-    return "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+    return "ui-monospace, 'Droid Sans Mono', 'Cascadia Mono', 'Segoe UI Mono', 'Ubuntu Mono', 'Roboto Mono', Menlo, Monaco, Consolas, monospace";
 }
 
 /**
@@ -420,7 +420,7 @@ export function getMonospaceFamily() {
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
 export function getSystemFonts() {
-    return "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+    return "system-ui, -apple-system, '.SFNSText-Regular', 'San Francisco', 'Segoe UI', 'Ubuntu', 'Roboto', 'Noto Sans' 'Droid Sans', sans-serif";
 }
 
 /**
@@ -428,6 +428,17 @@ export function getSystemFonts() {
  **/
 export function getSystemFamily() {
     return fontFamily(getSystemFonts());
+}
+
+/**
+ * A selection of serif fonts.
+ **/
+export function getSerifFonts() {
+    return "Georgia, Cambria, 'Times New Roman', Times, serif";
+}
+
+export function getSerifFamily() {
+    return fontFamily(getSerifFonts());
 }
 
 

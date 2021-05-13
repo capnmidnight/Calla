@@ -1,5 +1,5 @@
 import { isModifierless } from "../events/isModifierless";
-import { backgroundColor, color, columnGap, display, fontFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
+import { backgroundColor, color, columnGap, display, getMonospaceFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
 import { Div, elementClearChildren, elementSetDisplay, TextNode } from "../html/tags";
 import { assertNever } from "../typeChecks";
 import { ILogger, isWorkerLoggerMessageData, MessageType } from "./models";
@@ -7,7 +7,7 @@ import { ILogger, isWorkerLoggerMessageData, MessageType } from "./models";
 function track(a: number, b: number) {
     return styles(
         gridColumn(`${a}/${b}`),
-        fontFamily("monospace"));
+        getMonospaceFamily());
 }
 
 export class WindowLogger implements ILogger {
