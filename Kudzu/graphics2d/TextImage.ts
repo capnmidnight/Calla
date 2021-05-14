@@ -48,7 +48,6 @@ export class TextImage
     private _maxWidth: number | null = null;
     private _minHeight: number | null = null;
     private _maxHeight: number | null = null;
-    private _scale = 1;
 
     private _bgFillColor: string | null = null;
     private _bgStrokeColor: string | null = null;
@@ -117,7 +116,7 @@ export class TextImage
             }
 
             if (isDefined(options.scale)) {
-                this._scale = options.scale;
+                this.scale = options.scale;
             }
 
             if (isDefined(options.textFillColor)) {
@@ -169,17 +168,6 @@ export class TextImage
         this.redraw();
     }
 
-    get scale() {
-        return this._scale;
-    }
-
-    set scale(v) {
-        if (this.scale !== v) {
-            this._scale = v;
-            this.redraw();
-        }
-    }
-
     get minWidth() {
         return this._minWidth;
     }
@@ -222,14 +210,6 @@ export class TextImage
             this._maxHeight = v;
             this.redraw();
         }
-    }
-
-    get width() {
-        return this.canvas.width / this.scale;
-    }
-
-    get height() {
-        return this.canvas.height / this.scale;
     }
 
 

@@ -36,7 +36,6 @@ export declare class TextImage extends CanvasImage<{
     private _maxWidth;
     private _minHeight;
     private _maxHeight;
-    private _scale;
     private _bgFillColor;
     private _bgStrokeColor;
     private _bgStrokeSize;
@@ -54,8 +53,6 @@ export declare class TextImage extends CanvasImage<{
     private _value;
     private notReadyEvt;
     constructor(options?: Partial<TextImageOptions>);
-    get scale(): number;
-    set scale(v: number);
     get minWidth(): number;
     set minWidth(v: number);
     get maxWidth(): number;
@@ -64,8 +61,6 @@ export declare class TextImage extends CanvasImage<{
     set minHeight(v: number);
     get maxHeight(): number;
     set maxHeight(v: number);
-    get width(): number;
-    get height(): number;
     get padding(): PaddingRect;
     set padding(v: PaddingRect);
     get wrapWords(): boolean;

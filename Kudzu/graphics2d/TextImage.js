@@ -11,7 +11,6 @@ export class TextImage extends CanvasImage {
         this._maxWidth = null;
         this._minHeight = null;
         this._maxHeight = null;
-        this._scale = 1;
         this._bgFillColor = null;
         this._bgStrokeColor = null;
         this._bgStrokeSize = null;
@@ -59,7 +58,7 @@ export class TextImage extends CanvasImage {
                 this._value = options.value;
             }
             if (isDefined(options.scale)) {
-                this._scale = options.scale;
+                this.scale = options.scale;
             }
             if (isDefined(options.textFillColor)) {
                 this._textFillColor = options.textFillColor;
@@ -99,15 +98,6 @@ export class TextImage extends CanvasImage {
         }
         this.redraw();
     }
-    get scale() {
-        return this._scale;
-    }
-    set scale(v) {
-        if (this.scale !== v) {
-            this._scale = v;
-            this.redraw();
-        }
-    }
     get minWidth() {
         return this._minWidth;
     }
@@ -143,12 +133,6 @@ export class TextImage extends CanvasImage {
             this._maxHeight = v;
             this.redraw();
         }
-    }
-    get width() {
-        return this.canvas.width / this.scale;
-    }
-    get height() {
-        return this.canvas.height / this.scale;
     }
     get padding() {
         return this._padding;

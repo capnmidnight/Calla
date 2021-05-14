@@ -7,15 +7,10 @@ export function isCanvasImage(obj) {
 export class CanvasImage extends TypedEventBase {
     constructor(width, height) {
         super();
+        this._scale = 500;
         this.redrawnEvt = new TypedEvent("redrawn");
         this._canvas = createUtilityCanvas(width, height);
         this._g = this.canvas.getContext("2d");
-    }
-    get canvas() {
-        return this._canvas;
-    }
-    get g() {
-        return this._g;
     }
     fillRect(color, x, y, width, height, margin) {
         this.g.fillStyle = color;
@@ -29,6 +24,36 @@ export class CanvasImage extends TypedEventBase {
     redraw() {
         if (this.onRedraw()) {
             this.dispatchEvent(this.redrawnEvt);
+        }
+    }
+    get canvas() {
+        return this._canvas;
+    }
+    get g() {
+        return this._g;
+    }
+    get imageWidth() {
+        return this.canvas.width;
+    }
+    get imageHeight() {
+        return this.canvas.height;
+    }
+    get aspectRatio() {
+        return this.imageWidth / this.imageHeight;
+    }
+    get width() {
+        return this.imageWidth / this.scale;
+    }
+    get height() {
+        return this.imageHeight / this.scale;
+    }
+    get scale() {
+        return this._scale;
+    }
+    set scale(v) {
+        if (this.scale !== v) {
+            this._scale = v;
+            this.redraw();
         }
     }
 }
