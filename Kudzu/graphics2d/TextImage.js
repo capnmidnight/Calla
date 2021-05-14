@@ -417,8 +417,8 @@ export class TextImage extends CanvasImage {
             for (let i = 0; i < lines.length; ++i) {
                 const line = lines[i];
                 const dy = (i - di) * fontSize;
-                const x = dx + this.canvas.width / 2;
-                const y = dy + this.canvas.height / 2;
+                const x = dx + trueWidth / 2 + this.scale * this.padding.left;
+                const y = dy + trueHeight / 2 + this.scale * this.padding.top;
                 if (this.textStrokeColor && this.textStrokeSize) {
                     this.g.strokeText(line, x, y);
                 }
