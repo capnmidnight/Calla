@@ -444,7 +444,7 @@ export class TextImage extends CanvasImage {
             }
             if (this.bgStrokeColor && this.bgStrokeSize) {
                 this.g.strokeStyle = this.bgStrokeColor;
-                this.g.lineWidth = this.bgStrokeSize;
+                this.g.lineWidth = this.bgStrokeSize * this.scale;
                 const s = this.bgStrokeSize / 2;
                 this.g.strokeRect(s, s, this.canvas.width - this.bgStrokeSize, this.canvas.height - this.bgStrokeSize);
             }
