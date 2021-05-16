@@ -54,6 +54,7 @@ export class TextImage
     private _minHeight: number = null;
     private _maxHeight: number = null;
     private _freezeDimensions: boolean = false;
+    private _dimensionsFrozen: boolean = false;
 
     private _bgFillColor: string = null;
     private _bgStrokeColor: string = null;
@@ -422,6 +423,10 @@ export class TextImage
         }
     }
 
+    protected unfreeze() {
+        this._dimensionsFrozen = false;
+    }
+
     protected onRedraw() {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -437,7 +442,9 @@ export class TextImage
                 || this.trueHeight === null
                 || this.dx === null
                 || this.trueFontSize === null
-                || !this._freezeDimensions) {
+                || !this._dimensionsFrozen) {
+
+                this._dimensionsFrozen = this._freezeDimensions;
 
                 const autoResize = this.minWidth != null
                     || this.maxWidth != null

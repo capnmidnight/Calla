@@ -41,6 +41,7 @@ export declare class TextImage extends CanvasImage<{
     private _minHeight;
     private _maxHeight;
     private _freezeDimensions;
+    private _dimensionsFrozen;
     private _bgFillColor;
     private _bgStrokeColor;
     private _bgStrokeSize;
@@ -98,5 +99,6 @@ export declare class TextImage extends CanvasImage<{
     set value(v: string);
     draw(g: Context2D, x: number, y: number): void;
     private split;
+    protected unfreeze(): void;
     protected onRedraw(): boolean;
 }

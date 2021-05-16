@@ -16,6 +16,7 @@ export class TextImage extends CanvasImage {
         this._minHeight = null;
         this._maxHeight = null;
         this._freezeDimensions = false;
+        this._dimensionsFrozen = false;
         this._bgFillColor = null;
         this._bgStrokeColor = null;
         this._bgStrokeSize = null;
@@ -310,6 +311,9 @@ export class TextImage extends CanvasImage {
                 .split('\n');
         }
     }
+    unfreeze() {
+        this._dimensionsFrozen = false;
+    }
     onRedraw() {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.fontFamily
@@ -322,7 +326,8 @@ export class TextImage extends CanvasImage {
                 || this.trueHeight === null
                 || this.dx === null
                 || this.trueFontSize === null
-                || !this._freezeDimensions) {
+                || !this._dimensionsFrozen) {
+                this._dimensionsFrozen = this._freezeDimensions;
                 const autoResize = this.minWidth != null
                     || this.maxWidth != null
                     || this.minHeight != null
