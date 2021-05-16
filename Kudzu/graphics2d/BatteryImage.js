@@ -71,7 +71,7 @@ export class BatteryImage extends CanvasImage {
         this.drawText("-", left, midY, "left");
         this.drawText("+", right, midY, "right");
         this.g.font = makeFont({
-            fontSize: height / 3,
+            fontSize: height / 2.5,
             fontFamily: "Lato"
         });
         this.drawText(label, midX, midY, "center");
