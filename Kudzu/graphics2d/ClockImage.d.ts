@@ -1,5 +1,5 @@
-import { CanvasImage } from "./CanvasImage";
-export declare class ClockImage extends CanvasImage<void> {
+import { TextImage } from "./TextImage";
+export declare class ClockImage extends TextImage {
     constructor();
-    protected onRedraw(): boolean;
+    protected update(): boolean;
 }

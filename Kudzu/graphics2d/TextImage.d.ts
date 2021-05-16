@@ -1,18 +1,18 @@
 import { TypedEvent } from "../events/EventBase";
 import { Context2D } from "../html/canvas";
-import { CanvasImage } from "./CanvasImage";
+import { CanvasImage, CanvasImageOptions } from "./CanvasImage";
 export interface PaddingRect {
     top: number;
     right: number;
     bottom: number;
     left: number;
 }
-export interface TextImageOptions {
+export interface TextImageOptions extends CanvasImageOptions {
     minWidth: number;
     maxWidth: number;
     minHeight: number;
     maxHeight: number;
-    scale: number;
+    freezeDimensions: boolean;
     bgFillColor: string;
     bgStrokeColor: string;
     bgStrokeSize: number;
@@ -26,16 +26,21 @@ export interface TextImageOptions {
     fontWeight: string;
     fontFamily: string;
     fontSize: number;
-    padding: PaddingRect;
+    padding: PaddingRect | number;
     value: string;
 }
 export declare class TextImage extends CanvasImage<{
     notready: TypedEvent<"notready">;
 }> {
+    private trueWidth;
+    private trueHeight;
+    private trueFontSize;
+    private dx;
     private _minWidth;
     private _maxWidth;
     private _minHeight;
     private _maxHeight;
+    private _freezeDimensions;
     private _bgFillColor;
     private _bgStrokeColor;
     private _bgStrokeSize;

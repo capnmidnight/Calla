@@ -17,6 +17,7 @@ export interface TextImageOptions extends CanvasImageOptions {
     maxWidth: number;
     minHeight: number;
     maxHeight: number;
+    freezeDimensions: boolean;
 
     bgFillColor: string;
     bgStrokeColor: string;
@@ -34,7 +35,7 @@ export interface TextImageOptions extends CanvasImageOptions {
     fontFamily: string;
     fontSize: number;
 
-    padding: PaddingRect;
+    padding: PaddingRect | number;
 
     value: string;
 }
@@ -43,17 +44,23 @@ export class TextImage
     extends CanvasImage<{
         notready: TypedEvent<"notready">;
     }> {
-    private _minWidth: number | null = null;
-    private _maxWidth: number | null = null;
-    private _minHeight: number | null = null;
-    private _maxHeight: number | null = null;
+    private trueWidth: number = null;
+    private trueHeight: number = null;
+    private trueFontSize: number = null;
+    private dx: number = null;
 
-    private _bgFillColor: string | null = null;
-    private _bgStrokeColor: string | null = null;
-    private _bgStrokeSize: number | null = null;
+    private _minWidth: number = null;
+    private _maxWidth: number = null;
+    private _minHeight: number = null;
+    private _maxHeight: number = null;
+    private _freezeDimensions: boolean = false;
 
-    private _textStrokeColor: string | null = null;
-    private _textStrokeSize: number | null = null;
+    private _bgFillColor: string = null;
+    private _bgStrokeColor: string = null;
+    private _bgStrokeSize: number = null;
+
+    private _textStrokeColor: string = null;
+    private _textStrokeSize: number = null;
     private _textFillColor = "black";
     private _textDirection = "horizontal";
     private _wrapWords = true;
@@ -66,7 +73,7 @@ export class TextImage
 
     private _padding: PaddingRect;
 
-    private _value: string | null = null;
+    private _value: string = null;
 
     private notReadyEvt = new TypedEvent("notready");
 
@@ -88,6 +95,10 @@ export class TextImage
 
             if (isDefined(options.maxHeight)) {
                 this._maxHeight = options.maxHeight;
+            }
+
+            if (isDefined(options.freezeDimensions)) {
+                this._freezeDimensions = options.freezeDimensions;
             }
 
             if (isDefined(options.textStrokeColor)) {
@@ -147,7 +158,17 @@ export class TextImage
             }
 
             if (isDefined(options.padding)) {
-                this._padding = options.padding;
+                if (isNumber(options.padding)) {
+                    this._padding = {
+                        left: options.padding,
+                        right: options.padding,
+                        top: options.padding,
+                        bottom: options.padding
+                    };
+                }
+                else {
+                    this._padding = options.padding;
+                }
             }
         }
 
@@ -409,130 +430,141 @@ export class TextImage
             && (this.textFillColor || (this.textStrokeColor && this.textStrokeSize))
             && this.value) {
 
+            const lines = this.split(this.value);
             const isVertical = this.textDirection && this.textDirection.indexOf("vertical") === 0;
 
-            const autoResize = this.minWidth != null
-                || this.maxWidth != null
-                || this.minHeight != null
-                || this.maxHeight != null;
+            if (this.trueWidth === null
+                || this.trueHeight === null
+                || this.dx === null
+                || this.trueFontSize === null
+                || !this._freezeDimensions) {
 
-            const _targetMinWidth = ((this.minWidth || 0) - this.padding.right - this.padding.left) * this.scale;
-            const _targetMaxWidth = ((this.maxWidth || 4096) - this.padding.right - this.padding.left) * this.scale;
-            const _targetMinHeight = ((this.minHeight || 0) - this.padding.top - this.padding.bottom) * this.scale;
-            const _targetMaxHeight = ((this.maxHeight || 4096) - this.padding.top - this.padding.bottom) * this.scale;
+                const autoResize = this.minWidth != null
+                    || this.maxWidth != null
+                    || this.minHeight != null
+                    || this.maxHeight != null;
 
-            const targetMinWidth = isVertical ? _targetMinHeight : _targetMinWidth;
-            const targetMaxWidth = isVertical ? _targetMaxHeight : _targetMaxWidth;
-            const targetMinHeight = isVertical ? _targetMinWidth : _targetMinHeight;
-            const targetMaxHeight = isVertical ? _targetMaxWidth : _targetMaxHeight;
+                const _targetMinWidth = ((this.minWidth || 0) - this.padding.right - this.padding.left) * this.scale;
+                const _targetMaxWidth = ((this.maxWidth || 4096) - this.padding.right - this.padding.left) * this.scale;
+                const _targetMinHeight = ((this.minHeight || 0) - this.padding.top - this.padding.bottom) * this.scale;
+                const _targetMaxHeight = ((this.maxHeight || 4096) - this.padding.top - this.padding.bottom) * this.scale;
 
-            const tried = [];
+                const targetMinWidth = isVertical ? _targetMinHeight : _targetMinWidth;
+                const targetMaxWidth = isVertical ? _targetMaxHeight : _targetMaxWidth;
+                const targetMinHeight = isVertical ? _targetMinWidth : _targetMinHeight;
+                const targetMaxHeight = isVertical ? _targetMaxWidth : _targetMaxHeight;
 
-            const lines = this.split(this.value);
+                const tried = [];
 
-            let dx = 0,
-                trueWidth = 0,
-                trueHeight = 0,
-                tooBig = false,
-                tooSmall = false,
-                highFontSize = 10000,
-                lowFontSize = 0,
-                fontSize = clamp(this.fontSize * this.scale, lowFontSize, highFontSize),
-                minFont = null,
-                minFontDelta = Number.MAX_VALUE;
-            do {
-                const realFontSize = this.fontSize;
-                this._fontSize = fontSize;
-                const font = makeFont(this);
-                this._fontSize = realFontSize;
 
-                this.g.textAlign = "center";
-                this.g.textBaseline = "middle";
-                this.g.font = font;
+                this.trueWidth = 0;
+                this.trueHeight = 0;
 
-                trueWidth = 0;
-                trueHeight = 0;
-                for (const line of lines) {
-                    const metrics = this.g.measureText(line);
-                    trueWidth = Math.max(trueWidth, metrics.width);
-                    trueHeight += fontSize;
-                    if (isNumber(metrics.actualBoundingBoxLeft)
-                        && isNumber(metrics.actualBoundingBoxRight)
-                        && isNumber(metrics.actualBoundingBoxAscent)
-                        && isNumber(metrics.actualBoundingBoxDescent)) {
-                        if (!autoResize) {
-                            trueWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
-                            trueHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-                            dx = (metrics.actualBoundingBoxLeft - trueWidth / 2) / 2;
+                this.dx = 0;
+
+                let tooBig = false,
+                    tooSmall = false,
+                    highFontSize = 10000,
+                    lowFontSize = 0;
+
+                this.trueFontSize = clamp(this.fontSize * this.scale, lowFontSize, highFontSize);
+
+                let minFont = null,
+                    minFontDelta = Number.MAX_VALUE;
+                do {
+                    const realFontSize = this.fontSize;
+                    this._fontSize = this.trueFontSize;
+                    const font = makeFont(this);
+                    this._fontSize = realFontSize;
+
+                    this.g.textAlign = "center";
+                    this.g.textBaseline = "middle";
+                    this.g.font = font;
+
+                    this.trueWidth = 0;
+                    this.trueHeight = 0;
+                    for (const line of lines) {
+                        const metrics = this.g.measureText(line);
+                        this.trueWidth = Math.max(this.trueWidth, metrics.width);
+                        this.trueHeight += this.trueFontSize;
+                        if (isNumber(metrics.actualBoundingBoxLeft)
+                            && isNumber(metrics.actualBoundingBoxRight)
+                            && isNumber(metrics.actualBoundingBoxAscent)
+                            && isNumber(metrics.actualBoundingBoxDescent)) {
+                            if (!autoResize) {
+                                this.trueWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
+                                this.trueHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+                                this.dx = (metrics.actualBoundingBoxLeft - this.trueWidth / 2) / 2;
+                            }
                         }
                     }
-                }
+
+                    if (autoResize) {
+                        const dMinWidth = this.trueWidth - targetMinWidth;
+                        const dMaxWidth = this.trueWidth - targetMaxWidth;
+                        const dMinHeight = this.trueHeight - targetMinHeight;
+                        const dMaxHeight = this.trueHeight - targetMaxHeight;
+
+                        const mdMinWidth = Math.abs(dMinWidth);
+                        const mdMaxWidth = Math.abs(dMaxWidth);
+                        const mdMinHeight = Math.abs(dMinHeight);
+                        const mdMaxHeight = Math.abs(dMaxHeight);
+
+                        tooBig = dMaxWidth > 1 || dMaxHeight > 1;
+                        tooSmall = dMinWidth < -1 && dMinHeight < -1;
+
+                        const minDif = Math.min(mdMinWidth, Math.min(mdMaxWidth, Math.min(mdMinHeight, mdMaxHeight)));
+                        if (minDif < minFontDelta) {
+                            minFontDelta = minDif;
+                            minFont = this.g.font;
+                        }
+
+                        if ((tooBig || tooSmall)
+                            && tried.indexOf(this.g.font) > -1
+                            && minFont) {
+                            this.g.font = minFont;
+                            tooBig = false;
+                            tooSmall = false;
+                        }
+
+                        if (tooBig) {
+                            highFontSize = this.trueFontSize;
+                            this.trueFontSize = (lowFontSize + this.trueFontSize) / 2;
+                        }
+                        else if (tooSmall) {
+                            lowFontSize = this.trueFontSize;
+                            this.trueFontSize = (this.trueFontSize + highFontSize) / 2;
+                        }
+                    }
+
+                    tried.push(this.g.font);
+                } while (tooBig || tooSmall);
 
                 if (autoResize) {
-                    const dMinWidth = trueWidth - targetMinWidth;
-                    const dMaxWidth = trueWidth - targetMaxWidth;
-                    const dMinHeight = trueHeight - targetMinHeight;
-                    const dMaxHeight = trueHeight - targetMaxHeight;
-
-                    const mdMinWidth = Math.abs(dMinWidth);
-                    const mdMaxWidth = Math.abs(dMaxWidth);
-                    const mdMinHeight = Math.abs(dMinHeight);
-                    const mdMaxHeight = Math.abs(dMaxHeight);
-
-                    tooBig = dMaxWidth > 1 || dMaxHeight > 1;
-                    tooSmall = dMinWidth < -1 && dMinHeight < -1;
-
-                    const minDif = Math.min(mdMinWidth, Math.min(mdMaxWidth, Math.min(mdMinHeight, mdMaxHeight)));
-                    if (minDif < minFontDelta) {
-                        minFontDelta = minDif;
-                        minFont = this.g.font;
+                    if (this.trueWidth < targetMinWidth) {
+                        this.trueWidth = targetMinWidth;
+                    }
+                    else if (this.trueWidth > targetMaxWidth) {
+                        this.trueWidth = targetMaxWidth;
                     }
 
-                    if ((tooBig || tooSmall)
-                        && tried.indexOf(this.g.font) > -1
-                        && minFont) {
-                        this.g.font = minFont;
-                        tooBig = false;
-                        tooSmall = false;
+                    if (this.trueHeight < targetMinHeight) {
+                        this.trueHeight = targetMinHeight;
                     }
-
-                    if (tooBig) {
-                        highFontSize = fontSize;
-                        fontSize = (lowFontSize + fontSize) / 2;
-                    }
-                    else if (tooSmall) {
-                        lowFontSize = fontSize;
-                        fontSize = (fontSize + highFontSize) / 2;
+                    else if (this.trueHeight > targetMaxHeight) {
+                        this.trueHeight = targetMaxHeight;
                     }
                 }
 
-                tried.push(this.g.font);
-            } while (tooBig || tooSmall);
-
-            if (autoResize) {
-                if (trueWidth < targetMinWidth) {
-                    trueWidth = targetMinWidth;
+                const newW = this.trueWidth + this.scale * (this.padding.right + this.padding.left);
+                const newH = this.trueHeight + this.scale * (this.padding.top + this.padding.bottom);
+                try {
+                    setContextSize(this.g, newW, newH);
                 }
-                else if (trueWidth > targetMaxWidth) {
-                    trueWidth = targetMaxWidth;
+                catch (exp) {
+                    console.error(exp);
+                    throw exp;
                 }
-
-                if (trueHeight < targetMinHeight) {
-                    trueHeight = targetMinHeight;
-                }
-                else if (trueHeight > targetMaxHeight) {
-                    trueHeight = targetMaxHeight;
-                }
-            }
-
-            const newW = trueWidth + this.scale * (this.padding.right + this.padding.left);
-            const newH = trueHeight + this.scale * (this.padding.top + this.padding.bottom);
-            try {
-                setContextSize(this.g, newW, newH);
-            }
-            catch (exp) {
-                console.error(exp);
-                throw exp;
             }
 
             if (this.bgFillColor) {
@@ -556,9 +588,9 @@ export class TextImage
 
             for (let i = 0; i < lines.length; ++i) {
                 const line = lines[i];
-                const dy = (i - di) * fontSize;
-                const x = dx + trueWidth / 2 + this.scale * this.padding.left;
-                const y = dy + trueHeight / 2 + this.scale * this.padding.top;
+                const dy = (i - di) * this.trueFontSize;
+                const x = this.dx + this.trueWidth / 2 + this.scale * this.padding.left;
+                const y = dy + this.trueHeight / 2 + this.scale * this.padding.top;
 
                 if (this.textStrokeColor && this.textStrokeSize) {
                     this.g.strokeText(line, x, y);
