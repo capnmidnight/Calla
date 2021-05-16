@@ -10,13 +10,16 @@ export interface ICanvasImage extends TypedEventBase<CanvasImageEvents> {
     height: number;
     aspectRatio: number;
 }
+export interface CanvasImageOptions {
+    scale: number;
+}
 export declare function isCanvasImage(obj: any): obj is ICanvasImage;
 export declare abstract class CanvasImage<T> extends TypedEventBase<CanvasImageEvents & T> implements ICanvasImage {
     private _canvas;
     private _scale;
     private _g;
     private redrawnEvt;
-    constructor(width: number, height: number);
+    constructor(width: number, height: number, options?: Partial<CanvasImageOptions>);
     protected fillRect(color: string, x: number, y: number, width: number, height: number, margin: number): void;
     protected drawText(text: string, x: number, y: number, align: CanvasTextAlign): void;
     protected redraw(): void;

@@ -28,7 +28,7 @@ export abstract class CanvasImage<T>
     implements ICanvasImage {
 
     private _canvas: CanvasTypes;
-    private _scale = 500;
+    private _scale = 250;
     private _g: Context2D;
 
     private redrawnEvt = new TypedEvent("redrawn");

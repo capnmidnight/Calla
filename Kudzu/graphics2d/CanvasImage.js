@@ -1,3 +1,4 @@
+import { isDefined } from "../typeChecks";
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { createUtilityCanvas, isCanvas } from "../html/canvas";
 export function isCanvasImage(obj) {
@@ -5,10 +6,15 @@ export function isCanvasImage(obj) {
         && isCanvas(obj.canvas);
 }
 export class CanvasImage extends TypedEventBase {
-    constructor(width, height) {
+    constructor(width, height, options) {
         super();
-        this._scale = 500;
+        this._scale = 250;
         this.redrawnEvt = new TypedEvent("redrawn");
+        if (isDefined(options)) {
+            if (isDefined(options.scale)) {
+                this._scale = options.scale;
+            }
+        }
         this._canvas = createUtilityCanvas(width, height);
         this._g = this.canvas.getContext("2d");
     }
