@@ -15,11 +15,20 @@ export class ClockImage extends TextImage {
             wrapWords: false,
             freezeDimensions: true
         });
-        this.fps = null;
+        this._fps = null;
         this.lastLen = 0;
         const updater = this.update.bind(this);
         setInterval(updater, 500);
         updater();
+    }
+    get fps() {
+        return this._fps;
+    }
+    set fps(v) {
+        if (v !== this.fps) {
+            this._fps = v;
+            this.update();
+        }
     }
     update() {
         const time = new Date();

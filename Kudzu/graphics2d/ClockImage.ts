@@ -22,7 +22,19 @@ export class ClockImage extends TextImage {
         updater();
     }
 
-    public fps: number = null;
+    private _fps: number = null;
+
+    get fps(): number {
+        return this._fps;
+    }
+
+    set fps(v: number) {
+        if (v !== this.fps) {
+            this._fps = v;
+            this.update();
+        }
+    }
+
     private lastLen: number = 0;
 
     protected update(): void {
