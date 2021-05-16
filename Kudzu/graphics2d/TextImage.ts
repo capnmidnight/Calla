@@ -2,7 +2,7 @@ import { TypedEvent } from "../events/EventBase";
 import { Context2D, createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
-import { CanvasImage } from "./CanvasImage";
+import { CanvasImage, CanvasImageOptions } from "./CanvasImage";
 import { makeFont } from "./fonts";
 
 export interface PaddingRect {
@@ -12,12 +12,11 @@ export interface PaddingRect {
     left: number;
 }
 
-export interface TextImageOptions {
+export interface TextImageOptions extends CanvasImageOptions {
     minWidth: number;
     maxWidth: number;
     minHeight: number;
     maxHeight: number;
-    scale: number;
 
     bgFillColor: string;
     bgStrokeColor: string;
@@ -72,7 +71,7 @@ export class TextImage
     private notReadyEvt = new TypedEvent("notready");
 
     constructor(options?: Partial<TextImageOptions>) {
-        super(10, 10);
+        super(10, 10, options);
 
         if (isDefined(options)) {
             if (isDefined(options.minWidth)) {
@@ -113,10 +112,6 @@ export class TextImage
 
             if (isDefined(options.value)) {
                 this._value = options.value;
-            }
-
-            if (isDefined(options.scale)) {
-                this.scale = options.scale;
             }
 
             if (isDefined(options.textFillColor)) {

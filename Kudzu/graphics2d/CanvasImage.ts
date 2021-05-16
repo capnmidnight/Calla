@@ -1,3 +1,4 @@
+import { isDefined } from "../typeChecks";
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { CanvasTypes, Context2D, createUtilityCanvas, isCanvas } from "../html/canvas";
 
@@ -11,6 +12,10 @@ export interface ICanvasImage extends TypedEventBase<CanvasImageEvents> {
     width: number;
     height: number;
     aspectRatio: number;
+}
+
+export interface CanvasImageOptions {
+    scale: number;
 }
 
 export function isCanvasImage(obj: any): obj is ICanvasImage {
@@ -28,8 +33,16 @@ export abstract class CanvasImage<T>
 
     private redrawnEvt = new TypedEvent("redrawn");
 
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, options?: Partial<CanvasImageOptions>) {
         super();
+
+        if (isDefined(options)) {
+
+            if (isDefined(options.scale)) {
+                this._scale = options.scale;
+            }
+
+        }
 
         this._canvas = createUtilityCanvas(width, height);
         this._g = this.canvas.getContext("2d");
