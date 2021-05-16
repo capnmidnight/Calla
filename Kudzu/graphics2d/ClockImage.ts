@@ -1,7 +1,7 @@
 import { getMonospaceFonts } from "../html/css";
 import { TextImage } from "./TextImage";
 
-export class ClockImage extends TextImage{
+export class ClockImage extends TextImage {
     constructor() {
         super({
             bgFillColor: "#000000",
@@ -22,10 +22,22 @@ export class ClockImage extends TextImage{
         updater();
     }
 
-    protected update(): boolean {
+    public fps: number = null;
+    private lastLen: number = 0;
+
+    protected update(): void {
         const time = new Date();
-        this.value = time.toLocaleTimeString();
-        return true;
+        let value = time.toLocaleTimeString();
+        if (this.fps !== null) {
+            value += " " + Math.round(this.fps).toFixed(0) + "hz";
+        }
+
+        if (value.length !== this.lastLen) {
+            this.lastLen = value.length;
+            this.unfreeze();
+        }
+
+        this.value = value;
     }
 }
 

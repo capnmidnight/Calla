@@ -15,14 +15,23 @@ export class ClockImage extends TextImage {
             wrapWords: false,
             freezeDimensions: true
         });
+        this.fps = null;
+        this.lastLen = 0;
         const updater = this.update.bind(this);
         setInterval(updater, 500);
         updater();
     }
     update() {
         const time = new Date();
-        this.value = time.toLocaleTimeString();
-        return true;
+        let value = time.toLocaleTimeString();
+        if (this.fps !== null) {
+            value += " " + Math.round(this.fps).toFixed(0) + "hz";
+        }
+        if (value.length !== this.lastLen) {
+            this.lastLen = value.length;
+            this.unfreeze();
+        }
+        this.value = value;
     }
 }
 //# sourceMappingURL=ClockImage.js.map

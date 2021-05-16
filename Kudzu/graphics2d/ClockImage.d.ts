@@ -1,5 +1,7 @@
 import { TextImage } from "./TextImage";
 export declare class ClockImage extends TextImage {
     constructor();
-    protected update(): boolean;
+    fps: number;
+    private lastLen;
+    protected update(): void;
 }
