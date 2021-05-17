@@ -5,6 +5,7 @@ import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioManager } from "./audio/AudioManager";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
+import { MediaPermissionSet } from "./audio/MediaDevices";
 import type {
     CallaAudioStreamAddedEvent,
     CallaAudioStreamRemovedEvent,
@@ -20,17 +21,6 @@ import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
 import type { IMetadataClient, IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
-
-export interface MediaPermissionSet {
-    audio: boolean;
-    video: boolean;
-}
-
-export interface MediaDeviceSet {
-    audioInput: MediaDeviceInfo[];
-    videoInput: MediaDeviceInfo[];
-    audioOutput: MediaDeviceInfo[];
-}
 
 export enum ClientState {
     InConference = "in-conference",

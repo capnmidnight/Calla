@@ -2,7 +2,7 @@ import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { IFetcher } from "kudzu/io/IFetcher";
 import { AudioManager } from "../audio/AudioManager";
-import type { MediaPermissionSet } from "../Calla";
+import type { MediaPermissionSet } from "../audio/MediaDevices";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";

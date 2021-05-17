@@ -1,6 +1,6 @@
 import type { TypedEventBase } from "kudzu/events/EventBase";
 import type { AudioManager } from "../audio/AudioManager";
-import type { MediaPermissionSet } from "../Calla";
+import type { MediaPermissionSet } from "../audio/MediaDevices";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import type { ConnectionState } from "../ConnectionState";
 import type { IClient } from "../IClient";

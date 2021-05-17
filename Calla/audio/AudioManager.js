@@ -25,9 +25,7 @@ import { AudioBufferSpawningSource } from "./sources/AudioBufferSpawningSource";
 import { AudioElementSource } from "./sources/AudioElementSource";
 import { AudioStreamSource } from "./sources/AudioStreamSource";
 function BackgroundAudio(autoplay, mute, ...rest) {
-    const elem = Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
-    //document.body.appendChild(elem);
-    return elem;
+    return Audio(playsInline(true), controls(false), muted(mute), autoPlay(autoplay), styles(display("none")), ...rest);
 }
 if (!("AudioContext" in globalThis) && "webkitAudioContext" in globalThis) {
     globalThis.AudioContext = globalThis.webkitAudioContext;

@@ -1,12 +1,12 @@
 import type { vec3 } from "gl-matrix";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { IFetcher } from "kudzu/io/IFetcher";
+import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioDestination } from "./destinations/AudioDestination";
 import type { BaseListener } from "./destinations/spatializers/BaseListener";
 import { AudioStreamSource } from "./sources/AudioStreamSource";
-import { IPlayableSource } from "./sources/IPlayableSource";
+import type { IPlayableSource } from "./sources/IPlayableSource";
 import { BaseEmitter } from "./sources/spatializers/BaseEmitter";
 interface AudioManagerEvents {
     audioReady: TypedEvent<"audioReady">;

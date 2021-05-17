@@ -10,10 +10,11 @@ import { display, styles } from "kudzu/html/css";
 import type { HTMLAudioElementWithSinkID, TagChild } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
 import { Fetcher } from "kudzu/io/Fetcher";
-import { IFetcher } from "kudzu/io/IFetcher";
+import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { assertNever } from "kudzu/typeChecks";
-import { IDisposable, using } from "kudzu/using";
+import type { IDisposable } from "kudzu/using";
+import { using } from "kudzu/using";
 import { DEFAULT_LOCAL_USER_ID } from "../tele/BaseTeleconferenceClient";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
@@ -26,24 +27,23 @@ import { VolumeScalingListener } from "./destinations/spatializers/VolumeScaling
 import { WebAudioListenerNew } from "./destinations/spatializers/WebAudioListenerNew";
 import { WebAudioListenerOld } from "./destinations/spatializers/WebAudioListenerOld";
 import { connect } from "./GraphVisualizer";
-import { IPoseable } from "./IPoseable";
+import type { IPoseable } from "./IPoseable";
 import type { InterpolatedPose } from "./positions/InterpolatedPose";
 import { AudioBufferSpawningSource } from "./sources/AudioBufferSpawningSource";
 import { AudioElementSource } from "./sources/AudioElementSource";
-import { AudioStreamSource, AudioStreamSourceNode } from "./sources/AudioStreamSource";
-import { IPlayableSource } from "./sources/IPlayableSource";
+import type { AudioStreamSourceNode } from "./sources/AudioStreamSource";
+import { AudioStreamSource } from "./sources/AudioStreamSource";
+import type { IPlayableSource } from "./sources/IPlayableSource";
 import { BaseEmitter } from "./sources/spatializers/BaseEmitter";
 
 function BackgroundAudio(autoplay: boolean, mute: boolean, ...rest: TagChild[]): HTMLAudioElementWithSinkID {
-    const elem = Audio(
+    return Audio(
         playsInline(true),
         controls(false),
         muted(mute),
         autoPlay(autoplay),
         styles(display("none")),
         ...rest);
-    //document.body.appendChild(elem);
-    return elem;
 }
 
 if (!("AudioContext" in globalThis) && "webkitAudioContext" in globalThis) {

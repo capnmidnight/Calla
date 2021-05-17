@@ -4,7 +4,7 @@ import { TypedEventBase } from "kudzu/events/EventBase";
 import { IFetcher } from "kudzu/io/IFetcher";
 import { AudioManager } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
-import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";
+import type { MediaDeviceSet, MediaPermissionSet } from "../audio/MediaDevices";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
