@@ -62,7 +62,7 @@ export class Calla
             const user = this.audio.setLocalUserID(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.setPreferredDevices();
+            await this.enablePreferredDevices();
         });
 
         this._tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
@@ -278,8 +278,8 @@ export class Calla
         this._meta.chat(text);
     }
 
-    async setPreferredDevices(): Promise<void> {
-        await this._tele.setPreferredDevices();
+    async enablePreferredDevices(): Promise<void> {
+        await this._tele.enablePreferredDevices();
     }
 
     async setAudioInputDevice(device: MediaDeviceInfo): Promise<void> {

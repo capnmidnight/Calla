@@ -523,7 +523,7 @@ export class JitsiTeleconferenceClient
             }
         }
         else {
-            await this.setPreferredAudioInput(true);
+            await this.enablePreferredAudioInput(true);
         }
 
         const evt = await changeTask;
@@ -537,7 +537,7 @@ export class JitsiTeleconferenceClient
             await this.setVideoInputDevice(null);
         }
         else {
-            await this.setPreferredVideoInput(true);
+            await this.enablePreferredVideoInput(true);
         }
 
         const evt = await changeTask;

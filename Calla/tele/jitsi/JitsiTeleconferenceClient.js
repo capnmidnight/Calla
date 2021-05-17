@@ -400,7 +400,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             }
         }
         else {
-            await this.setPreferredAudioInput(true);
+            await this.enablePreferredAudioInput(true);
         }
         const evt = await changeTask;
         return evt.muted;
@@ -412,7 +412,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             await this.setVideoInputDevice(null);
         }
         else {
-            await this.setPreferredVideoInput(true);
+            await this.enablePreferredVideoInput(true);
         }
         const evt = await changeTask;
         return evt.muted;

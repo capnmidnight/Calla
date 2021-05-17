@@ -16,7 +16,7 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
     preferredAudioOutputID: string;
     preferredAudioInputID: string;
     preferredVideoInputID: string;
-    setPreferredDevices(): Promise<void>;
+    enablePreferredDevices(): Promise<void>;
     getAudioOutputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
     getAudioInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
     getVideoInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;

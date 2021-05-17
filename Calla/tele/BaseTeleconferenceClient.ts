@@ -84,7 +84,7 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(fetcher: IFetcher, audio: AudioManager, public needsAudioDevice = true, public needsVideoDevice = false) {
+    constructor(fetcher: IFetcher, audio: AudioManager, public needsVideoDevice = false) {
         super();
 
         this.fetcher = fetcher;
@@ -146,10 +146,10 @@ export abstract class BaseTeleconferenceClient
         localStorage.setItem(PREFERRED_VIDEO_INPUT_ID_KEY, v);
     }
 
-    async setPreferredDevices(): Promise<void> {
-        await this.setPreferredAudioInput(true);
-        await this.setPreferredVideoInput(false);
-        await this.setPreferredAudioOutput(true);
+    async enablePreferredDevices(): Promise<void> {
+        await this.enablePreferredAudioInput(true);
+        await this.enablePreferredVideoInput(false);
+        await this.enablePreferredAudioOutput(true);
     }
 
     async getPreferredAudioInput(allowAny: boolean): Promise<MediaDeviceInfo> {
@@ -163,7 +163,7 @@ export abstract class BaseTeleconferenceClient
         return device;
     }
 
-    async setPreferredAudioInput(allowAny: boolean): Promise<void> {
+    async enablePreferredAudioInput(allowAny: boolean): Promise<void> {
         const device = await this.getPreferredAudioInput(allowAny);
         if (device) {
             await this.setAudioInputDevice(device);
@@ -179,7 +179,7 @@ export abstract class BaseTeleconferenceClient
         return device;
     }
 
-    async setPreferredVideoInput(allowAny: boolean): Promise<void> {
+    async enablePreferredVideoInput(allowAny: boolean): Promise<void> {
         const device = await this.getPreferredVideoInput(allowAny);
         if (device) {
             await this.setVideoInputDevice(device);
@@ -203,7 +203,7 @@ export abstract class BaseTeleconferenceClient
 
             try {
                 await navigator.mediaDevices.getUserMedia({
-                    audio: this.needsAudioDevice && !this.hasAudioPermission,
+                    audio: !this.hasAudioPermission,
                     video: this.needsVideoDevice && !this.hasVideoPermission
                 });
             }
@@ -297,7 +297,7 @@ export abstract class BaseTeleconferenceClient
         return device;
     }
 
-    async setPreferredAudioOutput(allowAny: boolean): Promise<void> {
+    async enablePreferredAudioOutput(allowAny: boolean): Promise<void> {
         const device = await this.getPreferredAudioOutput(allowAny);
         if (device) {
             await this.setAudioOutputDevice(device);

@@ -35,7 +35,7 @@ export class Calla extends TypedEventBase {
             const user = this.audio.setLocalUserID(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.setPreferredDevices();
+            await this.enablePreferredDevices();
         });
         this._tele.addEventListener("conferenceLeft", (evt) => {
             this.audio.setLocalUserID(evt.id);
@@ -198,8 +198,8 @@ export class Calla extends TypedEventBase {
     chat(text) {
         this._meta.chat(text);
     }
-    async setPreferredDevices() {
-        await this._tele.setPreferredDevices();
+    async enablePreferredDevices() {
+        await this._tele.enablePreferredDevices();
     }
     async setAudioInputDevice(device) {
         await this._tele.setAudioInputDevice(device);

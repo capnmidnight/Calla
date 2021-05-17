@@ -32,9 +32,8 @@ export const DEFAULT_LOCAL_USER_ID = "local-user";
 let loggingEnabled = window.location.hostname === "localhost"
     || /\bdebug\b/.test(window.location.search);
 export class BaseTeleconferenceClient extends TypedEventBase {
-    constructor(fetcher, audio, needsAudioDevice = true, needsVideoDevice = false) {
+    constructor(fetcher, audio, needsVideoDevice = false) {
         super();
-        this.needsAudioDevice = needsAudioDevice;
         this.needsVideoDevice = needsVideoDevice;
         this.localUserID = null;
         this.localUserName = null;
@@ -104,17 +103,17 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     set preferredVideoInputID(v) {
         localStorage.setItem(PREFERRED_VIDEO_INPUT_ID_KEY, v);
     }
-    async setPreferredDevices() {
-        await this.setPreferredAudioInput(true);
-        await this.setPreferredVideoInput(false);
-        await this.setPreferredAudioOutput(true);
+    async enablePreferredDevices() {
+        await this.enablePreferredAudioInput(true);
+        await this.enablePreferredVideoInput(false);
+        await this.enablePreferredAudioOutput(true);
     }
     async getPreferredAudioInput(allowAny) {
         const devices = await this.getAudioInputDevices();
         const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
         return device;
     }
-    async setPreferredAudioInput(allowAny) {
+    async enablePreferredAudioInput(allowAny) {
         const device = await this.getPreferredAudioInput(allowAny);
         if (device) {
             await this.setAudioInputDevice(device);
@@ -125,7 +124,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         const device = arrayScan(devices, (d) => d.deviceId === this.preferredVideoInputID, (d) => allowAny && d && /front/i.test(d.label), (d) => allowAny && d.deviceId.length > 0);
         return device;
     }
-    async setPreferredVideoInput(allowAny) {
+    async enablePreferredVideoInput(allowAny) {
         const device = await this.getPreferredVideoInput(allowAny);
         if (device) {
             await this.setVideoInputDevice(device);
@@ -146,7 +145,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
             }
             try {
                 await navigator.mediaDevices.getUserMedia({
-                    audio: this.needsAudioDevice && !this.hasAudioPermission,
+                    audio: !this.hasAudioPermission,
                     video: this.needsVideoDevice && !this.hasVideoPermission
                 });
             }
@@ -218,7 +217,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => allowAny && d.deviceId.length > 0);
         return device;
     }
-    async setPreferredAudioOutput(allowAny) {
+    async enablePreferredAudioOutput(allowAny) {
         const device = await this.getPreferredAudioOutput(allowAny);
         if (device) {
             await this.setAudioOutputDevice(device);

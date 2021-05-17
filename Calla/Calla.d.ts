@@ -2,20 +2,12 @@ import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
 import type { AudioManager } from "./audio/AudioManager";
+import { MediaPermissionSet } from "./audio/MediaDevices";
 import type { CallaClientEvents } from "./CallaEvents";
 import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
 import type { IMetadataClient, IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
-export interface MediaPermissionSet {
-    audio: boolean;
-    video: boolean;
-}
-export interface MediaDeviceSet {
-    audioInput: MediaDeviceInfo[];
-    videoInput: MediaDeviceInfo[];
-    audioOutput: MediaDeviceInfo[];
-}
 export declare enum ClientState {
     InConference = "in-conference",
     JoiningConference = "joining-conference",
@@ -62,7 +54,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     tellAvatarURL(userid: string, url: string): void;
     emote(emoji: string): void;
     chat(text: string): void;
-    setPreferredDevices(): Promise<void>;
+    enablePreferredDevices(): Promise<void>;
     setAudioInputDevice(device: MediaDeviceInfo): Promise<void>;
     setVideoInputDevice(device: MediaDeviceInfo): Promise<void>;
     getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;

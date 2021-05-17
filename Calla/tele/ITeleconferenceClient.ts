@@ -24,7 +24,7 @@ export interface ITeleconferenceClient
     preferredAudioInputID: string;
     preferredVideoInputID: string;
 
-    setPreferredDevices(): Promise<void>;
+    enablePreferredDevices(): Promise<void>;
 
     getAudioOutputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
     getAudioInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]>;
