@@ -1,5 +1,6 @@
 import { IFetcher } from "kudzu/io/IFetcher";
-import { AudioManager } from "../../audio/AudioManager";
+import type { AudioManager } from "../../audio/AudioManager";
+import type { DeviceManagerInputsChangedEvent } from "../../devices/DeviceManager";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";
 export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
@@ -23,10 +24,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     userExists(id: string): boolean;
     getUserNames(): string[][];
     private getCurrentMediaTrack;
-    setAudioInputDevice(device: MediaDeviceInfo): Promise<void>;
-    setVideoInputDevice(device: MediaDeviceInfo): Promise<void>;
-    getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;
-    getCurrentVideoInputDevice(): Promise<MediaDeviceInfo>;
+    protected onInputsChanged(evt: DeviceManagerInputsChangedEvent): Promise<void>;
     toggleAudioMuted(): Promise<boolean>;
     toggleVideoMuted(): Promise<boolean>;
     private isMediaMuted;

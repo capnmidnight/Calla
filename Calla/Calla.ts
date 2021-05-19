@@ -4,8 +4,6 @@ import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioManager } from "./audio/AudioManager";
-import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
-import { MediaPermissionSet } from "./audio/MediaDevices";
 import type {
     CallaAudioStreamAddedEvent,
     CallaAudioStreamRemovedEvent,
@@ -18,6 +16,7 @@ import type {
     CallaUserPosedEvent
 } from "./CallaEvents";
 import { ConnectionState } from "./ConnectionState";
+import type { DeviceManager } from "./devices/DeviceManager";
 import type { ICombinedClient } from "./ICombinedClient";
 import type { IMetadataClient, IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
@@ -62,7 +61,7 @@ export class Calla
             const user = this.audio.setLocalUserID(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.enablePreferredDevices();
+            await this.devices.start();
         });
 
         this._tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
@@ -180,48 +179,8 @@ export class Calla
         return this._tele.audio;
     }
 
-    get preferredAudioOutputID(): string {
-        return this._tele.preferredAudioOutputID;
-    }
-
-    set preferredAudioOutputID(v: string) {
-        this._tele.preferredAudioOutputID = v;
-    }
-
-    get preferredAudioInputID(): string {
-        return this._tele.preferredAudioInputID;
-    }
-
-    set preferredAudioInputID(v: string) {
-        this._tele.preferredAudioInputID = v;
-    }
-
-    get preferredVideoInputID(): string {
-        return this._tele.preferredVideoInputID;
-    }
-
-    set preferredVideoInputID(v: string) {
-        this._tele.preferredVideoInputID = v;
-    }
-
-    async getCurrentAudioOutputDevice(): Promise<MediaDeviceInfo> {
-        return await this._tele.getCurrentAudioOutputDevice();
-    }
-
-    async getMediaPermissions(): Promise<MediaPermissionSet> {
-        return await this._tele.getMediaPermissions();
-    }
-
-    async getAudioOutputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]> {
-        return await this._tele.getAudioOutputDevices(filterDuplicates);
-    }
-
-    async getAudioInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]> {
-        return await this._tele.getAudioInputDevices(filterDuplicates);
-    }
-
-    async getVideoInputDevices(filterDuplicates: boolean): Promise<MediaDeviceInfo[]> {
-        return await this._tele.getVideoInputDevices(filterDuplicates);
+    get devices(): DeviceManager {
+        return this._tele.audio.devices;
     }
 
     private disposed = false;
@@ -276,26 +235,6 @@ export class Calla
 
     chat(text: string): void {
         this._meta.chat(text);
-    }
-
-    async enablePreferredDevices(): Promise<void> {
-        await this._tele.enablePreferredDevices();
-    }
-
-    async setAudioInputDevice(device: MediaDeviceInfo): Promise<void> {
-        await this._tele.setAudioInputDevice(device);
-    }
-
-    async setVideoInputDevice(device: MediaDeviceInfo): Promise<void> {
-        await this._tele.setVideoInputDevice(device);
-    }
-
-    async getCurrentAudioInputDevice(): Promise<MediaDeviceInfo> {
-        return await this._tele.getCurrentAudioInputDevice();
-    }
-
-    async getCurrentVideoInputDevice(): Promise<MediaDeviceInfo> {
-        return await this._tele.getCurrentVideoInputDevice();
     }
 
     async toggleAudioMuted(): Promise<boolean> {
@@ -372,10 +311,7 @@ export class Calla
     }
 
     async setAudioOutputDevice(device: MediaDeviceInfo) {
-        this._tele.setAudioOutputDevice(device);
-        if (canChangeAudioOutput) {
-            await this.audio.setAudioOutputDeviceID(this._tele.preferredAudioOutputID);
-        }
+        this.audio.devices.setAudioOutputDevice(device);
     }
 
     async setAudioMuted(muted: boolean) {

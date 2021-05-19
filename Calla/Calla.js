@@ -1,7 +1,6 @@
 import { Logger } from "kudzu/debugging/Logger";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
-import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
 import { ConnectionState } from "./ConnectionState";
 export var ClientState;
 (function (ClientState) {
@@ -35,7 +34,7 @@ export class Calla extends TypedEventBase {
             const user = this.audio.setLocalUserID(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.enablePreferredDevices();
+            await this.devices.start();
         });
         this._tele.addEventListener("conferenceLeft", (evt) => {
             this.audio.setLocalUserID(evt.id);
@@ -124,38 +123,8 @@ export class Calla extends TypedEventBase {
     get audio() {
         return this._tele.audio;
     }
-    get preferredAudioOutputID() {
-        return this._tele.preferredAudioOutputID;
-    }
-    set preferredAudioOutputID(v) {
-        this._tele.preferredAudioOutputID = v;
-    }
-    get preferredAudioInputID() {
-        return this._tele.preferredAudioInputID;
-    }
-    set preferredAudioInputID(v) {
-        this._tele.preferredAudioInputID = v;
-    }
-    get preferredVideoInputID() {
-        return this._tele.preferredVideoInputID;
-    }
-    set preferredVideoInputID(v) {
-        this._tele.preferredVideoInputID = v;
-    }
-    async getCurrentAudioOutputDevice() {
-        return await this._tele.getCurrentAudioOutputDevice();
-    }
-    async getMediaPermissions() {
-        return await this._tele.getMediaPermissions();
-    }
-    async getAudioOutputDevices(filterDuplicates) {
-        return await this._tele.getAudioOutputDevices(filterDuplicates);
-    }
-    async getAudioInputDevices(filterDuplicates) {
-        return await this._tele.getAudioInputDevices(filterDuplicates);
-    }
-    async getVideoInputDevices(filterDuplicates) {
-        return await this._tele.getVideoInputDevices(filterDuplicates);
+    get devices() {
+        return this._tele.audio.devices;
     }
     dispose() {
         if (!this.disposed) {
@@ -197,21 +166,6 @@ export class Calla extends TypedEventBase {
     }
     chat(text) {
         this._meta.chat(text);
-    }
-    async enablePreferredDevices() {
-        await this._tele.enablePreferredDevices();
-    }
-    async setAudioInputDevice(device) {
-        await this._tele.setAudioInputDevice(device);
-    }
-    async setVideoInputDevice(device) {
-        await this._tele.setVideoInputDevice(device);
-    }
-    async getCurrentAudioInputDevice() {
-        return await this._tele.getCurrentAudioInputDevice();
-    }
-    async getCurrentVideoInputDevice() {
-        return await this._tele.getCurrentVideoInputDevice();
     }
     async toggleAudioMuted() {
         return await this._tele.toggleAudioMuted();
@@ -272,10 +226,7 @@ export class Calla extends TypedEventBase {
         await this._tele.disconnect();
     }
     async setAudioOutputDevice(device) {
-        this._tele.setAudioOutputDevice(device);
-        if (canChangeAudioOutput) {
-            await this.audio.setAudioOutputDeviceID(this._tele.preferredAudioOutputID);
-        }
+        this.audio.devices.setAudioOutputDevice(device);
     }
     async setAudioMuted(muted) {
         let isMuted = this.isAudioMuted;

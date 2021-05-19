@@ -5,7 +5,7 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
-import { autoPlay, controls, muted, playsInline, srcObject } from "kudzu/html/attrs";
+import { autoPlay, controls, muted, playsInline } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import type { HTMLAudioElementWithSinkID, TagChild } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
@@ -15,10 +15,10 @@ import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { assertNever } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
 import { using } from "kudzu/using";
+import { canChangeAudioOutput, DeviceManager } from "../devices/DeviceManager";
 import { DEFAULT_LOCAL_USER_ID } from "../tele/BaseTeleconferenceClient";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
-import { canChangeAudioOutput } from "./canChangeAudioOutput";
 import { AudioDestination } from "./destinations/AudioDestination";
 import type { BaseListener } from "./destinations/spatializers/BaseListener";
 import { NoSpatializationListener } from "./destinations/spatializers/NoSpatializationListener";
@@ -116,6 +116,10 @@ export enum SpatializerType {
     High = "high"
 }
 
+function isMediaStreamAudioDestinationNode(destination: AudioDestinationNode | MediaStreamAudioDestinationNode): destination is MediaStreamAudioDestinationNode {
+    return canChangeAudioOutput && "stream" in destination;
+}
+
 /**
  * A manager of audio sources, destinations, and their spatialization.
  **/
@@ -137,14 +141,14 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     localUser: AudioDestination = null;
     listener: BaseListener = null;
     private audioContext: AudioContext = null;
-    private element: HTMLAudioElementWithSinkID = null;
     private destination: AudioDestinationNode | MediaStreamAudioDestinationNode = null;
-    private _audioOutputDeviceID: string = null;
 
     private onAudioActivity: (evt: AudioActivityEvent) => void;
 
     private fetcher: IFetcher;
     private _type: SpatializerType;
+
+    devices = new DeviceManager();
 
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
@@ -160,13 +164,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         if (canChangeAudioOutput) {
             this.destination = this.audioContext.createMediaStreamDestination();
-            this.element = Audio(
-                playsInline,
-                autoPlay,
-                srcObject(this.destination.stream),
-                styles(
-                    display("none")));
-            document.body.appendChild(this.element);
         }
         else {
             this.destination = this.audioContext.destination;
@@ -226,10 +223,12 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Perform the audio system initialization, after a user gesture 
      **/
     async start(): Promise<void> {
-        await this.audioContext.resume();
-        await this.setAudioOutputDeviceID(this._audioOutputDeviceID);
-        if (this.element) {
-            await this.element.play();
+        if (!this.ready) {
+            await this.audioContext.resume();
+        }
+
+        if (isMediaStreamAudioDestinationNode(this.destination)) {
+            await this.devices.setDestination(this.destination);
         }
     }
 
@@ -340,18 +339,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         for (const user of this.users.values()) {
             user.spatializer = this.createSpatializer(user.spatialized);
-        }
-    }
-
-    getAudioOutputDeviceID(): string {
-        return this.element && this.element.sinkId;
-    }
-
-    async setAudioOutputDeviceID(deviceID: string): Promise<void> {
-        this._audioOutputDeviceID = deviceID || "";
-        if (this.element
-            && this._audioOutputDeviceID !== this.element.sinkId) {
-            await this.element.setSinkId(this._audioOutputDeviceID);
         }
     }
 

@@ -2,7 +2,7 @@
 // the output audio device. This flag indicates whether or not
 // we are in a browser that supports such a feature, without
 // hardcoding the project to a specific browser.
-import { canChangeAudioOutput } from "calla/audio/canChangeAudioOutput";
+import { canChangeAudioOutput } from "calla/devices/DeviceManager";
 // Strictly speaking, these are the only classes that needs to be
 // imported, if you are consuming Calla through a vanilla JavaScript project.
 import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
@@ -348,10 +348,10 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
     client = await loader.load();
-    await client.getMediaPermissions();
-    deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
-    deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
-    deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
+    await client.devices.getMediaPermissions();
+    deviceSelector(true, controls.cams, await client.devices.getVideoInputDevices(true), client.devices.preferredVideoInputID, (device) => client.devices.setVideoInputDevice(device));
+    deviceSelector(true, controls.mics, await client.devices.getAudioInputDevices(true), client.devices.preferredAudioInputID, (device) => client.devices.setAudioInputDevice(device));
+    deviceSelector(false, controls.speakers, await client.devices.getAudioOutputDevices(true), client.devices.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
     await client.connect();
     // At this point, everything is ready, so we can let 
     // the user attempt to connect to the conference now.

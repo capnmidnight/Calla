@@ -257,20 +257,20 @@ import { Settings } from "./Settings";
 
     devices.addEventListener("audioInputChanged", async () => {
         const device = devices.currentAudioInputDevice;
-        await client.setAudioInputDevice(device);
-        settings.preferredAudioInputID = client.preferredAudioInputID;
+        await client.devices.setAudioInputDevice(device);
+        settings.preferredAudioInputID = client.devices.preferredAudioInputID;
     });
 
     devices.addEventListener("audioOutputChanged", async () => {
         const device = devices.currentAudioOutputDevice;
         await client.setAudioOutputDevice(device);
-        settings.preferredAudioOutputID = client.preferredAudioOutputID;
+        settings.preferredAudioOutputID = client.devices.preferredAudioOutputID;
     });
 
     devices.addEventListener("videoInputChanged", async () => {
         const device = devices.currentVideoInputDevice;
-        await client.setVideoInputDevice(device);
-        settings.preferredVideoInputID = client.preferredVideoInputID;
+        await client.devices.setVideoInputDevice(device);
+        settings.preferredVideoInputID = client.devices.preferredVideoInputID;
     });
 
     game.addEventListener("emojiNeeded", selectEmojiAsync);
@@ -285,12 +285,12 @@ import { Settings } from "./Settings";
 
     game.addEventListener("toggleAudio", async () => {
         await client.toggleAudioMuted();
-        settings.preferredAudioInputID = client.preferredAudioInputID;
+        settings.preferredAudioInputID = client.devices.preferredAudioInputID;
     });
 
     game.addEventListener("toggleVideo", async () => {
         await client.toggleVideoMuted();
-        settings.preferredVideoInputID = client.preferredVideoInputID;
+        settings.preferredVideoInputID = client.devices.preferredVideoInputID;
     });
 
     game.addEventListener("gameStarted", () => {
@@ -333,17 +333,17 @@ import { Settings } from "./Settings";
         client.setAvatarEmoji(settings.avatarEmoji);
         client.setAvatarURL(settings.avatarURL);
 
-        devices.audioInputDevices = await client.getAudioInputDevices(true);
-        devices.audioOutputDevices = await client.getAudioOutputDevices(true);
-        devices.videoInputDevices = await client.getVideoInputDevices(true);
+        devices.audioInputDevices = await client.devices.getAudioInputDevices(true);
+        devices.audioOutputDevices = await client.devices.getAudioOutputDevices(true);
+        devices.videoInputDevices = await client.devices.getVideoInputDevices(true);
 
-        settings.preferredAudioInputID = client.preferredAudioInputID;
-        settings.preferredAudioOutputID = client.preferredAudioOutputID;
-        settings.preferredVideoInputID = client.preferredVideoInputID;
+        settings.preferredAudioInputID = client.devices.preferredAudioInputID;
+        settings.preferredAudioOutputID = client.devices.preferredAudioOutputID;
+        settings.preferredVideoInputID = client.devices.preferredVideoInputID;
 
-        devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-        devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
-        devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
+        devices.currentAudioInputDevice = await client.devices.getAudioInputDevice();
+        devices.currentAudioOutputDevice = await client.devices.getAudioOutputDevice();
+        devices.currentVideoInputDevice = await client.devices.getVideoInputDevice();
 
         const audioMuted = client.isAudioMuted;
         game.muteUserAudio(client.localUserID, audioMuted);
@@ -406,8 +406,8 @@ import { Settings } from "./Settings";
     client.addEventListener("audioMuteStatusChanged", async (evt) => {
         if (evt.id === client.localUserID) {
             controls.audioEnabled = !evt.muted;
-            devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-            settings.preferredAudioInputID = client.preferredAudioInputID;
+            devices.currentAudioInputDevice = await client.devices.getAudioInputDevice();
+            settings.preferredAudioInputID = client.devices.preferredAudioInputID;
         }
         game.muteUserAudio(evt.id, evt.muted);
     });
@@ -421,10 +421,10 @@ import { Settings } from "./Settings";
             else {
                 options.setAvatarVideo(game.me.avatarVideo.element);
             }
-            devices.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
+            devices.currentVideoInputDevice = await client.devices.getVideoInputDevice();
         }
         game.muteUserVideo(evt.id, evt.muted);
-        settings.preferredVideoInputID = client.preferredVideoInputID;
+        settings.preferredVideoInputID = client.devices.preferredVideoInputID;
     });
 
     client.addEventListener("emote", (evt) => {
@@ -483,7 +483,7 @@ import { Settings } from "./Settings";
         client.connect()
     ]);
 
-    await client.getMediaPermissions();
+    await client.devices.getMediaPermissions();
 
     login.ready = true;
     timer.start();

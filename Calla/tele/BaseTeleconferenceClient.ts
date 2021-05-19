@@ -1,13 +1,12 @@
-import { arrayScan } from "kudzu/arrays/arrayScan";
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { IFetcher } from "kudzu/io/IFetcher";
+import type { IFetcher } from "kudzu/io/IFetcher";
 import { AudioManager } from "../audio/AudioManager";
-import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
-import type { MediaDeviceSet, MediaPermissionSet } from "../audio/MediaDevices";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
+import type { DeviceManagerInputsChangedEvent } from "../devices/DeviceManager";
+import { DeviceManager } from "../devices/DeviceManager";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 
 export function addLogger(obj: ErsatzEventTarget, evtName: string): void {
@@ -17,29 +16,6 @@ export function addLogger(obj: ErsatzEventTarget, evtName: string): void {
         }
     });
 }
-
-
-function filterDeviceDuplicates(devices: MediaDeviceInfo[]) {
-    const filtered = [];
-    for (let i = 0; i < devices.length; ++i) {
-        const a = devices[i];
-        let found = false;
-        for (let j = 0; j < filtered.length && !found; ++j) {
-            const b = filtered[j];
-            found = a.kind === b.kind && b.label.indexOf(a.label) > 0;
-        }
-
-        if (!found) {
-            filtered.push(a);
-        }
-    }
-
-    return filtered;
-}
-
-const PREFERRED_AUDIO_OUTPUT_ID_KEY = "calla:preferredAudioOutputID";
-const PREFERRED_AUDIO_INPUT_ID_KEY = "calla:preferredAudioInputID";
-const PREFERRED_VIDEO_INPUT_ID_KEY = "calla:preferredVideoInputID";
 
 export const DEFAULT_LOCAL_USER_ID = "local-user";
 
@@ -59,8 +35,6 @@ export abstract class BaseTeleconferenceClient
     roomName: string = null;
 
     protected fetcher: IFetcher;
-
-    audio: AudioManager;
 
     private _connectionState = ConnectionState.Disconnected;
     private _conferenceState = ConnectionState.Disconnected;
@@ -84,12 +58,12 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(fetcher: IFetcher, audio: AudioManager, public needsVideoDevice = false) {
+    constructor(fetcher: IFetcher, private _audio: AudioManager, public needsVideoDevice = false) {
         super();
 
         this.fetcher = fetcher;
 
-        this.audio = audio;
+        this.devices.addEventListener("inputschanged", this.onInputsChanged.bind(this));
 
         this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
         this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
@@ -99,6 +73,14 @@ export abstract class BaseTeleconferenceClient
         this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
         this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
         this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+    }
+
+    get audio(): AudioManager {
+        return this._audio;
+    }
+
+    get devices(): DeviceManager {
+        return this._audio.devices;
     }
 
     protected onDispatching<T extends Event>(evt: T) {
@@ -128,190 +110,6 @@ export abstract class BaseTeleconferenceClient
         });
     }
 
-
-
-    get preferredAudioInputID(): string {
-        return localStorage.getItem(PREFERRED_AUDIO_INPUT_ID_KEY);
-    }
-
-    set preferredAudioInputID(v: string) {
-        localStorage.setItem(PREFERRED_AUDIO_INPUT_ID_KEY, v);
-    }
-
-    get preferredVideoInputID(): string {
-        return localStorage.getItem(PREFERRED_VIDEO_INPUT_ID_KEY);
-    }
-
-    set preferredVideoInputID(v: string) {
-        localStorage.setItem(PREFERRED_VIDEO_INPUT_ID_KEY, v);
-    }
-
-    async enablePreferredDevices(): Promise<void> {
-        await this.enablePreferredAudioInput(true);
-        await this.enablePreferredVideoInput(false);
-        await this.enablePreferredAudioOutput(true);
-    }
-
-    async getPreferredAudioInput(allowAny: boolean): Promise<MediaDeviceInfo> {
-        const devices = await this.getAudioInputDevices();
-        const device = arrayScan(
-            devices,
-            (d) => d.deviceId === this.preferredAudioInputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => allowAny && d.deviceId.length > 0);
-        return device;
-    }
-
-    async enablePreferredAudioInput(allowAny: boolean): Promise<void> {
-        const device = await this.getPreferredAudioInput(allowAny);
-        if (device) {
-            await this.setAudioInputDevice(device);
-        }
-    }
-
-    async getPreferredVideoInput(allowAny: boolean): Promise<MediaDeviceInfo> {
-        const devices = await this.getVideoInputDevices();
-        const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferredVideoInputID,
-            (d) => allowAny && d && /front/i.test(d.label),
-            (d) => allowAny && d.deviceId.length > 0);
-        return device;
-    }
-
-    async enablePreferredVideoInput(allowAny: boolean): Promise<void> {
-        const device = await this.getPreferredVideoInput(allowAny);
-        if (device) {
-            await this.setVideoInputDevice(device);
-        }
-    }
-
-    private async getDevices(): Promise<MediaDeviceInfo[]> {
-        let devices: MediaDeviceInfo[] = null;
-        for (let i = 0; i < 3; ++i) {
-            devices = await navigator.mediaDevices.enumerateDevices();
-            for (const device of devices) {
-                if (device.deviceId.length > 0) {
-                    this.hasAudioPermission = this.hasAudioPermission || device.kind === "audioinput" && device.label.length > 0;
-                    this.hasVideoPermission = this.hasVideoPermission || device.kind === "videoinput" && device.label.length > 0;
-                }
-            }
-
-            if (this.hasAudioPermission) {
-                break;
-            }
-
-            try {
-                await navigator.mediaDevices.getUserMedia({
-                    audio: !this.hasAudioPermission,
-                    video: this.needsVideoDevice && !this.hasVideoPermission
-                });
-            }
-            catch (exp) {
-                console.warn(exp);
-            }
-        }
-
-        return devices || [];
-    }
-
-    async getMediaPermissions(): Promise<MediaPermissionSet> {
-        await this.getDevices();
-        return {
-            audio: this.hasAudioPermission,
-            video: this.hasVideoPermission
-        };
-    }
-
-    private async getAvailableDevices(filterDuplicates: boolean = false): Promise<MediaDeviceSet> {
-        let devices = await this.getDevices();
-
-        if (filterDuplicates) {
-            devices = filterDeviceDuplicates(devices);
-        }
-
-        return {
-            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
-            audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: devices.filter(d => d.kind === "videoinput")
-        };
-    }
-
-    async getAudioInputDevices(filterDuplicates: boolean = false): Promise<MediaDeviceInfo[]> {
-        const devices = await this.getAvailableDevices(filterDuplicates);
-        return devices && devices.audioInput || [];
-    }
-
-    async getVideoInputDevices(filterDuplicates: boolean = false): Promise<MediaDeviceInfo[]> {
-        const devices = await this.getAvailableDevices(filterDuplicates);
-        return devices && devices.videoInput || [];
-    }
-
-    async setAudioOutputDevice(device: MediaDeviceInfo) {
-        if (canChangeAudioOutput) {
-            this.preferredAudioOutputID = device && device.deviceId || null;
-        }
-    }
-
-    async getAudioOutputDevices(filterDuplicates: boolean = false): Promise<MediaDeviceInfo[]> {
-        if (!canChangeAudioOutput) {
-            return [];
-        }
-        const devices = await this.getAvailableDevices(filterDuplicates);
-        return devices && devices.audioOutput || [];
-    }
-
-    async getCurrentAudioOutputDevice() {
-        if (!canChangeAudioOutput) {
-            return null;
-        }
-        const curId = this.audio.getAudioOutputDeviceID(),
-            devices = await this.getAudioOutputDevices(),
-            device = devices.filter((d) => curId != null && d.deviceId === curId
-                || curId == null && d.deviceId === this.preferredAudioOutputID);
-        if (device.length === 0) {
-            return null;
-        }
-        else {
-            return device[0];
-        }
-    }
-
-    get preferredAudioOutputID(): string {
-        return localStorage.getItem(PREFERRED_AUDIO_OUTPUT_ID_KEY);
-    }
-
-    set preferredAudioOutputID(v: string) {
-        localStorage.setItem(PREFERRED_AUDIO_OUTPUT_ID_KEY, v);
-    }
-
-
-    async getPreferredAudioOutput(allowAny: boolean): Promise<MediaDeviceInfo> {
-        const devices = await this.getAudioOutputDevices();
-        const device = arrayScan(
-            devices,
-            (d) => d.deviceId === this.preferredAudioOutputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => allowAny && d.deviceId.length > 0);
-        return device;
-    }
-
-    async enablePreferredAudioOutput(allowAny: boolean): Promise<void> {
-        const device = await this.getPreferredAudioOutput(allowAny);
-        if (device) {
-            await this.setAudioOutputDevice(device);
-        }
-    }
-
-    async setAudioInputDevice(device: MediaDeviceInfo): Promise<void> {
-        this.preferredAudioInputID = device && device.deviceId || null;
-    }
-
-    async setVideoInputDevice(device: MediaDeviceInfo) {
-        this.preferredVideoInputID = device && device.deviceId || null;
-    }
-
     async connect(): Promise<void> {
         this.setConnectionState(ConnectionState.Connecting);
     }
@@ -331,8 +129,7 @@ export abstract class BaseTeleconferenceClient
     abstract userExists(id: string): boolean;
     abstract getUserNames(): string[][];
     abstract identify(userNameOrID: string): Promise<void>;
-    abstract getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;
-    abstract getCurrentVideoInputDevice(): Promise<MediaDeviceInfo>;
+    protected abstract onInputsChanged(evt: DeviceManagerInputsChangedEvent): Promise<void>;
     abstract toggleAudioMuted(): Promise<boolean>;
     abstract toggleVideoMuted(): Promise<boolean>;
     abstract getAudioMuted(): Promise<boolean>;

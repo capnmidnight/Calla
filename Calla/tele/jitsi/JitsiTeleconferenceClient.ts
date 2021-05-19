@@ -4,9 +4,9 @@ import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
 import { sleep } from "kudzu/events/sleep";
 import { IFetcher } from "kudzu/io/IFetcher";
-import { isNullOrUndefined } from "kudzu/typeChecks";
+import { isDefined, isNullOrUndefined } from "kudzu/typeChecks";
 import { using } from "kudzu/using";
-import { AudioManager } from "../../audio/AudioManager";
+import type { AudioManager } from "../../audio/AudioManager";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
 import {
     CallaAudioStreamAddedEvent,
@@ -27,8 +27,9 @@ import {
     StreamType
 } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
+import type { DeviceManagerInputsChangedEvent } from "../../devices/DeviceManager";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
-import type { JitsiConnection } from "../../lib-jitsi-meet/JitsiMeetJS";
+import type { JitsiConnection, JitsiCreateLocalTrackOptions } from "../../lib-jitsi-meet/JitsiMeetJS";
 import type JitsiParticipant from "../../lib-jitsi-meet/JitsiParticipant";
 import type JitsiLocalTrack from "../../lib-jitsi-meet/modules/RTC/JitsiLocalTrack";
 import type JitsiRemoteTrack from "../../lib-jitsi-meet/modules/RTC/JitsiRemoteTrack";
@@ -427,86 +428,48 @@ export class JitsiTeleconferenceClient
         return userTracks.get(type) as JitsiLocalTrack;
     }
 
-    async setAudioInputDevice(device: MediaDeviceInfo): Promise<void> {
-        await super.setAudioInputDevice(device);
-
-        const cur = this.getCurrentMediaTrack(StreamType.Audio);
-        if (cur) {
+    protected async onInputsChanged(evt: DeviceManagerInputsChangedEvent): Promise<void> {
+        const curAudio = this.getCurrentMediaTrack(StreamType.Audio);
+        if (curAudio) {
             const removeTask = this.getNext("audioRemoved", this.localUserID);
-            this.conference.removeTrack(cur);
+            this.conference.removeTrack(curAudio);
             await removeTask;
         }
 
-        if (this.conference && this.preferredAudioInputID) {
+        const curVideo = this.getCurrentMediaTrack(StreamType.Video);
+        if (curVideo) {
+            const removeTask = this.getNext("videoRemoved", this.localUserID);
+            this.conference.removeTrack(curVideo);
+            await removeTask;
+        }
+
+        if (isDefined(this.conference)
+            && isDefined(evt.audio)) {
             const addTask = this.getNext("audioAdded", this.localUserID);
-            const tracks = await JitsiMeetJS.createLocalTracks({
+            const opts: JitsiCreateLocalTrackOptions = {
                 devices: ["audio"],
-                micDeviceId: this.preferredAudioInputID,
+                micDeviceId: evt.audio.deviceId,
                 constraints: {
                     autoGainControl: true,
                     echoCancellation: true,
                     noiseSuppression: true
                 }
-            });
+            };
+
+            if (isDefined(evt.video)) {
+                opts.devices.push("video");
+                opts.cameraDeviceId = evt.video.deviceId;
+            }
+
+            const tracks = await JitsiMeetJS.createLocalTracks(opts);
 
             for (const track of tracks) {
+                const stream = track.getOriginalStream() as MediaStream;
+                this.devices.currentStream = stream;
                 this.conference.addTrack(track);
             }
 
             await addTask;
-        }
-    }
-
-    async setVideoInputDevice(device: MediaDeviceInfo) {
-        await super.setVideoInputDevice(device);
-
-        const cur = this.getCurrentMediaTrack(StreamType.Video);
-        if (cur) {
-            const removeTask = this.getNext("videoRemoved", this.localUserID);
-            this.conference.removeTrack(cur);
-            await removeTask;
-        }
-
-        if (this.conference && this.preferredVideoInputID) {
-            const addTask = this.getNext("videoAdded", this.localUserID);
-            const tracks = await JitsiMeetJS.createLocalTracks({
-                devices: ["video"],
-                cameraDeviceId: this.preferredVideoInputID
-            });
-
-            for (const track of tracks) {
-                this.conference.addTrack(track);
-            }
-
-            await addTask;
-        }
-    }
-
-    async getCurrentAudioInputDevice(): Promise<MediaDeviceInfo> {
-        const cur = this.getCurrentMediaTrack(StreamType.Audio),
-            devices = await this.getAudioInputDevices(),
-            device = devices.filter((d) =>
-                cur != null && d.deviceId === cur.getDeviceId()
-                || cur == null && d.deviceId === this.preferredAudioInputID);
-        if (device.length === 0) {
-            return null;
-        }
-        else {
-            return device[0];
-        }
-    }
-
-    async getCurrentVideoInputDevice(): Promise<MediaDeviceInfo> {
-        const cur = this.getCurrentMediaTrack(StreamType.Video),
-            devices = await this.getVideoInputDevices(),
-            device = devices.filter((d) =>
-                cur != null && d.deviceId === cur.getDeviceId()
-                || cur == null && d.deviceId === this.preferredVideoInputID);
-        if (device.length === 0) {
-            return null;
-        }
-        else {
-            return device[0];
         }
     }
 
@@ -523,7 +486,7 @@ export class JitsiTeleconferenceClient
             }
         }
         else {
-            await this.enablePreferredAudioInput(true);
+            await this.devices.enablePreferredAudioInput();
         }
 
         const evt = await changeTask;
@@ -534,10 +497,11 @@ export class JitsiTeleconferenceClient
         const changeTask = this.getNext("videoMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Video);
         if (cur) {
-            await this.setVideoInputDevice(null);
+            await this.devices.setVideoInputDevice(null);
         }
         else {
-            await this.enablePreferredVideoInput(true);
+            this.devices.needsVideoDevice = true;
+            await this.devices.enablePreferredVideoInput();
         }
 
         const evt = await changeTask;

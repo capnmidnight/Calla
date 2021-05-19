@@ -4,16 +4,16 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
-import { autoPlay, controls, muted, playsInline, srcObject } from "kudzu/html/attrs";
+import { autoPlay, controls, muted, playsInline } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import { Audio } from "kudzu/html/tags";
 import { Fetcher } from "kudzu/io/Fetcher";
 import { assertNever } from "kudzu/typeChecks";
 import { using } from "kudzu/using";
+import { canChangeAudioOutput, DeviceManager } from "../devices/DeviceManager";
 import { DEFAULT_LOCAL_USER_ID } from "../tele/BaseTeleconferenceClient";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
-import { canChangeAudioOutput } from "./canChangeAudioOutput";
 import { AudioDestination } from "./destinations/AudioDestination";
 import { NoSpatializationListener } from "./destinations/spatializers/NoSpatializationListener";
 import { ResonanceAudioListener } from "./destinations/spatializers/ResonanceAudioListener";
@@ -81,6 +81,9 @@ export var SpatializerType;
     SpatializerType["Medium"] = "medium";
     SpatializerType["High"] = "high";
 })(SpatializerType || (SpatializerType = {}));
+function isMediaStreamAudioDestinationNode(destination) {
+    return canChangeAudioOutput && "stream" in destination;
+}
 /**
  * A manager of audio sources, destinations, and their spatialization.
  **/
@@ -105,16 +108,13 @@ export class AudioManager extends TypedEventBase {
         this.localUser = null;
         this.listener = null;
         this.audioContext = null;
-        this.element = null;
         this.destination = null;
-        this._audioOutputDeviceID = null;
+        this.devices = new DeviceManager();
         this.fetcher = fetcher || new Fetcher();
         this.setLocalUserID(DEFAULT_LOCAL_USER_ID);
         this.audioContext = new AudioContext();
         if (canChangeAudioOutput) {
             this.destination = this.audioContext.createMediaStreamDestination();
-            this.element = Audio(playsInline, autoPlay, srcObject(this.destination.stream), styles(display("none")));
-            document.body.appendChild(this.element);
         }
         else {
             this.destination = this.audioContext.destination;
@@ -161,10 +161,11 @@ export class AudioManager extends TypedEventBase {
      * Perform the audio system initialization, after a user gesture
      **/
     async start() {
-        await this.audioContext.resume();
-        await this.setAudioOutputDeviceID(this._audioOutputDeviceID);
-        if (this.element) {
-            await this.element.play();
+        if (!this.ready) {
+            await this.audioContext.resume();
+        }
+        if (isMediaStreamAudioDestinationNode(this.destination)) {
+            await this.devices.setDestination(this.destination);
         }
     }
     update() {
@@ -257,16 +258,6 @@ export class AudioManager extends TypedEventBase {
         }
         for (const user of this.users.values()) {
             user.spatializer = this.createSpatializer(user.spatialized);
-        }
-    }
-    getAudioOutputDeviceID() {
-        return this.element && this.element.sinkId;
-    }
-    async setAudioOutputDeviceID(deviceID) {
-        this._audioOutputDeviceID = deviceID || "";
-        if (this.element
-            && this._audioOutputDeviceID !== this.element.sinkId) {
-            await this.element.setSinkId(this._audioOutputDeviceID);
         }
     }
     /**

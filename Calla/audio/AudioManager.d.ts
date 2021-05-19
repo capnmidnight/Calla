@@ -2,6 +2,7 @@ import type { vec3 } from "gl-matrix";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
+import { DeviceManager } from "../devices/DeviceManager";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioDestination } from "./destinations/AudioDestination";
 import type { BaseListener } from "./destinations/spatializers/BaseListener";
@@ -37,12 +38,11 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     localUser: AudioDestination;
     listener: BaseListener;
     private audioContext;
-    private element;
     private destination;
-    private _audioOutputDeviceID;
     private onAudioActivity;
     private fetcher;
     private _type;
+    devices: DeviceManager;
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
@@ -59,8 +59,6 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     update(): void;
     get type(): SpatializerType;
     set type(type: SpatializerType);
-    getAudioOutputDeviceID(): string;
-    setAudioOutputDeviceID(deviceID: string): Promise<void>;
     /**
      * Creates a spatialzer for an audio source.
      * @param source - the audio element that is being spatialized.
