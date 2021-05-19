@@ -7,31 +7,28 @@ export class BaseClientLoader {
         let f = null;
         let a = null;
         let p = null;
-        if (isDefined(fetcher)
-            && !(fetcher instanceof AudioManager)
-            && !isFunction(fetcher)) {
+        if (fetcher instanceof AudioManager) {
+            a = fetcher;
+        }
+        else if (isFunction(fetcher)) {
+            p = fetcher;
+        }
+        else if (isDefined(fetcher)) {
             f = fetcher;
         }
         else {
             f = new Fetcher();
         }
-        if (fetcher instanceof AudioManager) {
-            a = fetcher;
-        }
-        else if (isDefined(audio)
-            && !isFunction(audio)) {
+        if (audio instanceof AudioManager) {
             a = audio;
-        }
-        else {
-            a = new AudioManager(f);
-        }
-        if (isFunction(fetcher)) {
-            p = fetcher;
         }
         else if (isFunction(audio)) {
             p = audio;
         }
-        else if (isFunction(onProgress)) {
+        else {
+            a = new AudioManager(f);
+        }
+        if (isFunction(onProgress)) {
             p = onProgress;
         }
         await this._load(f, p);

@@ -9,38 +9,46 @@ import type { ITeleconferenceClientExt } from "../tele/ITeleconferenceClient";
 import type { IClientLoader } from "./IClientLoader";
 
 export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt> implements IClientLoader {
-    async load(fetcher?: IFetcher | AudioManager | progressCallback, audio?: AudioManager | progressCallback, onProgress?: progressCallback): Promise<Calla> {
+    load(): Promise<Calla>;
+    load(onProgress: progressCallback): Promise<Calla>;
+    load(audio: AudioManager): Promise<Calla>;
+    load(audio: AudioManager, onProgress: progressCallback): Promise<Calla>;
+    load(fetcher: IFetcher): Promise<Calla>;
+    load(fetcher: IFetcher, onProgress: progressCallback): Promise<Calla>;
+    load(fetcher: IFetcher, audio: AudioManager): Promise<Calla>;
+    load(fetcher: IFetcher, audio: AudioManager, onProgress: progressCallback): Promise<Calla>;
+    async load(
+        fetcher?: IFetcher | AudioManager | progressCallback,
+        audio?: AudioManager | progressCallback,
+        onProgress?: progressCallback): Promise<Calla> {
         let f: IFetcher = null;
         let a: AudioManager = null;
         let p: progressCallback = null;
 
-        if (isDefined(fetcher)
-            && !(fetcher instanceof AudioManager)
-            && !isFunction(fetcher)) {
+        if (fetcher instanceof AudioManager) {
+            a = fetcher;
+        }
+        else if (isFunction(fetcher)) {
+            p = fetcher;
+        }
+        else if (isDefined(fetcher)) {
             f = fetcher;
         }
         else {
             f = new Fetcher();
         }
 
-        if (fetcher instanceof AudioManager) {
-            a = fetcher;
-        }
-        else if (isDefined(audio)
-            && !isFunction(audio)) {
+        if (audio instanceof AudioManager) {
             a = audio;
+        }
+        else if (isFunction(audio)) {
+            p = audio;
         }
         else {
             a = new AudioManager(f);
         }
 
-        if (isFunction(fetcher)) {
-            p = fetcher;
-        }
-        else if (isFunction(audio)) {
-            p = audio;
-        }
-        else if (isFunction(onProgress)) {
+        if (isFunction(onProgress)) {
             p = onProgress;
         }
 
