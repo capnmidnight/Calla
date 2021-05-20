@@ -5,12 +5,13 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
-import { autoPlay, controls, muted, playsInline } from "kudzu/html/attrs";
+import { autoPlay, controls, loop, muted, playsInline, src } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import type { HTMLAudioElementWithSinkID, TagChild } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
 import { Fetcher } from "kudzu/io/Fetcher";
 import type { IFetcher } from "kudzu/io/IFetcher";
+import { guessMediaTypeByFileName } from "kudzu/mediaTypes";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { assertNever } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
@@ -66,33 +67,17 @@ const useTrackSource = "createMediaStreamTrackSource" in AudioContext.prototype;
 const useElementSourceForUsers = !useTrackSource && !("createMediaStreamSource" in AudioContext.prototype);
 const useElementSourceForClips = true;
 
-const audioTypes = new Map<string, string[]>([
-    ["wav", ["audio/wav", "audio/vnd.wave", "audio/wave", "audio/x-wav"]],
-    ["mp3", ["audio/mpeg"]],
-    ["m4a", ["audio/mp4"]],
-    ["m4b", ["audio/mp4"]],
-    ["3gp", ["audio/mp4"]],
-    ["3g2", ["audio/mp4"]],
-    ["aac", ["audio/aac", "audio/aacp"]],
-    ["oga", ["audio/ogg"]],
-    ["ogg", ["audio/ogg"]],
-    ["spx", ["audio/ogg"]],
-    ["webm", ["audio/webm"]],
-    ["flac", ["audio/flac"]]
-]);
-
 function shouldTry(path: string): boolean {
     const idx = path.lastIndexOf(".");
     if (idx > -1) {
-        const ext = path.substring(idx + 1);
-        if (audioTypes.has(ext)) {
-            for (const type of audioTypes.get(ext)) {
-                if (testAudio.canPlayType(type)) {
-                    return true;
-                }
+        const types = guessMediaTypeByFileName(path);
+        for (const type of types) {
+            if (testAudio.canPlayType(type.value)) {
+                return true;
             }
-            return false;
         }
+
+        return false;
     }
 
     return true;
@@ -416,24 +401,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         return clip;
     }
 
-    private async createAudioElementSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
-        if (onProgress) {
-            onProgress(0, 1);
-        }
-        const elem = BackgroundAudio(autoPlaying, false);
-        const task = once(elem, "canplaythrough");
-        elem.loop = looping;
-        elem.src = await this.fetcher.getFile(path, null, onProgress);
-        await task;
-        const source = this.audioContext.createMediaElementSource(elem);
-        if (onProgress) {
-            onProgress(1, 1);
-        }
-
-        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
-    }
-
-    private async createAudioBufferSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+    private async getAudioBlob(path: string, onProgress: progressCallback): Promise<Blob> {
         let goodBlob: Blob = null;
         if (!shouldTry(path)) {
             if (onProgress) {
@@ -450,6 +418,33 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         if (!goodBlob) {
             throw new Error("Cannot play file: " + path);
         }
+
+        return goodBlob;
+    }
+
+    private async createAudioElementSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+        if (onProgress) {
+            onProgress(0, 1);
+        }
+
+        const blob = await this.getAudioBlob(path, onProgress);
+        const file = URL.createObjectURL(blob);
+        const elem = BackgroundAudio(
+            autoPlaying,
+            false,
+            loop(looping),
+            src(file));
+        await once(elem, "canplaythrough", "error");
+        const source = this.audioContext.createMediaElementSource(elem);
+        if (onProgress) {
+            onProgress(1, 1);
+        }
+
+        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
+    }
+
+    private async createAudioBufferSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
+        let goodBlob: Blob = await this.getAudioBlob(path, onProgress);
 
         const buffer = await goodBlob.arrayBuffer();
         const data = await this.audioContext.decodeAudioData(buffer);

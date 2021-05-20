@@ -89,6 +89,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
      */
     createClip(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource>;
+    private getAudioBlob;
     private createAudioElementSource;
     private createAudioBufferSource;
     hasClip(name: string): boolean;
