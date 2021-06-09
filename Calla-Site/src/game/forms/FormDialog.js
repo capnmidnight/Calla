@@ -7,6 +7,9 @@ import { Button, Div, H1 } from "kudzu/html/tags";
 import { hide, show } from "./ops";
 const hiddenEvt = new TypedEvent("hidden"), shownEvt = new TypedEvent("shown");
 export class FormDialog extends TypedEventBase {
+    title;
+    element;
+    content;
     constructor(tagId, title, addCloseButton = true) {
         super();
         this.element = Div(id(tagId), className("dialog"), this.title = Div(selector(`#${tagId} > .title`), className("title"), H1(selector(`#${tagId} > .title > h1`), title)), this.content = Div(selector(`#${tagId} > .content`), className("content")));

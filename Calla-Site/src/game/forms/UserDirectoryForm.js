@@ -9,22 +9,23 @@ const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
 const unhoveredColor = backgroundColor("transparent");
 export class UserDirectoryFormWarpToEvent extends Event {
+    id = null;
     constructor() {
         super("warpTo");
-        this.id = null;
     }
 }
 const warpToEvt = new UserDirectoryFormWarpToEvent();
 const ROW_TIMEOUT = 3000;
 export class UserDirectoryForm extends FormDialog {
+    roomName = null;
+    userName = null;
+    usersList;
+    rows = new Map();
+    users = new Map();
+    avatarGs = new Map();
+    lastUser = null;
     constructor() {
         super("users", "Users");
-        this.roomName = null;
-        this.userName = null;
-        this.rows = new Map();
-        this.users = new Map();
-        this.avatarGs = new Map();
-        this.lastUser = null;
         this.content.append(this.usersList = Div(id("chatUsers")), Div(id("chatMessages")), InputText(id("chatEntry")), Button(id("chatSend"), "Send"));
         Object.seal(this);
     }

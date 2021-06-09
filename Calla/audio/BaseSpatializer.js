@@ -2,13 +2,14 @@
  * Base class providing functionality for spatializers.
  */
 export class BaseSpatializer {
+    audioContext;
+    minDistance = 1;
+    maxDistance = 10;
+    rolloff = 1;
+    algorithm = "logarithmic";
+    transitionTime = 0.1;
     constructor(audioContext) {
         this.audioContext = audioContext;
-        this.minDistance = 1;
-        this.maxDistance = 10;
-        this.rolloff = 1;
-        this.algorithm = "logarithmic";
-        this.transitionTime = 0.1;
     }
     dispose() {
         // nothing to do in the base case

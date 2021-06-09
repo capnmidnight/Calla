@@ -22,13 +22,27 @@ import { connect, disconnect } from "../audio/GraphVisualizer";
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  */
 export class FOAConvolver {
+    _context;
+    _active;
+    _isBufferLoaded;
+    _splitterWYZX;
+    _mergerWY;
+    _mergerZX;
+    _convolverWY;
+    _convolverZX;
+    _splitterWY;
+    _splitterZX;
+    _inverter;
+    _mergerBinaural;
+    _summingBus;
+    input;
+    output;
     /**
      * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
      * @param context The associated BaseAudioContext.
      * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
      */
     constructor(context, hrirBufferList) {
-        this.disposed = false;
         this._context = context;
         this._active = false;
         this._isBufferLoaded = false;
@@ -82,6 +96,7 @@ export class FOAConvolver {
         this.input = this._splitterWYZX;
         this.output = this._summingBus;
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this._active) {

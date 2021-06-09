@@ -12,6 +12,7 @@ export class EmojiAvatarChangedEvent extends BaseAvatarChangedEvent {
  * An avatar that uses a Unicode emoji as its representation
  **/
 export class EmojiAvatar extends BaseAvatar {
+    value;
     /**
      * Creats a new avatar that uses a Unicode emoji as its representation.
      */

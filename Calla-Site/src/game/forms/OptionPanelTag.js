@@ -19,6 +19,7 @@ export function OptionPanel(id, name, ...rest) {
  * A panel and a button that opens it.
  **/
 export class OptionPanelTag extends HtmlCustomTag {
+    button;
     /**
      * Creates a new panel that can be opened with a button click,
      * living in a collection of panels that will be hidden when

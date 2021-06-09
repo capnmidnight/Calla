@@ -1,10 +1,8 @@
 import { arrayRemoveAt } from "../arrays/arrayRemoveAt";
 import { isBoolean, isDefined, isFunction } from "../typeChecks";
 export class EventBase {
-    constructor() {
-        this.listeners = new Map();
-        this.listenerOptions = new Map();
-    }
+    listeners = new Map();
+    listenerOptions = new Map();
     addEventListener(type, callback, options) {
         if (isFunction(callback)) {
             let listeners = this.listeners.get(type);
@@ -59,10 +57,7 @@ export class TypedEvent extends Event {
     }
 }
 export class TypedEventBase extends EventBase {
-    constructor() {
-        super(...arguments);
-        this.mappedCallbacks = new Map();
-    }
+    mappedCallbacks = new Map();
     addEventListener(type, callback, options) {
         if (this.checkAddEventListener(type, callback)) {
             let mappedCallback = this.mappedCallbacks.get(callback);

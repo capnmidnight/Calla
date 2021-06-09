@@ -4,10 +4,16 @@ const byValue = new Map();
 const byExtension = new Map();
 const typePattern = /(\*|\w+)\/(\*|(-|\w)+)(?:;q=(1|0?\.\d+))?/;
 export class MediaType {
+    typeName;
+    subTypeName;
+    weightedValue;
+    value;
+    weight;
+    extensions;
+    primaryExtension = null;
     constructor(typeName, subTypeName, extensions, weight) {
         this.typeName = typeName;
         this.subTypeName = subTypeName;
-        this.primaryExtension = null;
         this.value = this.typeName + "/" + this.subTypeName;
         this.weightedValue = `"${this.value};q=${this.weight}`;
         if (isArray(extensions)) {

@@ -3,11 +3,10 @@ import { BaseAudioSource } from "./BaseAudioSource";
 export class AudioElementSource extends BaseAudioSource {
     constructor(id, audioContext, source, spatializer) {
         super(id, audioContext);
-        this.isPlaying = false;
-        this.disposed3 = false;
         this.source = source;
         this.spatializer = spatializer;
     }
+    isPlaying = false;
     async play() {
         this.isPlaying = true;
         await this.source.mediaElement.play();
@@ -21,6 +20,7 @@ export class AudioElementSource extends BaseAudioSource {
         this.source.mediaElement.currentTime = 0;
         this.isPlaying = false;
     }
+    disposed3 = false;
     dispose() {
         if (!this.disposed3) {
             if (this.source.mediaElement.parentElement) {

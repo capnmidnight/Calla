@@ -4,6 +4,7 @@ import { BaseEmitter } from "./BaseEmitter";
  * Base class for spatializers that uses WebAudio's PannerNode
  **/
 export class BaseWebAudioPanner extends BaseEmitter {
+    panner;
     /**
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param audioContext - the output WebAudio context

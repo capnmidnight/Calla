@@ -41,6 +41,8 @@ export function J(a, b, altDesc = null) {
     }
 }
 export class EmojiGroup extends Emoji {
+    width = null;
+    alts;
     /**
      * Groupings of Unicode-standardized pictograms.
      * @param value - a Unicode sequence.
@@ -49,7 +51,6 @@ export class EmojiGroup extends Emoji {
      */
     constructor(value, desc, ...alts) {
         super(value, desc);
-        this.width = null;
         this.alts = alts;
     }
     /**

@@ -1,10 +1,9 @@
 import { once } from "kudzu/events/once";
 import { BaseAudioBufferSource } from "./BaseAudioBufferSource";
 export class AudioBufferSource extends BaseAudioBufferSource {
+    isPlaying = false;
     constructor(id, audioContext, source, spatializer) {
         super(id, audioContext, source, spatializer);
-        this.isPlaying = false;
-        this.disposed3 = false;
     }
     async play() {
         this.source.start();
@@ -14,6 +13,7 @@ export class AudioBufferSource extends BaseAudioBufferSource {
     stop() {
         this.source.stop();
     }
+    disposed3 = false;
     dispose() {
         if (!this.disposed3) {
             this.stop();

@@ -23,6 +23,41 @@ export var GlobeHemisphere;
  * projection in each zone.
  **/
 export class UTMPoint {
+    /**
+     * The east/west component of the coordinate.
+     **/
+    get easting() {
+        return this._easting;
+    }
+    _easting;
+    /**
+     * The north/south component of the coordinate.
+     **/
+    get northing() {
+        return this._northing;
+    }
+    _northing;
+    /**
+     * An altitude component.
+     **/
+    get altitude() {
+        return this._altitude;
+    }
+    _altitude;
+    /**
+     * The UTM Zone for which this coordinate represents.
+     **/
+    get zone() {
+        return this._zone;
+    }
+    _zone;
+    /**
+     * The hemisphere in which the UTM point sits.
+     **/
+    get hemisphere() {
+        return this._hemisphere;
+    }
+    _hemisphere;
     constructor(eastingOrCopy, northing, altitude, zone, hemisphere) {
         if (isObject(eastingOrCopy)) {
             this._easting = eastingOrCopy.easting;
@@ -38,36 +73,6 @@ export class UTMPoint {
             this._zone = zone || 0;
             this._hemisphere = hemisphere || GlobeHemisphere.Northern;
         }
-    }
-    /**
-     * The east/west component of the coordinate.
-     **/
-    get easting() {
-        return this._easting;
-    }
-    /**
-     * The north/south component of the coordinate.
-     **/
-    get northing() {
-        return this._northing;
-    }
-    /**
-     * An altitude component.
-     **/
-    get altitude() {
-        return this._altitude;
-    }
-    /**
-     * The UTM Zone for which this coordinate represents.
-     **/
-    get zone() {
-        return this._zone;
-    }
-    /**
-     * The hemisphere in which the UTM point sits.
-     **/
-    get hemisphere() {
-        return this._hemisphere;
     }
     toJSON() {
         return JSON.stringify({

@@ -2,14 +2,17 @@ import { BaseAudioElement } from "../BaseAudioElement";
 import { connect, disconnect } from "../GraphVisualizer";
 import { NoSpatializationListener } from "./spatializers/NoSpatializationListener";
 export class AudioDestination extends BaseAudioElement {
+    _spatializedInput;
+    _nonSpatializedInput;
+    _trueDestination;
     constructor(audioContext, destination) {
         super(audioContext);
-        this.disposed2 = false;
         this._spatializedInput = audioContext.createGain();
         this._nonSpatializedInput = audioContext.createGain();
         connect(this._nonSpatializedInput, this.volumeControl);
         this.setDestination(destination);
     }
+    disposed2 = false;
     dispose() {
         if (!this.disposed2) {
             this.setDestination(null);

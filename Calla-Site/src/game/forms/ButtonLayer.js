@@ -7,10 +7,26 @@ import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
 import { updateLabel } from "./ops";
 const toggleOptionsEvt = new TypedEvent("toggleOptions"), tweetEvt = new TypedEvent("tweet"), leaveEvt = new TypedEvent("leave"), toggleFullscreenEvt = new TypedEvent("toggleFullscreen"), toggleInstructionsEvt = new TypedEvent("toggleInstructions"), toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), changeDevicesEvt = new TypedEvent("changeDevices"), emoteEvt = new TypedEvent("emote"), selectEmojiEvt = new TypedEvent("selectEmoji"), zoomChangedEvt = new TypedEvent("zoomChanged");
 export class ButtonLayer extends TypedEventBase {
+    element;
+    optionsButton;
+    instructionsButton;
+    shareButton;
+    showUsersButton;
+    fullscreenButton;
+    leaveButton;
+    toggleAudioButton;
+    toggleAudioLabel;
+    toggleVideoButton;
+    toggleVideoLabel;
+    changeDevicesButton;
+    emoteButton;
+    zoomInButton;
+    slider;
+    zoomOutButton;
+    _audioEnabled = true;
+    _videoEnabled = false;
     constructor(zoomMin, zoomMax) {
         super();
-        this._audioEnabled = true;
-        this._videoEnabled = false;
         const changeZoom = (dz) => {
             this.zoom += dz;
             this.dispatchEvent(zoomChangedEvt);

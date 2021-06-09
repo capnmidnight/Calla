@@ -114,10 +114,11 @@ export function cleanNode(node) {
  * @param gridIn 2D array of input weights
  */
 export class Graph {
+    nodes;
+    dirtyNodes = new Array();
+    grid = null;
+    diagonal = true;
     constructor(gridIn, options) {
-        this.dirtyNodes = new Array();
-        this.grid = null;
-        this.diagonal = true;
         if (options) {
             this.diagonal = options.diagonal !== false;
         }
@@ -205,16 +206,19 @@ export class Graph {
     }
 }
 export class GridNode {
+    x;
+    y;
+    weight;
+    f = 0;
+    g = 0;
+    h = 0;
+    visited = false;
+    closed = false;
+    parent = null;
     constructor(x, y, weight) {
         this.x = x;
         this.y = y;
         this.weight = weight;
-        this.f = 0;
-        this.g = 0;
-        this.h = 0;
-        this.visited = false;
-        this.closed = false;
-        this.parent = null;
     }
     toString() {
         return `[${this.x} ${this.y}]`;
@@ -231,9 +235,10 @@ export class GridNode {
     }
 }
 class BinaryHeap {
+    scoreFunction;
+    content = new Array();
     constructor(scoreFunction) {
         this.scoreFunction = scoreFunction;
-        this.content = new Array();
     }
     push(element) {
         // Add the new element to the end of the array.

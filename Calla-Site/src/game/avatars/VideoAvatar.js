@@ -14,6 +14,7 @@ export class VideoAvatarChangedEvent extends BaseAvatarChangedEvent {
  * An avatar that uses an HTML Video element as its representation.
  **/
 export class VideoAvatar extends BaseAvatar {
+    video;
     /**
      * Creates a new avatar that uses a MediaStream as its representation.
      */

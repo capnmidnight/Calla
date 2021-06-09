@@ -1,5 +1,7 @@
 import { createUtilityCanvas } from "kudzu/html/canvas";
 export class BaseAvatarChangedEvent extends Event {
+    mode;
+    avatar;
     constructor(mode, avatar) {
         super(mode);
         this.mode = mode;
@@ -10,6 +12,10 @@ export class BaseAvatarChangedEvent extends Event {
  * A base class for different types of avatars.
  **/
 export class BaseAvatar {
+    mode;
+    canSwim;
+    element;
+    g;
     /**
      * Encapsulates a resource to use as an avatar.
      */

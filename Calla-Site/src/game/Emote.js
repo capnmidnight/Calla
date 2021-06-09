@@ -3,19 +3,25 @@ import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 const EMOJI_LIFE = 3;
 export class EmoteEvent extends TypedEvent {
+    emoji;
     constructor(emoji) {
         super("emote");
         this.emoji = emoji;
     }
 }
 export class Emote {
+    emoji;
+    x;
+    y;
+    dx;
+    dy;
+    life = 1;
+    width = -1;
+    emoteText = null;
     constructor(emoji, x, y) {
         this.emoji = emoji;
         this.x = x;
         this.y = y;
-        this.life = 1;
-        this.width = -1;
-        this.emoteText = null;
         this.dx = Math.random() - 0.5;
         this.dy = -Math.random() * 0.5 - 0.5;
         this.emoteText = new TextImage();

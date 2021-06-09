@@ -73,28 +73,32 @@ function isMediaStreamAudioDestinationNode(destination) {
  * A manager of audio sources, destinations, and their spatialization.
  **/
 export class AudioManager extends TypedEventBase {
+    analyzeAudio;
+    minDistance = 1;
+    maxDistance = 10;
+    rolloff = 1;
+    _algorithm = "logarithmic";
+    transitionTime = 0.5;
+    _offsetRadius = 0;
+    clips = new Map();
+    users = new Map();
+    analysers = new Map();
+    localUserID = null;
+    sortedUserIDs = new Array();
+    localUser = null;
+    listener = null;
+    audioContext = null;
+    destination = null;
+    onAudioActivity;
+    fetcher;
+    _type;
+    devices = new DeviceManager();
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
     constructor(fetcher, type, analyzeAudio = false) {
         super();
         this.analyzeAudio = analyzeAudio;
-        this.minDistance = 1;
-        this.maxDistance = 10;
-        this.rolloff = 1;
-        this._algorithm = "logarithmic";
-        this.transitionTime = 0.5;
-        this._offsetRadius = 0;
-        this.clips = new Map();
-        this.users = new Map();
-        this.analysers = new Map();
-        this.localUserID = null;
-        this.sortedUserIDs = new Array();
-        this.localUser = null;
-        this.listener = null;
-        this.audioContext = null;
-        this.destination = null;
-        this.devices = new DeviceManager();
         this.fetcher = fetcher || new Fetcher();
         this.setLocalUserID(DEFAULT_LOCAL_USER_ID);
         this.audioContext = new AudioContext();

@@ -228,6 +228,13 @@ function computeHOAMatrices(matrix) {
  *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
  */
 export class HOARotator {
+    _context;
+    _ambisonicOrder;
+    _splitter;
+    _merger;
+    _gainNodeMatrix;
+    input;
+    output;
     /**
      * Higher-order-ambisonic decoder based on gain node network. We expect
      * the order of the channels to conform to ACN ordering. Below are the helper
@@ -245,7 +252,6 @@ export class HOARotator {
      * @param ambisonicOrder - Ambisonic order.
      */
     constructor(context, ambisonicOrder) {
-        this.disposed = false;
         this._context = context;
         this._ambisonicOrder = ambisonicOrder;
         // We need to determine the number of channels K based on the ambisonic order
@@ -286,6 +292,7 @@ export class HOARotator {
         this.input = this._splitter;
         this.output = this._merger;
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             for (let i = 1; i <= this._ambisonicOrder; i++) {

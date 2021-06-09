@@ -185,6 +185,11 @@ function _computeReflectionCoefficients(absorptionCoefficients) {
  * properties and listener position relative to a rectangular room.
  **/
 export class Room {
+    early;
+    late;
+    speedOfSound;
+    output;
+    _merger;
     constructor(context, options) {
         // Use defaults for undefined arguments.
         options = Object.assign({

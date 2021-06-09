@@ -40,13 +40,18 @@ const ChannelMaps = {
  * Channel router for FOA stream.
  */
 export class FOARouter {
+    _context;
+    _splitter;
+    _merger;
+    input;
+    output;
+    _channelMap;
     /**
      * Channel router for FOA stream.
      * @param context - Associated BaseAudioContext.
      * @param channelMap - Routing destination array.
      */
     constructor(context, channelMap) {
-        this.disposed = false;
         this._context = context;
         this._splitter = this._context.createChannelSplitter(4);
         this._merger = this._context.createChannelMerger(4);
@@ -71,6 +76,7 @@ export class FOARouter {
         connect(this._splitter, this._merger, 2, this._channelMap[2]);
         connect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             disconnect(this._splitter, this._merger, 0, this._channelMap[0]);

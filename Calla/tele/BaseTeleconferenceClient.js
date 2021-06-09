@@ -12,30 +12,19 @@ export const DEFAULT_LOCAL_USER_ID = "local-user";
 let loggingEnabled = window.location.hostname === "localhost"
     || /\bdebug\b/.test(window.location.search);
 export class BaseTeleconferenceClient extends TypedEventBase {
-    constructor(fetcher, _audio, needsVideoDevice = false) {
-        super();
-        this._audio = _audio;
-        this.needsVideoDevice = needsVideoDevice;
-        this.localUserID = null;
-        this.localUserName = null;
-        this.roomName = null;
-        this._connectionState = ConnectionState.Disconnected;
-        this._conferenceState = ConnectionState.Disconnected;
-        this.hasAudioPermission = false;
-        this.hasVideoPermission = false;
-        this.fetcher = fetcher;
-        this.devices.addEventListener("inputschanged", this.onInputsChanged.bind(this));
-        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
-        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-    }
+    _audio;
+    needsVideoDevice;
     toggleLogging() {
         loggingEnabled = !loggingEnabled;
     }
+    localUserID = null;
+    localUserName = null;
+    roomName = null;
+    fetcher;
+    _connectionState = ConnectionState.Disconnected;
+    _conferenceState = ConnectionState.Disconnected;
+    hasAudioPermission = false;
+    hasVideoPermission = false;
     get connectionState() {
         return this._connectionState;
     }
@@ -47,6 +36,20 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     }
     setConferenceState(state) {
         this._conferenceState = state;
+    }
+    constructor(fetcher, _audio, needsVideoDevice = false) {
+        super();
+        this._audio = _audio;
+        this.needsVideoDevice = needsVideoDevice;
+        this.fetcher = fetcher;
+        this.devices.addEventListener("inputschanged", this.onInputsChanged.bind(this));
+        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
+        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
     get audio() {
         return this._audio;

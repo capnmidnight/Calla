@@ -1,11 +1,11 @@
 import { TypedEventBase } from "../events/EventBase";
 import { lerp } from "../math/lerp";
 export class TimerTickEvent extends Event {
+    t = 0;
+    dt = 0;
+    sdt = 0;
     constructor() {
         super("tick");
-        this.t = 0;
-        this.dt = 0;
-        this.sdt = 0;
         Object.seal(this);
     }
     copy(evt) {
@@ -20,11 +20,12 @@ export class TimerTickEvent extends Event {
     }
 }
 export class BaseTimer extends TypedEventBase {
+    _timer = null;
+    _onTick;
+    _frameTime = Number.MAX_VALUE;
+    _targetFPS = 0;
     constructor(targetFrameRate) {
         super();
-        this._timer = null;
-        this._frameTime = Number.MAX_VALUE;
-        this._targetFPS = 0;
         this.targetFrameRate = targetFrameRate;
         const tickEvt = new TimerTickEvent();
         let lt = -1;

@@ -5,6 +5,7 @@ import { BaseListener } from "./BaseListener";
  * A positioner that uses WebAudio's gain nodes to only adjust volume.
  **/
 export class VolumeScalingListener extends BaseListener {
+    pose;
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */

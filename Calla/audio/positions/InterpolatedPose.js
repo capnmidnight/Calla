@@ -7,12 +7,10 @@ const k = 2;
  * a target position over time.
  */
 export class InterpolatedPose {
-    constructor() {
-        this.start = new Pose();
-        this.current = new Pose();
-        this.end = new Pose();
-        this.offset = vec3.create();
-    }
+    start = new Pose();
+    current = new Pose();
+    end = new Pose();
+    offset = vec3.create();
     /**
      * Set the target comfort offset for the time `t + dt`.
      */

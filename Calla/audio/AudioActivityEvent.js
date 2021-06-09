@@ -2,11 +2,11 @@
  * An Event class for tracking changes to audio activity.
  **/
 export class AudioActivityEvent extends Event {
+    id = null;
+    isActive = false;
     /** Creates a new "audioActivity" event */
     constructor() {
         super("audioActivity");
-        this.id = null;
-        this.isActive = false;
         Object.seal(this);
     }
     /**

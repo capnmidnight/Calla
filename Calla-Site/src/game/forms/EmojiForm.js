@@ -12,6 +12,7 @@ import { FormDialog } from "./FormDialog";
 import { hide, isOpen, show, toggleOpen } from "./ops";
 const disabler = disabled(true), enabler = disabled(false);
 class EmojiSelectedEvent extends TypedEvent {
+    emoji;
     constructor(emoji) {
         super("emojiSelected");
         this.emoji = emoji;
@@ -19,6 +20,10 @@ class EmojiSelectedEvent extends TypedEvent {
 }
 const cancelEvt = new TypedEvent("emojiCanceled");
 export class EmojiForm extends FormDialog {
+    recent;
+    preview;
+    confirmButton;
+    selectAsync;
     constructor() {
         super("emoji", "Emoji");
         this.element.classList.add("dialog-3");

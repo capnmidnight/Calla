@@ -22,6 +22,22 @@ import { connect, disconnect } from "../audio/GraphVisualizer";
  * A convolver network for N-channel HOA stream.
  */
 export class HOAConvolver {
+    _context;
+    _active = false;
+    _isBufferLoaded = false;
+    _ambisonicOrder;
+    _numberOfChannels;
+    _inputSplitter;
+    _stereoMergers;
+    _convolvers;
+    _stereoSplitters;
+    _positiveIndexSphericalHarmonics;
+    _negativeIndexSphericalHarmonics;
+    _inverter;
+    _binauralMerger;
+    _outputGain;
+    input;
+    output;
     /**
      * A convolver network for N-channel HOA stream.
       * @param context - Associated BaseAudioContext.
@@ -30,8 +46,6 @@ export class HOAConvolver {
      * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
      */
     constructor(context, ambisonicOrder, hrirBufferList) {
-        this._active = false;
-        this._isBufferLoaded = false;
         this._context = context;
         // The number of channels K based on the ambisonic order N where K = (N+1)^2.
         this._ambisonicOrder = ambisonicOrder;

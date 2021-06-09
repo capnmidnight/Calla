@@ -21,8 +21,14 @@ const directionNorm = vec3.create();
  * Directivity/occlusion filter.
  **/
 export class Directivity {
+    alpha;
+    sharpness;
+    context;
+    lowpass;
+    cosTheta = 0;
+    input;
+    output;
     constructor(context, options) {
-        this.cosTheta = 0;
         // Use defaults for undefined arguments.
         options = Object.assign({
             alpha: DEFAULT_DIRECTIVITY_ALPHA,

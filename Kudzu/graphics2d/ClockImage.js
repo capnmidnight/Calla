@@ -15,12 +15,11 @@ export class ClockImage extends TextImage {
             wrapWords: false,
             freezeDimensions: true
         });
-        this._fps = null;
-        this.lastLen = 0;
         const updater = this.update.bind(this);
         setInterval(updater, 500);
         updater();
     }
+    _fps = null;
     get fps() {
         return this._fps;
     }
@@ -30,6 +29,7 @@ export class ClockImage extends TextImage {
             this.update();
         }
     }
+    lastLen = 0;
     update() {
         const time = new Date();
         let value = time.toLocaleTimeString();

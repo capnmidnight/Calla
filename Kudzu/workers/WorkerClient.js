@@ -2,117 +2,17 @@ import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { arrayProgress } from "../tasks/arrayProgress";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
-class TreeTraversalResult {
-    constructor(init) {
-        this.found = false;
-        this.value = init;
-    }
-}
-function traverseObject(obj, callback, init = null) {
-    const result = new TreeTraversalResult(init);
-    const seen = new Set();
-    const queue = [[null, obj]];
-    while (queue.length > 0 && !result.found) {
-        const [key, here] = queue.shift();
-        if (!seen.has(here)) {
-            seen.add(here);
-            callback(key, here, result);
-            if (!result.found) {
-                for (const key of Object.keys(here)) {
-                    queue.push([key, here[key]]);
-                }
-            }
-        }
-    }
-    return result;
-}
-function findAll(obj, test) {
-    const result = traverseObject(obj, (key, val, cur) => {
-        if (test(key, val)) {
-            cur.value.push(val);
-        }
-    }, []);
-    return result.value;
-}
-function hasAny(obj, test) {
-    const result = traverseObject(obj, (key, val, cur) => {
-        if (test(key, val)) {
-            cur.found = true;
-        }
-    });
-    return result.found;
-}
-function accum(obj, test, act, init = null) {
-    const result = traverseObject(obj, (key, val, cur) => {
-        if (test(key, val)) {
-            cur.value = act(val, cur.value);
-        }
-    }, init);
-    return result.value;
-}
-function inStock(_key, value) {
-    return value && value.inStock;
-}
-const prices = {
-    a: {
-        name: "A",
-        price: 5,
-        inStock: false,
-        b: {
-            name: "B",
-            price: 5,
-            inStock: false,
-            c: {
-                name: "C",
-                price: 2,
-                inStock: true
-            },
-            d: {
-                name: "D",
-                price: 3,
-                inStock: false
-            }
-        },
-        e: {
-            name: "E",
-            price: 5,
-            inStock: false,
-            f: {
-                name: "F",
-                price: 5,
-                inStock: true,
-                g: {
-                    name: "G",
-                    price: 1,
-                    inStock: false
-                },
-                h: {
-                    name: "H",
-                    price: 4,
-                    inStock: true
-                }
-            }
-        }
-    },
-    i: {
-        name: "I",
-        price: 6,
-        inStock: true
-    }
-};
-console.log(findAll(prices, inStock));
-console.log(findAll(prices, inStock)
-    .map(v => v.price)
-    .reduce((a, b) => a + b, 0));
-console.log(accum(prices, inStock, (a, b) => a.price + b, 0));
-console.log(hasAny(prices, inStock));
-console.log(hasAny(prices, (_, v) => v.name === "I"));
-console.log(hasAny(prices, (_, v) => v.name === "Z"));
 export class WorkerClient extends TypedEventBase {
+    static isSupported = "Worker" in globalThis;
+    scriptPath;
+    taskCounter;
+    workers;
+    invocations = new Map();
+    dispatchMessageResponse;
+    propertyValues = new Map();
+    ready;
     constructor(scriptPath, minScriptPathOrWorkers, workerPoolSizeOrCurTaskCounter) {
         super();
-        this.invocations = new Map();
-        this.propertyValues = new Map();
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
@@ -365,5 +265,4 @@ export class WorkerClient extends TypedEventBase {
         return new Class(this.scriptPath, [worker], this.taskCounter + 1);
     }
 }
-WorkerClient.isSupported = "Worker" in globalThis;
 //# sourceMappingURL=WorkerClient.js.map

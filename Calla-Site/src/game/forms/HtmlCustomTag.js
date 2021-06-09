@@ -5,6 +5,7 @@ import { setOpen } from "./ops";
  * A pseudo-element that is made out of other elements.
  **/
 export class HtmlCustomTag extends EventBase {
+    element;
     /**
      * Creates a new pseudo-element
      * @param tagName - the type of tag that will contain the elements in the custom tag.

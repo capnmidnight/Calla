@@ -1,10 +1,10 @@
 import { deg2rad } from "../math/deg2rad";
 import { CanvasImage } from "./CanvasImage";
 export class ArtificialHorizon extends CanvasImage {
+    _pitch = 0;
+    _heading = 0;
     constructor() {
         super(128, 128);
-        this._pitch = 0;
-        this._heading = 0;
         this.redraw();
     }
     get pitch() {

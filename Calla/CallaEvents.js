@@ -1,4 +1,5 @@
 export class CallaEvent extends Event {
+    eventType;
     constructor(eventType) {
         super(eventType);
         this.eventType = eventType;
@@ -20,24 +21,28 @@ export class CallaTeleconferenceServerFailedEvent extends CallaEvent {
     }
 }
 export class CallaUserEvent extends CallaEvent {
+    id;
     constructor(type, id) {
         super(type);
         this.id = id;
     }
 }
 export class CallaParticipantEvent extends CallaUserEvent {
+    displayName;
     constructor(type, id, displayName) {
         super(type, id);
         this.displayName = displayName;
     }
 }
 export class CallaUserNameChangedEvent extends CallaUserEvent {
+    displayName;
     constructor(id, displayName) {
         super("userNameChanged", id);
         this.displayName = displayName;
     }
 }
 export class CallaConferenceJoinedEvent extends CallaUserEvent {
+    pose;
     constructor(id, pose) {
         super("conferenceJoined", id);
         this.pose = pose;
@@ -64,6 +69,7 @@ export class CallaConferenceRestoredEvent extends CallaEvent {
     }
 }
 export class CallaParticipantJoinedEvent extends CallaParticipantEvent {
+    source;
     constructor(id, displayName, source) {
         super("participantJoined", id, displayName);
         this.source = source;
@@ -80,6 +86,7 @@ export class CallaParticipantNameChangeEvent extends CallaParticipantEvent {
     }
 }
 export class CallaUserMutedEvent extends CallaUserEvent {
+    muted;
     constructor(type, id, muted) {
         super(type, id);
         this.muted = muted;
@@ -107,6 +114,9 @@ export var StreamOpType;
     StreamOpType["Changed"] = "changed";
 })(StreamOpType || (StreamOpType = {}));
 export class CallaStreamEvent extends CallaUserEvent {
+    kind;
+    op;
+    stream;
     constructor(type, kind, op, id, stream) {
         super(type, id);
         this.kind = kind;
@@ -150,6 +160,15 @@ export class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent {
     }
 }
 export class CallaPoseEvent extends CallaUserEvent {
+    px;
+    py;
+    pz;
+    fx;
+    fy;
+    fz;
+    ux;
+    uy;
+    uz;
     constructor(type, id, px, py, pz, fx, fy, fz, ux, uy, uz) {
         super(type, id);
         this.px = px;
@@ -180,12 +199,14 @@ export class CallaUserPosedEvent extends CallaPoseEvent {
     }
 }
 export class CallaUserPointerEvent extends CallaPoseEvent {
+    name;
     constructor(id, name, px, py, pz, fx, fy, fz, ux, uy, uz) {
         super("userPointer", id, px, py, pz, fx, fy, fz, ux, uy, uz);
         this.name = name;
     }
 }
 export class CallaEmojiEvent extends CallaUserEvent {
+    emoji;
     constructor(type, id, emoji) {
         super(type, id);
         this.emoji = emoji;
@@ -202,12 +223,14 @@ export class CallaEmojiAvatarEvent extends CallaEmojiEvent {
     }
 }
 export class CallaPhotoAvatarEvent extends CallaUserEvent {
+    url;
     constructor(id, url) {
         super("setAvatarURL", id);
         this.url = url;
     }
 }
 export class CallaChatEvent extends CallaUserEvent {
+    text;
     constructor(id, text) {
         super("chat", id);
         this.text = text;

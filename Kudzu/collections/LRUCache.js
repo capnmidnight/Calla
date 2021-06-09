@@ -3,6 +3,8 @@ import { arrayRemove } from "../arrays/arrayRemove";
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { isDefined } from "../typeChecks";
 export class LRUCacheItemEvicted extends TypedEvent {
+    key;
+    value;
     constructor(key, value) {
         super("itemevicted");
         this.key = key;
@@ -10,12 +12,13 @@ export class LRUCacheItemEvicted extends TypedEvent {
     }
 }
 export class LRUCache extends TypedEventBase {
+    size;
+    map = new Map();
+    usage = new Array();
+    removed = new Map();
     constructor(size) {
         super();
         this.size = size;
-        this.map = new Map();
-        this.usage = new Array();
-        this.removed = new Map();
     }
     set(key, value) {
         this.usage.push(key);

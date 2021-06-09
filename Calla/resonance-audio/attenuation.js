@@ -23,13 +23,16 @@ import { DEFAULT_ATTENUATION_ROLLOFF, DEFAULT_MAX_DISTANCE, DEFAULT_MIN_DISTANCE
  * Distance-based attenuation filter.
  */
 export class Attenuation {
+    minDistance = DEFAULT_MIN_DISTANCE;
+    maxDistance = DEFAULT_MAX_DISTANCE;
+    rolloff = DEFAULT_ATTENUATION_ROLLOFF;
+    gainNode;
+    input;
+    output;
     /**
      * Distance-based attenuation filter.
      */
     constructor(context, options) {
-        this.minDistance = DEFAULT_MIN_DISTANCE;
-        this.maxDistance = DEFAULT_MAX_DISTANCE;
-        this.rolloff = DEFAULT_ATTENUATION_ROLLOFF;
         if (options) {
             if (isGoodNumber(options.minDistance)) {
                 this.minDistance = options.minDistance;

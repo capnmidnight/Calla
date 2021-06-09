@@ -8,12 +8,12 @@ import { BaseListener } from "./BaseListener";
  * An audio positioner that uses Google's Resonance Audio library
  **/
 export class ResonanceAudioListener extends BaseListener {
+    scene;
     /**
      * Creates a new audio positioner that uses Google's Resonance Audio library
      */
     constructor(audioContext) {
         super(audioContext);
-        this.disposed = false;
         const scene = new ResonanceAudio(audioContext, {
             ambisonicOrder: 1,
             renderingMode: RenderingMode.Bypass
@@ -35,6 +35,7 @@ export class ResonanceAudioListener extends BaseListener {
         this.scene = scene;
         Object.seal(this);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this.scene) {

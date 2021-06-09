@@ -9,14 +9,16 @@ import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
 export class UserMovedEvent extends TypedEvent {
+    id;
+    x = 0;
+    y = 0;
     constructor(id) {
         super("userMoved");
         this.id = id;
-        this.x = 0;
-        this.y = 0;
     }
 }
 export class UserJoinedEvent extends TypedEvent {
+    user;
     constructor(user) {
         super("userJoined");
         this.user = user;
@@ -28,23 +30,29 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
 export class User extends TypedEventBase {
+    isMe;
+    audioMuted = false;
+    videoMuted = true;
+    isActive = false;
+    stackUserCount = 1;
+    stackIndex = 0;
+    stackAvatarHeight = 0;
+    stackAvatarWidth = 0;
+    stackOffsetX = 0;
+    stackOffsetY = 0;
+    lastPositionRequestTime;
+    visible = true;
+    userNameText;
+    _displayName = null;
+    _avatarVideo = null;
+    _avatarImage = null;
+    _avatarEmoji = null;
+    _id;
+    _pose;
+    userMovedEvt;
     constructor(id, displayName, pose, isMe) {
         super();
         this.isMe = isMe;
-        this.audioMuted = false;
-        this.videoMuted = true;
-        this.isActive = false;
-        this.stackUserCount = 1;
-        this.stackIndex = 0;
-        this.stackAvatarHeight = 0;
-        this.stackAvatarWidth = 0;
-        this.stackOffsetX = 0;
-        this.stackOffsetY = 0;
-        this.visible = true;
-        this._displayName = null;
-        this._avatarVideo = null;
-        this._avatarImage = null;
-        this._avatarEmoji = null;
         this.id = id;
         this.pose = pose;
         this.setAvatarEmoji(bustInSilhouette.value);

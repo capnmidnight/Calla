@@ -1,4 +1,7 @@
 export class CssProp {
+    key;
+    value;
+    name;
     constructor(key, value) {
         this.key = key;
         this.value = value;
@@ -15,6 +18,7 @@ export class CssProp {
     }
 }
 export class CssPropSet {
+    rest;
     constructor(...rest) {
         this.rest = rest;
     }
@@ -427,6 +431,8 @@ export function getSerifFamily() {
     return fontFamily(getSerifFonts());
 }
 export class CSSInJSRule {
+    selector;
+    props;
     constructor(selector, props) {
         this.selector = selector;
         this.props = props;

@@ -22,12 +22,31 @@ import { connect, disconnect } from "../audio/GraphVisualizer";
  * First-order-ambisonic decoder based on gain node network.
  */
 export class FOARotator {
+    _context;
+    _splitter;
+    _inX;
+    _inY;
+    _inZ;
+    _m0;
+    _m1;
+    _m2;
+    _m3;
+    _m4;
+    _m5;
+    _m6;
+    _m7;
+    _m8;
+    _outX;
+    _outY;
+    _outZ;
+    _merger;
+    input;
+    output;
     /**
      * First-order-ambisonic decoder based on gain node network.
      * @param context - Associated BaseAudioContext.
      */
     constructor(context) {
-        this.disposed = false;
         this._context = context;
         this._splitter = this._context.createChannelSplitter(4);
         this._inX = this._context.createGain();
@@ -95,6 +114,7 @@ export class FOARotator {
         this.input = this._splitter;
         this.output = this._merger;
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             // ACN channel ordering: [1, 2, 3] => [X, Y, Z]

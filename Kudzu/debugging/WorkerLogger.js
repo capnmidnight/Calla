@@ -1,13 +1,11 @@
 import { KEY, MessageType } from "./models";
 export class WorkerLogger {
-    constructor() {
-        this.msg = {
-            key: KEY,
-            method: null,
-            id: null,
-            values: null
-        };
-    }
+    msg = {
+        key: KEY,
+        method: null,
+        id: null,
+        values: null
+    };
     post(method, id, ...values) {
         this.msg.method = method;
         this.msg.id = id;

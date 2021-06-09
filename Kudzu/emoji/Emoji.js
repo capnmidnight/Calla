@@ -2,6 +2,9 @@
  * Unicode-standardized pictograms.
  **/
 export class Emoji {
+    value;
+    desc;
+    props;
     /**
      * Creates a new Unicode-standardized pictograms.
      * @param value - a Unicode sequence.

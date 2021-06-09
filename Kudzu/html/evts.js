@@ -15,6 +15,9 @@ export function makeEnterKeyEventHandler(callback) {
  * A setter functor for HTML element events.
  **/
 export class HtmlEvt {
+    name;
+    callback;
+    opts;
     /**
      * Creates a new setter functor for an HTML element event.
      * @param name - the name of the event to attach to.

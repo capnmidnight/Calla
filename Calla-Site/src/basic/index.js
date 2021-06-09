@@ -181,20 +181,24 @@ async function leave() {
  * in some way. This User class helps encapsulate that representation.
  **/
 class User {
+    id;
+    pose;
+    // The user's name.
+    _name = null;
+    // An HTML element to display the user's name.
+    _nameEl = null;
+    // Calla will eventually give us a video stream for the user.
+    _videoStream = null;
+    // An HTML element for displaying the user's video.
+    _video = null;
+    // An HTML element for showing the user name and video together.
+    container;
     /**
      * Creates a new User object.
      */
     constructor(id, name, pose, isLocal) {
         this.id = id;
         this.pose = pose;
-        // The user's name.
-        this._name = null;
-        // An HTML element to display the user's name.
-        this._nameEl = null;
-        // Calla will eventually give us a video stream for the user.
-        this._videoStream = null;
-        // An HTML element for displaying the user's video.
-        this._video = null;
         this.container = document.createElement("div");
         this.container.className = "user";
         if (isLocal) {

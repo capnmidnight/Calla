@@ -2,6 +2,12 @@ let _getTransform;
 if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
     && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
     class MockDOMMatrix {
+        a;
+        b;
+        c;
+        d;
+        e;
+        f;
         constructor(trans) {
             this.a = trans[0];
             this.b = trans[1];

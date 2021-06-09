@@ -6,6 +6,30 @@ import { GlobeHemisphere, UTMPoint } from "./UTMPoint";
  * A point in geographic space on a radial coordinate system.
  **/
 export class LatLngPoint {
+    /**
+     * An altitude value thrown in just for kicks. It makes some calculations and conversions
+     * easier if we keep the Altitude value.
+     **/
+    get alt() {
+        return this._alt;
+    }
+    _alt;
+    /**
+     * Lines of latitude run east/west around the globe, parallel to the equator, never
+     * intersecting. They measure angular distance north/south.
+     **/
+    get lat() {
+        return this._lat;
+    }
+    _lat;
+    /**
+     * Lines of longitude run north/south around the globe, intersecting at the poles. They
+     * measure angular distance east/west.
+     **/
+    get lng() {
+        return this._lng;
+    }
+    _lng;
     constructor(lat, lng, alt) {
         if (isObject(lat)) {
             this._lat = lat.lat;
@@ -17,27 +41,6 @@ export class LatLngPoint {
             this._lng = lng || 0;
             this._alt = alt;
         }
-    }
-    /**
-     * An altitude value thrown in just for kicks. It makes some calculations and conversions
-     * easier if we keep the Altitude value.
-     **/
-    get alt() {
-        return this._alt;
-    }
-    /**
-     * Lines of latitude run east/west around the globe, parallel to the equator, never
-     * intersecting. They measure angular distance north/south.
-     **/
-    get lat() {
-        return this._lat;
-    }
-    /**
-     * Lines of longitude run north/south around the globe, intersecting at the poles. They
-     * measure angular distance east/west.
-     **/
-    get lng() {
-        return this._lng;
     }
     toJSON() {
         return JSON.stringify({

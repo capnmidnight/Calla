@@ -9,11 +9,12 @@ import { BaseMetadataClient } from "../BaseMetadataClient";
 const JITSI_HAX_FINGERPRINT = "Calla";
 const logger = new Logger();
 export class JitsiMetadataClient extends BaseMetadataClient {
+    tele;
+    _status = ConnectionState.Disconnected;
+    remoteUserIDs = new Array();
     constructor(tele) {
         super();
         this.tele = tele;
-        this._status = ConnectionState.Disconnected;
-        this.remoteUserIDs = new Array();
         this.tele.addEventListener("participantJoined", (evt) => {
             arraySortedInsert(this.remoteUserIDs, evt.id, false);
         });

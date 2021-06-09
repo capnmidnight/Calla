@@ -4,6 +4,8 @@ import { BaseEmitter } from "./BaseEmitter";
  * A spatializer that uses Google's Resonance Audio library.
  **/
 export class ResonanceAudioNode extends BaseEmitter {
+    resScene;
+    resNode;
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      */

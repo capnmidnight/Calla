@@ -19,11 +19,17 @@ import { DEFAULT_REVERB_BANDWIDTH, DEFAULT_REVERB_DURATIONS, DEFAULT_REVERB_DURA
  * Late-reflections reverberation filter for Ambisonic content.
  */
 export class LateReflections {
+    bandwidthCoeff;
+    tailonsetSamples;
+    context;
+    predelay;
+    convolver;
+    input;
+    output;
     /**
     * Late-reflections reverberation filter for Ambisonic content.
     */
     constructor(context, options) {
-        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             durations: DEFAULT_REVERB_DURATIONS.slice(),
@@ -53,6 +59,7 @@ export class LateReflections {
         // Compute IR using RT60 values.
         this.setDurations(options.durations);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             disconnect(this.input, this.predelay);

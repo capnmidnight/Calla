@@ -26,11 +26,17 @@ import { DEFAULT_AMBISONIC_ORDER, DEFAULT_FORWARD, DEFAULT_POSITION, DEFAULT_REN
  * Listener model to spatialize sources in an environment.
  */
 export class Listener {
+    tempMatrix3;
+    ambisonicOrder;
+    renderer;
+    position;
+    ambisonicOutput;
+    input;
+    output;
     /**
      * Listener model to spatialize sources in an environment.
      */
     constructor(context, options) {
-        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -75,6 +81,7 @@ export class Listener {
         // Set orientation and update rotation matrix accordingly.
         this.setOrientation(options.forward, options.up);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             // Connect pre-rotated soundfield to renderer.

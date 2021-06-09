@@ -2,20 +2,21 @@ import { createUtilityCanvas } from "kudzu/html/canvas";
 import * as astar from "../lib/astar";
 import { TileSet } from "./TileSet";
 export class TileMap {
+    fetcher;
+    _tileWidth = 0;
+    _tileHeight = 0;
+    _layers = 0;
+    _width = 0;
+    _height = 0;
+    _offsetX = 0;
+    _offsetY = 0;
+    _layerImages = new Array();
+    _url = null;
+    _tileset = null;
+    _tiles = null;
+    _graph = null;
     constructor(tilemapName, fetcher) {
         this.fetcher = fetcher;
-        this._tileWidth = 0;
-        this._tileHeight = 0;
-        this._layers = 0;
-        this._width = 0;
-        this._height = 0;
-        this._offsetX = 0;
-        this._offsetY = 0;
-        this._layerImages = new Array();
-        this._url = null;
-        this._tileset = null;
-        this._tiles = null;
-        this._graph = null;
         this._url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
     async load() {

@@ -10,6 +10,7 @@ export class PhotoAvatarChangedEvent extends BaseAvatarChangedEvent {
  * An avatar that uses an Image as its representation.
  **/
 export class PhotoAvatar extends BaseAvatar {
+    url;
     /**
      * Creates a new avatar that uses an Image as its representation.
      */

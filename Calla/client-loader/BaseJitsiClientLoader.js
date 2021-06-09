@@ -3,12 +3,15 @@ import { JitsiTeleconferenceClient } from "../tele/jitsi/JitsiTeleconferenceClie
 import { BaseClientLoader } from "./BaseClientLoader";
 const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
 export class BaseJitsiClientLoader extends BaseClientLoader {
+    host;
+    bridgeHost;
+    bridgeMUC;
+    loaded = false;
     constructor(host, bridgeHost, bridgeMUC) {
         super();
         this.host = host;
         this.bridgeHost = bridgeHost;
         this.bridgeMUC = bridgeMUC;
-        this.loaded = false;
     }
     async _load(fetcher, onProgress) {
         if (!this.loaded) {

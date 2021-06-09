@@ -21,12 +21,16 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
     return count === 0 ? 0 : (sum / count);
 }
 export class ActivityAnalyser extends TypedEventBase {
+    source;
+    id;
+    bufferSize;
+    buffer;
+    wasActive = false;
+    activityCounter;
+    analyser = null;
     constructor(source, audioContext, bufferSize) {
         super();
         this.source = source;
-        this.wasActive = false;
-        this.analyser = null;
-        this.disposed = false;
         if (!isGoodNumber(bufferSize)
             || bufferSize <= 0) {
             throw new Error("Buffer size must be greater than 0");
@@ -50,6 +54,7 @@ export class ActivityAnalyser extends TypedEventBase {
         };
         checkSource();
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             disconnect(this.source.source, this.analyser);

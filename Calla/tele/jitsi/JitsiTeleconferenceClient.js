@@ -30,16 +30,19 @@ function decodeUserName(v) {
 }
 const logger = new Logger();
 export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
+    host;
+    bridgeHost;
+    bridgeMUC;
+    useDefaultMetadataClient = false;
+    connection = null;
+    conference = null;
+    tracks = new Map();
+    listenersForObjs = new Map();
     constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
         super(fetcher, audio);
         this.host = host;
         this.bridgeHost = bridgeHost;
         this.bridgeMUC = bridgeMUC;
-        this.useDefaultMetadataClient = false;
-        this.connection = null;
-        this.conference = null;
-        this.tracks = new Map();
-        this.listenersForObjs = new Map();
     }
     _on(obj, evtName, handler) {
         let objListeners = this.listenersForObjs.get(obj);

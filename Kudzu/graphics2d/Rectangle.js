@@ -2,6 +2,8 @@ import { isDefined } from "../typeChecks.js";
 import { Point } from "./point.js";
 import { Size } from "./Size";
 export class Rectangle {
+    point;
+    size;
     constructor(x = 0, y = 0, width = 0, height = 0) {
         this.point = new Point(x, y);
         this.size = new Size(width, height);

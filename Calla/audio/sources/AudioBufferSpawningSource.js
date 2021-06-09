@@ -4,11 +4,10 @@ import { once } from "kudzu/events/once";
 import { AudioBufferSource } from "./AudioBufferSource";
 import { BaseAudioBufferSource } from "./BaseAudioBufferSource";
 export class AudioBufferSpawningSource extends BaseAudioBufferSource {
+    counter = 0;
+    playingSources = new Array();
     constructor(id, audioContext, source, spatializer) {
         super(id, audioContext, source, spatializer);
-        this.counter = 0;
-        this.playingSources = new Array();
-        this.disposed3 = false;
     }
     connectSpatializer() {
         // do nothing, this node doesn't play on its own
@@ -47,6 +46,7 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         }
         arrayClear(this.playingSources);
     }
+    disposed3 = false;
     dispose() {
         if (!this.disposed3) {
             this.stop();

@@ -25,11 +25,18 @@ import { log } from "./utils";
  * Omnitone FOA renderer class. Uses the optimized convolution technique.
  */
 export class FOARenderer {
+    context;
+    config;
+    bypass;
+    router;
+    convolver;
+    rotator;
+    input;
+    output;
     /**
      * Omnitone FOA renderer class. Uses the optimized convolution technique.
      */
     constructor(context, options) {
-        this.disposed = false;
         this.context = context;
         this.config = Object.assign({
             channelMap: ChannelMap.Default,
@@ -65,6 +72,7 @@ export class FOARenderer {
         this.input.channelCountMode = 'explicit';
         this.input.channelInterpretation = 'discrete';
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this.getRenderingMode() === RenderingMode.Bypass) {

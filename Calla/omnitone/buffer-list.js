@@ -33,6 +33,9 @@ export var BufferDataType;
  * AudioBuffers from multiple URLs.
  */
 export class BufferList {
+    _context;
+    _options;
+    _bufferData;
     /**
      * BufferList object mananges the async loading/decoding of multiple
      * AudioBuffers from multiple URLs.

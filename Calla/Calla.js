@@ -14,14 +14,16 @@ export var ClientState;
 })(ClientState || (ClientState = {}));
 const audioActivityEvt = new AudioActivityEvent();
 export class Calla extends TypedEventBase {
+    _fetcher;
+    _tele;
+    _meta;
+    isAudioMuted = null;
+    isVideoMuted = null;
     constructor(_fetcher, _tele, _meta) {
         super();
         this._fetcher = _fetcher;
         this._tele = _tele;
         this._meta = _meta;
-        this.isAudioMuted = null;
-        this.isVideoMuted = null;
-        this.disposed = false;
         const fwd = this.dispatchEvent.bind(this);
         this._tele.addEventListener("serverConnected", fwd);
         this._tele.addEventListener("serverDisconnected", fwd);
@@ -126,6 +128,7 @@ export class Calla extends TypedEventBase {
     get devices() {
         return this._tele.audio.devices;
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             this.leave();

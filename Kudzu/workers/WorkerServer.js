@@ -1,14 +1,15 @@
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
 export class WorkerServer {
+    self;
+    methods = new Map();
+    properties = new Map();
     /**
      * Creates a new worker thread method call listener.
      * @param self - the worker scope in which to listen.
      */
     constructor(self) {
         this.self = self;
-        this.methods = new Map();
-        this.properties = new Map();
         this.addMethodInternal(GET_PROPERTY_VALUES_METHOD, () => {
             for (const [name, prop] of this.properties) {
                 this.onPropertyInitialized(name, prop.get());

@@ -12,11 +12,15 @@ function isEnter(evt) {
         && evt.key === "Enter";
 }
 export class LoginForm extends FormDialog {
+    _ready = false;
+    _connecting = false;
+    _connected = false;
+    roomNameInput;
+    userNameInput;
+    emailInput;
+    connectButton;
     constructor(rooms) {
         super("login", "Login", false);
-        this._ready = false;
-        this._connecting = false;
-        this._connected = false;
         this.element.classList.add("dialog-1");
         this.addEventListener("shown", () => this._ready = true);
         const validator = () => this.validate();

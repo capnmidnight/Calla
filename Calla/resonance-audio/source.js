@@ -44,6 +44,18 @@ function _computeDistanceOutsideRoom(distance) {
  * Source model to spatialize an audio buffer.
  */
 export class Source {
+    scene;
+    position;
+    forward;
+    up;
+    right;
+    dx;
+    directivity;
+    toEarly;
+    toLate;
+    attenuation;
+    encoder;
+    input;
     /**
      * Source model to spatialize an audio buffer.
      * @param scene Associated ResonanceAudio instance.

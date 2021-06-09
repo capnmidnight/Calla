@@ -8,6 +8,7 @@ export class InputBindingChangedEvent extends Event {
 }
 const inputBindingChangedEvt = new InputBindingChangedEvent();
 export class InputBinding extends TypedEventBase {
+    bindings;
     constructor() {
         super();
         this.bindings = new Map([
@@ -233,24 +234,24 @@ const DEFAULT_INPUT_BINDING = Object.freeze({
     gpButtonRight: 15
 });
 export class Settings {
+    _drawHearing = false;
+    _audioDistanceMin = 1;
+    _audioDistanceMax = 10;
+    _audioRolloff = 1;
+    _fontSize = 12;
+    _transitionSpeed = 1;
+    _zoom = 1.5;
+    _roomName = "calla";
+    _userName = "";
+    _email = "";
+    _avatarEmoji = null;
+    _avatarURL = null;
+    _gamepadIndex = 0;
+    _inputBinding = new InputBinding();
+    _preferredAudioOutputID = null;
+    _preferredAudioInputID = null;
+    _preferredVideoInputID = null;
     constructor() {
-        this._drawHearing = false;
-        this._audioDistanceMin = 1;
-        this._audioDistanceMax = 10;
-        this._audioRolloff = 1;
-        this._fontSize = 12;
-        this._transitionSpeed = 1;
-        this._zoom = 1.5;
-        this._roomName = "calla";
-        this._userName = "";
-        this._email = "";
-        this._avatarEmoji = null;
-        this._avatarURL = null;
-        this._gamepadIndex = 0;
-        this._inputBinding = new InputBinding();
-        this._preferredAudioOutputID = null;
-        this._preferredAudioInputID = null;
-        this._preferredVideoInputID = null;
         const thisStr = localStorage.getItem(KEY);
         if (thisStr) {
             const obj = JSON.parse(thisStr);

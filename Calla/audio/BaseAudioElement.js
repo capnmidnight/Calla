@@ -1,12 +1,14 @@
 import { InterpolatedPose } from "./positions/InterpolatedPose";
 export class BaseAudioElement {
+    audioContext;
+    pose = new InterpolatedPose();
+    _spatializer = null;
+    volumeControl;
     constructor(audioContext) {
         this.audioContext = audioContext;
-        this.pose = new InterpolatedPose();
-        this._spatializer = null;
-        this.disposed = false;
         this.volumeControl = audioContext.createGain();
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             this.spatializer = null;

@@ -29,6 +29,14 @@ import { DEFAULT_AMBISONIC_ORDER, DEFAULT_FORWARD, DEFAULT_POSITION, DEFAULT_REN
  * Main class for managing sources, room and listener models.
  */
 export class ResonanceAudio {
+    _sources;
+    listener;
+    room;
+    ambisonicOrder;
+    context;
+    output;
+    ambisonicOutput;
+    ambisonicInput;
     /**
      * Main class for managing sources, room and listener models.
      * @param context
@@ -38,7 +46,6 @@ export class ResonanceAudio {
      * Options for constructing a new ResonanceAudio scene.
      */
     constructor(context, options) {
-        this.disposed = false;
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -82,6 +89,7 @@ export class ResonanceAudio {
     setRenderingMode(mode) {
         this.listener.setRenderingMode(mode);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             disconnect(this.room.output, this.listener.input);

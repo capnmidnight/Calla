@@ -3,25 +3,26 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { project } from "kudzu/math/project";
 import { unproject } from "kudzu/math/unproject";
 export class ScreenPointerEvent extends TypedEvent {
+    pointerType = null;
+    pointerID = null;
+    x = 0;
+    y = 0;
+    dx = 0;
+    dy = 0;
+    dz = 0;
+    u = 0;
+    v = 0;
+    du = 0;
+    dv = 0;
+    buttons = 0;
+    dragDistance = 0;
     constructor(type) {
         super(type);
-        this.pointerType = null;
-        this.pointerID = null;
-        this.x = 0;
-        this.y = 0;
-        this.dx = 0;
-        this.dy = 0;
-        this.dz = 0;
-        this.u = 0;
-        this.v = 0;
-        this.du = 0;
-        this.dv = 0;
-        this.buttons = 0;
-        this.dragDistance = 0;
         Object.seal(this);
     }
 }
 export class InputTypeChangingEvent extends TypedEvent {
+    newInputType;
     constructor(newInputType) {
         super("inputTypeChanging");
         this.newInputType = newInputType;
@@ -29,6 +30,15 @@ export class InputTypeChangingEvent extends TypedEvent {
     }
 }
 export class Pointer {
+    type;
+    id;
+    buttons;
+    moveDistance;
+    dragDistance;
+    x;
+    y;
+    dx;
+    dy;
     constructor(evt) {
         if (evt.type !== "wheel") {
             const ptrEvt = evt;
@@ -51,10 +61,10 @@ export class Pointer {
 }
 const MAX_DRAG_DISTANCE = 5, pointerDownEvt = new ScreenPointerEvent("pointerdown"), pointerUpEvt = new ScreenPointerEvent("pointerup"), clickEvt = new ScreenPointerEvent("click"), moveEvt = new ScreenPointerEvent("move"), dragEvt = new ScreenPointerEvent("drag");
 export class ScreenPointerControls extends TypedEventBase {
+    pointers = new Map();
+    currentInputType = null;
     constructor(element) {
         super();
-        this.pointers = new Map();
-        this.currentInputType = null;
         let canClick = true;
         const dispatch = (evt, pointer, dz) => {
             evt.pointerType = pointer.type;

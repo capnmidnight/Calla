@@ -19,6 +19,11 @@ export function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
  * A select box that can be databound to collections.
  **/
 export class SelectBoxTag extends HtmlCustomTag {
+    noSelectionText;
+    makeID;
+    makeLabel;
+    _emptySelectionEnabled = false;
+    _values = new Array();
     /**
      * Creates a select box that can bind to collections
      * @param tagId - the ID to use for the select box.
@@ -29,8 +34,6 @@ export class SelectBoxTag extends HtmlCustomTag {
      */
     constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
         super("select", id(tagId), ...rest);
-        this._emptySelectionEnabled = false;
-        this._values = new Array();
         if (!isFunction(makeID)) {
             throw new Error("makeID parameter must be a Function");
         }

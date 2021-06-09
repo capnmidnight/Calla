@@ -16,6 +16,8 @@ export function LabeledInput(id, inputType, labelText, ...rest) {
  * An input box that has a label attached to it.
  **/
 export class LabeledInputTag extends HtmlCustomTag {
+    label;
+    input;
     /**
      * Creates an input box that has a label attached to it.
      * @param id - the ID to use for the input box

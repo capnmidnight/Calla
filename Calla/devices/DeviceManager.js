@@ -25,6 +25,8 @@ function filterDeviceDuplicates(devices) {
     return filtered;
 }
 export class DeviceManagerInputsChangedEvent extends TypedEvent {
+    audio;
+    video;
     constructor(audio, video) {
         super("inputschanged");
         this.audio = audio;
@@ -32,6 +34,7 @@ export class DeviceManagerInputsChangedEvent extends TypedEvent {
     }
 }
 export class DeviceManagerAudioOutputChangedEvent extends TypedEvent {
+    device;
     constructor(device) {
         super("audiooutputchanged");
         this.device = device;
@@ -41,24 +44,17 @@ const PREFERRED_AUDIO_OUTPUT_ID_KEY = "calla:preferredAudioOutputID";
 const PREFERRED_AUDIO_INPUT_ID_KEY = "calla:preferredAudioInputID";
 const PREFERRED_VIDEO_INPUT_ID_KEY = "calla:preferredVideoInputID";
 export class DeviceManager extends TypedEventBase {
-    constructor(needsVideoDevice = false) {
-        super();
-        this.needsVideoDevice = needsVideoDevice;
-        this.element = null;
-        this._hasAudioPermission = false;
-        this._hasVideoPermission = false;
-        this._currentStream = null;
-        if (canChangeAudioOutput) {
-            this.element = Audio(playsInline, autoPlay, styles(display("none")));
-            document.body.appendChild(this.element);
-        }
-    }
+    needsVideoDevice;
+    element = null;
+    _hasAudioPermission = false;
     get hasAudioPermission() {
         return this._hasAudioPermission;
     }
+    _hasVideoPermission = false;
     get hasVideoPermission() {
         return this._hasVideoPermission;
     }
+    _currentStream = null;
     get currentStream() {
         return this._currentStream;
     }
@@ -71,6 +67,14 @@ export class DeviceManager extends TypedEventBase {
                 }
             }
             this._currentStream = v;
+        }
+    }
+    constructor(needsVideoDevice = false) {
+        super();
+        this.needsVideoDevice = needsVideoDevice;
+        if (canChangeAudioOutput) {
+            this.element = Audio(playsInline, autoPlay, styles(display("none")));
+            document.body.appendChild(this.element);
         }
     }
     async setDestination(destination) {

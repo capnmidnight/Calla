@@ -6,10 +6,12 @@ export function isCanvasImage(obj) {
         && isCanvas(obj.canvas);
 }
 export class CanvasImage extends TypedEventBase {
+    _canvas;
+    _scale = 250;
+    _g;
+    redrawnEvt = new TypedEvent("redrawn");
     constructor(width, height, options) {
         super();
-        this._scale = 250;
-        this.redrawnEvt = new TypedEvent("redrawn");
         if (isDefined(options)) {
             if (isDefined(options.scale)) {
                 this._scale = options.scale;

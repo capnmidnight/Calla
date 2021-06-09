@@ -4,14 +4,17 @@ import { disconnect } from "../../GraphVisualizer";
  * Base class providing functionality for audio listeners.
  **/
 export class BaseEmitter extends BaseSpatializer {
+    destination;
+    input;
+    output;
     /**
      * Creates a spatializer that keeps track of position
      */
     constructor(audioContext, destination) {
         super(audioContext);
         this.destination = destination;
-        this.disposed = false;
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this.output !== this.destination) {

@@ -9,13 +9,13 @@ const chargeLabels = [
     "charge"
 ];
 export class BatteryImage extends CanvasImage {
+    battery = null;
+    lastChargeDirection = null;
+    lastLevel = null;
+    chargeDirection = 0;
+    level = 0.5;
     constructor() {
         super(256, 128);
-        this.battery = null;
-        this.lastChargeDirection = null;
-        this.lastLevel = null;
-        this.chargeDirection = 0;
-        this.level = 0.5;
         if (isBatteryNavigator(navigator)) {
             this.readBattery(navigator);
         }

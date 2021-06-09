@@ -1,5 +1,6 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 class GamepadButtonEvent extends TypedEvent {
+    button;
     constructor(type, button) {
         super(type);
         this.button = button;
@@ -16,6 +17,8 @@ export class GamepadButtonDownEvent extends GamepadButtonEvent {
     }
 }
 class GamepadAxisEvent extends TypedEvent {
+    axis;
+    value;
     constructor(type, axis, value) {
         super(type);
         this.axis = axis;
@@ -28,20 +31,26 @@ export class GamepadAxisMaxedEvent extends GamepadAxisEvent {
     }
 }
 export class EventedGamepad extends TypedEventBase {
+    id;
+    displayId;
+    connected;
+    hand;
+    pose;
+    lastButtons = new Array();
+    buttons = new Array();
+    axes = new Array();
+    hapticActuators = new Array();
+    _isStick;
+    btnDownEvts = new Array();
+    btnUpEvts = new Array();
+    btnState = new Array();
+    axisThresholdMax = 0.9;
+    axisThresholdMin = 0.1;
+    axisMaxEvts = new Array();
+    axisMaxed = new Array();
+    sticks = new Array();
     constructor(pad) {
         super();
-        this.lastButtons = new Array();
-        this.buttons = new Array();
-        this.axes = new Array();
-        this.hapticActuators = new Array();
-        this.btnDownEvts = new Array();
-        this.btnUpEvts = new Array();
-        this.btnState = new Array();
-        this.axisThresholdMax = 0.9;
-        this.axisThresholdMin = 0.1;
-        this.axisMaxEvts = new Array();
-        this.axisMaxed = new Array();
-        this.sticks = new Array();
         this.id = pad.id;
         this.displayId = pad.displayId;
         this.connected = pad.connected;

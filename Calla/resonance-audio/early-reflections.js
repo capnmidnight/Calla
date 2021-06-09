@@ -22,26 +22,32 @@ import { connect, disconnect } from "../audio/GraphVisualizer";
 * Ray-tracing-based early reflections model.
 */
 export class EarlyReflections {
+    listenerPosition = vec3.copy(vec3.create(), DEFAULT_POSITION);
+    speedOfSound = DEFAULT_SPEED_OF_SOUND;
+    coefficients = {
+        left: DEFAULT_REFLECTION_COEFFICIENTS.left,
+        right: DEFAULT_REFLECTION_COEFFICIENTS.right,
+        front: DEFAULT_REFLECTION_COEFFICIENTS.front,
+        back: DEFAULT_REFLECTION_COEFFICIENTS.back,
+        up: DEFAULT_REFLECTION_COEFFICIENTS.up,
+        down: DEFAULT_REFLECTION_COEFFICIENTS.down,
+    };
+    halfDimensions = {
+        width: 0.5 * DEFAULT_ROOM_DIMENSIONS.width,
+        height: 0.5 * DEFAULT_ROOM_DIMENSIONS.height,
+        depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
+    };
+    inverters;
+    merger;
+    lowpass;
+    delays;
+    gains;
+    input;
+    output;
     /**
      * Ray-tracing-based early reflections model.
      */
     constructor(context, options) {
-        this.listenerPosition = vec3.copy(vec3.create(), DEFAULT_POSITION);
-        this.speedOfSound = DEFAULT_SPEED_OF_SOUND;
-        this.coefficients = {
-            left: DEFAULT_REFLECTION_COEFFICIENTS.left,
-            right: DEFAULT_REFLECTION_COEFFICIENTS.right,
-            front: DEFAULT_REFLECTION_COEFFICIENTS.front,
-            back: DEFAULT_REFLECTION_COEFFICIENTS.back,
-            up: DEFAULT_REFLECTION_COEFFICIENTS.up,
-            down: DEFAULT_REFLECTION_COEFFICIENTS.down,
-        };
-        this.halfDimensions = {
-            width: 0.5 * DEFAULT_ROOM_DIMENSIONS.width,
-            height: 0.5 * DEFAULT_ROOM_DIMENSIONS.height,
-            depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
-        };
-        this.disposed = false;
         if (options) {
             if (isGoodNumber(options.speedOfSound)) {
                 this.speedOfSound = options.speedOfSound;
@@ -126,6 +132,7 @@ export class EarlyReflections {
         // Initialize.
         this.setRoomProperties(options && options.dimensions, options && options.coefficients);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             // Connect nodes.

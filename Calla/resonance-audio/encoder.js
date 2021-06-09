@@ -20,30 +20,15 @@ import { DEFAULT_AMBISONIC_ORDER, DEFAULT_AZIMUTH, DEFAULT_ELEVATION, DEFAULT_SO
  * Spatially encodes input using weighted spherical harmonics.
  */
 export class Encoder {
-    /**
-     * Spatially encodes input using weighted spherical harmonics.
-     */
-    constructor(context, options) {
-        this.channelGain = new Array();
-        this.merger = null;
-        this.disposed = false;
-        // Use defaults for undefined arguments.
-        options = Object.assign({
-            ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
-            azimuth: DEFAULT_AZIMUTH,
-            elevation: DEFAULT_ELEVATION,
-            sourceWidth: DEFAULT_SOURCE_WIDTH
-        }, options);
-        this.context = context;
-        // Create I/O nodes.
-        this.input = context.createGain();
-        this.output = context.createGain();
-        // Set initial order, angle and source width.
-        this.setAmbisonicOrder(options.ambisonicOrder);
-        this.azimuth = options.azimuth;
-        this.elevation = options.elevation;
-        this.setSourceWidth(options.sourceWidth);
-    }
+    context;
+    channelGain = new Array();
+    merger = null;
+    ambisonicOrder;
+    azimuth;
+    elevation;
+    spreadIndex;
+    input;
+    output;
     /**
      * Validate the provided ambisonic order.
      * @param ambisonicOrder Desired ambisonic order.
@@ -65,6 +50,27 @@ export class Encoder {
         return ambisonicOrder;
     }
     /**
+     * Spatially encodes input using weighted spherical harmonics.
+     */
+    constructor(context, options) {
+        // Use defaults for undefined arguments.
+        options = Object.assign({
+            ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
+            azimuth: DEFAULT_AZIMUTH,
+            elevation: DEFAULT_ELEVATION,
+            sourceWidth: DEFAULT_SOURCE_WIDTH
+        }, options);
+        this.context = context;
+        // Create I/O nodes.
+        this.input = context.createGain();
+        this.output = context.createGain();
+        // Set initial order, angle and source width.
+        this.setAmbisonicOrder(options.ambisonicOrder);
+        this.azimuth = options.azimuth;
+        this.elevation = options.elevation;
+        this.setSourceWidth(options.sourceWidth);
+    }
+    /**
      * Set the desired ambisonic order.
      * @param ambisonicOrder Desired ambisonic order.
      */
@@ -82,6 +88,7 @@ export class Encoder {
         }
         connect(this.merger, this.output);
     }
+    disposed = false;
     dispose() {
         if (!this.disposed) {
             for (let i = 0; i < this.channelGain.length; i++) {

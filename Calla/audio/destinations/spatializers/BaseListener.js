@@ -4,6 +4,8 @@ import { NoSpatializationNode } from "../../sources/spatializers/NoSpatializatio
  * Base class providing functionality for audio listeners.
  **/
 export class BaseListener extends BaseSpatializer {
+    input;
+    output;
     /**
      * Creates a spatializer that keeps track of position
      */

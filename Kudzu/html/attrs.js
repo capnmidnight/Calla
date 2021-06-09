@@ -3,6 +3,10 @@ import { isBoolean } from "../typeChecks";
  * A setter functor for HTML attributes.
  **/
 export class Attr {
+    key;
+    value;
+    bySetAttribute;
+    tags;
     /**
      * Creates a new setter functor for HTML Attributes
      * @param key - the attribute name.

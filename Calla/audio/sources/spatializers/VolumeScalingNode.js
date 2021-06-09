@@ -5,6 +5,8 @@ import { connect } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 const delta = vec3.create();
 export class VolumeScalingNode extends BaseEmitter {
+    gain;
+    listener;
     /**
      * Creates a new spatializer that performs no panning, only distance-based volume scaling
      */

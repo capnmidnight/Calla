@@ -36,25 +36,51 @@ export class OptionsFormToggleVideoEvent extends Event {
     constructor() { super("toggleVideo"); }
 }
 export class OptionsFormGamepadButtonUpEvent extends Event {
-    constructor() {
-        super("gamepadButtonUp");
-        this.button = 0;
-    }
+    button = 0;
+    constructor() { super("gamepadButtonUp"); }
 }
 export class OptionsFormGamepadAxisMaxedEvent extends Event {
-    constructor() {
-        super("gamepadAxisMaxed");
-        this.axis = 0;
-    }
+    axis = 0;
+    constructor() { super("gamepadAxisMaxed"); }
 }
 const keyWidthStyle = width("7em"), numberWidthStyle = width("3em"), avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(), gamepadChangedEvt = new OptionsFormGamepadChangedEvent(), selectAvatarEvt = new OptionsFormSelectAvatarEvent(), fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(), inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(), audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(), toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(), toggleVideoEvt = new OptionsFormToggleVideoEvent(), gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(), gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
 const disabler = disabled(true), enabler = disabled(false);
 export class OptionsForm extends FormDialog {
+    _drawHearing = false;
+    _inputBinding = new InputBinding();
+    _pad;
+    avatarURLInput;
+    clearAvatarURLButton;
+    useVideoAvatarButton;
+    avatarPreview;
+    fontSizeInput;
+    drawHearingCheck;
+    audioMinInput;
+    audioMaxInput;
+    audioRolloffInput;
+    gpSelect;
+    keyButtonUpInput;
+    keyButtonDownInput;
+    keyButtonLeftInput;
+    keyButtonRightInput;
+    keyButtonEmoteInput;
+    keyButtonToggleAudioInput;
+    keyButtonZoomOutInput;
+    keyButtonZoomInInput;
+    gpAxisLeftRightInput;
+    gpAxisUpDownInput;
+    gpButtonUpInput;
+    gpButtonDownInput;
+    gpButtonLeftInput;
+    gpButtonRightInput;
+    gpButtonEmoteInput;
+    gpButtonToggleAudioInput;
+    gpButtonZoomOutInput;
+    gpButtonZoomInInput;
+    user = null;
+    _avatarG;
     constructor() {
         super("options", "Options");
-        this._drawHearing = false;
-        this._inputBinding = new InputBinding();
-        this.user = null;
         this.element.classList.add("dialog-2");
         const _ = (evt) => () => this.dispatchEvent(evt);
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));
