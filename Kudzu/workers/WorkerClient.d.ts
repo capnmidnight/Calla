@@ -2,13 +2,13 @@ import { TypedEventBase } from "../events/EventBase";
 import type { progressCallback } from "../tasks/progressCallback";
 export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported: boolean;
-    private _script;
+    private scriptPath;
     private taskCounter;
     private workers;
     private invocations;
     private dispatchMessageResponse;
     private propertyValues;
-    private _ready;
+    readonly ready: Promise<unknown>;
     /**
      * Creates a new pooled worker method executor.
      * @param scriptPath - the path to the unminified script to use for the worker
@@ -52,19 +52,28 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      * ever pertaining to the invocation.
      **/
     private removeInvocation;
-    get ready(): Promise<void>;
-    get isDedicated(): boolean;
-    popWorker(): Worker;
-    get scriptPath(): string;
+    /**
+     * Invokes the given method on one particular worker thread.
+     * @param worker
+     * @param taskID
+     * @param methodName
+     * @param params
+     * @param transferables
+     * @param onProgress
+     */
+    private callMethodOnWorker;
+    private postMessage;
     /**
      * Set a property value on all of the worker threads.
      * @param propertyName - the name of the property to set.
      * @param value - the value to which to set the property.
      */
     protected setProperty<T>(propertyName: string, value: T): void;
+    /**
+     * Retrieve the most recently cached value for a given property.
+     * @param propertyName - the name of the property to get.
+     */
     protected getProperty<T>(propertyName: string): T;
-    private callMethodOnWorker;
-    private postMessage;
     /**
      * Execute a method on a round-robin selected worker thread.
      * @param methodName - the name of the method to execute.
@@ -99,5 +108,10 @@ export declare class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
     protected callMethodOnAll<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T[]>;
+    /**
+     * Remove one of the workers from the worker pool and create a new instance
+     * of the workerized object for just that worker. This is useful for creating
+     * workers that cache network requests in memory.
+     **/
     getDedicatedClient(): any;
 }

@@ -30,13 +30,14 @@ interface WorkerInvocation {
 export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
     static isSupported = "Worker" in globalThis;
 
-    private _script: string;
+    private scriptPath: string;
     private taskCounter: number;
     private workers: Worker[];
     private invocations = new Map<number, WorkerInvocation>();
     private dispatchMessageResponse: (evt: MessageEvent<WorkerServerMessages>) => void;
     private propertyValues = new Map<string, any>();
-    private _ready: Promise<void>;
+
+    readonly ready: Promise<unknown>;
 
     /**
      * Creates a new pooled worker method executor.
@@ -98,10 +99,10 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
             || !isString(minScriptPathOrWorkers)) {
-            this._script = scriptPath;
+            this.scriptPath = scriptPath;
         }
         else {
-            this._script = minScriptPathOrWorkers;
+            this.scriptPath = minScriptPathOrWorkers;
         }
 
         this.dispatchMessageResponse = (evt: MessageEvent<WorkerServerMessages>) => {
@@ -138,7 +139,7 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
             this.taskCounter = 0;
             this.workers = new Array(workerPoolSizeOrCurTaskCounter);
             for (let i = 0; i < workerPoolSizeOrCurTaskCounter; ++i) {
-                this.workers[i] = new Worker(this._script);
+                this.workers[i] = new Worker(this.scriptPath);
             }
         }
 
@@ -146,9 +147,7 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
             worker.addEventListener("message", this.dispatchMessageResponse);
         }
 
-        this._ready = (async () => {
-            await this.callMethodOnAll(GET_PROPERTY_VALUES_METHOD);
-        })();
+        this.ready = this.callMethodOnAll(GET_PROPERTY_VALUES_METHOD);
     }
 
     private propogateEvent(data: WorkerServerEventMessage) {
@@ -202,56 +201,15 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         return invocation;
     }
 
-    get ready() {
-        return this._ready;
-    }
-
-    get isDedicated() {
-        return this.workers.length === 1;
-    }
-
-    popWorker() {
-        if (this.isDedicated) {
-            throw new Error("Can't create a dedicated fetcher from a dedicated fetcher.");
-        }
-
-        const worker = this.workers.pop();
-        worker.removeEventListener("message", this.dispatchMessageResponse);
-        return worker;
-    }
-
-    get scriptPath() {
-        return this._script;
-    }
-
     /**
-     * Set a property value on all of the worker threads.
-     * @param propertyName - the name of the property to set.
-     * @param value - the value to which to set the property.
+     * Invokes the given method on one particular worker thread.
+     * @param worker
+     * @param taskID
+     * @param methodName
+     * @param params
+     * @param transferables
+     * @param onProgress
      */
-    protected setProperty<T>(propertyName: string, value: T): void {
-        if (!WorkerClient.isSupported) {
-            throw new Error("Workers are not supported on this system.");
-        }
-
-        this.propertyValues.set(propertyName, value);
-
-        const message: WorkerClientPropertySetMessage = {
-            type: WorkerClientMessageType.PropertySet,
-            taskID: this.taskCounter++,
-            propertyName,
-            value
-        };
-
-        for (const worker of this.workers) {
-            this.postMessage(worker, message);
-        }
-    }
-
-    protected getProperty<T>(propertyName: string): T {
-        return this.propertyValues.get(propertyName) as T;
-    }
-
     private callMethodOnWorker<T>(worker: Worker, taskID: number, methodName: string, params?: any[], transferables?: Transferable[], onProgress?: progressCallback): Promise<T> {
         return new Promise((resolve, reject) => {
             const invocation: WorkerInvocation = {
@@ -291,6 +249,38 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         else {
             worker.postMessage(message);
         }
+    }
+
+    /**
+     * Set a property value on all of the worker threads.
+     * @param propertyName - the name of the property to set.
+     * @param value - the value to which to set the property.
+     */
+    protected setProperty<T>(propertyName: string, value: T): void {
+        if (!WorkerClient.isSupported) {
+            throw new Error("Workers are not supported on this system.");
+        }
+
+        this.propertyValues.set(propertyName, value);
+
+        const message: WorkerClientPropertySetMessage = {
+            type: WorkerClientMessageType.PropertySet,
+            taskID: this.taskCounter++,
+            propertyName,
+            value
+        };
+
+        for (const worker of this.workers) {
+            this.postMessage(worker, message);
+        }
+    }
+
+    /**
+     * Retrieve the most recently cached value for a given property.
+     * @param propertyName - the name of the property to get.
+     */
+    protected getProperty<T>(propertyName: string): T {
+        return this.propertyValues.get(propertyName) as T;
     }
 
     /**
@@ -422,8 +412,19 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
                     subProgress));
     }
 
+    /**
+     * Remove one of the workers from the worker pool and create a new instance
+     * of the workerized object for just that worker. This is useful for creating
+     * workers that cache network requests in memory.
+     **/
     getDedicatedClient() {
+        if (this.workers.length === 1) {
+            throw new Error("Can't create a dedicated fetcher from a dedicated fetcher.");
+        }
+
         const Class = Object.getPrototypeOf(this).constructor;
-        return new Class(this.scriptPath, [this.popWorker()], this.taskCounter + 1);
+        const worker = this.workers.pop();
+        worker.removeEventListener("message", this.dispatchMessageResponse);
+        return new Class(this.scriptPath, [worker], this.taskCounter + 1);
     }
 }

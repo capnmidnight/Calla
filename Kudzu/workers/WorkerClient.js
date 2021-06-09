@@ -2,6 +2,112 @@ import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { arrayProgress } from "../tasks/arrayProgress";
 import { assertNever, isArray, isDefined, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { GET_PROPERTY_VALUES_METHOD, WorkerClientMessageType, WorkerServerMessageType } from "./WorkerMessages";
+class TreeTraversalResult {
+    constructor(init) {
+        this.found = false;
+        this.value = init;
+    }
+}
+function traverseObject(obj, callback, init = null) {
+    const result = new TreeTraversalResult(init);
+    const seen = new Set();
+    const queue = [[null, obj]];
+    while (queue.length > 0 && !result.found) {
+        const [key, here] = queue.shift();
+        if (!seen.has(here)) {
+            seen.add(here);
+            callback(key, here, result);
+            if (!result.found) {
+                for (const key of Object.keys(here)) {
+                    queue.push([key, here[key]]);
+                }
+            }
+        }
+    }
+    return result;
+}
+function findAll(obj, test) {
+    const result = traverseObject(obj, (key, val, cur) => {
+        if (test(key, val)) {
+            cur.value.push(val);
+        }
+    }, []);
+    return result.value;
+}
+function hasAny(obj, test) {
+    const result = traverseObject(obj, (key, val, cur) => {
+        if (test(key, val)) {
+            cur.found = true;
+        }
+    });
+    return result.found;
+}
+function accum(obj, test, act, init = null) {
+    const result = traverseObject(obj, (key, val, cur) => {
+        if (test(key, val)) {
+            cur.value = act(val, cur.value);
+        }
+    }, init);
+    return result.value;
+}
+function inStock(_key, value) {
+    return value && value.inStock;
+}
+const prices = {
+    a: {
+        name: "A",
+        price: 5,
+        inStock: false,
+        b: {
+            name: "B",
+            price: 5,
+            inStock: false,
+            c: {
+                name: "C",
+                price: 2,
+                inStock: true
+            },
+            d: {
+                name: "D",
+                price: 3,
+                inStock: false
+            }
+        },
+        e: {
+            name: "E",
+            price: 5,
+            inStock: false,
+            f: {
+                name: "F",
+                price: 5,
+                inStock: true,
+                g: {
+                    name: "G",
+                    price: 1,
+                    inStock: false
+                },
+                h: {
+                    name: "H",
+                    price: 4,
+                    inStock: true
+                }
+            }
+        }
+    },
+    i: {
+        name: "I",
+        price: 6,
+        inStock: true
+    }
+};
+console.log(findAll(prices, inStock));
+console.log(findAll(prices, inStock)
+    .map(v => v.price)
+    .reduce((a, b) => a + b, 0));
+console.log(accum(prices, inStock, (a, b) => a.price + b, 0));
+console.log(hasAny(prices, inStock));
+console.log(hasAny(prices, (_, v) => v.name === "I"));
+console.log(hasAny(prices, (_, v) => v.name === "Z"));
 export class WorkerClient extends TypedEventBase {
     constructor(scriptPath, minScriptPathOrWorkers, workerPoolSizeOrCurTaskCounter) {
         super();
@@ -25,10 +131,10 @@ export class WorkerClient extends TypedEventBase {
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
             || !isString(minScriptPathOrWorkers)) {
-            this._script = scriptPath;
+            this.scriptPath = scriptPath;
         }
         else {
-            this._script = minScriptPathOrWorkers;
+            this.scriptPath = minScriptPathOrWorkers;
         }
         this.dispatchMessageResponse = (evt) => {
             const data = evt.data;
@@ -63,15 +169,13 @@ export class WorkerClient extends TypedEventBase {
             this.taskCounter = 0;
             this.workers = new Array(workerPoolSizeOrCurTaskCounter);
             for (let i = 0; i < workerPoolSizeOrCurTaskCounter; ++i) {
-                this.workers[i] = new Worker(this._script);
+                this.workers[i] = new Worker(this.scriptPath);
             }
         }
         for (const worker of this.workers) {
             worker.addEventListener("message", this.dispatchMessageResponse);
         }
-        this._ready = (async () => {
-            await this.callMethodOnAll(GET_PROPERTY_VALUES_METHOD);
-        })();
+        this.ready = this.callMethodOnAll(GET_PROPERTY_VALUES_METHOD);
     }
     propogateEvent(data) {
         const evt = new TypedEvent(data.eventName);
@@ -115,46 +219,15 @@ export class WorkerClient extends TypedEventBase {
         this.invocations.delete(taskID);
         return invocation;
     }
-    get ready() {
-        return this._ready;
-    }
-    get isDedicated() {
-        return this.workers.length === 1;
-    }
-    popWorker() {
-        if (this.isDedicated) {
-            throw new Error("Can't create a dedicated fetcher from a dedicated fetcher.");
-        }
-        const worker = this.workers.pop();
-        worker.removeEventListener("message", this.dispatchMessageResponse);
-        return worker;
-    }
-    get scriptPath() {
-        return this._script;
-    }
     /**
-     * Set a property value on all of the worker threads.
-     * @param propertyName - the name of the property to set.
-     * @param value - the value to which to set the property.
+     * Invokes the given method on one particular worker thread.
+     * @param worker
+     * @param taskID
+     * @param methodName
+     * @param params
+     * @param transferables
+     * @param onProgress
      */
-    setProperty(propertyName, value) {
-        if (!WorkerClient.isSupported) {
-            throw new Error("Workers are not supported on this system.");
-        }
-        this.propertyValues.set(propertyName, value);
-        const message = {
-            type: WorkerClientMessageType.PropertySet,
-            taskID: this.taskCounter++,
-            propertyName,
-            value
-        };
-        for (const worker of this.workers) {
-            this.postMessage(worker, message);
-        }
-    }
-    getProperty(propertyName) {
-        return this.propertyValues.get(propertyName);
-    }
     callMethodOnWorker(worker, taskID, methodName, params, transferables, onProgress) {
         return new Promise((resolve, reject) => {
             const invocation = {
@@ -190,6 +263,33 @@ export class WorkerClient extends TypedEventBase {
         else {
             worker.postMessage(message);
         }
+    }
+    /**
+     * Set a property value on all of the worker threads.
+     * @param propertyName - the name of the property to set.
+     * @param value - the value to which to set the property.
+     */
+    setProperty(propertyName, value) {
+        if (!WorkerClient.isSupported) {
+            throw new Error("Workers are not supported on this system.");
+        }
+        this.propertyValues.set(propertyName, value);
+        const message = {
+            type: WorkerClientMessageType.PropertySet,
+            taskID: this.taskCounter++,
+            propertyName,
+            value
+        };
+        for (const worker of this.workers) {
+            this.postMessage(worker, message);
+        }
+    }
+    /**
+     * Retrieve the most recently cached value for a given property.
+     * @param propertyName - the name of the property to get.
+     */
+    getProperty(propertyName) {
+        return this.propertyValues.get(propertyName);
     }
     /**
      * Execute a method on a round-robin selected worker thread.
@@ -250,9 +350,19 @@ export class WorkerClient extends TypedEventBase {
         this.taskCounter += this.workers.length;
         return await arrayProgress(onProgress, this.workers, (worker, subProgress, i) => this.callMethodOnWorker(worker, rootTaskID + i, methodName, parameters, null, subProgress));
     }
+    /**
+     * Remove one of the workers from the worker pool and create a new instance
+     * of the workerized object for just that worker. This is useful for creating
+     * workers that cache network requests in memory.
+     **/
     getDedicatedClient() {
+        if (this.workers.length === 1) {
+            throw new Error("Can't create a dedicated fetcher from a dedicated fetcher.");
+        }
         const Class = Object.getPrototypeOf(this).constructor;
-        return new Class(this.scriptPath, [this.popWorker()], this.taskCounter + 1);
+        const worker = this.workers.pop();
+        worker.removeEventListener("message", this.dispatchMessageResponse);
+        return new Class(this.scriptPath, [worker], this.taskCounter + 1);
     }
 }
 WorkerClient.isSupported = "Worker" in globalThis;
