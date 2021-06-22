@@ -108,7 +108,6 @@ export class DeviceManager
                 const device = arrayScan(
                     devices,
                     (d) => d.deviceId === this.preferredAudioOutputID,
-                    (d) => d.deviceId === "communications",
                     (d) => d.deviceId === "default",
                     (d) => d.deviceId.length > 0);
                 if (device) {
@@ -251,7 +250,6 @@ export class DeviceManager
         const device = arrayScan(
             devices,
             (d) => d.deviceId === this.preferredAudioInputID,
-            (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
             (d) => d.deviceId.length > 0);
         return device;

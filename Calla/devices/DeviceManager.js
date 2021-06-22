@@ -82,7 +82,7 @@ export class DeviceManager extends TypedEventBase {
             if (canChangeAudioOutput && destination.stream !== this.element.srcObject) {
                 this.element.srcObject = destination.stream;
                 const devices = await this.getAudioOutputDevices();
-                const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d.deviceId.length > 0);
+                const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioOutputID, (d) => d.deviceId === "default", (d) => d.deviceId.length > 0);
                 if (device) {
                     await this.setAudioOutputDevice(device);
                 }
@@ -188,7 +188,7 @@ export class DeviceManager extends TypedEventBase {
     }
     async getPreferredAudioInput() {
         const devices = await this.getAudioInputDevices();
-        const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d.deviceId.length > 0);
+        const device = arrayScan(devices, (d) => d.deviceId === this.preferredAudioInputID, (d) => d.deviceId === "default", (d) => d.deviceId.length > 0);
         return device;
     }
     async getPreferredVideoInput() {
