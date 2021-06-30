@@ -7,18 +7,24 @@ import { createScript } from "../html/script";
 import { Img } from "../html/tags";
 import { dumpProgress, progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
-import { isDefined, isNullOrUndefined, isString, isXHRBodyInit } from "../typeChecks";
+import { isDefined, isString, isXHRBodyInit } from "../typeChecks";
 import type { BufferAndContentType } from "./BufferAndContentType";
 import type { IFetcher } from "./IFetcher";
 
 function normalizeMap<KeyT, ValueT>(map: Map<KeyT, ValueT>, key: KeyT, value: ValueT) {
-    if (isNullOrUndefined(map)) {
-        map = new Map<KeyT, ValueT>();
+    const newMap = new Map<KeyT, ValueT>();
+
+    if (isDefined(map)) {
+        for (const [key, value] of map) {
+            newMap.set(key, value);
+        }
+
+        if (!newMap.has(key)) {
+            newMap.set(key, value);
+        }
     }
-    if (!map.has(key)) {
-        map.set(key, value);
-    }
-    return map;
+
+    return newMap;
 }
 
 export async function fileToImage(file: string) {
