@@ -6,18 +6,22 @@ export interface ErsatzElement {
     element: HTMLElement;
 }
 
+export interface ErsatzElements {
+    elements: HTMLElement[];
+}
+
 interface IAppliable {
     apply(x: any): any;
 }
 
 type makesIAppliable = (v: any) => IAppliable;
 
+export type Appendable = string | Node | ErsatzElement | ErsatzElements;
 
-export type TagChild = Node
-    | ErsatzElement
+
+export type TagChild = Appendable
     | IAppliable
     | makesIAppliable
-    | string
     | number
     | boolean
     | Date
@@ -27,6 +31,12 @@ function isErsatzElement(obj: any): obj is ErsatzElement {
     return isObject(obj)
         && "element" in obj
         && (obj as any).element instanceof Node;
+}
+
+function isErsatzElements(obj: any): obj is ErsatzElements {
+    return isObject(obj)
+        && "elements" in obj
+        && (obj as any).elements instanceof Array;
 }
 
 export interface IFocusable {
@@ -45,7 +55,24 @@ export function elementIsDisplayed(elem: HTMLElement): boolean {
     return elem.style.display !== "none";
 }
 
-export function getElement<T extends HTMLElement>(selector: string) {
+export function elementAppend(parent: ParentNode, ...children: Appendable[]) {
+    const arr = new Array<string | Node>();
+    for (const child of children) {
+        if (isErsatzElement(child)) {
+            arr.push(child.element);
+        }
+        else if (isErsatzElements(child)) {
+            arr.push(...child.elements);
+        }
+        else {
+            arr.push(child);
+        }
+    }
+
+    parent.append(...arr);
+}
+
+export function getElement<T extends HTMLElement>(selector: string): T {
     return document.querySelector<T>(selector);
 }
 
@@ -115,6 +142,9 @@ export function tag(name: string, ...rest: TagChild[]) {
                 }
 
                 elem.appendChild(x);
+            }
+            else if (isErsatzElements(x)) {
+                elem.append(...x.elements);
             }
             else {
                 if (x instanceof Function) {

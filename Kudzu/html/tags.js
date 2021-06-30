@@ -6,6 +6,11 @@ function isErsatzElement(obj) {
         && "element" in obj
         && obj.element instanceof Node;
 }
+function isErsatzElements(obj) {
+    return isObject(obj)
+        && "elements" in obj
+        && obj.elements instanceof Array;
+}
 export function isFocusable(elem) {
     return "focus" in elem && isFunction(elem.focus);
 }
@@ -14,6 +19,21 @@ export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
 }
 export function elementIsDisplayed(elem) {
     return elem.style.display !== "none";
+}
+export function elementAppend(parent, ...children) {
+    const arr = new Array();
+    for (const child of children) {
+        if (isErsatzElement(child)) {
+            arr.push(child.element);
+        }
+        else if (isErsatzElements(child)) {
+            arr.push(...child.elements);
+        }
+        else {
+            arr.push(child);
+        }
+    }
+    parent.append(...arr);
 }
 export function getElement(selector) {
     return document.querySelector(selector);
@@ -75,6 +95,9 @@ export function tag(name, ...rest) {
                     x = document.createTextNode(x.toLocaleString());
                 }
                 elem.appendChild(x);
+            }
+            else if (isErsatzElements(x)) {
+                elem.append(...x.elements);
             }
             else {
                 if (x instanceof Function) {

@@ -2,17 +2,22 @@ import { CSSInJSRule, CssPropSet } from "./css";
 export interface ErsatzElement {
     element: HTMLElement;
 }
+export interface ErsatzElements {
+    elements: HTMLElement[];
+}
 interface IAppliable {
     apply(x: any): any;
 }
 declare type makesIAppliable = (v: any) => IAppliable;
-export declare type TagChild = Node | ErsatzElement | IAppliable | makesIAppliable | string | number | boolean | Date | CssPropSet;
+export declare type Appendable = string | Node | ErsatzElement | ErsatzElements;
+export declare type TagChild = Appendable | IAppliable | makesIAppliable | number | boolean | Date | CssPropSet;
 export interface IFocusable {
     focus(): void;
 }
 export declare function isFocusable(elem: any): elem is IFocusable;
 export declare function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType?: string): void;
 export declare function elementIsDisplayed(elem: HTMLElement): boolean;
+export declare function elementAppend(parent: ParentNode, ...children: Appendable[]): void;
 export declare function getElement<T extends HTMLElement>(selector: string): T;
 export declare function getButton(selector: string): HTMLButtonElement;
 export declare function getInput(selector: string): HTMLInputElement;

@@ -25,11 +25,17 @@ export class Attr {
      * @param elem - the element on which to set the attribute.
      */
     apply(elem: HTMLElement) {
+        const isDataSet = this.key.startsWith("data-");
         const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
+            || this.tags.indexOf(elem.tagName) > -1
+            || isDataSet;
 
         if (!isValid) {
             console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (isDataSet) {
+            const subkey = this.key.substring(5);
+            elem.dataset[subkey] = this.value;
         }
         else if (this.key === "style") {
             Object.assign(elem.style, this.value);
@@ -427,7 +433,7 @@ export function data(value: string) { return new Attr("data", value, false, "obj
 /**
  * Lets you attach custom attributes to an HTML element.
  */
-export function customData(name: string, value: any) { return new Attr("data" + name, [], false, value); }
+export function customData(name: string, value: any) { return new Attr("data-" + name, value, false); }
 
 /**
  * Indicates the date and time associated with the element.
