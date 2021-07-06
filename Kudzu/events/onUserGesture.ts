@@ -12,8 +12,8 @@ const gestures = [
     "touchend"
 ];
 
-function identityPromise() {
-    return Promise.resolve();
+function identityPromise(): Promise<boolean> {
+    return Promise.resolve(true);
 }
 
 /**
@@ -33,9 +33,10 @@ export function onUserGesture(callback: () => void, test?: () => Promise<boolean
 
             callback();
         }
-    }
+    };
 
     for (const gesture of gestures) {
         window.addEventListener(gesture, check);
     }
 }
+

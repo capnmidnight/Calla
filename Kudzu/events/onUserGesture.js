@@ -11,7 +11,7 @@ const gestures = [
     "touchend"
 ];
 function identityPromise() {
-    return Promise.resolve();
+    return Promise.resolve(true);
 }
 /**
  * This is not an event handler that you can add to an element. It's a global event that

@@ -703,6 +703,14 @@ export declare function type(value: string): Attr;
   **/
 export declare function value(value: string): Attr;
 /**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export declare function valueAsNumber(value: number): Attr;
+/**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export declare function valueAsDate(value: Date): Attr;
+/**
  * setting the volume at which a media element plays.
   **/
 export declare function volume(value: number): Attr;

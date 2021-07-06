@@ -747,6 +747,14 @@ export function type(value) { return new Attr("type", value, false, "button", "i
   **/
 export function value(value) { return new Attr("value", value, false, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
 /**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export function valueAsNumber(value) { return new Attr("valueAsNumber", value, false, "input"); }
+/**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export function valueAsDate(value) { return new Attr("valueAsDate", value, false, "input"); }
+/**
  * setting the volume at which a media element plays.
   **/
 export function volume(value) { return new Attr("volume", value, false, "audio", "video"); }

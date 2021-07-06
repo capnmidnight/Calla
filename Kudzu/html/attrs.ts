@@ -920,6 +920,16 @@ export function type(value: string) { return new Attr("type", value, false, "but
 export function value(value: string) { return new Attr("value", value, false, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
 
 /**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export function valueAsNumber(value: number) { return new Attr("valueAsNumber", value, false, "input"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+  **/
+export function valueAsDate(value: Date) { return new Attr("valueAsDate", value, false, "input"); }
+
+/**
  * setting the volume at which a media element plays.
   **/
 export function volume(value: number) { return new Attr("volume", value, false, "audio", "video"); }
