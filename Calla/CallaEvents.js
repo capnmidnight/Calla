@@ -27,6 +27,16 @@ export class CallaUserEvent extends CallaEvent {
         this.id = id;
     }
 }
+export class CallaUserJoinedEvent extends CallaUserEvent {
+    constructor(id) {
+        super("userJoined", id);
+    }
+}
+export class CallaUserLeftEvent extends CallaUserEvent {
+    constructor(id) {
+        super("userLeft", id);
+    }
+}
 export class CallaParticipantEvent extends CallaUserEvent {
     displayName;
     constructor(type, id, displayName) {

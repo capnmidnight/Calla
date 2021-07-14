@@ -2,7 +2,7 @@ import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
 export declare type CallaTeleconferenceEventType = "serverConnected" | "serverDisconnected" | "serverFailed" | "conferenceConnected" | "conferenceJoined" | "conferenceFailed" | "conferenceRestored" | "conferenceLeft" | "participantJoined" | "participantLeft" | "userNameChanged" | "audioMuteStatusChanged" | "videoMuteStatusChanged" | "audioActivity" | "audioAdded" | "audioRemoved" | "videoAdded" | "videoRemoved";
-export declare type CallaMetadataEventType = "userPosed" | "userPointer" | "setAvatarEmoji" | "setAvatarURL" | "emote" | "chat";
+export declare type CallaMetadataEventType = "userJoined" | "userLeft" | "userPosed" | "userPointer" | "setAvatarEmoji" | "setAvatarURL" | "emote" | "chat";
 export declare type CallaEventType = CallaTeleconferenceEventType | CallaMetadataEventType;
 export declare class CallaEvent<T extends CallaEventType> extends Event {
     eventType: T;
@@ -20,6 +20,12 @@ export declare class CallaTeleconferenceServerFailedEvent extends CallaEvent<"se
 export declare class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
     id: string;
     constructor(type: T, id: string);
+}
+export declare class CallaUserJoinedEvent extends CallaUserEvent<"userJoined"> {
+    constructor(id: string);
+}
+export declare class CallaUserLeftEvent extends CallaUserEvent<"userLeft"> {
+    constructor(id: string);
 }
 export declare class CallaParticipantEvent<T extends CallaTeleconferenceEventType> extends CallaUserEvent<T> {
     displayName: string;
@@ -160,6 +166,8 @@ export interface CallaTeleconferenceEvents {
     videoRemoved: CallaVideoStreamRemovedEvent;
 }
 export interface CallaMetadataEvents {
+    userJoined: CallaUserJoinedEvent;
+    userLeft: CallaUserLeftEvent;
     userPosed: CallaUserPosedEvent;
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;

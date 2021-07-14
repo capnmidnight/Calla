@@ -21,7 +21,9 @@ export type CallaTeleconferenceEventType = "serverConnected"
     | "videoAdded"
     | "videoRemoved";
 
-export type CallaMetadataEventType = "userPosed"
+export type CallaMetadataEventType = "userJoined"
+    | "userLeft"
+    | "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
     | "setAvatarURL"
@@ -60,6 +62,18 @@ export class CallaTeleconferenceServerFailedEvent
 export class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
     constructor(type: T, public id: string) {
         super(type);
+    }
+}
+
+export class CallaUserJoinedEvent extends CallaUserEvent<"userJoined"> {
+    constructor(id: string) {
+        super("userJoined", id);
+    }
+}
+
+export class CallaUserLeftEvent extends CallaUserEvent<"userLeft"> {
+    constructor(id: string) {
+        super("userLeft", id);
     }
 }
 
@@ -282,6 +296,8 @@ export interface CallaTeleconferenceEvents {
 }
 
 export interface CallaMetadataEvents {
+    userJoined: CallaUserJoinedEvent;
+    userLeft: CallaUserLeftEvent;
     userPosed: CallaUserPosedEvent;
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;
