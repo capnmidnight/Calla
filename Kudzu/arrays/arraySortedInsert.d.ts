@@ -15,3 +15,14 @@ export declare function arraySortedInsert<T, V>(arr: T[], item: T, keySelector?:
  * @param keySelector
  */
 export declare function arraySortByKey<T, V>(arr: ReadonlyArray<T>, keySelector: (obj: T) => V): T[];
+/**
+ * Creates a new array that is sorted by the key extracted
+ * by the keySelector callback, not modifying the input array,
+ * (unlike JavaScript's own Array.prototype.sort).
+ *
+ * If the values have a number at the beginning, they'll be sorted
+ * by that number.
+ * @param arr
+ * @param keySelector
+ */
+export declare function arraySortNumericByKey<T>(arr: ReadonlyArray<T>, keySelector: (obj: T) => string): T[];
