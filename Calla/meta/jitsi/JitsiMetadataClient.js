@@ -55,6 +55,10 @@ export class JitsiMetadataClient extends BaseMetadataClient {
                     case "chat":
                         this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                         break;
+                    case "userJoined":
+                    case "userLeft":
+                        // not used here
+                        break;
                     default:
                         assertNever(command);
                 }

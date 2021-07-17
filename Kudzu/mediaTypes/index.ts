@@ -1,5 +1,5 @@
-import { arraySortByKey, arraySortedInsert } from "./arrays/arraySortedInsert";
-import { isArray, isDefined, isNullOrUndefined, isNumber, isString } from "./typeChecks";
+import { arraySortByKey, arraySortedInsert } from "../arrays/arraySortedInsert";
+import { isArray, isDefined, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 
 const byValue = new Map<string, MediaType>();
 const byExtension = new Map<string, MediaType[]>();
