@@ -37,6 +37,27 @@ export class CallaUserLeftEvent extends CallaUserEvent {
         super("userLeft", id);
     }
 }
+export class CallaRTCIceEvent extends CallaUserEvent {
+    ice;
+    constructor(id, ice) {
+        super("iceReceived", id);
+        this.ice = ice;
+    }
+}
+export class CallaRTCOfferEvent extends CallaUserEvent {
+    offer;
+    constructor(id, offer) {
+        super("offerReceived", id);
+        this.offer = offer;
+    }
+}
+export class CallaRTCAnswerEvent extends CallaUserEvent {
+    answer;
+    constructor(id, answer) {
+        super("answerReceived", id);
+        this.answer = answer;
+    }
+}
 export class CallaParticipantEvent extends CallaUserEvent {
     displayName;
     constructor(type, id, displayName) {

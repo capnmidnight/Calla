@@ -57,6 +57,9 @@ export class JitsiMetadataClient extends BaseMetadataClient {
                         break;
                     case "userJoined":
                     case "userLeft":
+                    case "iceReceived":
+                    case "answerReceived":
+                    case "offerReceived":
                         // not used here
                         break;
                     default:

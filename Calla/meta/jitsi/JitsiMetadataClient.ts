@@ -81,7 +81,11 @@ export class JitsiMetadataClient
                     case "chat":
                         this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                         break;
-                    case "userJoined": case "userLeft":
+                    case "userJoined":
+                    case "userLeft":
+                    case "iceReceived":
+                    case "answerReceived":
+                    case "offerReceived":
                         // not used here
                         break;
                     default:

@@ -23,6 +23,9 @@ export type CallaTeleconferenceEventType = "serverConnected"
 
 export type CallaMetadataEventType = "userJoined"
     | "userLeft"
+    | "iceReceived"
+    | "offerReceived"
+    | "answerReceived"
     | "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
@@ -74,6 +77,24 @@ export class CallaUserJoinedEvent extends CallaUserEvent<"userJoined"> {
 export class CallaUserLeftEvent extends CallaUserEvent<"userLeft"> {
     constructor(id: string) {
         super("userLeft", id);
+    }
+}
+
+export class CallaRTCIceEvent extends CallaUserEvent<"iceReceived"> {
+    constructor(id: string, public readonly ice: RTCIceCandidate) {
+        super("iceReceived", id);
+    }
+}
+
+export class CallaRTCOfferEvent extends CallaUserEvent<"offerReceived"> {
+    constructor(id: string, public readonly offer: RTCSessionDescription) {
+        super("offerReceived", id);
+    }
+}
+
+export class CallaRTCAnswerEvent extends CallaUserEvent<"answerReceived"> {
+    constructor(id: string, public readonly answer: RTCSessionDescription) {
+        super("answerReceived", id);
     }
 }
 
@@ -298,6 +319,9 @@ export interface CallaTeleconferenceEvents {
 export interface CallaMetadataEvents {
     userJoined: CallaUserJoinedEvent;
     userLeft: CallaUserLeftEvent;
+    iceReceived: CallaRTCIceEvent;
+    offerReceived: CallaRTCOfferEvent;
+    answerReceived: CallaRTCAnswerEvent;
     userPosed: CallaUserPosedEvent;
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;
