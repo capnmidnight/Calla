@@ -917,7 +917,7 @@ export function type(value: string) { return new Attr("type", value, false, "but
 /**
  * Defines a default value which will be displayed in the element on page load.
   **/
-export function value(value: string) { return new Attr("value", value, false, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+export function value(value: string | number) { return new Attr("value", value, false, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
 
 /**
  * Defines a default value which will be displayed in the element on page load.

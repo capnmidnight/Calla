@@ -701,7 +701,7 @@ export declare function type(value: string): Attr;
 /**
  * Defines a default value which will be displayed in the element on page load.
   **/
-export declare function value(value: string): Attr;
+export declare function value(value: string | number): Attr;
 /**
  * Defines a default value which will be displayed in the element on page load.
   **/
