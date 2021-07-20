@@ -31,10 +31,12 @@ export class BaseClientLoader {
         if (isFunction(onProgress)) {
             p = onProgress;
         }
-        await this._load(f, p);
+        await this.onload(f, p);
         const t = this.createTeleconferenceClient(f, a);
         const m = this.createMetadataClient(f, a, t);
         return Promise.resolve(new Calla(f, t, m));
+    }
+    async onload(_fetcher, _onProgress) {
     }
 }
 //# sourceMappingURL=BaseClientLoader.js.map

@@ -52,13 +52,16 @@ export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt> i
             p = onProgress;
         }
 
-        await this._load(f, p);
+        await this.onload(f, p);
+
         const t = this.createTeleconferenceClient(f, a);
         const m = this.createMetadataClient(f, a, t);
         return Promise.resolve(new Calla(f, t, m));
     }
 
-    protected abstract _load(fetcher: IFetcher, onProgress?: progressCallback): Promise<void>;
+    protected async onload(_fetcher: IFetcher, _onProgress?: progressCallback): Promise<void> {
+    }
+
     protected abstract createTeleconferenceClient(fetcher: IFetcher, audio: AudioManager): TeleT;
     protected abstract createMetadataClient(fetcher: IFetcher, audio: AudioManager, tele: TeleT): IMetadataClientExt;
 }

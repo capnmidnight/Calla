@@ -15,7 +15,7 @@ export abstract class BaseJitsiClientLoader extends BaseClientLoader<JitsiTeleco
         super();
     }
 
-    async _load(fetcher: IFetcher, onProgress?: progressCallback): Promise<void> {
+    protected async onload(fetcher: IFetcher, onProgress?: progressCallback): Promise<void> {
         if (!this.loaded) {
             console.info("Connecting to:", this.host);
             const progs = splitProgress(onProgress, [1, 3]);

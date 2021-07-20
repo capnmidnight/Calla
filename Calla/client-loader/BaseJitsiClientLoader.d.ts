@@ -9,6 +9,6 @@ export declare abstract class BaseJitsiClientLoader extends BaseClientLoader<Jit
     protected bridgeMUC: string;
     protected loaded: boolean;
     constructor(host: string, bridgeHost: string, bridgeMUC: string);
-    _load(fetcher: IFetcher, onProgress?: progressCallback): Promise<void>;
+    protected onload(fetcher: IFetcher, onProgress?: progressCallback): Promise<void>;
     protected createTeleconferenceClient(fetcher: IFetcher, audio: AudioManager): JitsiTeleconferenceClient;
 }

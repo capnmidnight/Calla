@@ -13,7 +13,7 @@ export class BaseJitsiClientLoader extends BaseClientLoader {
         this.bridgeHost = bridgeHost;
         this.bridgeMUC = bridgeMUC;
     }
-    async _load(fetcher, onProgress) {
+    async onload(fetcher, onProgress) {
         if (!this.loaded) {
             console.info("Connecting to:", this.host);
             const progs = splitProgress(onProgress, [1, 3]);
