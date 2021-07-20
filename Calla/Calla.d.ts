@@ -55,7 +55,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     userExists(id: string): boolean;
     getUserNames(): string[][];
     connect(): Promise<void>;
-    join(roomName: string): Promise<void>;
+    join(roomName: string, enableTeleconference: boolean): Promise<void>;
     identify(userName: string): Promise<void>;
     leave(): Promise<void>;
     disconnect(): Promise<void>;

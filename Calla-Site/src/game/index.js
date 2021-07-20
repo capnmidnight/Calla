@@ -133,7 +133,7 @@ import { Settings } from "./Settings";
         const path = `${window.location.pathname}#${roomName}`;
         window.history.replaceState({}, title, path);
         await directory.startAsync(roomName, login.userName);
-        await client.join(roomName);
+        await client.join(roomName, true);
         await client.identify(login.userName);
     });
     options.addEventListener("audioPropertiesChanged", setAudioProperties);

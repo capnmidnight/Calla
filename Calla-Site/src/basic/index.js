@@ -66,7 +66,7 @@ async function connect() {
     controls.userName.disabled = true;
     controls.connect.disabled = true;
     // and start the connection.
-    await client.join(roomName);
+    await client.join(roomName, true);
     await client.identify(userName);
 }
 /**

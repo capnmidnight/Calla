@@ -284,13 +284,13 @@ export class Calla
         }
     }
 
-    async join(roomName: string): Promise<void> {
+    async join(roomName: string, enableTeleconference: boolean): Promise<void> {
         const logger = new Logger();
         logger.log("Calla.join:tele", roomName);
-        await this._tele.join(roomName);
+        await this._tele.join(roomName, enableTeleconference);
         if (this._tele.conferenceState === ConnectionState.Connected) {
             logger.log("Calla.join:meta", roomName);
-            await this._meta.join(roomName);
+            await this._meta.join(roomName, enableTeleconference);
         }
         logger.log("Calla.joined");
     }

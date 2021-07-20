@@ -8,6 +8,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     private bridgeHost;
     private bridgeMUC;
     useDefaultMetadataClient: boolean;
+    private enableTeleconference;
     private connection;
     conference: JitsiConference;
     private tracks;
@@ -16,7 +17,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     private _on;
     private _off;
     connect(): Promise<void>;
-    join(roomName: string, password?: string): Promise<void>;
+    join(roomName: string, enableTeleconference: boolean): Promise<void>;
     identify(userName: string): Promise<void>;
     private tryRemoveTrack;
     leave(): Promise<void>;

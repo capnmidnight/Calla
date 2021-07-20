@@ -114,7 +114,7 @@ export abstract class BaseTeleconferenceClient
         this.setConnectionState(ConnectionState.Connecting);
     }
 
-    async join(_roomName: string, _password?: string): Promise<void> {
+    async join(_roomName: string, _enableTeleconference: boolean): Promise<void> {
         this.setConferenceState(ConnectionState.Connecting);
     }
 

@@ -31,7 +31,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     protected onDispatching<T extends Event>(evt: T): void;
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
     connect(): Promise<void>;
-    join(_roomName: string, _password?: string): Promise<void>;
+    join(_roomName: string, _enableTeleconference: boolean): Promise<void>;
     leave(): Promise<void>;
     disconnect(): Promise<void>;
     abstract userExists(id: string): boolean;

@@ -84,7 +84,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     async connect() {
         this.setConnectionState(ConnectionState.Connecting);
     }
-    async join(_roomName, _password) {
+    async join(_roomName, _enableTeleconference) {
         this.setConferenceState(ConnectionState.Connecting);
     }
     async leave() {

@@ -34,6 +34,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     bridgeHost;
     bridgeMUC;
     useDefaultMetadataClient = false;
+    enableTeleconference = true;
     connection = null;
     conference = null;
     tracks = new Map();
@@ -103,8 +104,9 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         this.connection.connect();
         await connectTask;
     }
-    async join(roomName, password) {
-        await super.join(roomName, password);
+    async join(roomName, enableTeleconference) {
+        await super.join(roomName, enableTeleconference);
+        this.enableTeleconference = enableTeleconference;
         const isoRoomName = roomName.toLocaleLowerCase();
         if (isoRoomName !== this.roomName) {
             if (this.conference) {
@@ -228,7 +230,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                 });
             });
             const joinTask = once(this, "conferenceJoined");
-            this.conference.join(password);
+            this.conference.join(null);
             await joinTask;
         }
     }
@@ -339,7 +341,8 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             await removeTask;
         }
         if (isDefined(this.conference)
-            && isDefined(evt.audio)) {
+            && isDefined(evt.audio)
+            && this.enableTeleconference) {
             const addTask = this.getNext("audioAdded", this.localUserID);
             const opts = {
                 devices: ["audio"],
