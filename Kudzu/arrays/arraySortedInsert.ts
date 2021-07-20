@@ -47,10 +47,20 @@ function arraySortedInsertInternal<T, V>(arr: T[], item: T, ks: (obj: T) => V, a
  * @param keySelector
  */
 export function arraySortByKey<T, V>(arr: ReadonlyArray<T>, keySelector: (obj: T) => V): T[] {
-    const newArr = new Array<T>();
-    for (const obj of arr) {
-        arraySortedInsertInternal(newArr, obj, keySelector, true);
-    }
+    const newArr = Array.from(arr);
+    newArr.sort((a, b) => {
+        const keyA = keySelector(a);
+        const keyB = keySelector(b);
+        if (keyA < keyB) {
+            return -1;
+        }
+        else if (keyA > keyB) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    });
 
     return newArr;
 }
@@ -87,10 +97,10 @@ export function arraySortNumericByKey<T>(arr: ReadonlyArray<T>, keySelector: (ob
             }
         }
 
-        if (a < b) {
+        if (keyA < keyB) {
             return -1;
         }
-        else if (a > b) {
+        else if (keyA > keyB) {
             return 1;
         }
         else {
