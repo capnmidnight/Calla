@@ -1,12 +1,20 @@
 import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
-export declare type CallaTeleconferenceEventType = "serverConnected" | "serverDisconnected" | "serverFailed" | "conferenceConnected" | "conferenceJoined" | "conferenceFailed" | "conferenceRestored" | "conferenceLeft" | "participantJoined" | "participantLeft" | "userNameChanged" | "audioMuteStatusChanged" | "videoMuteStatusChanged" | "audioActivity" | "audioAdded" | "audioRemoved" | "videoAdded" | "videoRemoved";
-export declare type CallaMetadataEventType = "userJoined" | "userLeft" | "iceReceived" | "offerReceived" | "answerReceived" | "userPosed" | "userPointer" | "setAvatarEmoji" | "setAvatarURL" | "emote" | "chat";
+export declare type CallaTeleconferenceEventType = "error" | "info" | "serverConnected" | "serverDisconnected" | "serverFailed" | "conferenceConnected" | "conferenceJoined" | "conferenceFailed" | "conferenceRestored" | "conferenceLeft" | "participantJoined" | "participantLeft" | "userNameChanged" | "audioMuteStatusChanged" | "videoMuteStatusChanged" | "audioActivity" | "audioAdded" | "audioRemoved" | "videoAdded" | "videoRemoved";
+export declare type CallaMetadataEventType = "error" | "info" | "userJoined" | "userLeft" | "iceReceived" | "offerReceived" | "answerReceived" | "userPosed" | "userPointer" | "setAvatarEmoji" | "setAvatarURL" | "emote" | "chat";
 export declare type CallaEventType = CallaTeleconferenceEventType | CallaMetadataEventType;
 export declare class CallaEvent<T extends CallaEventType> extends Event {
     eventType: T;
     constructor(eventType: T);
+}
+export declare class CallaErrorEvent extends CallaEvent<"error"> {
+    readonly error: Error;
+    constructor(error: Error);
+}
+export declare class CallaInfoEvent extends CallaEvent<"info"> {
+    readonly message: string;
+    constructor(message: string);
 }
 export declare class CallaTeleconferenceServerConnectedEvent extends CallaEvent<"serverConnected"> {
     constructor();
@@ -158,6 +166,8 @@ export declare class CallaChatEvent extends CallaUserEvent<"chat"> {
     constructor(id: string, text: string);
 }
 export interface CallaTeleconferenceEvents {
+    error: CallaErrorEvent;
+    info: CallaInfoEvent;
     serverConnected: CallaTeleconferenceServerConnectedEvent;
     serverDisconnected: CallaTeleconferenceServerDisconnectedEvent;
     serverFailed: CallaTeleconferenceServerFailedEvent;
@@ -178,6 +188,8 @@ export interface CallaTeleconferenceEvents {
     videoRemoved: CallaVideoStreamRemovedEvent;
 }
 export interface CallaMetadataEvents {
+    error: CallaErrorEvent;
+    info: CallaInfoEvent;
     userJoined: CallaUserJoinedEvent;
     userLeft: CallaUserLeftEvent;
     iceReceived: CallaRTCIceEvent;

@@ -5,6 +5,20 @@ export class CallaEvent extends Event {
         this.eventType = eventType;
     }
 }
+export class CallaErrorEvent extends CallaEvent {
+    error;
+    constructor(error) {
+        super("error");
+        this.error = error;
+    }
+}
+export class CallaInfoEvent extends CallaEvent {
+    message;
+    constructor(message) {
+        super("info");
+        this.message = message;
+    }
+}
 export class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
     constructor() {
         super("serverConnected");

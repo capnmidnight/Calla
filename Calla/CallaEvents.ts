@@ -2,7 +2,9 @@ import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
 
-export type CallaTeleconferenceEventType = "serverConnected"
+export type CallaTeleconferenceEventType = "error"
+    | "info"
+    | "serverConnected"
     | "serverDisconnected"
     | "serverFailed"
     | "conferenceConnected"
@@ -21,7 +23,9 @@ export type CallaTeleconferenceEventType = "serverConnected"
     | "videoAdded"
     | "videoRemoved";
 
-export type CallaMetadataEventType = "userJoined"
+export type CallaMetadataEventType = "error"
+    | "info"
+    | "userJoined"
     | "userLeft"
     | "iceReceived"
     | "offerReceived"
@@ -38,6 +42,20 @@ export type CallaEventType = CallaTeleconferenceEventType | CallaMetadataEventTy
 export class CallaEvent<T extends CallaEventType> extends Event {
     constructor(public eventType: T) {
         super(eventType);
+    }
+}
+
+export class CallaErrorEvent
+    extends CallaEvent<"error"> {
+    constructor(public readonly error: Error) {
+        super("error");
+    }
+}
+
+export class CallaInfoEvent
+    extends CallaEvent<"info"> {
+    constructor(public readonly message: string) {
+        super("info");
     }
 }
 
@@ -296,6 +314,8 @@ export class CallaChatEvent extends CallaUserEvent<"chat"> {
 }
 
 export interface CallaTeleconferenceEvents {
+    error: CallaErrorEvent;
+    info: CallaInfoEvent;
     serverConnected: CallaTeleconferenceServerConnectedEvent;
     serverDisconnected: CallaTeleconferenceServerDisconnectedEvent;
     serverFailed: CallaTeleconferenceServerFailedEvent;
@@ -317,6 +337,8 @@ export interface CallaTeleconferenceEvents {
 }
 
 export interface CallaMetadataEvents {
+    error: CallaErrorEvent;
+    info: CallaInfoEvent;
     userJoined: CallaUserJoinedEvent;
     userLeft: CallaUserLeftEvent;
     iceReceived: CallaRTCIceEvent;
