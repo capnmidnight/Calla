@@ -58,25 +58,25 @@ export class Calla
         this._tele.addEventListener("videoMuteStatusChanged", fwd);
 
         this._tele.addEventListener("conferenceJoined", async (evt: CallaConferenceJoinedEvent) => {
-            const user = this.audio.setLocalUserID(evt.id);
+            const user = this.audio.setLocalUserID(evt.userID);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
             await this.devices.start();
         });
 
         this._tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
-            this.audio.setLocalUserID(evt.id);
+            this.audio.setLocalUserID(evt.userID);
             this.dispatchEvent(evt);
         });
 
         this._tele.addEventListener("participantJoined", async (joinEvt: CallaParticipantJoinedEvent) => {
-            joinEvt.source = this.audio.createUser(joinEvt.id);
+            joinEvt.source = this.audio.createUser(joinEvt.userID);
             this.dispatchEvent(joinEvt);
         });
 
         this._tele.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) => {
             this.dispatchEvent(evt);
-            this.audio.removeUser(evt.id);
+            this.audio.removeUser(evt.userID);
         });
 
         this._tele.addEventListener("userNameChanged", fwd);
@@ -84,7 +84,7 @@ export class Calla
         this._tele.addEventListener("videoRemoved", fwd);
 
         this._tele.addEventListener("audioAdded", (evt: CallaAudioStreamAddedEvent) => {
-            const user = this.audio.getUser(evt.id);
+            const user = this.audio.getUser(evt.userID);
             if (user) {
                 let stream = user.streams.get(evt.kind);
                 if (stream) {
@@ -94,8 +94,8 @@ export class Calla
                 stream = evt.stream;
                 user.streams.set(evt.kind, stream);
 
-                if (evt.id !== this._tele.localUserID) {
-                    this.audio.setUserStream(evt.id, stream);
+                if (evt.userID !== this._tele.localUserID) {
+                    this.audio.setUserStream(evt.userID, stream);
                 }
 
                 this.dispatchEvent(evt);
@@ -103,13 +103,13 @@ export class Calla
         });
 
         this._tele.addEventListener("audioRemoved", (evt: CallaAudioStreamRemovedEvent) => {
-            const user = this.audio.getUser(evt.id);
+            const user = this.audio.getUser(evt.userID);
             if (user && user.streams.has(evt.kind)) {
                 user.streams.delete(evt.kind);
             }
 
-            if (evt.id !== this._tele.localUserID) {
-                this.audio.setUserStream(evt.id, null);
+            if (evt.userID !== this._tele.localUserID) {
+                this.audio.setUserStream(evt.userID, null);
             }
 
             this.dispatchEvent(evt);
@@ -121,7 +121,7 @@ export class Calla
         this._meta.addEventListener("setAvatarURL", fwd);
 
         const offsetEvt = (poseEvt: CallaUserPointerEvent | CallaUserPosedEvent): void => {
-            const O = this.audio.getUserOffset(poseEvt.id);
+            const O = this.audio.getUserOffset(poseEvt.userID);
             if (O) {
                 poseEvt.px += O[0];
                 poseEvt.py += O[1];
@@ -134,7 +134,7 @@ export class Calla
 
         this._meta.addEventListener("userPosed", (evt: CallaUserPosedEvent) => {
             this.audio.setUserPose(
-                evt.id,
+                evt.userID,
                 evt.px, evt.py, evt.pz,
                 evt.fx, evt.fy, evt.fz,
                 evt.ux, evt.uy, evt.uz);

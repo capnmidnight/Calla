@@ -81,7 +81,7 @@ export class CallaTeleconferenceServerFailedEvent
 }
 
 export class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
-    constructor(type: T, public id: string) {
+    constructor(type: T, public userID: string) {
         super(type);
     }
 }

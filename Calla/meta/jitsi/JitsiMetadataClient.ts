@@ -38,11 +38,11 @@ export class JitsiMetadataClient
         super();
 
         this.tele.addEventListener("participantJoined", (evt: CallaParticipantJoinedEvent) => {
-            arraySortedInsert(this.remoteUserIDs, evt.id, false);
+            arraySortedInsert(this.remoteUserIDs, evt.userID, false);
         });
 
         this.tele.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) => {
-            arrayRemove(this.remoteUserIDs, evt.id);
+            arrayRemove(this.remoteUserIDs, evt.userID);
         });
     }
 

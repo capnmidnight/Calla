@@ -16,10 +16,10 @@ export class JitsiMetadataClient extends BaseMetadataClient {
         super();
         this.tele = tele;
         this.tele.addEventListener("participantJoined", (evt) => {
-            arraySortedInsert(this.remoteUserIDs, evt.id, false);
+            arraySortedInsert(this.remoteUserIDs, evt.userID, false);
         });
         this.tele.addEventListener("participantLeft", (evt) => {
-            arrayRemove(this.remoteUserIDs, evt.id);
+            arrayRemove(this.remoteUserIDs, evt.userID);
         });
     }
     get metadataState() {

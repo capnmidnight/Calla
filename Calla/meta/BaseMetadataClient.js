@@ -6,7 +6,7 @@ export class BaseMetadataClient extends TypedEventBase {
         return new Promise((resolve) => {
             const getter = (evt) => {
                 if (evt instanceof CallaUserEvent
-                    && evt.id === userID) {
+                    && evt.userID === userID) {
                     this.removeEventListener(evtName, getter);
                     resolve(evt);
                 }

@@ -347,33 +347,33 @@ controls.space.addEventListener("click", (evt: MouseEvent) => {
 });
 
 client.addEventListener("conferenceJoined", (evt: CallaConferenceJoinedEvent) =>
-    startGame(evt.id, evt.pose));
+    startGame(evt.userID, evt.pose));
 
 /**
  * If the user has left the conference (or been kicked
  * by a moderator), we need to shut down the rendering.
  **/
 client.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
-    removeUser(evt.id);
+    removeUser(evt.userID);
     timer.stop();
     controls.leave.disabled = true;
     controls.connect.disabled = false;
 });
 
 client.addEventListener("participantJoined", (evt: CallaParticipantJoinedEvent) =>
-    addUser(evt.id, evt.displayName, evt.source.pose, false));
+    addUser(evt.userID, evt.displayName, evt.source.pose, false));
 
 client.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) =>
-    removeUser(evt.id));
+    removeUser(evt.userID));
 
 client.addEventListener("videoAdded", (evt: CallaVideoStreamAddedEvent) =>
-    changeVideo(evt.id, evt.stream));
+    changeVideo(evt.userID, evt.stream));
 
 client.addEventListener("videoRemoved", (evt: CallaVideoStreamRemovedEvent) =>
-    changeVideo(evt.id, null));
+    changeVideo(evt.userID, null));
 
 client.addEventListener("userNameChanged", (evt: CallaUserNameChangedEvent) =>
-    changeName(evt.id, evt.displayName));
+    changeName(evt.userID, evt.displayName));
 
 timer.addEventListener("tick", update);
 

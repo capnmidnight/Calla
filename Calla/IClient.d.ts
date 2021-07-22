@@ -7,7 +7,7 @@ export interface IClient {
      * Join a teleconferencing session.
      * @param roomName - the name of the room in which to find the other users in the teleconference.
      */
-    join(roomName: string): Promise<void>;
+    join(roomName: string, enableTeleconference: boolean): Promise<void>;
     /**
      * Set the user identifier for the teleconferencing session.
      * @param userNameOrID - the name of the user joining the conference, or the id of the user joining the metadata channel.

@@ -285,22 +285,22 @@ controls.space.addEventListener("click", (evt) => {
     const y = evt.clientY - controls.space.offsetTop;
     setPosition(x, y);
 });
-client.addEventListener("conferenceJoined", (evt) => startGame(evt.id, evt.pose));
+client.addEventListener("conferenceJoined", (evt) => startGame(evt.userID, evt.pose));
 /**
  * If the user has left the conference (or been kicked
  * by a moderator), we need to shut down the rendering.
  **/
 client.addEventListener("conferenceLeft", (evt) => {
-    removeUser(evt.id);
+    removeUser(evt.userID);
     timer.stop();
     controls.leave.disabled = true;
     controls.connect.disabled = false;
 });
-client.addEventListener("participantJoined", (evt) => addUser(evt.id, evt.displayName, evt.source.pose, false));
-client.addEventListener("participantLeft", (evt) => removeUser(evt.id));
-client.addEventListener("videoAdded", (evt) => changeVideo(evt.id, evt.stream));
-client.addEventListener("videoRemoved", (evt) => changeVideo(evt.id, null));
-client.addEventListener("userNameChanged", (evt) => changeName(evt.id, evt.displayName));
+client.addEventListener("participantJoined", (evt) => addUser(evt.userID, evt.displayName, evt.source.pose, false));
+client.addEventListener("participantLeft", (evt) => removeUser(evt.userID));
+client.addEventListener("videoAdded", (evt) => changeVideo(evt.userID, evt.stream));
+client.addEventListener("videoRemoved", (evt) => changeVideo(evt.userID, null));
+client.addEventListener("userNameChanged", (evt) => changeName(evt.userID, evt.displayName));
 timer.addEventListener("tick", update);
 /**
  * Binds a device list to a select box.

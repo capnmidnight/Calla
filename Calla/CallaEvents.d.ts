@@ -26,8 +26,8 @@ export declare class CallaTeleconferenceServerFailedEvent extends CallaEvent<"se
     constructor();
 }
 export declare class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
-    id: string;
-    constructor(type: T, id: string);
+    userID: string;
+    constructor(type: T, userID: string);
 }
 export declare class CallaUserJoinedEvent extends CallaUserEvent<"userJoined"> {
     constructor(id: string);

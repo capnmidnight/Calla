@@ -325,7 +325,7 @@ import { Settings } from "./Settings";
     client.addEventListener("conferenceJoined", async (evt) => {
         login.connected = true;
 
-        await game.startAsync(evt.id, login.userName, evt.pose, login.roomName);
+        await game.startAsync(evt.userID, login.userName, evt.pose, login.roomName);
 
         game.me.setAvatarEmoji(settings.avatarEmoji);
         game.me.setAvatarImage(settings.avatarURL);
@@ -359,61 +359,61 @@ import { Settings } from "./Settings";
     });
 
     client.addEventListener("participantJoined", async (evt) => {
-        game.addUser(evt.id, evt.displayName, evt.source.pose);
+        game.addUser(evt.userID, evt.displayName, evt.source.pose);
 
         await sleep(250);
 
         if (game.me.avatarMode === AvatarMode.Emoji) {
-            client.tellAvatarEmoji(evt.id, game.me.avatarEmoji.value);
+            client.tellAvatarEmoji(evt.userID, game.me.avatarEmoji.value);
             await sleep(250);
         }
         else if (game.me.avatarMode === AvatarMode.Photo) {
-            client.tellAvatarURL(evt.id, game.me.avatarImage.url);
+            client.tellAvatarURL(evt.userID, game.me.avatarImage.url);
             await sleep(250);
         }
 
         const { p, f, u } = game.me.pose.end;
-        client.tellLocalPose(evt.id, p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
+        client.tellLocalPose(evt.userID, p[0], p[1], p[2], f[0], f[1], f[2], u[0], u[1], u[2]);
 
         audio.playClip("join");
     });
 
     client.addEventListener("participantLeft", (evt) => {
         audio.playClip("leave");
-        game.removeUser(evt.id);
-        directory.delete(evt.id);
+        game.removeUser(evt.userID);
+        directory.delete(evt.userID);
     });
 
-    client.addEventListener("audioAdded", (evt) => refreshUser(evt.id));
+    client.addEventListener("audioAdded", (evt) => refreshUser(evt.userID));
 
-    client.addEventListener("audioRemoved", (evt) => refreshUser(evt.id));
+    client.addEventListener("audioRemoved", (evt) => refreshUser(evt.userID));
 
     client.addEventListener("videoAdded", (evt) => {
-        game.setAvatarVideo(evt.id, evt.stream);
-        refreshUser(evt.id);
+        game.setAvatarVideo(evt.userID, evt.stream);
+        refreshUser(evt.userID);
     });
 
     client.addEventListener("videoRemoved", (evt) => {
-        game.setAvatarVideo(evt.id, null);
-        refreshUser(evt.id);
+        game.setAvatarVideo(evt.userID, null);
+        refreshUser(evt.userID);
     });
 
     client.addEventListener("userNameChanged", (evt) => {
-        game.changeUserName(evt.id, evt.displayName);
-        refreshUser(evt.id);
+        game.changeUserName(evt.userID, evt.displayName);
+        refreshUser(evt.userID);
     });
 
     client.addEventListener("audioMuteStatusChanged", async (evt) => {
-        if (evt.id === client.localUserID) {
+        if (evt.userID === client.localUserID) {
             controls.audioEnabled = !evt.muted;
             devices.currentAudioInputDevice = await client.devices.getAudioInputDevice();
             settings.preferredAudioInputID = client.devices.preferredAudioInputID;
         }
-        game.muteUserAudio(evt.id, evt.muted);
+        game.muteUserAudio(evt.userID, evt.muted);
     });
 
     client.addEventListener("videoMuteStatusChanged", async (evt) => {
-        if (evt.id === client.localUserID) {
+        if (evt.userID === client.localUserID) {
             controls.videoEnabled = !evt.muted;
             if (evt.muted) {
                 options.setAvatarVideo(null);
@@ -423,25 +423,25 @@ import { Settings } from "./Settings";
             }
             devices.currentVideoInputDevice = await client.devices.getVideoInputDevice();
         }
-        game.muteUserVideo(evt.id, evt.muted);
+        game.muteUserVideo(evt.userID, evt.muted);
         settings.preferredVideoInputID = client.devices.preferredVideoInputID;
     });
 
     client.addEventListener("emote", (evt) => {
         rawEmoteEmoji.value = evt.emoji;
-        game.emote(evt.id, rawEmoteEmoji);
+        game.emote(evt.userID, rawEmoteEmoji);
     });
 
     client.addEventListener("setAvatarEmoji", (evt) => {
         rawAvatarEmoji.value = evt.emoji;
-        game.setAvatarEmoji(evt.id, rawAvatarEmoji);
-        refreshUser(evt.id);
+        game.setAvatarEmoji(evt.userID, rawAvatarEmoji);
+        refreshUser(evt.userID);
     });
 
     client.addEventListener("setAvatarURL", (evt) => {
-        logger.log("got setAvatarURL:" + evt.id, evt.url);
-        game.setAvatarURL(evt.id, evt.url);
-        refreshUser(evt.id);
+        logger.log("got setAvatarURL:" + evt.userID, evt.url);
+        game.setAvatarURL(evt.userID, evt.url);
+        refreshUser(evt.userID);
     });
 
     client.addEventListener("audioActivity", (evt) => {

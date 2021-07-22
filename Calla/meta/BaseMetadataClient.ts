@@ -13,7 +13,7 @@ export abstract class BaseMetadataClient
         return new Promise((resolve) => {
             const getter = (evt: CallaMetadataEvents[T]) => {
                 if (evt instanceof CallaUserEvent
-                    && evt.id === userID) {
+                    && evt.userID === userID) {
                     this.removeEventListener(evtName, getter);
                     resolve(evt);
                 }

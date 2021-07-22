@@ -59,13 +59,13 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     }
     onDispatching(evt) {
         if (evt instanceof CallaUserEvent
-            && (evt.id == null
-                || evt.id === "local")) {
+            && (evt.userID == null
+                || evt.userID === "local")) {
             if (this.localUserID === DEFAULT_LOCAL_USER_ID) {
-                evt.id = null;
+                evt.userID = null;
             }
             else {
-                evt.id = this.localUserID;
+                evt.userID = this.localUserID;
             }
         }
     }
@@ -73,7 +73,7 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         return new Promise((resolve) => {
             const getter = (evt) => {
                 if (evt instanceof CallaUserEvent
-                    && evt.id === userID) {
+                    && evt.userID === userID) {
                     this.removeEventListener(evtName, getter);
                     resolve(evt);
                 }

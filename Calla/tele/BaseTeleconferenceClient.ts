@@ -85,13 +85,13 @@ export abstract class BaseTeleconferenceClient
 
     protected onDispatching<T extends Event>(evt: T) {
         if (evt instanceof CallaUserEvent
-            && (evt.id == null
-                || evt.id === "local")) {
+            && (evt.userID == null
+                || evt.userID === "local")) {
             if (this.localUserID === DEFAULT_LOCAL_USER_ID) {
-                evt.id = null;
+                evt.userID = null;
             }
             else {
-                evt.id = this.localUserID;
+                evt.userID = this.localUserID;
             }
         }
     }
@@ -100,7 +100,7 @@ export abstract class BaseTeleconferenceClient
         return new Promise((resolve) => {
             const getter = (evt: CallaTeleconferenceEvents[T]) => {
                 if (evt instanceof CallaUserEvent
-                    && evt.id === userID) {
+                    && evt.userID === userID) {
                     this.removeEventListener(evtName, getter);
                     resolve(evt);
                 }

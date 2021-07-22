@@ -35,10 +35,10 @@ export class CallaTeleconferenceServerFailedEvent extends CallaEvent {
     }
 }
 export class CallaUserEvent extends CallaEvent {
-    id;
-    constructor(type, id) {
+    userID;
+    constructor(type, userID) {
         super(type);
-        this.id = id;
+        this.userID = userID;
     }
 }
 export class CallaUserJoinedEvent extends CallaUserEvent {
