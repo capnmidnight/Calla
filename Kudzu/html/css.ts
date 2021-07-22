@@ -41,6 +41,11 @@ export function styles(...rest: (CssProp | CssPropSet)[]) {
     return new CssPropSet(...rest);
 }
 
+type globalValues = "inherit"
+    | "initial"
+    | "revert"
+    | "unset";
+
 export function alignContent(v: string) { return new CssProp("alignContent", v); }
 export function alignItems(v: string) { return new CssProp("alignItems", v); }
 export function alignSelf(v: string) { return new CssProp("alignSelf", v); }
@@ -198,7 +203,15 @@ export function gap(v: string) { return new CssProp("gap", v); }
 export function grid(v: string) { return new CssProp("grid", v); }
 export function gridArea(v: string) { return new CssProp("gridArea", v); }
 export function gridAutoColumns(v: string) { return new CssProp("gridAutoColumns", v); }
-export function gridAutoFlow(v: string) { return new CssProp("gridAutoFlow", v); }
+
+type gridAutoFlowType = "row"
+    | "column"
+    | "dense"
+    | "row dense"
+    | "column dense"
+    | globalValues;
+export function gridAutoFlow(v: gridAutoFlowType) { return new CssProp("gridAutoFlow", v); }
+
 export function gridAutoRows(v: string) { return new CssProp("gridAutoRows", v); }
 export function gridColumn(v: string) { return new CssProp("gridColumn", v); }
 export function gridColumnEnd(v: string) { return new CssProp("gridColumnEnd", v); }

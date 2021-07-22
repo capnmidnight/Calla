@@ -22,6 +22,7 @@ export declare class CssPropSet {
  * Combine style properties.
  **/
 export declare function styles(...rest: (CssProp | CssPropSet)[]): CssPropSet;
+declare type globalValues = "inherit" | "initial" | "revert" | "unset";
 export declare function alignContent(v: string): CssProp;
 export declare function alignItems(v: string): CssProp;
 export declare function alignSelf(v: string): CssProp;
@@ -179,7 +180,8 @@ export declare function gap(v: string): CssProp;
 export declare function grid(v: string): CssProp;
 export declare function gridArea(v: string): CssProp;
 export declare function gridAutoColumns(v: string): CssProp;
-export declare function gridAutoFlow(v: string): CssProp;
+declare type gridAutoFlowType = "row" | "column" | "dense" | "row dense" | "column dense" | globalValues;
+export declare function gridAutoFlow(v: gridAutoFlowType): CssProp;
 export declare function gridAutoRows(v: string): CssProp;
 export declare function gridColumn(v: string): CssProp;
 export declare function gridColumnEnd(v: string): CssProp;
@@ -409,3 +411,4 @@ export declare class CSSInJSRule {
     apply(sheet: CSSStyleSheet): void;
 }
 export declare function rule(selector: string, ...props: CssProp[]): CSSInJSRule;
+export {};
