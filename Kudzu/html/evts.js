@@ -116,6 +116,13 @@ export function onInvalid(callback, opts) { return new HtmlEvt("invalid", callba
 export function onKeyDown(callback, opts) { return new HtmlEvt("keydown", (evt) => callback(evt), opts); }
 export function onKeyPress(callback, opts) { return new HtmlEvt("keypress", (evt) => callback(evt), opts); }
 export function onKeyUp(callback, opts) { return new HtmlEvt("keyup", (evt) => callback(evt), opts); }
+export function onEnterKeyPressed(callback, opts) {
+    return onKeyUp((evt) => {
+        if (evt.key === "Enter") {
+            callback(evt);
+        }
+    }, opts);
+}
 export function onLanguageChange(callback, opts) { return new HtmlEvt("languagechange", callback, opts); }
 export function onLevelChange(callback, opts) { return new HtmlEvt("levelchange", callback, opts); }
 export function onLoad(callback, opts) { return new HtmlEvt("load", callback, opts); }

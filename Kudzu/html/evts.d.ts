@@ -89,6 +89,7 @@ export declare function onInvalid(callback: (evt: Event) => void, opts?: EventLi
 export declare function onKeyDown(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onKeyPress(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onKeyUp(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt;
+export declare function onEnterKeyPressed(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onLanguageChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onLevelChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onLoad(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;

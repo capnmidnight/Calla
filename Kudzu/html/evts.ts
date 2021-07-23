@@ -123,6 +123,13 @@ export function onInvalid(callback: (evt: Event) => void, opts?: EventListenerOp
 export function onKeyDown(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keydown", (evt: Event) => callback(evt as KeyboardEvent), opts); }
 export function onKeyPress(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keypress", (evt: Event) => callback(evt as KeyboardEvent), opts); }
 export function onKeyUp(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("keyup", (evt: Event) => callback(evt as KeyboardEvent), opts); }
+export function onEnterKeyPressed(callback: (evt: KeyboardEvent) => void, opts?: EventListenerOpts): HtmlEvt {
+    return onKeyUp((evt) => {
+        if (evt.key === "Enter") {
+            callback(evt);
+        }
+    }, opts);
+}
 export function onLanguageChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("languagechange", callback, opts); }
 export function onLevelChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("levelchange", callback, opts); }
 export function onLoad(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("load", callback, opts); }
