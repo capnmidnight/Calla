@@ -22,7 +22,7 @@ export interface IMetadataClient
      */
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
 
-    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
 
     /**
      * Set the position of the user's pointer.
@@ -43,17 +43,13 @@ export interface IMetadataClient
      * Use an Emoji character as the user's avatar.
      * @param emoji
      */
-    setAvatarEmoji(emoji: string): void;
-
-    tellAvatarEmoji(userid: string, emoji: string): void;
+    setAvatarEmoji(toUserID: string, emoji: string): void;
 
     /**
      * Use an image, found somewhere on the public Internet, as the user's avatar.
      * @param url
      */
-    setAvatarURL(url: string): void;
-
-    tellAvatarURL(userid: string, url: string): void;
+    setAvatarURL(toUserID: string, url: string): void;
 
     /**
      * Express an emotion to the other users in the teleconferencing session.

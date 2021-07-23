@@ -7,7 +7,6 @@ import {
     CallaChatEvent,
     CallaEmojiAvatarEvent,
     CallaEmoteEvent,
-    CallaEventType,
     CallaMetadataEventType,
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
@@ -111,7 +110,7 @@ export class JitsiMetadataClient
         // JitsiTeleconferenceClient will already disconnect
     }
 
-    protected async callInternal(command: CallaEventType, ...values: any[]): Promise<void> {
+    private toRoom(command: string, ...values: any[]): Promise<void> {
         logger.log(`callInternal:${command}`, ...values);
         this.tele.conference.broadcastEndpointMessage({
             hax: JITSI_HAX_FINGERPRINT,
@@ -121,14 +120,42 @@ export class JitsiMetadataClient
         return Promise.resolve();
     }
 
-    protected callInternalSingle(toUserID: string, command: CallaEventType, ...values: any[]): Promise<void> {
-        logger.log(`callInternalSingle:${toUserID}:${command}`, ...values);
+    private toUser(command: string, toUserID: string, ...values: any[]): Promise<void> {
+        logger.log(`callInternal:${toUserID}:${command}`, ...values);
         this.tele.conference.sendMessage({
             hax: JITSI_HAX_FINGERPRINT,
             command,
             values
         }, toUserID);
         return Promise.resolve();
+    }
+
+    setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.toRoom("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+
+    tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.toUser("userPosedSingle", toUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+
+    setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.toRoom("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+
+    setAvatarEmoji(toUserID: string, emoji: string): void {
+        this.toUser("setAvatarEmoji", toUserID, emoji);
+    }
+
+    setAvatarURL(toUserID: string, url: string): void {
+        this.toUser("setAvatarURL", toUserID, url);
+    }
+
+    emote(emoji: string): void {
+        this.toRoom("emote", emoji);
+    }
+
+    chat(text: string): void {
+        this.toRoom("chat", text);
     }
 
     protected async stopInternal(): Promise<void> {

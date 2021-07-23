@@ -146,23 +146,17 @@ export class Calla extends TypedEventBase {
         this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
-    tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this._meta.tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz);
+    tellLocalPose(toUserID, px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this._meta.tellLocalPose(toUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
         this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
-    setAvatarEmoji(emoji) {
-        this._meta.setAvatarEmoji(emoji);
+    setAvatarEmoji(toUserID, emoji) {
+        this._meta.setAvatarEmoji(toUserID, emoji);
     }
-    tellAvatarEmoji(userid, emoji) {
-        this._meta.tellAvatarEmoji(userid, emoji);
-    }
-    setAvatarURL(url) {
-        this._meta.setAvatarURL(url);
-    }
-    tellAvatarURL(userid, url) {
-        this._meta.tellAvatarURL(userid, url);
+    setAvatarURL(toUserID, url) {
+        this._meta.setAvatarURL(toUserID, url);
     }
     emote(emoji) {
         this._meta.emote(emoji);

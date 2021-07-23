@@ -1,4 +1,4 @@
-import { CallaEventType, CallaMetadataEventType } from "../../CallaEvents";
+import { CallaMetadataEventType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import type { JitsiTeleconferenceClient } from "../../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseMetadataClient } from "../BaseMetadataClient";
@@ -18,7 +18,14 @@ export declare class JitsiMetadataClient extends BaseMetadataClient {
     leave(): Promise<void>;
     identify(_userName: string): Promise<void>;
     disconnect(): Promise<void>;
-    protected callInternal(command: CallaEventType, ...values: any[]): Promise<void>;
-    protected callInternalSingle(toUserID: string, command: CallaEventType, ...values: any[]): Promise<void>;
+    private toRoom;
+    private toUser;
+    setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    setAvatarEmoji(toUserID: string, emoji: string): void;
+    setAvatarURL(toUserID: string, url: string): void;
+    emote(emoji: string): void;
+    chat(text: string): void;
     protected stopInternal(): Promise<void>;
 }

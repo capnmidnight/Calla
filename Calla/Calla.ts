@@ -205,28 +205,20 @@ export class Calla
         this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this._meta.tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz);
+    tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this._meta.tellLocalPose(toUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
-    setAvatarEmoji(emoji: string): void {
-        this._meta.setAvatarEmoji(emoji);
+    setAvatarEmoji(toUserID: string, emoji: string): void {
+        this._meta.setAvatarEmoji(toUserID, emoji);
     }
 
-    tellAvatarEmoji(userid: string, emoji: string): void {
-        this._meta.tellAvatarEmoji(userid, emoji);
-    }
-
-    setAvatarURL(url: string): void {
-        this._meta.setAvatarURL(url);
-    }
-
-    tellAvatarURL(userid: string, url: string): void {
-        this._meta.tellAvatarURL(userid, url);
+    setAvatarURL(toUserID: string, url: string): void {
+        this._meta.setAvatarURL(toUserID, url);
     }
 
     emote(emoji: string): void {

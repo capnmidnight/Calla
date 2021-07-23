@@ -17,7 +17,7 @@ export interface IMetadataClient extends TypedEventBase<CallaMetadataEvents>, IC
      * @param uz - the lateral component of the up vector.
      */
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
-    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     /**
      * Set the position of the user's pointer.
      * @param name - the name of pointer that is being set.
@@ -36,14 +36,12 @@ export interface IMetadataClient extends TypedEventBase<CallaMetadataEvents>, IC
      * Use an Emoji character as the user's avatar.
      * @param emoji
      */
-    setAvatarEmoji(emoji: string): void;
-    tellAvatarEmoji(userid: string, emoji: string): void;
+    setAvatarEmoji(toUserID: string, emoji: string): void;
     /**
      * Use an image, found somewhere on the public Internet, as the user's avatar.
      * @param url
      */
-    setAvatarURL(url: string): void;
-    tellAvatarURL(userid: string, url: string): void;
+    setAvatarURL(toUserID: string, url: string): void;
     /**
      * Express an emotion to the other users in the teleconferencing session.
      * @param emoji

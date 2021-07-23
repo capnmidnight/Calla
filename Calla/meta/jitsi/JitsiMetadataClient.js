@@ -81,7 +81,7 @@ export class JitsiMetadataClient extends BaseMetadataClient {
     async disconnect() {
         // JitsiTeleconferenceClient will already disconnect
     }
-    async callInternal(command, ...values) {
+    toRoom(command, ...values) {
         logger.log(`callInternal:${command}`, ...values);
         this.tele.conference.broadcastEndpointMessage({
             hax: JITSI_HAX_FINGERPRINT,
@@ -90,14 +90,35 @@ export class JitsiMetadataClient extends BaseMetadataClient {
         });
         return Promise.resolve();
     }
-    callInternalSingle(toUserID, command, ...values) {
-        logger.log(`callInternalSingle:${toUserID}:${command}`, ...values);
+    toUser(command, toUserID, ...values) {
+        logger.log(`callInternal:${toUserID}:${command}`, ...values);
         this.tele.conference.sendMessage({
             hax: JITSI_HAX_FINGERPRINT,
             command,
             values
         }, toUserID);
         return Promise.resolve();
+    }
+    setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.toRoom("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+    tellLocalPose(toUserID, px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.toUser("userPosedSingle", toUserID, px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+    setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.toRoom("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+    setAvatarEmoji(toUserID, emoji) {
+        this.toUser("setAvatarEmoji", toUserID, emoji);
+    }
+    setAvatarURL(toUserID, url) {
+        this.toUser("setAvatarURL", toUserID, url);
+    }
+    emote(emoji) {
+        this.toRoom("emote", emoji);
+    }
+    chat(text) {
+        this.toRoom("chat", text);
     }
     async stopInternal() {
         this._status = ConnectionState.Disconnecting;

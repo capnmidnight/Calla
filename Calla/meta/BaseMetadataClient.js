@@ -17,32 +17,5 @@ export class BaseMetadataClient extends TypedEventBase {
     get isConnected() {
         return this.metadataState === ConnectionState.Connected;
     }
-    setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-    tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callInternalSingle(userid, "userPosedSingle", px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-    setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callInternal("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-    setAvatarEmoji(emoji) {
-        this.callInternal("setAvatarEmoji", emoji);
-    }
-    tellAvatarEmoji(userid, emoji) {
-        this.callInternalSingle(userid, "setAvatarEmoji", emoji);
-    }
-    setAvatarURL(url) {
-        this.callInternal("setAvatarURL", url);
-    }
-    tellAvatarURL(userid, url) {
-        this.callInternalSingle(userid, "setAvatarURL", url);
-    }
-    emote(emoji) {
-        this.callInternal("emote", emoji);
-    }
-    chat(text) {
-        this.callInternal("chat", text);
-    }
 }
 //# sourceMappingURL=BaseMetadataClient.js.map

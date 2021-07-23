@@ -29,46 +29,13 @@ export abstract class BaseMetadataClient
         return this.metadataState === ConnectionState.Connected;
     }
 
-    protected abstract callInternal(command: string, ...args: any[]): Promise<void>;
-
-    protected abstract callInternalSingle(userid: string, command: string, ...args: any[]): Promise<void>;
-
-    setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-
-    tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callInternalSingle(userid, "userPosedSingle", px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-
-    setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callInternal("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
-    }
-
-    setAvatarEmoji(emoji: string): void {
-        this.callInternal("setAvatarEmoji", emoji);
-    }
-
-    tellAvatarEmoji(userid: string, emoji: string): void {
-        this.callInternalSingle(userid, "setAvatarEmoji", emoji);
-    }
-
-    setAvatarURL(url: string): void {
-        this.callInternal("setAvatarURL", url);
-    }
-
-    tellAvatarURL(userid: string, url: string): void {
-        this.callInternalSingle(userid, "setAvatarURL", url);
-    }
-
-    emote(emoji: string): void {
-        this.callInternal("emote", emoji);
-    }
-
-    chat(text: string): void {
-        this.callInternal("chat", text);
-    }
-
+    abstract setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    abstract tellLocalPose(toUserID: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    abstract setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    abstract setAvatarEmoji(toUserID: string, emoji: string): void;
+    abstract setAvatarURL(toUserID: string, url: string): void;
+    abstract emote(emoji: string): void;
+    abstract chat(text: string): void;
     abstract connect(): Promise<void>;
     abstract join(roomName: string): Promise<void>;
     abstract identify(userNameOrID: string): Promise<void>;

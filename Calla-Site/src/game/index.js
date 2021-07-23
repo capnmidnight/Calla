@@ -140,14 +140,18 @@ import { Settings } from "./Settings";
     options.addEventListener("selectAvatar", async () => {
         await withEmojiSelection((e) => {
             settings.avatarEmoji = e.value;
-            client.setAvatarEmoji(e.value);
+            for (const [toUserID, _] of client.getUserNames()) {
+                client.setAvatarEmoji(toUserID, e.value);
+            }
             game.me.setAvatarEmoji(e.value);
             refreshUser(client.localUserID);
         });
     });
     options.addEventListener("avatarURLChanged", () => {
         settings.avatarURL = options.avatarURL;
-        client.setAvatarURL(options.avatarURL);
+        for (const [toUserID, _] of client.getUserNames()) {
+            client.setAvatarURL(toUserID, options.avatarURL);
+        }
         game.me.setAvatarImage(options.avatarURL);
         refreshUser(client.localUserID);
     });
@@ -230,8 +234,6 @@ import { Settings } from "./Settings";
         await game.startAsync(evt.userID, login.userName, evt.pose, login.roomName);
         game.me.setAvatarEmoji(settings.avatarEmoji);
         game.me.setAvatarImage(settings.avatarURL);
-        client.setAvatarEmoji(settings.avatarEmoji);
-        client.setAvatarURL(settings.avatarURL);
         devices.audioInputDevices = await client.devices.getAudioInputDevices(true);
         devices.audioOutputDevices = await client.devices.getAudioOutputDevices(true);
         devices.videoInputDevices = await client.devices.getVideoInputDevices(true);
@@ -255,11 +257,11 @@ import { Settings } from "./Settings";
         game.addUser(evt.userID, evt.displayName, evt.source.pose);
         await sleep(250);
         if (game.me.avatarMode === AvatarMode.Emoji) {
-            client.tellAvatarEmoji(evt.userID, game.me.avatarEmoji.value);
+            client.setAvatarEmoji(evt.userID, game.me.avatarEmoji.value);
             await sleep(250);
         }
         else if (game.me.avatarMode === AvatarMode.Photo) {
-            client.tellAvatarURL(evt.userID, game.me.avatarImage.url);
+            client.setAvatarURL(evt.userID, game.me.avatarImage.url);
             await sleep(250);
         }
         const { p, f, u } = game.me.pose.end;
