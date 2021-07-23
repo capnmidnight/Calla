@@ -1,5 +1,5 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
-import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
+import type { CallaMetadataEvents } from "../CallaEvents";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "./IMetadataClient";
@@ -29,16 +29,16 @@ export abstract class BaseMetadataClient
         return this.metadataState === ConnectionState.Connected;
     }
 
-    protected abstract callInternal(command: CallaEventType, ...args: any[]): Promise<void>;
+    protected abstract callInternal(command: string, ...args: any[]): Promise<void>;
 
-    protected abstract callInternalSingle(userid: string, command: CallaEventType, ...args: any[]): Promise<void>;
+    protected abstract callInternalSingle(userid: string, command: string, ...args: any[]): Promise<void>;
 
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     tellLocalPose(userid: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callInternalSingle(userid, "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callInternalSingle(userid, "userPosedSingle", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {

@@ -21,7 +21,7 @@ export class BaseMetadataClient extends TypedEventBase {
         this.callInternal("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     tellLocalPose(userid, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callInternalSingle(userid, "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callInternalSingle(userid, "userPosedSingle", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
         this.callInternal("userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
