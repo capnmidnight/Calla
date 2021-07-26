@@ -60,10 +60,10 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     set type(type: SpatializerType);
     /**
      * Creates a spatialzer for an audio source.
-     * @param source - the audio element that is being spatialized.
      * @param spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
+     * @param isRemoteStream - whether or not the audio stream is coming from a remote user.
      */
-    createSpatializer(spatialize: boolean): BaseEmitter;
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean): BaseEmitter;
     /**
      * Gets the current playback time.
      */

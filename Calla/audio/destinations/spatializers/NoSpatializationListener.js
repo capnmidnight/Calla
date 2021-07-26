@@ -15,7 +15,7 @@ export class NoSpatializationListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(_spatialize, audioContext, destination) {
+    createSpatializer(_spatialize, _isRemoteStream, audioContext, destination) {
         return new NoSpatializationNode(audioContext, destination.nonSpatializedInput);
     }
 }

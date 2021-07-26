@@ -14,5 +14,5 @@ export declare abstract class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(spatialize: boolean, _isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
 }

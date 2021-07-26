@@ -22,12 +22,15 @@ export class WebAudioListenerOld extends BaseWebAudioListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize, audioContext, destination) {
+    createSpatializer(spatialize, isRemoteStream, audioContext, destination) {
         if (spatialize) {
-            return new WebAudioPannerOld(audioContext, destination.spatializedInput);
+            const dest = isRemoteStream
+                ? destination.remoteUserInput
+                : destination.spatializedInput;
+            return new WebAudioPannerOld(audioContext, dest);
         }
         else {
-            return super.createSpatializer(spatialize, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
         }
     }
 }

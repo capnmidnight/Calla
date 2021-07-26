@@ -18,5 +18,5 @@ export declare class VolumeScalingListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
 }

@@ -31,12 +31,15 @@ export class VolumeScalingListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
         if (spatialize) {
-            return new VolumeScalingNode(audioContext, destination.spatializedInput, this);
+            const dest = isRemoteStream
+                ? destination.remoteUserInput
+                : destination.spatializedInput;
+            return new VolumeScalingNode(audioContext, dest, this);
         }
         else {
-            return super.createSpatializer(spatialize, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
         }
     }
 }

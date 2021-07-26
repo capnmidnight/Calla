@@ -48,10 +48,12 @@ export class AudioDestination extends BaseAudioElement {
     }
     disconnectSpatializer() {
         disconnect(this.spatializer.output, this.volumeControl);
-        disconnect(this._spatializedInput, this.spatializer.input);
+        disconnect(this.spatializedInput, this.spatializer.input);
+        disconnect(this.remoteUserInput, this.spatializedInput);
     }
     connectSpatializer() {
-        connect(this._spatializedInput, this.spatializer.input);
+        connect(this.remoteUserInput, this.spatializedInput);
+        connect(this.spatializedInput, this.spatializer.input);
         connect(this.spatializer.output, this.volumeControl);
     }
 }

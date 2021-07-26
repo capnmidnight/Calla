@@ -295,21 +295,21 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         this.localOutput.spatializer = this.listener;
         for (const clip of this.clips.values()) {
-            clip.spatializer = this.createSpatializer(clip.spatialized);
+            clip.spatializer = this.createSpatializer(clip.spatialized, false);
         }
 
         for (const user of this.users.values()) {
-            user.spatializer = this.createSpatializer(user.spatialized);
+            user.spatializer = this.createSpatializer(user.spatialized, false);
         }
     }
 
     /**
      * Creates a spatialzer for an audio source.
-     * @param source - the audio element that is being spatialized.
      * @param spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
+     * @param isRemoteStream - whether or not the audio stream is coming from a remote user.
      */
-    createSpatializer(spatialize: boolean): BaseEmitter {
-        return this.listener.createSpatializer(spatialize, this.audioContext, this.localOutput);
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean): BaseEmitter {
+        return this.listener.createSpatializer(spatialize, isRemoteStream, this.audioContext, this.localOutput);
     }
 
     /**
@@ -416,7 +416,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             onProgress(1, 1);
         }
 
-        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
+        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize, false));
     }
 
     private async createAudioBufferSource(id: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, path: string, onProgress?: progressCallback): Promise<IPlayableSource> {
@@ -428,7 +428,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         source.buffer = data;
         source.loop = looping;
 
-        const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize));
+        const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize, false));
 
         if (autoPlaying) {
             clip.play();
@@ -555,7 +555,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             if (stream) {
                 await waitFor(() => stream.active);
                 user.source = this.createSourceFromStream(stream);
-                user.spatializer = this.createSpatializer(true);
+                user.spatializer = this.createSpatializer(true, true);
                 user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);
             }
         }

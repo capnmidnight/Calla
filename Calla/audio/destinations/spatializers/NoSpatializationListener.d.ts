@@ -11,5 +11,5 @@ export declare class NoSpatializationListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(_spatialize: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(_spatialize: boolean, _isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
 }

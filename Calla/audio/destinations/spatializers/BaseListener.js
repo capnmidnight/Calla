@@ -15,7 +15,7 @@ export class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize, audioContext, destination) {
+    createSpatializer(spatialize, _isRemoteStream, audioContext, destination) {
         if (spatialize) {
             throw new Error("Can't spatialize with the base listener.");
         }

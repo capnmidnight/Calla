@@ -71,12 +71,15 @@ export class ResonanceAudioListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
         if (spatialize) {
-            return new ResonanceAudioNode(audioContext, destination.spatializedInput, this.scene);
+            const dest = isRemoteStream
+                ? destination.remoteUserInput
+                : destination.spatializedInput;
+            return new ResonanceAudioNode(audioContext, dest, this.scene);
         }
         else {
-            return super.createSpatializer(spatialize, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
         }
     }
 }
