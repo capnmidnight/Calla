@@ -187,7 +187,7 @@ import { Settings } from "./Settings";
 
     login.addEventListener("login", async () => {
 
-        if (!audio.ready) {
+        if (!audio.isReady) {
             await once(audio, "audioready");
             setAudioProperties();
         }

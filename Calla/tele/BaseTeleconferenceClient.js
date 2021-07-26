@@ -28,11 +28,17 @@ export class BaseTeleconferenceClient extends TypedEventBase {
     get connectionState() {
         return this._connectionState;
     }
+    get isConnected() {
+        return this.connectionState === ConnectionState.Connected;
+    }
     setConnectionState(state) {
         this._connectionState = state;
     }
     get conferenceState() {
         return this._conferenceState;
+    }
+    get isConferenced() {
+        return this.conferenceState === ConnectionState.Connected;
     }
     setConferenceState(state) {
         this._conferenceState = state;

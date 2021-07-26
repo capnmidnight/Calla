@@ -3,8 +3,8 @@ import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
-import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
+import { whenAudioContextReady } from "kudzu/events/whenAudioContextReady";
 import { autoPlay, controls, loop, muted, playsInline, src } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import type { HTMLAudioElementWithSinkID, TagChild } from "kudzu/html/tags";
@@ -15,10 +15,8 @@ import { guessMediaTypeByFileName } from "kudzu/mediaTypes";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { assertNever } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
-import { using } from "kudzu/using";
 import { canChangeAudioOutput, DeviceManager } from "../devices/DeviceManager";
 import { DEFAULT_LOCAL_USER_ID } from "../tele/BaseTeleconferenceClient";
-import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioDestination } from "./destinations/AudioDestination";
 import type { BaseListener } from "./destinations/spatializers/BaseListener";
@@ -58,8 +56,6 @@ if (!("OfflineAudioContext" in globalThis) && "webkitOfflineAudioContext" in glo
 
 type withPoseCallback<T> = (pose: InterpolatedPose) => T;
 
-const BUFFER_SIZE = 1024;
-const audioActivityEvt = new AudioActivityEvent();
 const audioReadyEvt = new TypedEvent("audioReady");
 const testAudio = Audio();
 
@@ -118,27 +114,30 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
     private clips = new Map<string, IPlayableSource>();
     private users = new Map<string, AudioStreamSource>();
-    private analysers = new Map<string, ActivityAnalyser>();
 
     public localUserID: string = null;
     private sortedUserIDs = new Array<string>();
 
-    localUser: AudioDestination = null;
-    listener: BaseListener = null;
-    private audioContext: AudioContext = null;
-    private destination: AudioDestinationNode | MediaStreamAudioDestinationNode = null;
+    localOutput: AudioDestination = null;
 
-    private onAudioActivity: (evt: AudioActivityEvent) => void;
+    listener: BaseListener = null;
+    audioContext: AudioContext = null;
+    private destination: AudioDestinationNode | MediaStreamAudioDestinationNode = null;
 
     private fetcher: IFetcher;
     private _type: SpatializerType;
 
     devices = new DeviceManager();
 
+    private _ready: Promise<void>;
+    get ready() {
+        return this._ready;
+    }
+
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(fetcher?: IFetcher, type?: SpatializerType, private analyzeAudio = false) {
+    constructor(fetcher?: IFetcher, type?: SpatializerType) {
         super();
 
         this.fetcher = fetcher || new Fetcher();
@@ -154,27 +153,12 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             this.destination = this.audioContext.destination;
         }
 
-        this.localUser = new AudioDestination(this.audioContext, this.destination);
+        this.localOutput = new AudioDestination(this.audioContext, this.destination);
 
-        if (this.ready) {
-            this.start();
-        }
-        else {
-            onUserGesture(
-                () => this.dispatchEvent(audioReadyEvt),
-                async () => {
-                    await this.start();
-                    return this.ready;
-                });
-        }
+        this._ready = whenAudioContextReady(this.audioContext)
+            .then(() => this.start());
 
         this.type = type || SpatializerType.Medium;
-
-        this.onAudioActivity = (evt: AudioActivityEvent) => {
-            audioActivityEvt.id = evt.id;
-            audioActivityEvt.isActive = evt.isActive;
-            this.dispatchEvent(audioActivityEvt);
-        };
 
         Object.seal(this);
     }
@@ -193,14 +177,14 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     }
 
     protected checkAddEventListener<T extends Event>(type: string, callback: (evt: T) => any) {
-        if (type === audioReadyEvt.type && this.ready) {
+        if (type === audioReadyEvt.type && this.isReady) {
             callback(audioReadyEvt as any as T);
             return false;
         }
         return true;
     }
 
-    get ready(): boolean {
+    get isReady(): boolean {
         return this.audioContext && this.audioContext.state === "running";
     }
 
@@ -208,10 +192,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Perform the audio system initialization, after a user gesture 
      **/
     async start(): Promise<void> {
-        if (!this.ready) {
-            await this.audioContext.resume();
-        }
-
         if (isMediaStreamAudioDestinationNode(this.destination)) {
             await this.devices.setDestination(this.destination);
         }
@@ -220,7 +200,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     update(): void {
         const t = this.currentTime;
 
-        this.localUser.update(t);
+        this.localOutput.update(t);
 
         for (const clip of this.clips.values()) {
             clip.update(t);
@@ -228,10 +208,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         for (const user of this.users.values()) {
             user.update(t);
-        }
-
-        for (const analyser of this.analysers.values()) {
-            analyser.update();
         }
     }
 
@@ -317,7 +293,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         this._type = type;
 
-        this.localUser.spatializer = this.listener;
+        this.localOutput.spatializer = this.listener;
         for (const clip of this.clips.values()) {
             clip.spatializer = this.createSpatializer(clip.spatialized);
         }
@@ -333,7 +309,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      */
     createSpatializer(spatialize: boolean): BaseEmitter {
-        return this.listener.createSpatializer(spatialize, this.audioContext, this.localUser);
+        return this.listener.createSpatializer(spatialize, this.audioContext, this.localOutput);
     }
 
     /**
@@ -362,7 +338,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * Create a new user for the audio listener.
      */
     setLocalUserID(id: string): AudioDestination {
-        if (this.localUser) {
+        if (this.localOutput) {
             arrayRemove(this.sortedUserIDs, this.localUserID);
             this.localUserID = id;
             arraySortedInsert(this.sortedUserIDs, this.localUserID);
@@ -371,7 +347,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         else {
         }
 
-        return this.localUser;
+        return this.localOutput;
     }
 
     /**
@@ -470,14 +446,14 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param name - the name of the effect to play.
      */
     async playClip(name: string): Promise<void> {
-        if (this.ready && this.hasClip(name)) {
+        if (this.isReady && this.hasClip(name)) {
             const clip = this.clips.get(name);
             await clip.play();
         }
     }
 
     stopClip(name: string): void {
-        if (this.ready && this.hasClip(name)) {
+        if (this.isReady && this.hasClip(name)) {
             const clip = this.clips.get(name);
             clip.stop();
         }
@@ -573,13 +549,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
     async setUserStream(id: string, stream: MediaStream): Promise<void> {
         if (this.users.has(id)) {
-            if (this.analysers.has(id)) {
-                using(this.analysers.get(id), (analyser) => {
-                    this.analysers.delete(id);
-                    analyser.removeEventListener("audioActivity", this.onAudioActivity);
-                });
-            }
-
             const user = this.users.get(id);
             user.spatializer = null;
 
@@ -588,12 +557,6 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
                 user.source = this.createSourceFromStream(stream);
                 user.spatializer = this.createSpatializer(true);
                 user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);
-
-                if (this.analyzeAudio) {
-                    const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
-                    analyser.addEventListener("audioActivity", this.onAudioActivity);
-                    this.analysers.set(id, analyser);
-                }
             }
         }
     }
@@ -645,7 +608,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             pose = source.pose;
         }
         else if (id === this.localUserID) {
-            pose = this.localUser.pose;
+            pose = this.localOutput.pose;
         }
 
         if (!pose) {

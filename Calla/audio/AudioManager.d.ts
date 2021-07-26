@@ -23,7 +23,6 @@ export declare enum SpatializerType {
  * A manager of audio sources, destinations, and their spatialization.
  **/
 export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
-    private analyzeAudio;
     private minDistance;
     private maxDistance;
     private rolloff;
@@ -32,26 +31,26 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private _offsetRadius;
     private clips;
     private users;
-    private analysers;
     localUserID: string;
     private sortedUserIDs;
-    localUser: AudioDestination;
+    localOutput: AudioDestination;
     listener: BaseListener;
-    private audioContext;
+    audioContext: AudioContext;
     private destination;
-    private onAudioActivity;
     private fetcher;
     private _type;
     devices: DeviceManager;
+    private _ready;
+    get ready(): Promise<void>;
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(fetcher?: IFetcher, type?: SpatializerType, analyzeAudio?: boolean);
+    constructor(fetcher?: IFetcher, type?: SpatializerType);
     get offsetRadius(): number;
     set offsetRadius(v: number);
     get algorithm(): string;
     protected checkAddEventListener<T extends Event>(type: string, callback: (evt: T) => any): boolean;
-    get ready(): boolean;
+    get isReady(): boolean;
     /**
      * Perform the audio system initialization, after a user gesture
      **/

@@ -22,8 +22,10 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     hasAudioPermission: boolean;
     hasVideoPermission: boolean;
     get connectionState(): ConnectionState;
+    get isConnected(): boolean;
     private setConnectionState;
     get conferenceState(): ConnectionState;
+    get isConferenced(): boolean;
     private setConferenceState;
     constructor(fetcher: IFetcher, _audio: AudioManager, needsVideoDevice?: boolean);
     get audio(): AudioManager;

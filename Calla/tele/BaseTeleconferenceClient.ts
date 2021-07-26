@@ -46,12 +46,20 @@ export abstract class BaseTeleconferenceClient
         return this._connectionState;
     }
 
+    get isConnected(): boolean {
+        return this.connectionState === ConnectionState.Connected;
+    }
+
     private setConnectionState(state: ConnectionState): void {
         this._connectionState = state;
     }
 
     get conferenceState(): ConnectionState {
         return this._conferenceState;
+    }
+
+    get isConferenced(): boolean {
+        return this.conferenceState === ConnectionState.Connected;
     }
 
     private setConferenceState(state: ConnectionState): void {

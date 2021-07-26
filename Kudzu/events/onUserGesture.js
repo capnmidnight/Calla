@@ -26,7 +26,7 @@ export function onUserGesture(callback, test) {
             for (const gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }
-            callback();
+            await callback();
         }
     };
     for (const gesture of gestures) {

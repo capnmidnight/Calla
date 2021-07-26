@@ -25,11 +25,6 @@ export type CallaTeleconferenceEventType = "error"
 
 export type CallaMetadataEventType = "error"
     | "info"
-    | "userJoined"
-    | "userLeft"
-    | "iceReceived"
-    | "offerReceived"
-    | "answerReceived"
     | "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
@@ -83,36 +78,6 @@ export class CallaTeleconferenceServerFailedEvent
 export class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
     constructor(type: T, public userID: string) {
         super(type);
-    }
-}
-
-export class CallaUserJoinedEvent extends CallaUserEvent<"userJoined"> {
-    constructor(id: string) {
-        super("userJoined", id);
-    }
-}
-
-export class CallaUserLeftEvent extends CallaUserEvent<"userLeft"> {
-    constructor(id: string) {
-        super("userLeft", id);
-    }
-}
-
-export class CallaRTCIceEvent extends CallaUserEvent<"iceReceived"> {
-    constructor(id: string, public readonly ice: RTCIceCandidate) {
-        super("iceReceived", id);
-    }
-}
-
-export class CallaRTCOfferEvent extends CallaUserEvent<"offerReceived"> {
-    constructor(id: string, public readonly offer: RTCSessionDescription) {
-        super("offerReceived", id);
-    }
-}
-
-export class CallaRTCAnswerEvent extends CallaUserEvent<"answerReceived"> {
-    constructor(id: string, public readonly answer: RTCSessionDescription) {
-        super("answerReceived", id);
     }
 }
 
@@ -339,11 +304,6 @@ export interface CallaTeleconferenceEvents {
 export interface CallaMetadataEvents {
     error: CallaErrorEvent;
     info: CallaInfoEvent;
-    userJoined: CallaUserJoinedEvent;
-    userLeft: CallaUserLeftEvent;
-    iceReceived: CallaRTCIceEvent;
-    offerReceived: CallaRTCOfferEvent;
-    answerReceived: CallaRTCAnswerEvent;
     userPosed: CallaUserPosedEvent;
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;

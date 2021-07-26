@@ -6,12 +6,14 @@ import { NoSpatializationListener } from "./spatializers/NoSpatializationListene
 export type DestinationNode = AudioDestinationNode | MediaStreamAudioDestinationNode;
 
 export class AudioDestination extends BaseAudioElement<BaseListener> {
+    private _remoteUserInput: AudioNode;
     private _spatializedInput: AudioNode;
     private _nonSpatializedInput: AudioNode;
     private _trueDestination: DestinationNode;
 
     constructor(audioContext: BaseAudioContext, destination: DestinationNode) {
         super(audioContext);
+        this._remoteUserInput = audioContext.createGain();
         this._spatializedInput = audioContext.createGain();
         this._nonSpatializedInput = audioContext.createGain();
 
@@ -31,6 +33,10 @@ export class AudioDestination extends BaseAudioElement<BaseListener> {
 
     get spatialized() {
         return !(this.spatializer instanceof NoSpatializationListener);
+    }
+
+    get remoteUserInput() {
+        return this._remoteUserInput;
     }
 
     get spatializedInput() {

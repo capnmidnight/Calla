@@ -123,7 +123,7 @@ import { Settings } from "./Settings";
         settings.zoom = game.zoom = controls.zoom;
     });
     login.addEventListener("login", async () => {
-        if (!audio.ready) {
+        if (!audio.isReady) {
             await once(audio, "audioready");
             setAudioProperties();
         }
