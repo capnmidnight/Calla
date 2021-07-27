@@ -60,4 +60,18 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     setAudioOutputDevice(device: MediaDeviceInfo): Promise<void>;
     setAudioMuted(muted: boolean): Promise<boolean>;
     setVideoMuted(muted: boolean): Promise<boolean>;
+    get localAudioInput(): GainNode;
+    get useHalfDuplex(): boolean;
+    set useHalfDuplex(v: boolean);
+    get halfDuplexMin(): number;
+    set halfDuplexMin(v: number);
+    get halfDuplexMax(): number;
+    set halfDuplexMax(v: number);
+    get halfDuplexThreshold(): number;
+    set halfDuplexThreshold(v: number);
+    get halfDuplexDelay(): number;
+    set halfDuplexDelay(v: number);
+    get halfDuplexSustain(): number;
+    set halfDuplexSustain(v: number);
+    get halfDuplexLevel(): number;
 }

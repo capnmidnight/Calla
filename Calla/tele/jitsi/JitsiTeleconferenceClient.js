@@ -412,5 +412,47 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     async getVideoMuted() {
         return this.isMediaMuted(StreamType.Video);
     }
+    get localAudioInput() {
+        return null;
+    }
+    get useHalfDuplex() {
+        return false;
+    }
+    set useHalfDuplex(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexMin() {
+        return 0;
+    }
+    set halfDuplexMin(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexMax() {
+        return 1;
+    }
+    set halfDuplexMax(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexThreshold() {
+        return Number.POSITIVE_INFINITY;
+    }
+    set halfDuplexThreshold(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexDelay() {
+        return 0;
+    }
+    set halfDuplexDelay(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexSustain() {
+        return 0;
+    }
+    set halfDuplexSustain(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexLevel() {
+        return 0;
+    }
 }
 //# sourceMappingURL=JitsiTeleconferenceClient.js.map

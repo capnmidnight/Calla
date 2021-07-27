@@ -122,7 +122,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      **/
     removeClip(id: string): IPlayableSource;
     private createSourceFromStream;
-    setUserStream(id: string, stream: MediaStream): Promise<void>;
+    setUserStream(id: string, stream: MediaStream): void;
     updateUserOffsets(): void;
     /**
      * Sets parameters that alter spatialization.

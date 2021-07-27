@@ -1,7 +1,7 @@
 import { arrayScan } from "kudzu/arrays/arrayScan";
 import { arraySortByKey } from "kudzu/arrays/arraySortedInsert";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import { autoPlay, playsInline } from "kudzu/html/attrs";
+import { autoPlay, id, playsInline } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import { Audio } from "kudzu/html/tags";
 import { isDefined, isFunction, isNullOrUndefined } from "kudzu/typeChecks";
@@ -73,7 +73,7 @@ export class DeviceManager extends TypedEventBase {
         super();
         this.needsVideoDevice = needsVideoDevice;
         if (canChangeAudioOutput) {
-            this.element = Audio(playsInline, autoPlay, styles(display("none")));
+            this.element = Audio(id("Calla-Device-Manager"), playsInline, autoPlay, styles(display("none")));
             document.body.appendChild(this.element);
         }
     }

@@ -121,4 +121,26 @@ export abstract class BaseTeleconferenceClient
     abstract toggleVideoMuted(): Promise<boolean>;
     abstract getAudioMuted(): Promise<boolean>;
     abstract getVideoMuted(): Promise<boolean>;
+
+    abstract get localAudioInput(): GainNode;
+
+    abstract get useHalfDuplex(): boolean;
+    abstract set useHalfDuplex(v: boolean);
+
+    abstract get halfDuplexMin(): number;
+    abstract set halfDuplexMin(v: number);
+
+    abstract get halfDuplexMax(): number;
+    abstract set halfDuplexMax(v: number);
+
+    abstract get halfDuplexThreshold(): number;
+    abstract set halfDuplexThreshold(v: number);
+
+    abstract get halfDuplexDelay(): number;
+    abstract set halfDuplexDelay(v: number);
+
+    abstract get halfDuplexSustain(): number;
+    abstract set halfDuplexSustain(v: number);
+
+    abstract get halfDuplexLevel(): number;
 }

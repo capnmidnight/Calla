@@ -239,5 +239,47 @@ export class Calla extends TypedEventBase {
         }
         return isMuted;
     }
+    get localAudioInput() {
+        return this._tele.localAudioInput;
+    }
+    get useHalfDuplex() {
+        return this._tele.useHalfDuplex;
+    }
+    set useHalfDuplex(v) {
+        this._tele.useHalfDuplex = v;
+    }
+    get halfDuplexMin() {
+        return this._tele.halfDuplexMin;
+    }
+    set halfDuplexMin(v) {
+        this._tele.halfDuplexMin = v;
+    }
+    get halfDuplexMax() {
+        return this._tele.halfDuplexMax;
+    }
+    set halfDuplexMax(v) {
+        this._tele.halfDuplexMax = v;
+    }
+    get halfDuplexThreshold() {
+        return this._tele.halfDuplexThreshold;
+    }
+    set halfDuplexThreshold(v) {
+        this._tele.halfDuplexThreshold = v;
+    }
+    get halfDuplexDelay() {
+        return this._tele.halfDuplexDelay;
+    }
+    set halfDuplexDelay(v) {
+        this._tele.halfDuplexDelay = v;
+    }
+    get halfDuplexSustain() {
+        return this._tele.halfDuplexSustain;
+    }
+    set halfDuplexSustain(v) {
+        this._tele.halfDuplexSustain = v;
+    }
+    get halfDuplexLevel() {
+        return this._tele.halfDuplexLevel;
+    }
 }
 //# sourceMappingURL=Calla.js.map

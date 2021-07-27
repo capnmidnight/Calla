@@ -31,4 +31,18 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     private isMediaMuted;
     getAudioMuted(): Promise<boolean>;
     getVideoMuted(): Promise<boolean>;
+    get localAudioInput(): GainNode;
+    get useHalfDuplex(): boolean;
+    set useHalfDuplex(_v: boolean);
+    get halfDuplexMin(): number;
+    set halfDuplexMin(_v: number);
+    get halfDuplexMax(): number;
+    set halfDuplexMax(_v: number);
+    get halfDuplexThreshold(): number;
+    set halfDuplexThreshold(_v: number);
+    get halfDuplexDelay(): number;
+    set halfDuplexDelay(_v: number);
+    get halfDuplexSustain(): number;
+    set halfDuplexSustain(_v: number);
+    get halfDuplexLevel(): number;
 }

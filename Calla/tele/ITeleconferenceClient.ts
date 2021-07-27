@@ -12,6 +12,15 @@ export interface ITeleconferenceClient
     localUserName: string;
     roomName: string;
 
+    localAudioInput: GainNode;
+    useHalfDuplex: boolean;
+    halfDuplexMin: number;
+    halfDuplexMax: number;
+    halfDuplexThreshold: number;
+    halfDuplexDelay: number;
+    halfDuplexSustain: number;
+    halfDuplexLevel: number;
+
     userExists(id: string): boolean;
 
     getUserNames(): string[][];

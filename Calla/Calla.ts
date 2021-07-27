@@ -322,4 +322,59 @@ export class Calla
         return isMuted;
     }
 
+    get localAudioInput(): GainNode {
+        return this._tele.localAudioInput;
+    }
+
+    get useHalfDuplex(): boolean {
+        return this._tele.useHalfDuplex;
+    }
+
+    set useHalfDuplex(v: boolean) {
+        this._tele.useHalfDuplex = v;
+    }
+
+    get halfDuplexMin(): number {
+        return this._tele.halfDuplexMin;
+    }
+
+    set halfDuplexMin(v: number) {
+        this._tele.halfDuplexMin = v;
+    }
+
+    get halfDuplexMax(): number {
+        return this._tele.halfDuplexMax;
+    }
+
+    set halfDuplexMax(v: number) {
+        this._tele.halfDuplexMax = v;
+    }
+
+    get halfDuplexThreshold(): number {
+        return this._tele.halfDuplexThreshold;
+    }
+
+    set halfDuplexThreshold(v: number) {
+        this._tele.halfDuplexThreshold = v;
+    }
+
+    get halfDuplexDelay(): number {
+        return this._tele.halfDuplexDelay;
+    }
+
+    set halfDuplexDelay(v: number) {
+        this._tele.halfDuplexDelay = v;
+    }
+
+    get halfDuplexSustain(): number {
+        return this._tele.halfDuplexSustain;
+    }
+
+    set halfDuplexSustain(v: number) {
+        this._tele.halfDuplexSustain = v;
+    }
+
+    get halfDuplexLevel(): number {
+        return this._tele.halfDuplexLevel;
+    }
 }

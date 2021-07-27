@@ -3,7 +3,6 @@ import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
-import { waitFor } from "kudzu/events/waitFor";
 import { whenAudioContextReady } from "kudzu/events/whenAudioContextReady";
 import { autoPlay, controls, loop, muted, playsInline, src } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
@@ -547,13 +546,12 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         }
     }
 
-    async setUserStream(id: string, stream: MediaStream): Promise<void> {
+    setUserStream(id: string, stream: MediaStream): void {
         if (this.users.has(id)) {
             const user = this.users.get(id);
             user.spatializer = null;
 
             if (stream) {
-                await waitFor(() => stream.active);
                 user.source = this.createSourceFromStream(stream);
                 user.spatializer = this.createSpatializer(true, true);
                 user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);
