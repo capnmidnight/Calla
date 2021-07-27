@@ -71,7 +71,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         }
     }
     async connect() {
-        await super.connect();
+        this.setConnectionState(ConnectionState.Connecting);
         const connectionEvents = JitsiMeetJS.events.connection;
         this.connection = new JitsiMeetJS.JitsiConnection(null, null, {
             hosts: {
@@ -103,9 +103,10 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         const connectTask = once(this.connection, connectionEvents.CONNECTION_ESTABLISHED);
         this.connection.connect();
         await connectTask;
+        this.setConnectionState(ConnectionState.Connected);
     }
     async join(roomName, enableTeleconference) {
-        await super.join(roomName, enableTeleconference);
+        this.setConferenceState(ConnectionState.Connecting);
         this.enableTeleconference = enableTeleconference;
         const isoRoomName = roomName.toLocaleLowerCase();
         if (isoRoomName !== this.roomName) {
@@ -159,6 +160,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                 const userID = this.conference.myUserId();
                 if (userID) {
                     this.localUserID = userID;
+                    this.setConferenceState(ConnectionState.Connected);
                     this.dispatchEvent(new CallaConferenceJoinedEvent(userID, null));
                 }
             });
@@ -270,13 +272,14 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         }
     }
     async leave() {
-        await super.leave();
+        this.setConferenceState(ConnectionState.Disconnecting);
         try {
             await this.tryRemoveTrack(this.localUserID, StreamType.Video);
             await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
             const leaveTask = once(this, "conferenceLeft");
             this.conference.leave();
             await leaveTask;
+            this.setConferenceState(ConnectionState.Disconnected);
         }
         catch (exp) {
             console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
@@ -287,7 +290,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         }
     }
     async disconnect() {
-        await super.disconnect();
+        this.setConnectionState(ConnectionState.Disconnecting);
         if (this.conferenceState === ConnectionState.Connected) {
             await this.leave();
         }
@@ -295,6 +298,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             const disconnectTask = once(this, "serverDisconnected");
             this.connection.disconnect();
             await disconnectTask;
+            this.setConnectionState(ConnectionState.Disconnected);
         }
         catch (exp) {
             console.warn("><> CALLA <>< ---- Failed to disconnect from teleconference server.", exp);

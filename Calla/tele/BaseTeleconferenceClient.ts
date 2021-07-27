@@ -50,7 +50,7 @@ export abstract class BaseTeleconferenceClient
         return this.connectionState === ConnectionState.Connected;
     }
 
-    private setConnectionState(state: ConnectionState): void {
+    protected setConnectionState(state: ConnectionState): void {
         this._connectionState = state;
     }
 
@@ -62,7 +62,7 @@ export abstract class BaseTeleconferenceClient
         return this.conferenceState === ConnectionState.Connected;
     }
 
-    private setConferenceState(state: ConnectionState): void {
+    protected setConferenceState(state: ConnectionState): void {
         this._conferenceState = state;
     }
 
@@ -72,15 +72,6 @@ export abstract class BaseTeleconferenceClient
         this.fetcher = fetcher;
 
         this.devices.addEventListener("inputschanged", this.onInputsChanged.bind(this));
-
-        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
-        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-
-        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
 
     get audio(): AudioManager {
@@ -118,22 +109,10 @@ export abstract class BaseTeleconferenceClient
         });
     }
 
-    async connect(): Promise<void> {
-        this.setConnectionState(ConnectionState.Connecting);
-    }
-
-    async join(_roomName: string, _enableTeleconference: boolean): Promise<void> {
-        this.setConferenceState(ConnectionState.Connecting);
-    }
-
-    async leave(): Promise<void> {
-        this.setConferenceState(ConnectionState.Disconnecting);
-    }
-
-    async disconnect(): Promise<void> {
-        this.setConnectionState(ConnectionState.Disconnecting);
-    }
-
+    abstract connect(): Promise<void>;
+    abstract join(_roomName: string, _enableTeleconference: boolean): Promise<void>;
+    abstract leave(): Promise<void>;
+    abstract disconnect(): Promise<void>;
     abstract userExists(id: string): boolean;
     abstract getUserNames(): string[][];
     abstract identify(userNameOrID: string): Promise<void>;

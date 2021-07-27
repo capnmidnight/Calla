@@ -6,7 +6,7 @@ export async function whenAudioContextReady(ctx) {
         onUserGesture(() => ctx.resume());
     }
     else if (ctx.state === "closed") {
-        ctx.resume();
+        await ctx.resume();
     }
     await task;
 }

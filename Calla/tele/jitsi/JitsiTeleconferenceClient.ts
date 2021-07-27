@@ -110,7 +110,7 @@ export class JitsiTeleconferenceClient
     }
 
     async connect(): Promise<void> {
-        await super.connect();
+        this.setConnectionState(ConnectionState.Connecting);
 
         const connectionEvents = JitsiMeetJS.events.connection;
 
@@ -150,10 +150,12 @@ export class JitsiTeleconferenceClient
         const connectTask = once(this.connection, connectionEvents.CONNECTION_ESTABLISHED);
         this.connection.connect();
         await connectTask;
+
+        this.setConnectionState(ConnectionState.Connected);
     }
 
     async join(roomName: string, enableTeleconference: boolean): Promise<void> {
-        await super.join(roomName, enableTeleconference);
+        this.setConferenceState(ConnectionState.Connecting);
 
         this.enableTeleconference = enableTeleconference;
 
@@ -221,6 +223,7 @@ export class JitsiTeleconferenceClient
                 const userID = this.conference.myUserId();
                 if (userID) {
                     this.localUserID = userID;
+                    this.setConferenceState(ConnectionState.Connected);
                     this.dispatchEvent(new CallaConferenceJoinedEvent(userID, null));
                 }
             });
@@ -365,7 +368,7 @@ export class JitsiTeleconferenceClient
     }
 
     async leave(): Promise<void> {
-        await super.leave();
+        this.setConferenceState(ConnectionState.Disconnecting);
 
         try {
             await this.tryRemoveTrack(this.localUserID, StreamType.Video);
@@ -373,6 +376,7 @@ export class JitsiTeleconferenceClient
             const leaveTask = once(this, "conferenceLeft");
             this.conference.leave();
             await leaveTask;
+            this.setConferenceState(ConnectionState.Disconnected);
         }
         catch (exp) {
             console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
@@ -384,7 +388,7 @@ export class JitsiTeleconferenceClient
     }
 
     async disconnect(): Promise<void> {
-        await super.disconnect();
+        this.setConnectionState(ConnectionState.Disconnecting);
         if (this.conferenceState === ConnectionState.Connected) {
             await this.leave();
         }
@@ -393,6 +397,7 @@ export class JitsiTeleconferenceClient
             const disconnectTask = once(this, "serverDisconnected");
             this.connection.disconnect();
             await disconnectTask;
+            this.setConnectionState(ConnectionState.Disconnected);
         }
         catch (exp) {
             console.warn("><> CALLA <>< ---- Failed to disconnect from teleconference server.", exp);

@@ -49,13 +49,6 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this.needsVideoDevice = needsVideoDevice;
         this.fetcher = fetcher;
         this.devices.addEventListener("inputschanged", this.onInputsChanged.bind(this));
-        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
-        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
     get audio() {
         return this._audio;
@@ -86,18 +79,6 @@ export class BaseTeleconferenceClient extends TypedEventBase {
             };
             this.addEventListener(evtName, getter);
         });
-    }
-    async connect() {
-        this.setConnectionState(ConnectionState.Connecting);
-    }
-    async join(_roomName, _enableTeleconference) {
-        this.setConferenceState(ConnectionState.Connecting);
-    }
-    async leave() {
-        this.setConferenceState(ConnectionState.Disconnecting);
-    }
-    async disconnect() {
-        this.setConnectionState(ConnectionState.Disconnecting);
     }
 }
 //# sourceMappingURL=BaseTeleconferenceClient.js.map
