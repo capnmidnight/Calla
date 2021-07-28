@@ -454,5 +454,8 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     get halfDuplexLevel() {
         return 0;
     }
+    get remoteActivityLevel() {
+        return 0;
+    }
 }
 //# sourceMappingURL=JitsiTeleconferenceClient.js.map

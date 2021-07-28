@@ -16,6 +16,7 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
     halfDuplexDelay: number;
     halfDuplexSustain: number;
     halfDuplexLevel: number;
+    remoteActivityLevel: number;
     userExists(id: string): boolean;
     getUserNames(): string[][];
     connectionState: ConnectionState;

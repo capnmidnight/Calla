@@ -58,4 +58,5 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     abstract get halfDuplexSustain(): number;
     abstract set halfDuplexSustain(v: number);
     abstract get halfDuplexLevel(): number;
+    abstract get remoteActivityLevel(): number;
 }

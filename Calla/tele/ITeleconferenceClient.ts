@@ -20,6 +20,7 @@ export interface ITeleconferenceClient
     halfDuplexDelay: number;
     halfDuplexSustain: number;
     halfDuplexLevel: number;
+    remoteActivityLevel: number;
 
     userExists(id: string): boolean;
 

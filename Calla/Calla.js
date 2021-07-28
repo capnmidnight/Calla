@@ -281,5 +281,8 @@ export class Calla extends TypedEventBase {
     get halfDuplexLevel() {
         return this._tele.halfDuplexLevel;
     }
+    get remoteActivityLevel() {
+        return this._tele.remoteActivityLevel;
+    }
 }
 //# sourceMappingURL=Calla.js.map

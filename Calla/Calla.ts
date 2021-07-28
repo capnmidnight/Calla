@@ -377,4 +377,8 @@ export class Calla
     get halfDuplexLevel(): number {
         return this._tele.halfDuplexLevel;
     }
+
+    get remoteActivityLevel(): number {
+        return this._tele.remoteActivityLevel;
+    }
 }

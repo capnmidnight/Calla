@@ -586,4 +586,8 @@ export class JitsiTeleconferenceClient
     get halfDuplexLevel(): number {
         return 0;
     }
+
+    get remoteActivityLevel(): number {
+        return 0;
+    }
 }

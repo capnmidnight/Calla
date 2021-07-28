@@ -74,4 +74,5 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     get halfDuplexSustain(): number;
     set halfDuplexSustain(v: number);
     get halfDuplexLevel(): number;
+    get remoteActivityLevel(): number;
 }

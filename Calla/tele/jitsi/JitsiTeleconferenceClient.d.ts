@@ -45,4 +45,5 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     get halfDuplexSustain(): number;
     set halfDuplexSustain(_v: number);
     get halfDuplexLevel(): number;
+    get remoteActivityLevel(): number;
 }
