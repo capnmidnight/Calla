@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * @file A collection of convolvers. Can be used for the optimized FOA binaural
  * rendering. (e.g. SH-MaxRe HRTFs)
@@ -56,16 +56,16 @@ export class FOAConvolver {
      * Build the internal audio graph.
      */
     _buildAudioGraph() {
-        this._splitterWYZX = this._context.createChannelSplitter(4);
-        this._mergerWY = this._context.createChannelMerger(2);
-        this._mergerZX = this._context.createChannelMerger(2);
-        this._convolverWY = this._context.createConvolver();
-        this._convolverZX = this._context.createConvolver();
-        this._splitterWY = this._context.createChannelSplitter(2);
-        this._splitterZX = this._context.createChannelSplitter(2);
-        this._inverter = this._context.createGain();
-        this._mergerBinaural = this._context.createChannelMerger(2);
-        this._summingBus = this._context.createGain();
+        this._splitterWYZX = nameVertex("foa-convolver-splitter-wyzx", this._context.createChannelSplitter(4));
+        this._mergerWY = nameVertex("foa-convolver-merger-wy", this._context.createChannelMerger(2));
+        this._mergerZX = nameVertex("foa-convolver-merger-zx", this._context.createChannelMerger(2));
+        this._convolverWY = nameVertex("foa-convolver-convolver-wy", this._context.createConvolver());
+        this._convolverZX = nameVertex("foa-convolver-convolver-zx", this._context.createConvolver());
+        this._splitterWY = nameVertex("foa-convolver-splitter-wy", this._context.createChannelSplitter(2));
+        this._splitterZX = nameVertex("foa-convolver-splitter-zx", this._context.createChannelSplitter(2));
+        this._inverter = nameVertex("foa-convolver-inverter", this._context.createGain());
+        this._mergerBinaural = nameVertex("foa-convolver-merger-binaural", this._context.createChannelMerger(2));
+        this._summingBus = nameVertex("foa-convolver-summing-bus", this._context.createGain());
         // Group W and Y, then Z and X.
         connect(this._splitterWYZX, this._mergerWY, 0, 0);
         connect(this._splitterWYZX, this._mergerWY, 1, 1);

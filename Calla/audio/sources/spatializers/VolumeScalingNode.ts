@@ -2,7 +2,7 @@ import { vec3 } from "gl-matrix";
 import { clamp } from "kudzu/math/clamp";
 import { project } from "kudzu/math/project";
 import type { VolumeScalingListener } from "../../destinations/spatializers/VolumeScalingListener";
-import { connect } from "../../GraphVisualizer";
+import { connect, nameVertex } from "../../GraphVisualizer";
 import type { Pose } from "../../positions/Pose";
 import { BaseEmitter } from "./BaseEmitter";
 
@@ -17,7 +17,7 @@ export class VolumeScalingNode extends BaseEmitter {
      */
     constructor(audioContext: BaseAudioContext, destination: AudioNode, listener: VolumeScalingListener) {
         super(audioContext, destination);
-        const gain = audioContext.createGain();
+        const gain = nameVertex("listener-volume-scaler", audioContext.createGain());
         this.input = this.output = gain;
         this.gain = gain;
         this.listener = listener;

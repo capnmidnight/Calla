@@ -1,5 +1,6 @@
 import { IDisposable } from "kudzu/using";
 import { BaseSpatializer } from "./BaseSpatializer";
+import { nameVertex } from "./GraphVisualizer";
 import { IPoseable } from "./IPoseable";
 import { InterpolatedPose } from "./positions/InterpolatedPose";
 
@@ -16,8 +17,8 @@ export abstract class BaseAudioElement<T extends BaseSpatializer>
     private _spatializer: T = null;
     protected volumeControl: GainNode;
 
-    constructor(protected audioContext: BaseAudioContext) {
-        this.volumeControl = audioContext.createGain();
+    constructor(public id: string, protected audioContext: BaseAudioContext) {
+        this.volumeControl = nameVertex("volume-control-" + this.id, audioContext.createGain());
     }
 
     private disposed = false;

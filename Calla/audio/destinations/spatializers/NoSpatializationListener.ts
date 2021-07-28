@@ -1,3 +1,4 @@
+import { nameVertex } from "../../GraphVisualizer";
 import { Pose } from "../../positions/Pose";
 import { BaseEmitter } from "../../sources/spatializers/BaseEmitter";
 import { NoSpatializationNode } from "../../sources/spatializers/NoSpatializationNode";
@@ -8,7 +9,7 @@ import { BaseListener } from "./BaseListener";
 export class NoSpatializationListener extends BaseListener {
     constructor(audioContext: BaseAudioContext) {
         super(audioContext);
-        const gain = audioContext.createGain();
+        const gain = nameVertex("listener-volume-correction", audioContext.createGain());
         gain.gain.value = 0.1;
         this.input = this.output = gain;
     }

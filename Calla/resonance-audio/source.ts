@@ -24,7 +24,7 @@
 // Internal dependencies.
 import { vec3 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { Attenuation } from './attenuation';
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 import { Directivity } from './directivity';
@@ -190,13 +190,13 @@ export class Source implements IDisposable {
 
         // Create audio nodes.
         let context = scene.context;
-        this.input = context.createGain();
+        this.input = nameVertex("source-input", context.createGain());
         this.directivity = new Directivity(context, {
             alpha: options.alpha,
             sharpness: options.sharpness,
         });
-        this.toEarly = context.createGain();
-        this.toLate = context.createGain();
+        this.toEarly = nameVertex("source-to-early", context.createGain());
+        this.toLate = nameVertex("source-to-late", context.createGain());
         this.attenuation = new Attenuation(context, {
             minDistance: options.minDistance,
             maxDistance: options.maxDistance,

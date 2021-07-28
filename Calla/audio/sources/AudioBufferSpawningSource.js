@@ -1,6 +1,7 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { once } from "kudzu/events/once";
+import { nameVertex } from "../GraphVisualizer";
 import { AudioBufferSource } from "./AudioBufferSource";
 import { BaseAudioBufferSource } from "./BaseAudioBufferSource";
 export class AudioBufferSpawningSource extends BaseAudioBufferSource {
@@ -24,7 +25,7 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         return false;
     }
     async play() {
-        const newBuffer = this.source.context.createBufferSource();
+        const newBuffer = nameVertex("buffer-source-" + this.id, this.source.context.createBufferSource());
         newBuffer.buffer = this.source.buffer;
         newBuffer.loop = this.source.loop;
         const newSpatializer = this.spatializer.clone();

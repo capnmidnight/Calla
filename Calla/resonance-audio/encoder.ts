@@ -21,7 +21,7 @@
 
 
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import {
     MAX_RE_WEIGHTS,
     SPHERICAL_HARMONICS,
@@ -115,8 +115,8 @@ export class Encoder implements IDisposable {
         this.context = context;
 
         // Create I/O nodes.
-        this.input = context.createGain();
-        this.output = context.createGain();
+        this.input = nameVertex("encoder-input", context.createGain());
+        this.output = nameVertex("encoder-output", context.createGain());
 
         // Set initial order, angle and source width.
         this.setAmbisonicOrder(options.ambisonicOrder);
@@ -136,10 +136,10 @@ export class Encoder implements IDisposable {
         
         // Create audio graph.
         let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
-        this.merger = this.context.createChannelMerger(numChannels);
+        this.merger = nameVertex("encoder-merger", this.context.createChannelMerger(numChannels));
         this.channelGain = new Array(numChannels);
         for (let i = 0; i < numChannels; i++) {
-            this.channelGain[i] = this.context.createGain();
+            this.channelGain[i] = nameVertex("encoder-channel-" + i, this.context.createGain());
             connect(this.input, this.channelGain[i]);
             connect(this.channelGain[i], this.merger, 0, i);
         }

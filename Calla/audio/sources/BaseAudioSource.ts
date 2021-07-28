@@ -7,8 +7,8 @@ export abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElem
 
     private _source: T;
 
-    constructor(public id: string, audioContext: BaseAudioContext) {
-        super(audioContext);
+    constructor(id: string, audioContext: BaseAudioContext) {
+        super(id, audioContext);
     }
 
     private disposed2 = false;

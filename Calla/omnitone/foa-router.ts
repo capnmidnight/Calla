@@ -15,7 +15,7 @@
  */
 
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 /**
  * @file An audio channel router to resolve different channel layouts between
@@ -59,8 +59,8 @@ export class FOARouter implements IDisposable {
     constructor(context: BaseAudioContext, channelMap: ChannelMap|number[]) {
         this._context = context;
 
-        this._splitter = this._context.createChannelSplitter(4);
-        this._merger = this._context.createChannelMerger(4);
+        this._splitter = nameVertex("foa-router-splitter", this._context.createChannelSplitter(4));
+        this._merger = nameVertex("foa-router-merger", this._context.createChannelMerger(4));
 
         // input/output proxy.
         this.input = this._splitter;

@@ -1,7 +1,7 @@
 import { vec3 } from "gl-matrix";
 import { clamp } from "kudzu/math/clamp";
 import { project } from "kudzu/math/project";
-import { connect } from "../../GraphVisualizer";
+import { connect, nameVertex } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 const delta = vec3.create();
 export class VolumeScalingNode extends BaseEmitter {
@@ -12,7 +12,7 @@ export class VolumeScalingNode extends BaseEmitter {
      */
     constructor(audioContext, destination, listener) {
         super(audioContext, destination);
-        const gain = audioContext.createGain();
+        const gain = nameVertex("listener-volume-scaler", audioContext.createGain());
         this.input = this.output = gain;
         this.gain = gain;
         this.listener = listener;

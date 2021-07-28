@@ -1,7 +1,8 @@
 import { isDefined, isNullOrUndefined, isNumber } from "kudzu/typeChecks";
 
 const graph = new Map<AudioNode, Set<AudioNode | AudioParam>>();
-const children = new Map<AudioNode, number>();
+const children = new WeakMap<AudioNode, number>();
+const names = new WeakMap<AudioNode | AudioParam, string>();
 
 function add(a: AudioNode, b: AudioNode | AudioParam): boolean {
 
@@ -62,6 +63,13 @@ function isAudioNode(a: AudioNode | AudioParam | number): a is AudioNode {
 
 function isAudioParam(a: AudioNode | AudioParam): a is AudioParam {
     return !isAudioNode(a);
+}
+
+export function nameVertex<T>(name: string, node: T & AudioNode): T;
+export function nameVertex<T>(name: string, param: T & AudioParam): T;
+export function nameVertex<T>(name: string, v: T & (AudioNode | AudioParam)): T {
+    names.set(v, name);
+    return v;
 }
 
 export function connect(a: AudioNode, destinationNode: AudioNode, output?: number, input?: number): boolean;
@@ -138,7 +146,8 @@ export function print() {
 
             while (stack.length > 0) {
                 const { pre, node } = stack.pop();
-                console.log(pre, node);
+                const name = names.get(node) ?? "???";
+                console.log(pre, name, node);
                 if (isAudioNode(node)) {
                     const set = graph.get(node);
                     if (set) {

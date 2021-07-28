@@ -1,5 +1,5 @@
 import { BaseAudioElement } from "../BaseAudioElement";
-import { connect, disconnect } from "../GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../GraphVisualizer";
 import { NoSpatializationListener } from "./spatializers/NoSpatializationListener";
 export class AudioDestination extends BaseAudioElement {
     _remoteUserInput;
@@ -7,10 +7,10 @@ export class AudioDestination extends BaseAudioElement {
     _nonSpatializedInput;
     _trueDestination;
     constructor(audioContext, destination) {
-        super(audioContext);
-        this._remoteUserInput = audioContext.createGain();
-        this._spatializedInput = audioContext.createGain();
-        this._nonSpatializedInput = audioContext.createGain();
+        super("final", audioContext);
+        this._remoteUserInput = nameVertex("remote-user-input", audioContext.createGain());
+        this._spatializedInput = nameVertex("spatialized-input", audioContext.createGain());
+        this._nonSpatializedInput = nameVertex("non-spatialized-input", audioContext.createGain());
         connect(this._nonSpatializedInput, this.volumeControl);
         this.setDestination(destination);
     }

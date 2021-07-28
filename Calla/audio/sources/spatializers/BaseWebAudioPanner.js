@@ -1,4 +1,4 @@
-import { connect } from "../../GraphVisualizer";
+import { connect, nameVertex } from "../../GraphVisualizer";
 import { BaseEmitter } from "./BaseEmitter";
 /**
  * Base class for spatializers that uses WebAudio's PannerNode
@@ -11,7 +11,7 @@ export class BaseWebAudioPanner extends BaseEmitter {
      */
     constructor(audioContext, destination) {
         super(audioContext, destination);
-        this.panner = audioContext.createPanner();
+        this.panner = nameVertex("listener-spatializer", audioContext.createPanner());
         this.panner.panningModel = "HRTF";
         this.panner.distanceModel = "inverse";
         this.panner.coneInnerAngle = 360;

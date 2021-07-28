@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { BufferDataType, BufferList } from './buffer-list';
 import { FOAConvolver } from './foa-convolver';
 import { FOARotator } from './foa-rotator';
@@ -57,9 +57,9 @@ export class FOARenderer {
      * Builds the internal audio graph.
      */
     buildAudioGraph() {
-        this.input = this.context.createGain();
-        this.output = this.context.createGain();
-        this.bypass = this.context.createGain();
+        this.input = nameVertex("foa-renderer-input", this.context.createGain());
+        this.output = nameVertex("foa-renderer-output", this.context.createGain());
+        this.bypass = nameVertex("foa-renderer-bypass", this.context.createGain());
         this.router = new FOARouter(this.context, this.config.channelMap);
         this.rotator = new FOARotator(this.context);
         this.convolver = new FOAConvolver(this.context);

@@ -36,7 +36,7 @@ import {
     DirectionToAxis,
     DirectionToDimension
 } from "./utils";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 export interface EarlyReflectionsOptions {
 
@@ -120,33 +120,33 @@ export class EarlyReflections implements IDisposable {
         }
 
         // Create nodes.
-        this.input = context.createGain();
-        this.output = context.createGain();
-        this.lowpass = context.createBiquadFilter();
-        this.merger = context.createChannelMerger(4); // First-order encoding only.
+        this.input = nameVertex("early-reflections-input", context.createGain());
+        this.output = nameVertex("early-reflections-output", context.createGain());
+        this.lowpass = nameVertex("early-reflection-lowpass-filter", context.createBiquadFilter());
+        this.merger = nameVertex("early-reflection-merger", context.createChannelMerger(4)); // First-order encoding only.
 
         this.delays = {
-            left: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION),
-            right: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION),
-            front: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION),
-            back: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION),
-            up: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION),
-            down: context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)
+            left: nameVertex("early-reflection-delay-left", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
+            right: nameVertex("early-reflection-delay-right", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
+            front: nameVertex("early-reflection-delay-front", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
+            back: nameVertex("early-reflection-delay-back", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
+            up: nameVertex("early-reflection-delay-up", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
+            down: nameVertex("early-reflection-delay-down", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION))
         };
 
         this.gains = {
-            left: context.createGain(),
-            right: context.createGain(),
-            front: context.createGain(),
-            back: context.createGain(),
-            up: context.createGain(),
-            down: context.createGain()
+            left: nameVertex("early-reflections-gains-left", context.createGain()),
+            right: nameVertex("early-reflections-gains-right", context.createGain()),
+            front: nameVertex("early-reflections-gains-front", context.createGain()),
+            back: nameVertex("early-reflections-gains-back", context.createGain()),
+            up: nameVertex("early-reflections-gains-up", context.createGain()),
+            down: nameVertex("early-reflections-gains-down", context.createGain())
         };
 
         this.inverters = {
-            right: context.createGain(),
-            back: context.createGain(),
-            down: context.createGain()
+            right: nameVertex("early-reflections-inverters-right", context.createGain()),
+            back: nameVertex("early-reflections-inverters-back", context.createGain()),
+            down: nameVertex("early-reflections-inverters-down", context.createGain())
         };
 
         // Connect audio graph for each wall reflection and initialize encoder directions, set delay times and gains to 0.

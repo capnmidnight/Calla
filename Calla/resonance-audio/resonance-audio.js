@@ -19,7 +19,7 @@
  */
 import { vec3 } from "gl-matrix";
 import { arrayRemoveAt } from "kudzu/arrays/arrayRemoveAt";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { Encoder } from './encoder';
 import { Listener } from './listener';
 import { Room } from './room';
@@ -75,8 +75,8 @@ export class ResonanceAudio {
         });
         // Create auxillary audio nodes.
         this.context = context;
-        this.output = context.createGain();
-        this.ambisonicOutput = context.createGain();
+        this.output = nameVertex("resonance-output", context.createGain());
+        this.ambisonicOutput = nameVertex("resonance-ambisonic-output", context.createGain());
         this.ambisonicInput = this.listener.input;
         // Connect audio graph.
         connect(this.room.output, this.listener.input);

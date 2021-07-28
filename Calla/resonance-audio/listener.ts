@@ -22,7 +22,7 @@
 
 import { mat3, vec3 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import type { FOARenderer } from "../omnitone/foa-renderer";
 import type { HOARenderer } from "../omnitone/hoa-renderer";
 import { createFOARenderer, createHOARenderer } from "../omnitone/omnitone";
@@ -116,9 +116,9 @@ export class Listener implements IDisposable {
 
         // These nodes are created in order to safely asynchronously load Omnitone
         // while the rest of the scene is being created.
-        this.input = context.createGain();
-        this.output = context.createGain();
-        this.ambisonicOutput = context.createGain();
+        this.input = nameVertex("listener-input", context.createGain());
+        this.output = nameVertex("listener-output", context.createGain());
+        this.ambisonicOutput = nameVertex("listener-ambisonic-input", context.createGain());
 
         // Initialize Omnitone (async) and connect to audio graph when complete.
         this.renderer.initialize().then(() => {

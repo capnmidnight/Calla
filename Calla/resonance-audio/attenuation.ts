@@ -20,6 +20,7 @@
  */
 
 import { isGoodNumber } from "kudzu/typeChecks";
+import { nameVertex } from "../audio/GraphVisualizer";
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 import {
     DEFAULT_ATTENUATION_ROLLOFF,
@@ -82,7 +83,7 @@ export class Attenuation {
         this.setRolloff(this.rolloff);
 
         // Create node.
-        this.gainNode = context.createGain();
+        this.gainNode = nameVertex("attenuation", context.createGain());
 
         // Initialize distance to max distance.
         this.setDistance(this.maxDistance);

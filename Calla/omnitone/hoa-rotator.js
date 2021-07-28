@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { mat3, mat4, vec3 } from "gl-matrix";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * @file Sound field rotator for higher-order-ambisonics decoding.
  */
@@ -257,8 +257,8 @@ export class HOARotator {
         // We need to determine the number of channels K based on the ambisonic order
         // N where K = (N + 1)^2.
         const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
-        this._splitter = this._context.createChannelSplitter(numberOfChannels);
-        this._merger = this._context.createChannelMerger(numberOfChannels);
+        this._splitter = nameVertex("hoa-rotator-splitter", this._context.createChannelSplitter(numberOfChannels));
+        this._merger = nameVertex("hoa-rotator-merger", this._context.createChannelMerger(numberOfChannels));
         // Create a set of per-order rotation matrices using gain nodes.
         /** @type {GainNode[][]} */
         this._gainNodeMatrix = [];
@@ -278,7 +278,7 @@ export class HOARotator {
                 for (let k = 0; k < rows; k++) {
                     const outputIndex = orderOffset + k;
                     const matrixIndex = j * rows + k;
-                    this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
+                    this._gainNodeMatrix[i - 1][matrixIndex] = nameVertex(`hoa-rotator-matrix-${i}-${matrixIndex}`, this._context.createGain());
                     connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
                     connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                 }

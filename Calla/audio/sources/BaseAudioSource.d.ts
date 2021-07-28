@@ -1,7 +1,6 @@
 import { BaseAudioElement } from "../BaseAudioElement";
 import { BaseEmitter } from "./spatializers/BaseEmitter";
 export declare abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElement<BaseEmitter> {
-    id: string;
     private _source;
     constructor(id: string, audioContext: BaseAudioContext);
     private disposed2;

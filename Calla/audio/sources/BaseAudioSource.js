@@ -2,11 +2,9 @@ import { BaseAudioElement } from "../BaseAudioElement";
 import { connect, disconnect } from "../GraphVisualizer";
 import { NoSpatializationNode } from "./spatializers/NoSpatializationNode";
 export class BaseAudioSource extends BaseAudioElement {
-    id;
     _source;
     constructor(id, audioContext) {
-        super(audioContext);
-        this.id = id;
+        super(id, audioContext);
     }
     disposed2 = false;
     dispose() {

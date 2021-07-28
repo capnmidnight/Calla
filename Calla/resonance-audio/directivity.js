@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { vec3 } from "gl-matrix";
+import { nameVertex } from "../audio/GraphVisualizer";
 import { DEFAULT_DIRECTIVITY_ALPHA, DEFAULT_DIRECTIVITY_SHARPNESS, EPSILON_FLOAT } from "./utils";
 const forwardNorm = vec3.create();
 const directionNorm = vec3.create();
@@ -36,7 +37,7 @@ export class Directivity {
         }, options);
         // Create audio node.
         this.context = context;
-        this.lowpass = context.createBiquadFilter();
+        this.lowpass = nameVertex("directivity-lowpass-filter", context.createBiquadFilter());
         // Initialize filter coefficients.
         this.lowpass.type = 'lowpass';
         this.lowpass.Q.value = 0;

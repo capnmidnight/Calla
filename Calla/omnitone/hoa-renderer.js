@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
 import { HOARotator } from './hoa-rotator';
@@ -63,9 +63,9 @@ export class HOARenderer {
      * Builds the internal audio graph.
      */
     _buildAudioGraph() {
-        this.input = this.context.createGain();
-        this.output = this.context.createGain();
-        this.bypass = this.context.createGain();
+        this.input = nameVertex("hoa-renderer-input", this.context.createGain());
+        this.output = nameVertex("hoa-renderer-output", this.context.createGain());
+        this.bypass = nameVertex("hoa-renderer-bypass", this.context.createGain());
         this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
         this.convolver =
             new HOAConvolver(this.context, this.config.ambisonicOrder);

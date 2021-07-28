@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * @file An audio channel router to resolve different channel layouts between
  * browsers.
@@ -53,8 +53,8 @@ export class FOARouter {
      */
     constructor(context, channelMap) {
         this._context = context;
-        this._splitter = this._context.createChannelSplitter(4);
-        this._merger = this._context.createChannelMerger(4);
+        this._splitter = nameVertex("foa-router-splitter", this._context.createChannelSplitter(4));
+        this._merger = nameVertex("foa-router-merger", this._context.createChannelMerger(4));
         // input/output proxy.
         this.input = this._splitter;
         this.output = this._merger;

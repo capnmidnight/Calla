@@ -1,3 +1,4 @@
+import { nameVertex } from "../../GraphVisualizer";
 import { Pose } from "../../positions/Pose";
 import { BaseEmitter } from "../../sources/spatializers/BaseEmitter";
 import { VolumeScalingNode } from "../../sources/spatializers/VolumeScalingNode";
@@ -15,7 +16,7 @@ export class VolumeScalingListener extends BaseListener {
      */
     constructor(audioContext: BaseAudioContext) {
         super(audioContext);
-        const gain = audioContext.createGain();
+        const gain = nameVertex("volume-scaler", audioContext.createGain());
         this.input = this.output = gain;
 
         this.pose = new Pose();

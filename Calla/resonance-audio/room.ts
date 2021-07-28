@@ -23,7 +23,7 @@
 // Internal dependencies.
 import { vec3 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { Dimension } from "./Dimension";
 import { Direction } from "./Direction";
 import { EarlyReflections } from './early-reflections';
@@ -289,9 +289,9 @@ export class Room implements IDisposable {
         this.speedOfSound = options.speedOfSound;
 
         // Construct auxillary audio nodes.
-        this.output = context.createGain();
+        this.output = nameVertex("room-output", context.createGain());
         connect(this.early.output, this.output);
-        this._merger = context.createChannelMerger(4);
+        this._merger = nameVertex("room-merger", context.createChannelMerger(4));
 
         connect(this.late.output, this._merger, 0, 0);
         connect(this._merger, this.output);

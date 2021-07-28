@@ -1,3 +1,5 @@
+export declare function nameVertex<T>(name: string, node: T & AudioNode): T;
+export declare function nameVertex<T>(name: string, param: T & AudioParam): T;
 export declare function connect(a: AudioNode, destinationNode: AudioNode, output?: number, input?: number): boolean;
 export declare function connect(a: AudioNode, destinationParam: AudioParam, output?: number): boolean;
 export declare function disconnect(a: AudioNode): boolean;

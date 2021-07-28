@@ -19,7 +19,7 @@
  */
 // Internal dependencies.
 import { vec3 } from "gl-matrix";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { Attenuation } from './attenuation';
 import { Directivity } from './directivity';
 import { Encoder } from './encoder';
@@ -87,13 +87,13 @@ export class Source {
         vec3.cross(this.right, this.forward, this.up);
         // Create audio nodes.
         let context = scene.context;
-        this.input = context.createGain();
+        this.input = nameVertex("source-input", context.createGain());
         this.directivity = new Directivity(context, {
             alpha: options.alpha,
             sharpness: options.sharpness,
         });
-        this.toEarly = context.createGain();
-        this.toLate = context.createGain();
+        this.toEarly = nameVertex("source-to-early", context.createGain());
+        this.toLate = nameVertex("source-to-late", context.createGain());
         this.attenuation = new Attenuation(context, {
             minDistance: options.minDistance,
             maxDistance: options.maxDistance,

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * @file A collection of convolvers. Can be used for the optimized HOA binaural
  * rendering. (e.g. SH-MaxRe HRTFs)
@@ -66,20 +66,19 @@ export class HOAConvolver {
      */
     _buildAudioGraph() {
         const numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
-        this._inputSplitter =
-            this._context.createChannelSplitter(this._numberOfChannels);
+        this._inputSplitter = nameVertex("hoa-convolver-splitter", this._context.createChannelSplitter(this._numberOfChannels));
         this._stereoMergers = [];
         this._convolvers = [];
         this._stereoSplitters = [];
-        this._positiveIndexSphericalHarmonics = this._context.createGain();
-        this._negativeIndexSphericalHarmonics = this._context.createGain();
-        this._inverter = this._context.createGain();
-        this._binauralMerger = this._context.createChannelMerger(2);
-        this._outputGain = this._context.createGain();
+        this._positiveIndexSphericalHarmonics = nameVertex("foa-convolver-positiveIndexSphericalHarmonics", this._context.createGain());
+        this._negativeIndexSphericalHarmonics = nameVertex("foa-convolver-negativeIndexSphericalHarmonics", this._context.createGain());
+        this._inverter = nameVertex("foa-convolver-inverter", this._context.createGain());
+        this._binauralMerger = nameVertex("hoa-convolver-merger", this._context.createChannelMerger(2));
+        this._outputGain = nameVertex("foa-convolver-outputGain", this._context.createGain());
         for (let i = 0; i < numberOfStereoChannels; ++i) {
-            this._stereoMergers[i] = this._context.createChannelMerger(2);
-            this._convolvers[i] = this._context.createConvolver();
-            this._stereoSplitters[i] = this._context.createChannelSplitter(2);
+            this._stereoMergers[i] = nameVertex("hoa-convolver-stereo-merger-" + i, this._context.createChannelMerger(2));
+            this._convolvers[i] = nameVertex("hoa-convolver-stereo-convolver-" + i, this._context.createConvolver());
+            this._stereoSplitters[i] = nameVertex("hoa-convolver-stereo-splitter" + i, this._context.createChannelSplitter(2));
             this._convolvers[i].normalize = false;
         }
         for (let l = 0; l <= this._ambisonicOrder; ++l) {

@@ -24,7 +24,7 @@ import { ResonanceAudioListener } from "./destinations/spatializers/ResonanceAud
 import { VolumeScalingListener } from "./destinations/spatializers/VolumeScalingListener";
 import { WebAudioListenerNew } from "./destinations/spatializers/WebAudioListenerNew";
 import { WebAudioListenerOld } from "./destinations/spatializers/WebAudioListenerOld";
-import { connect } from "./GraphVisualizer";
+import { connect, nameVertex } from "./GraphVisualizer";
 import type { IPoseable } from "./IPoseable";
 import type { InterpolatedPose } from "./positions/InterpolatedPose";
 import { AudioBufferSpawningSource } from "./sources/AudioBufferSpawningSource";
@@ -146,10 +146,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         this.audioContext = new AudioContext();
 
         if (canChangeAudioOutput) {
-            this.destination = this.audioContext.createMediaStreamDestination();
+            this.destination = nameVertex("final-destination", this.audioContext.createMediaStreamDestination());
         }
         else {
-            this.destination = this.audioContext.destination;
+            this.destination = nameVertex("final-destination", this.audioContext.destination);
         }
 
         this.localOutput = new AudioDestination(this.audioContext, this.destination);
@@ -410,7 +410,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             loop(looping),
             src(file));
         await once(elem, "canplaythrough", "error");
-        const source = this.audioContext.createMediaElementSource(elem);
+        const source = nameVertex("audio-element-source-" + id, this.audioContext.createMediaElementSource(elem));
         if (onProgress) {
             onProgress(1, 1);
         }
@@ -423,7 +423,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
         const buffer = await goodBlob.arrayBuffer();
         const data = await this.audioContext.decodeAudioData(buffer);
-        const source = this.audioContext.createBufferSource();
+        const source = nameVertex("audio-buffer-source-" + id, this.audioContext.createBufferSource());
         source.buffer = data;
         source.loop = looping;
 
@@ -515,7 +515,9 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private createSourceFromStream(stream: MediaStream): AudioStreamSourceNode {
         if (useTrackSource) {
             const tracks = stream.getAudioTracks()
-                .map((track) => this.audioContext.createMediaStreamTrackSource(track));
+                .map((track) => {
+                    return nameVertex<MediaStreamTrackAudioSourceNode>("track-source-" + track.id, this.audioContext.createMediaStreamTrackSource(track));
+                });
             if (tracks.length === 0) {
                 throw new Error("No audio tracks!");
             }
@@ -523,7 +525,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
                 return tracks[0];
             }
             else {
-                const merger = this.audioContext.createChannelMerger(tracks.length);
+                const merger = nameVertex<ChannelMergerNode>("track-merger-" + stream.id, this.audioContext.createChannelMerger(tracks.length));
                 for (const track of tracks) {
                     connect(track, merger);
                 }
@@ -537,11 +539,11 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             elem.play();
 
             if (useElementSourceForUsers) {
-                return this.audioContext.createMediaElementSource(elem);
+                return nameVertex("media-element-source-" + stream.id, this.audioContext.createMediaElementSource(elem));
             }
             else {
                 elem.muted = true;
-                return this.audioContext.createMediaStreamSource(stream);
+                return nameVertex("media-stream-source-" + stream.id, this.audioContext.createMediaStreamSource(stream));
             }
         }
     }

@@ -1,3 +1,4 @@
+import { nameVertex } from "../../GraphVisualizer";
 import { BaseListener } from "./BaseListener";
 /**
  * Base class for spatializers that uses WebAudio's AudioListener
@@ -9,7 +10,7 @@ export class BaseWebAudioListener extends BaseListener {
      */
     constructor(audioContext) {
         super(audioContext);
-        const gain = audioContext.createGain();
+        const gain = nameVertex("listener-volume-correction", audioContext.createGain());
         gain.gain.value = 0.75;
         this.input = this.output = gain;
         this.listener = audioContext.listener;

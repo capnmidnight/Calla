@@ -1,12 +1,15 @@
+import { nameVertex } from "./GraphVisualizer";
 import { InterpolatedPose } from "./positions/InterpolatedPose";
 export class BaseAudioElement {
+    id;
     audioContext;
     pose = new InterpolatedPose();
     _spatializer = null;
     volumeControl;
-    constructor(audioContext) {
+    constructor(id, audioContext) {
+        this.id = id;
         this.audioContext = audioContext;
-        this.volumeControl = audioContext.createGain();
+        this.volumeControl = nameVertex("volume-control-" + this.id, audioContext.createGain());
     }
     disposed = false;
     dispose() {

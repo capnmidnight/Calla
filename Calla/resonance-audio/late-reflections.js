@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { DEFAULT_REVERB_BANDWIDTH, DEFAULT_REVERB_DURATIONS, DEFAULT_REVERB_DURATION_MULTIPLIER, DEFAULT_REVERB_FREQUENCY_BANDS, DEFAULT_REVERB_GAIN, DEFAULT_REVERB_MAX_DURATION, DEFAULT_REVERB_PREDELAY, DEFAULT_REVERB_TAIL_ONSET, log, LOG1000, LOG2_DIV2, NUMBER_REVERB_FREQUENCY_BANDS, TWO_PI } from "./utils";
 /**
  * Late-reflections reverberation filter for Ambisonic content.
@@ -44,10 +44,10 @@ export class LateReflections {
         this.tailonsetSamples = options.tailonset / 1000;
         // Create nodes.
         this.context = context;
-        this.input = context.createGain();
-        this.predelay = context.createDelay(delaySecs);
-        this.convolver = context.createConvolver();
-        this.output = context.createGain();
+        this.input = nameVertex("late-reflections-input", context.createGain());
+        this.predelay = nameVertex("late-reflections-predelay", context.createDelay(delaySecs));
+        this.convolver = nameVertex("late-reflections-convolver", context.createConvolver());
+        this.output = nameVertex("late-reflections-output", context.createGain());
         // Set reverb attenuation.
         this.output.gain.value = options.gain;
         // Disable normalization.

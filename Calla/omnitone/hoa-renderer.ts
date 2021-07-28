@@ -23,7 +23,7 @@
 
 import { mat3, mat4 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
 import { HOARotator } from './hoa-rotator';
@@ -101,9 +101,9 @@ export class HOARenderer implements IDisposable {
      * Builds the internal audio graph.
      */
     private _buildAudioGraph(): void {
-        this.input = this.context.createGain();
-        this.output = this.context.createGain();
-        this.bypass = this.context.createGain();
+        this.input = nameVertex("hoa-renderer-input", this.context.createGain());
+        this.output = nameVertex("hoa-renderer-output", this.context.createGain());
+        this.bypass = nameVertex("hoa-renderer-bypass", this.context.createGain());
         this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
         this.convolver =
             new HOAConvolver(this.context, this.config.ambisonicOrder);

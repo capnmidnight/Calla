@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { mat3, mat4 } from "gl-matrix";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * @file Sound field rotator for first-order-ambisonics decoding.
  */
@@ -48,23 +48,38 @@ export class FOARotator {
      */
     constructor(context) {
         this._context = context;
-        this._splitter = this._context.createChannelSplitter(4);
-        this._inX = this._context.createGain();
-        this._inY = this._context.createGain();
-        this._inZ = this._context.createGain();
-        this._m0 = this._context.createGain();
-        this._m1 = this._context.createGain();
-        this._m2 = this._context.createGain();
-        this._m3 = this._context.createGain();
-        this._m4 = this._context.createGain();
-        this._m5 = this._context.createGain();
-        this._m6 = this._context.createGain();
-        this._m7 = this._context.createGain();
-        this._m8 = this._context.createGain();
-        this._outX = this._context.createGain();
-        this._outY = this._context.createGain();
-        this._outZ = this._context.createGain();
-        this._merger = this._context.createChannelMerger(4);
+        this._splitter = nameVertex("foa-rotator-splitter", this._context.createChannelSplitter(4));
+        this._inX = nameVertex("foa-rotator-inX", this._context.createGain());
+        ;
+        this._inY = nameVertex("foa-rotator-inY", this._context.createGain());
+        ;
+        this._inZ = nameVertex("foa-rotator-inZ", this._context.createGain());
+        ;
+        this._m0 = nameVertex("foa-rotator-m0", this._context.createGain());
+        ;
+        this._m1 = nameVertex("foa-rotator-m1", this._context.createGain());
+        ;
+        this._m2 = nameVertex("foa-rotator-m2", this._context.createGain());
+        ;
+        this._m3 = nameVertex("foa-rotator-m3", this._context.createGain());
+        ;
+        this._m4 = nameVertex("foa-rotator-m4", this._context.createGain());
+        ;
+        this._m5 = nameVertex("foa-rotator-m5", this._context.createGain());
+        ;
+        this._m6 = nameVertex("foa-rotator-m6", this._context.createGain());
+        ;
+        this._m7 = nameVertex("foa-rotator-m7", this._context.createGain());
+        ;
+        this._m8 = nameVertex("foa-rotator-m8", this._context.createGain());
+        ;
+        this._outX = nameVertex("foa-rotator-outX", this._context.createGain());
+        ;
+        this._outY = nameVertex("foa-rotator-outY", this._context.createGain());
+        ;
+        this._outZ = nameVertex("foa-rotator-outZ", this._context.createGain());
+        ;
+        this._merger = nameVertex("foa-rotator-merger", this._context.createChannelMerger(4));
         // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
         // X (from channel 1)
         connect(this._splitter, this._inX, 1);

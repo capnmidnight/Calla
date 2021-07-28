@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { MAX_RE_WEIGHTS, SPHERICAL_HARMONICS, SPHERICAL_HARMONICS_MAX_ORDER } from "./tables";
 import { DEFAULT_AMBISONIC_ORDER, DEFAULT_AZIMUTH, DEFAULT_ELEVATION, DEFAULT_SOURCE_WIDTH, log } from "./utils";
 /**
@@ -62,8 +62,8 @@ export class Encoder {
         }, options);
         this.context = context;
         // Create I/O nodes.
-        this.input = context.createGain();
-        this.output = context.createGain();
+        this.input = nameVertex("encoder-input", context.createGain());
+        this.output = nameVertex("encoder-output", context.createGain());
         // Set initial order, angle and source width.
         this.setAmbisonicOrder(options.ambisonicOrder);
         this.azimuth = options.azimuth;
@@ -79,10 +79,10 @@ export class Encoder {
         this.dispose();
         // Create audio graph.
         let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
-        this.merger = this.context.createChannelMerger(numChannels);
+        this.merger = nameVertex("encoder-merger", this.context.createChannelMerger(numChannels));
         this.channelGain = new Array(numChannels);
         for (let i = 0; i < numChannels; i++) {
-            this.channelGain[i] = this.context.createGain();
+            this.channelGain[i] = nameVertex("encoder-channel-" + i, this.context.createGain());
             connect(this.input, this.channelGain[i]);
             connect(this.channelGain[i], this.merger, 0, i);
         }

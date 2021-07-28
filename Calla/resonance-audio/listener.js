@@ -18,7 +18,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 import { mat3, vec3 } from "gl-matrix";
-import { connect, disconnect } from "../audio/GraphVisualizer";
+import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import { createFOARenderer, createHOARenderer } from "../omnitone/omnitone";
 import { Encoder } from "./encoder";
 import { DEFAULT_AMBISONIC_ORDER, DEFAULT_FORWARD, DEFAULT_POSITION, DEFAULT_RENDERING_MODE, DEFAULT_UP } from "./utils";
@@ -66,9 +66,9 @@ export class Listener {
         }
         // These nodes are created in order to safely asynchronously load Omnitone
         // while the rest of the scene is being created.
-        this.input = context.createGain();
-        this.output = context.createGain();
-        this.ambisonicOutput = context.createGain();
+        this.input = nameVertex("listener-input", context.createGain());
+        this.output = nameVertex("listener-output", context.createGain());
+        this.ambisonicOutput = nameVertex("listener-ambisonic-input", context.createGain());
         // Initialize Omnitone (async) and connect to audio graph when complete.
         this.renderer.initialize().then(() => {
             // Connect pre-rotated soundfield to renderer.
