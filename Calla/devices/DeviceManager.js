@@ -213,7 +213,7 @@ export class DeviceManager extends TypedEventBase {
         }
     }
     async setAudioInputDevice(newAudio) {
-        if (newAudio.kind !== "audioinput") {
+        if (isDefined(newAudio) && newAudio.kind !== "audioinput") {
             throw new Error(`Device is not an audio input device. Was: ${newAudio.kind}. Label: ${newAudio.label}`);
         }
         this.setPreferredAudioInputID(newAudio && newAudio.deviceId || null);

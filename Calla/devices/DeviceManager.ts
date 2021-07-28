@@ -284,7 +284,7 @@ export class DeviceManager
     }
 
     async setAudioInputDevice(newAudio: MediaDeviceInfo) {
-        if (newAudio.kind !== "audioinput") {
+        if (isDefined(newAudio) && newAudio.kind !== "audioinput") {
             throw new Error(`Device is not an audio input device. Was: ${newAudio.kind}. Label: ${newAudio.label}`);
         }
 
