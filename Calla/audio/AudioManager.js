@@ -104,7 +104,11 @@ export class AudioManager extends TypedEventBase {
         }
         this.localOutput = new AudioDestination(this.audioContext, this.destination);
         this._ready = whenAudioContextReady(this.audioContext)
-            .then(() => this.start());
+            .then(async () => {
+            if (isMediaStreamAudioDestinationNode(this.destination)) {
+                await this.devices.setDestination(this.destination);
+            }
+        });
         this.type = type || SpatializerType.Medium;
         Object.seal(this);
     }
@@ -126,15 +130,10 @@ export class AudioManager extends TypedEventBase {
         return true;
     }
     get isReady() {
-        return this.audioContext && this.audioContext.state === "running";
+        return this.audioContext.state !== "suspended";
     }
-    /**
-     * Perform the audio system initialization, after a user gesture
-     **/
-    async start() {
-        if (isMediaStreamAudioDestinationNode(this.destination)) {
-            await this.devices.setDestination(this.destination);
-        }
+    get isRunning() {
+        return this.audioContext.state === "running";
     }
     update() {
         const t = this.currentTime;

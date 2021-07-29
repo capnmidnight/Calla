@@ -155,7 +155,11 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         this.localOutput = new AudioDestination(this.audioContext, this.destination);
 
         this._ready = whenAudioContextReady(this.audioContext)
-            .then(() => this.start());
+            .then(async () => {
+                if (isMediaStreamAudioDestinationNode(this.destination)) {
+                    await this.devices.setDestination(this.destination);
+                }
+            });
 
         this.type = type || SpatializerType.Medium;
 
@@ -184,16 +188,11 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     }
 
     get isReady(): boolean {
-        return this.audioContext && this.audioContext.state === "running";
+        return this.audioContext.state !== "suspended";
     }
 
-    /** 
-     * Perform the audio system initialization, after a user gesture 
-     **/
-    async start(): Promise<void> {
-        if (isMediaStreamAudioDestinationNode(this.destination)) {
-            await this.devices.setDestination(this.destination);
-        }
+    get isRunning(): boolean {
+        return this.audioContext.state === "running";
     }
 
     update(): void {

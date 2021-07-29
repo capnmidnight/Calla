@@ -51,10 +51,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     get algorithm(): string;
     protected checkAddEventListener<T extends Event>(type: string, callback: (evt: T) => any): boolean;
     get isReady(): boolean;
-    /**
-     * Perform the audio system initialization, after a user gesture
-     **/
-    start(): Promise<void>;
+    get isRunning(): boolean;
     update(): void;
     get type(): SpatializerType;
     set type(type: SpatializerType);
