@@ -13,6 +13,7 @@ export declare class AudioDestination extends BaseAudioElement<BaseListener> {
     get remoteUserInput(): AudioNode;
     get spatializedInput(): AudioNode;
     get nonSpatializedInput(): AudioNode;
+    get trueDestination(): DestinationNode;
     setDestination(v: DestinationNode): void;
     protected disconnectSpatializer(): void;
     protected connectSpatializer(): void;

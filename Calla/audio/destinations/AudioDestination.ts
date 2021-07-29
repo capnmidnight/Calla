@@ -47,6 +47,10 @@ export class AudioDestination extends BaseAudioElement<BaseListener> {
         return this._nonSpatializedInput;
     }
 
+    get trueDestination() {
+        return this._trueDestination;
+    }
+
     setDestination(v: DestinationNode) {
         if (v !== this._trueDestination) {
             if (this._trueDestination) {
