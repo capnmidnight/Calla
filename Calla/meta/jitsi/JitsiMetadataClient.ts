@@ -7,7 +7,7 @@ import {
     CallaChatEvent,
     CallaEmojiAvatarEvent,
     CallaEmoteEvent,
-    C,
+    CallaMetadataEventType,
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
     CallaPhotoAvatarEvent,
@@ -21,7 +21,7 @@ import { BaseMetadataClient } from "../BaseMetadataClient";
 
 export interface JitsiHaxCommand {
     hax: string,
-    command: C,
+    command: CallaMetadataEventType,
     values: any[];
 }
 

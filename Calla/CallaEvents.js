@@ -19,17 +19,17 @@ export class CallaInfoEvent extends CallaEvent {
         this.message = message;
     }
 }
-export class CallaServerConnectedEvent extends CallaEvent {
+export class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
     constructor() {
         super("serverConnected");
     }
 }
-export class CallaServerDisconnectedEvent extends CallaEvent {
+export class CallaTeleconferenceServerDisconnectedEvent extends CallaEvent {
     constructor() {
         super("serverDisconnected");
     }
 }
-export class CallaServerFailedEvent extends CallaEvent {
+export class CallaTeleconferenceServerFailedEvent extends CallaEvent {
     constructor() {
         super("serverFailed");
     }

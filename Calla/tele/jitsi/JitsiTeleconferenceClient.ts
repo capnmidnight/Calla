@@ -17,9 +17,9 @@ import {
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
     CallaParticipantNameChangeEvent,
-    CallaServerConnectedEvent,
-    CallaServerDisconnectedEvent,
-    CallaServerFailedEvent,
+    CallaTeleconferenceServerConnectedEvent,
+    CallaTeleconferenceServerDisconnectedEvent,
+    CallaTeleconferenceServerFailedEvent,
     CallaUserAudioMutedEvent,
     CallaUserVideoMutedEvent,
     CallaVideoStreamAddedEvent,
@@ -143,9 +143,9 @@ export class JitsiTeleconferenceClient
             });
         };
 
-        fwd(connectionEvents.CONNECTION_ESTABLISHED, CallaServerConnectedEvent);
-        fwd(connectionEvents.CONNECTION_DISCONNECTED, CallaServerDisconnectedEvent, onDisconnect);
-        fwd(connectionEvents.CONNECTION_FAILED, CallaServerFailedEvent, onDisconnect);
+        fwd(connectionEvents.CONNECTION_ESTABLISHED, CallaTeleconferenceServerConnectedEvent);
+        fwd(connectionEvents.CONNECTION_DISCONNECTED, CallaTeleconferenceServerDisconnectedEvent, onDisconnect);
+        fwd(connectionEvents.CONNECTION_FAILED, CallaTeleconferenceServerFailedEvent, onDisconnect);
 
         const connectTask = once(this.connection, connectionEvents.CONNECTION_ESTABLISHED);
         this.connection.connect();
