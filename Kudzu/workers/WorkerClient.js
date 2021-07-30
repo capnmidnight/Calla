@@ -22,7 +22,7 @@ export class WorkerClient extends TypedEventBase {
             minScriptPathOrWorkers = undefined;
         }
         if (isNullOrUndefined(workerPoolSizeOrCurTaskCounter)) {
-            workerPoolSizeOrCurTaskCounter = 1;
+            workerPoolSizeOrCurTaskCounter = navigator.hardwareConcurrency || 4;
         }
         // Validate parameters
         if (workerPoolSizeOrCurTaskCounter < 1) {

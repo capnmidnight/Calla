@@ -88,7 +88,7 @@ export class WorkerClient<EventsT> extends TypedEventBase<EventsT> {
         }
 
         if (isNullOrUndefined(workerPoolSizeOrCurTaskCounter)) {
-            workerPoolSizeOrCurTaskCounter = 1;
+            workerPoolSizeOrCurTaskCounter = navigator.hardwareConcurrency || 4;
         }
 
         // Validate parameters
