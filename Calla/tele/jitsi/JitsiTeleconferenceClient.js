@@ -4,7 +4,7 @@ import { once } from "kudzu/events/once";
 import { sleep } from "kudzu/events/sleep";
 import { isDefined, isNullOrUndefined } from "kudzu/typeChecks";
 import { using } from "kudzu/using";
-import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
+import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaServerConnectedEvent, CallaServerDisconnectedEvent, CallaServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { addLogger, BaseTeleconferenceClient, DEFAULT_LOCAL_USER_ID } from "../BaseTeleconferenceClient";
 function encodeUserName(v) {
@@ -97,9 +97,9 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                 }
             });
         };
-        fwd(connectionEvents.CONNECTION_ESTABLISHED, CallaTeleconferenceServerConnectedEvent);
-        fwd(connectionEvents.CONNECTION_DISCONNECTED, CallaTeleconferenceServerDisconnectedEvent, onDisconnect);
-        fwd(connectionEvents.CONNECTION_FAILED, CallaTeleconferenceServerFailedEvent, onDisconnect);
+        fwd(connectionEvents.CONNECTION_ESTABLISHED, CallaServerConnectedEvent);
+        fwd(connectionEvents.CONNECTION_DISCONNECTED, CallaServerDisconnectedEvent, onDisconnect);
+        fwd(connectionEvents.CONNECTION_FAILED, CallaServerFailedEvent, onDisconnect);
         const connectTask = once(this.connection, connectionEvents.CONNECTION_ESTABLISHED);
         this.connection.connect();
         await connectTask;

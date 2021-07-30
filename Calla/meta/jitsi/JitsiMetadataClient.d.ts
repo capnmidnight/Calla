@@ -1,10 +1,10 @@
-import { CallaMetadataEventType } from "../../CallaEvents";
+import { C } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import type { JitsiTeleconferenceClient } from "../../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 export interface JitsiHaxCommand {
     hax: string;
-    command: CallaMetadataEventType;
+    command: C;
     values: any[];
 }
 export declare class JitsiMetadataClient extends BaseMetadataClient {

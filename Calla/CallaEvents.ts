@@ -2,7 +2,7 @@ import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
 import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
 
-export type CallaTeleconferenceEventType = "error"
+export type CallaEventType = "error"
     | "info"
     | "serverConnected"
     | "serverDisconnected"
@@ -21,18 +21,13 @@ export type CallaTeleconferenceEventType = "error"
     | "audioAdded"
     | "audioRemoved"
     | "videoAdded"
-    | "videoRemoved";
-
-export type CallaMetadataEventType = "error"
-    | "info"
+    | "videoRemoved"
     | "userPosed"
     | "userPointer"
     | "setAvatarEmoji"
     | "setAvatarURL"
     | "emote"
     | "chat";
-
-export type CallaEventType = CallaTeleconferenceEventType | CallaMetadataEventType;
 
 export class CallaEvent<T extends CallaEventType> extends Event {
     constructor(public eventType: T) {
@@ -54,21 +49,21 @@ export class CallaInfoEvent
     }
 }
 
-export class CallaTeleconferenceServerConnectedEvent
+export class CallaServerConnectedEvent
     extends CallaEvent<"serverConnected"> {
     constructor() {
         super("serverConnected");
     }
 }
 
-export class CallaTeleconferenceServerDisconnectedEvent
+export class CallaServerDisconnectedEvent
     extends CallaEvent<"serverDisconnected"> {
     constructor() {
         super("serverDisconnected");
     }
 }
 
-export class CallaTeleconferenceServerFailedEvent
+export class CallaServerFailedEvent
     extends CallaEvent<"serverFailed"> {
     constructor() {
         super("serverFailed");
@@ -81,7 +76,7 @@ export class CallaUserEvent<T extends CallaEventType> extends CallaEvent<T> {
     }
 }
 
-export class CallaParticipantEvent<T extends CallaTeleconferenceEventType> extends CallaUserEvent<T> {
+export class CallaParticipantEvent<T extends CallaEventType> extends CallaUserEvent<T> {
     constructor(type: T, id: string, public displayName: string) {
         super(type, id);
     }
@@ -141,7 +136,7 @@ export class CallaParticipantNameChangeEvent extends CallaParticipantEvent<"user
     }
 }
 
-export class CallaUserMutedEvent<T extends CallaTeleconferenceEventType> extends CallaUserEvent<T> {
+export class CallaUserMutedEvent<T extends CallaEventType> extends CallaUserEvent<T> {
     constructor(type: T, id: string, public muted: boolean) {
         super(type, id);
     }
@@ -170,25 +165,25 @@ export enum StreamOpType {
     Changed = "changed"
 }
 
-export class CallaStreamEvent<T extends CallaTeleconferenceEventType> extends CallaUserEvent<T> {
+export class CallaStreamEvent<T extends CallaEventType> extends CallaUserEvent<T> {
     constructor(type: T, public kind: StreamType, public op: StreamOpType, id: string, public stream: MediaStream) {
         super(type, id);
     }
 }
 
-export class CallaStreamAddedEvent<T extends CallaTeleconferenceEventType> extends CallaStreamEvent<T> {
+export class CallaStreamAddedEvent<T extends CallaEventType> extends CallaStreamEvent<T> {
     constructor(type: T, kind: StreamType, id: string, stream: MediaStream) {
         super(type, kind, StreamOpType.Added, id, stream);
     }
 }
 
-export class CallaStreamRemovedEvent<T extends CallaTeleconferenceEventType> extends CallaStreamEvent<T> {
+export class CallaStreamRemovedEvent<T extends CallaEventType> extends CallaStreamEvent<T> {
     constructor(type: T, kind: StreamType, id: string, stream: MediaStream) {
         super(type, kind, StreamOpType.Removed, id, stream);
     }
 }
 
-export class CallaStreamChangedEvent<T extends CallaTeleconferenceEventType> extends CallaStreamEvent<T> {
+export class CallaStreamChangedEvent<T extends CallaEventType> extends CallaStreamEvent<T> {
     constructor(type: T, kind: StreamType, id: string, stream: MediaStream) {
         super(type, kind, StreamOpType.Changed, id, stream);
     }
@@ -218,7 +213,7 @@ export class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent<"video
     }
 }
 
-export class CallaPoseEvent<T extends CallaMetadataEventType> extends CallaUserEvent<T> {
+export class CallaPoseEvent<T extends CallaEventType> extends CallaUserEvent<T> {
     constructor(type: T, id: string, public px: number, public py: number, public pz: number, public fx: number, public fy: number, public fz: number, public ux: number, public uy: number, public uz: number) {
         super(type, id);
     }
@@ -248,7 +243,7 @@ export class CallaUserPointerEvent extends CallaPoseEvent<"userPointer"> {
     }
 }
 
-export class CallaEmojiEvent<T extends CallaMetadataEventType> extends CallaUserEvent<T> {
+export class CallaEmojiEvent<T extends CallaEventType> extends CallaUserEvent<T> {
     constructor(type: T, id: string, public readonly emoji: string) {
         super(type, id);
     }
@@ -278,12 +273,12 @@ export class CallaChatEvent extends CallaUserEvent<"chat"> {
     }
 }
 
-export interface CallaTeleconferenceEvents {
+export interface CallaClientEvents {
     error: CallaErrorEvent;
     info: CallaInfoEvent;
-    serverConnected: CallaTeleconferenceServerConnectedEvent;
-    serverDisconnected: CallaTeleconferenceServerDisconnectedEvent;
-    serverFailed: CallaTeleconferenceServerFailedEvent;
+    serverConnected: CallaServerConnectedEvent;
+    serverDisconnected: CallaServerDisconnectedEvent;
+    serverFailed: CallaServerFailedEvent;
     audioMuteStatusChanged: CallaUserAudioMutedEvent;
     videoMuteStatusChanged: CallaUserVideoMutedEvent;
     conferenceConnected: CallaConferenceConnectedEvent;
@@ -299,11 +294,6 @@ export interface CallaTeleconferenceEvents {
     videoAdded: CallaVideoStreamAddedEvent;
     audioRemoved: CallaAudioStreamRemovedEvent;
     videoRemoved: CallaVideoStreamRemovedEvent;
-}
-
-export interface CallaMetadataEvents {
-    error: CallaErrorEvent;
-    info: CallaInfoEvent;
     userPosed: CallaUserPosedEvent;
     userPointer: CallaUserPointerEvent;
     emote: CallaEmoteEvent;
@@ -311,5 +301,3 @@ export interface CallaMetadataEvents {
     setAvatarURL: CallaPhotoAvatarEvent;
     chat: CallaChatEvent;
 }
-
-export interface CallaClientEvents extends CallaTeleconferenceEvents, CallaMetadataEvents { }
