@@ -74,10 +74,10 @@ export function isArrayBufferView(obj: any): obj is ArrayBufferView {
         || obj instanceof Int16Array
         || obj instanceof Uint32Array
         || obj instanceof Int32Array
-        || obj instanceof BigUint64Array
-        || obj instanceof BigInt64Array
         || obj instanceof Float32Array
-        || obj instanceof Float64Array;
+        || obj instanceof Float64Array
+        || "BigUint64Array" in globalThis && obj instanceof globalThis["BigUint64Array"]
+        || "BigInt64Array" in globalThis && obj instanceof globalThis["BigInt64Array"];
 }
 
 export function isXHRBodyInit(obj: any): obj is BodyInit {
