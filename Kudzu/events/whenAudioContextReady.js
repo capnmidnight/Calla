@@ -1,7 +1,19 @@
-import { waitFor } from "./waitFor";
 import { onUserGesture } from "./onUserGesture";
 export async function whenAudioContextReady(ctx) {
-    const task = waitFor(() => ctx.state === "running");
+    const task = new Promise((resolve) => {
+        if (ctx.state === "running") {
+            resolve();
+        }
+        else {
+            const onStateChange = () => {
+                if (ctx.state === "running") {
+                    resolve();
+                    ctx.removeEventListener("statechange", onStateChange);
+                }
+            };
+            ctx.addEventListener("statechange", onStateChange);
+        }
+    });
     if (ctx.state === "suspended") {
         onUserGesture(() => ctx.resume());
     }
