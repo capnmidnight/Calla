@@ -4,6 +4,7 @@
   "files": [
     "arrays/",
     "collections/",
+    "debugging/",
     "emoji/",
     "events/",
     "gis/",
@@ -12,6 +13,7 @@
     "input/",
     "io/",
     "math/",
+    "mediaTypes/",
     "strings/",
     "tasks/",
     "testing/",
@@ -40,7 +42,14 @@
     "watch": "tsc --watch"
   },
   "description": "JavaScript browser runtime library",
-  "author": {
-    "name": "Sean T. McBeth"
+  "homepage": "https://calla.chat",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/capnmidnight/Calla.git"
+  },
+  "author": "Sean T. McBeth <sean.mcbeth@gmail.com> (https://github.com/capnmidnight)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/capnmidnight/Calla/issues"
   }
 }

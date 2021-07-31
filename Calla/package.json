@@ -5,7 +5,7 @@
   "files": [
     "audio/",
     "client-loader/",
-    "dist/",
+    "devices/",
     "doc/",
     "lib-jitsi-meet/",
     "meta/",
