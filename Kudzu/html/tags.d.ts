@@ -33,7 +33,7 @@ export declare function getCanvas(selector: string): HTMLCanvasElement;
  * @param rest - optional attributes, child elements, and text
  * @returns
  */
-export declare function tag(name: string, ...rest: TagChild[]): HTMLElement;
+export declare function tag<T extends HTMLElement>(name: string, ...rest: TagChild[]): T;
 export interface IDisableable {
     disabled: boolean;
 }

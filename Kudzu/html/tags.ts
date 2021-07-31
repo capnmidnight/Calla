@@ -102,24 +102,24 @@ export function getCanvas(selector: string) {
  * @param rest - optional attributes, child elements, and text
  * @returns
  */
-export function tag(name: string, ...rest: TagChild[]) {
-    let elem: HTMLElement | null = null;
+export function tag<T extends HTMLElement>(name: string, ...rest: TagChild[]): T {
+    let elem: T = null;
 
     for (const attr of rest) {
         if (attr instanceof Attr) {
             if (attr.key === "id") {
-                elem = document.getElementById(attr.value);
+                elem = document.getElementById(attr.value) as T;
                 break;
             }
             else if (attr.key === "selector") {
-                elem = document.querySelector(attr.value);
+                elem = document.querySelector<T>(attr.value);
                 break;
             }
         }
     }
 
     if (elem == null) {
-        elem = document.createElement(name);
+        elem = document.createElement(name) as T;
     }
 
     for (let x of rest) {
@@ -190,89 +190,89 @@ export type HTMLAudioElementWithSinkID = HTMLAudioElement & {
     setSinkId(id: string): Promise<void>;
 };
 
-export function A(...rest: TagChild[]): HTMLAnchorElement { return tag("a", ...rest) as HTMLAnchorElement; }
+export function A(...rest: TagChild[]): HTMLAnchorElement { return tag("a", ...rest); }
 export function Abbr(...rest: TagChild[]): HTMLElement { return tag("abbr", ...rest); }
 export function Address(...rest: TagChild[]): HTMLElement { return tag("address", ...rest); }
-export function Area(...rest: TagChild[]): HTMLAreaElement { return tag("area", ...rest) as HTMLAreaElement; }
+export function Area(...rest: TagChild[]): HTMLAreaElement { return tag("area", ...rest); }
 export function Article(...rest: TagChild[]): HTMLElement { return tag("article", ...rest); }
 export function Aside(...rest: TagChild[]): HTMLElement { return tag("aside", ...rest); }
-export function Audio(...rest: TagChild[]): HTMLAudioElementWithSinkID { return tag("audio", ...rest) as HTMLAudioElementWithSinkID; }
+export function Audio(...rest: TagChild[]): HTMLAudioElementWithSinkID { return tag("audio", ...rest); }
 export function B(...rest: TagChild[]): HTMLElement { return tag("b", ...rest); }
-export function Base(...rest: TagChild[]): HTMLBaseElement { return tag("base", ...rest) as HTMLBaseElement; }
+export function Base(...rest: TagChild[]): HTMLBaseElement { return tag("base", ...rest); }
 export function BDI(...rest: TagChild[]): HTMLElement { return tag("bdi", ...rest); }
 export function BDO(...rest: TagChild[]): HTMLElement { return tag("bdo", ...rest); }
-export function BlockQuote(...rest: TagChild[]): HTMLQuoteElement { return tag("blockquote", ...rest) as HTMLQuoteElement; }
-export function Body(...rest: TagChild[]): HTMLBodyElement { return tag("body", ...rest) as HTMLBodyElement; }
-export function BR(): HTMLBRElement { return tag("br") as HTMLBRElement; }
-export function ButtonRaw(...rest: TagChild[]): HTMLButtonElement { return tag("button", ...rest) as HTMLButtonElement; }
+export function BlockQuote(...rest: TagChild[]): HTMLQuoteElement { return tag("blockquote", ...rest); }
+export function Body(...rest: TagChild[]): HTMLBodyElement { return tag("body", ...rest); }
+export function BR(): HTMLBRElement { return tag("br"); }
+export function ButtonRaw(...rest: TagChild[]): HTMLButtonElement { return tag("button", ...rest); }
 export function Button(...rest: TagChild[]): HTMLButtonElement { return ButtonRaw(...rest, type("button")); }
 export function ButtonSubmit(...rest: TagChild[]): HTMLButtonElement { return ButtonRaw(...rest, type("submit")); }
 export function ButtonReset(...rest: TagChild[]): HTMLButtonElement { return ButtonRaw(...rest, type("reset")); }
-export function Canvas(...rest: TagChild[]): HTMLCanvasElement { return tag("canvas", ...rest) as HTMLCanvasElement; }
-export function Caption(...rest: TagChild[]): HTMLTableCaptionElement { return tag("caption", ...rest) as HTMLTableCaptionElement; }
+export function Canvas(...rest: TagChild[]): HTMLCanvasElement { return tag("canvas", ...rest); }
+export function Caption(...rest: TagChild[]): HTMLTableCaptionElement { return tag("caption", ...rest); }
 export function Cite(...rest: TagChild[]): HTMLElement { return tag("cite", ...rest); }
 export function Code(...rest: TagChild[]): HTMLElement { return tag("code", ...rest); }
-export function Col(...rest: TagChild[]): HTMLTableColElement { return tag("col", ...rest) as HTMLTableColElement; }
-export function ColGroup(...rest: TagChild[]): HTMLTableColElement { return tag("colgroup", ...rest) as HTMLTableColElement; }
-export function Data(...rest: TagChild[]): HTMLDataElement { return tag("data", ...rest) as HTMLDataElement; }
-export function DataList(...rest: TagChild[]): HTMLDataListElement { return tag("datalist", ...rest) as HTMLDataListElement; }
+export function Col(...rest: TagChild[]): HTMLTableColElement { return tag("col", ...rest); }
+export function ColGroup(...rest: TagChild[]): HTMLTableColElement { return tag("colgroup", ...rest); }
+export function Data(...rest: TagChild[]): HTMLDataElement { return tag("data", ...rest); }
+export function DataList(...rest: TagChild[]): HTMLDataListElement { return tag("datalist", ...rest); }
 export function DD(...rest: TagChild[]): HTMLElement { return tag("dd", ...rest); }
-export function Del(...rest: TagChild[]): HTMLModElement { return tag("del", ...rest) as HTMLModElement; }
-export function Details(...rest: TagChild[]): HTMLDetailsElement { return tag("details", ...rest) as HTMLDetailsElement; }
+export function Del(...rest: TagChild[]): HTMLModElement { return tag("del", ...rest); }
+export function Details(...rest: TagChild[]): HTMLDetailsElement { return tag("details", ...rest); }
 export function DFN(...rest: TagChild[]): HTMLElement { return tag("dfn", ...rest); }
-export function Dialog(...rest: TagChild[]): HTMLDialogElement { return tag("dialog", ...rest) as HTMLDialogElement; }
-export function Dir(...rest: TagChild[]): HTMLDirectoryElement { return tag("dir", ...rest) as HTMLDirectoryElement; }
-export function Div(...rest: TagChild[]): HTMLDivElement { return tag("div", ...rest) as HTMLDivElement; }
-export function DL(...rest: TagChild[]): HTMLDListElement { return tag("dl", ...rest) as HTMLDListElement; }
+export function Dialog(...rest: TagChild[]): HTMLDialogElement { return tag("dialog", ...rest); }
+export function Dir(...rest: TagChild[]): HTMLDirectoryElement { return tag("dir", ...rest); }
+export function Div(...rest: TagChild[]): HTMLDivElement { return tag("div", ...rest); }
+export function DL(...rest: TagChild[]): HTMLDListElement { return tag("dl", ...rest); }
 export function DT(...rest: TagChild[]): HTMLElement { return tag("dt", ...rest); }
 export function Em(...rest: TagChild[]): HTMLElement { return tag("em", ...rest); }
-export function Embed(...rest: TagChild[]): HTMLEmbedElement { return tag("embed", ...rest) as HTMLEmbedElement; }
-export function FieldSet(...rest: TagChild[]): HTMLFieldSetElement { return tag("fieldset", ...rest) as HTMLFieldSetElement; }
+export function Embed(...rest: TagChild[]): HTMLEmbedElement { return tag("embed", ...rest); }
+export function FieldSet(...rest: TagChild[]): HTMLFieldSetElement { return tag("fieldset", ...rest); }
 export function FigCaption(...rest: TagChild[]): HTMLElement { return tag("figcaption", ...rest); }
 export function Figure(...rest: TagChild[]): HTMLElement { return tag("figure", ...rest); }
 export function Footer(...rest: TagChild[]): HTMLElement { return tag("footer", ...rest); }
-export function Form(...rest: TagChild[]): HTMLFormElement { return tag("form", ...rest) as HTMLFormElement; }
-export function H1(...rest: TagChild[]): HTMLHeadingElement { return tag("h1", ...rest) as HTMLHeadingElement; }
-export function H2(...rest: TagChild[]): HTMLHeadingElement { return tag("h2", ...rest) as HTMLHeadingElement; }
-export function H3(...rest: TagChild[]): HTMLHeadingElement { return tag("h3", ...rest) as HTMLHeadingElement; }
-export function H4(...rest: TagChild[]): HTMLHeadingElement { return tag("h4", ...rest) as HTMLHeadingElement; }
-export function H5(...rest: TagChild[]): HTMLHeadingElement { return tag("h5", ...rest) as HTMLHeadingElement; }
-export function H6(...rest: TagChild[]): HTMLHeadingElement { return tag("h6", ...rest) as HTMLHeadingElement; }
-export function HR(...rest: TagChild[]): HTMLHRElement { return tag("hr", ...rest) as HTMLHRElement; }
-export function Head(...rest: TagChild[]): HTMLHeadElement { return tag("head", ...rest) as HTMLHeadElement; }
+export function Form(...rest: TagChild[]): HTMLFormElement { return tag("form", ...rest); }
+export function H1(...rest: TagChild[]): HTMLHeadingElement { return tag("h1", ...rest); }
+export function H2(...rest: TagChild[]): HTMLHeadingElement { return tag("h2", ...rest); }
+export function H3(...rest: TagChild[]): HTMLHeadingElement { return tag("h3", ...rest); }
+export function H4(...rest: TagChild[]): HTMLHeadingElement { return tag("h4", ...rest); }
+export function H5(...rest: TagChild[]): HTMLHeadingElement { return tag("h5", ...rest); }
+export function H6(...rest: TagChild[]): HTMLHeadingElement { return tag("h6", ...rest); }
+export function HR(...rest: TagChild[]): HTMLHRElement { return tag("hr", ...rest); }
+export function Head(...rest: TagChild[]): HTMLHeadElement { return tag("head", ...rest); }
 export function Header(...rest: TagChild[]): HTMLElement { return tag("header", ...rest); }
 export function HGroup(...rest: TagChild[]): HTMLElement { return tag("hgroup", ...rest); }
-export function HTML(...rest: TagChild[]): HTMLHtmlElement { return tag("html", ...rest) as HTMLHtmlElement; }
+export function HTML(...rest: TagChild[]): HTMLHtmlElement { return tag("html", ...rest); }
 export function I(...rest: TagChild[]): HTMLElement { return tag("i", ...rest); }
-export function IFrame(...rest: TagChild[]): HTMLIFrameElement { return tag("iframe", ...rest) as HTMLIFrameElement; }
-export function Img(...rest: TagChild[]): HTMLImageElement { return tag("img", ...rest) as HTMLImageElement; }
-export function Input(...rest: TagChild[]): HTMLInputElement { return tag("input", ...rest) as HTMLInputElement; }
-export function Ins(...rest: TagChild[]): HTMLModElement { return tag("ins", ...rest) as HTMLModElement; }
+export function IFrame(...rest: TagChild[]): HTMLIFrameElement { return tag("iframe", ...rest); }
+export function Img(...rest: TagChild[]): HTMLImageElement { return tag("img", ...rest); }
+export function Input(...rest: TagChild[]): HTMLInputElement { return tag("input", ...rest); }
+export function Ins(...rest: TagChild[]): HTMLModElement { return tag("ins", ...rest); }
 export function KBD(...rest: TagChild[]): HTMLElement { return tag("kbd", ...rest); }
-export function Label(...rest: TagChild[]): HTMLLabelElement { return tag("label", ...rest) as HTMLLabelElement; }
-export function Legend(...rest: TagChild[]): HTMLLegendElement { return tag("legend", ...rest) as HTMLLegendElement; }
-export function LI(...rest: TagChild[]): HTMLLIElement { return tag("li", ...rest) as HTMLLIElement; }
-export function Link(...rest: TagChild[]): HTMLLinkElement { return tag("link", ...rest) as HTMLLinkElement; }
+export function Label(...rest: TagChild[]): HTMLLabelElement { return tag("label", ...rest); }
+export function Legend(...rest: TagChild[]): HTMLLegendElement { return tag("legend", ...rest); }
+export function LI(...rest: TagChild[]): HTMLLIElement { return tag("li", ...rest); }
+export function Link(...rest: TagChild[]): HTMLLinkElement { return tag("link", ...rest); }
 export function Main(...rest: TagChild[]): HTMLElement { return tag("main", ...rest); }
-export function HtmlMap(...rest: TagChild[]): HTMLMapElement { return tag("map", ...rest) as HTMLMapElement; }
+export function HtmlMap(...rest: TagChild[]): HTMLMapElement { return tag("map", ...rest); }
 export function Mark(...rest: TagChild[]): HTMLElement { return tag("mark", ...rest); }
-export function Marquee(...rest: TagChild[]): HTMLMarqueeElement { return tag("marquee", ...rest) as HTMLMarqueeElement; }
-export function Menu(...rest: TagChild[]): HTMLMenuElement { return tag("menu", ...rest) as HTMLMenuElement; }
-export function Meta(...rest: TagChild[]): HTMLMetaElement { return tag("meta", ...rest) as HTMLMetaElement; }
-export function Meter(...rest: TagChild[]): HTMLMeterElement { return tag("meter", ...rest) as HTMLMeterElement; }
+export function Marquee(...rest: TagChild[]): HTMLMarqueeElement { return tag("marquee", ...rest); }
+export function Menu(...rest: TagChild[]): HTMLMenuElement { return tag("menu", ...rest); }
+export function Meta(...rest: TagChild[]): HTMLMetaElement { return tag("meta", ...rest); }
+export function Meter(...rest: TagChild[]): HTMLMeterElement { return tag("meter", ...rest); }
 export function Nav(...rest: TagChild[]): HTMLElement { return tag("nav", ...rest); }
 export function NoScript(...rest: TagChild[]): HTMLElement { return tag("noscript", ...rest); }
-export function HtmlObject(...rest: TagChild[]): HTMLObjectElement { return tag("object", ...rest) as HTMLObjectElement; }
-export function OL(...rest: TagChild[]): HTMLOListElement { return tag("ol", ...rest) as HTMLOListElement; }
-export function OptGroup(...rest: TagChild[]): HTMLOptGroupElement { return tag("optgroup", ...rest) as HTMLOptGroupElement; }
-export function Option(...rest: TagChild[]): HTMLOptionElement { return tag("option", ...rest) as HTMLOptionElement; }
-export function Output(...rest: TagChild[]): HTMLOutputElement { return tag("output", ...rest) as HTMLOutputElement; }
-export function P(...rest: TagChild[]): HTMLParagraphElement { return tag("p", ...rest) as HTMLParagraphElement; }
-export function Param(...rest: TagChild[]): HTMLParamElement { return tag("param", ...rest) as HTMLParamElement; }
-export function Picture(...rest: TagChild[]): HTMLPictureElement { return tag("picture", ...rest) as HTMLPictureElement; }
-export function Pre(...rest: TagChild[]): HTMLPreElement { return tag("pre", ...rest) as HTMLPreElement; }
-export function Progress(...rest: TagChild[]): HTMLProgressElement { return tag("progress", ...rest) as HTMLProgressElement; }
-export function Q(...rest: TagChild[]): HTMLQuoteElement { return tag("q", ...rest) as HTMLQuoteElement; }
+export function HtmlObject(...rest: TagChild[]): HTMLObjectElement { return tag("object", ...rest); }
+export function OL(...rest: TagChild[]): HTMLOListElement { return tag("ol", ...rest); }
+export function OptGroup(...rest: TagChild[]): HTMLOptGroupElement { return tag("optgroup", ...rest); }
+export function Option(...rest: TagChild[]): HTMLOptionElement { return tag("option", ...rest); }
+export function Output(...rest: TagChild[]): HTMLOutputElement { return tag("output", ...rest); }
+export function P(...rest: TagChild[]): HTMLParagraphElement { return tag("p", ...rest); }
+export function Param(...rest: TagChild[]): HTMLParamElement { return tag("param", ...rest); }
+export function Picture(...rest: TagChild[]): HTMLPictureElement { return tag("picture", ...rest); }
+export function Pre(...rest: TagChild[]): HTMLPreElement { return tag("pre", ...rest); }
+export function Progress(...rest: TagChild[]): HTMLProgressElement { return tag("progress", ...rest); }
+export function Q(...rest: TagChild[]): HTMLQuoteElement { return tag("q", ...rest); }
 export function RB(...rest: TagChild[]): HTMLElement { return tag("rb", ...rest); }
 export function RP(...rest: TagChild[]): HTMLElement { return tag("rp", ...rest); }
 export function RT(...rest: TagChild[]): HTMLElement { return tag("rt", ...rest); }
@@ -280,33 +280,33 @@ export function RTC(...rest: TagChild[]): HTMLElement { return tag("rtc", ...res
 export function Ruby(...rest: TagChild[]): HTMLElement { return tag("ruby", ...rest); }
 export function S(...rest: TagChild[]): HTMLElement { return tag("s", ...rest); }
 export function Samp(...rest: TagChild[]): HTMLElement { return tag("samp", ...rest); }
-export function Script(...rest: TagChild[]): HTMLScriptElement { return tag("script", ...rest) as HTMLScriptElement; }
+export function Script(...rest: TagChild[]): HTMLScriptElement { return tag("script", ...rest); }
 export function Section(...rest: TagChild[]): HTMLElement { return tag("section", ...rest); }
-export function Select(...rest: TagChild[]): HTMLSelectElement { return tag("select", ...rest) as HTMLSelectElement; }
-export function Slot(...rest: TagChild[]): HTMLSlotElement { return tag("slot", ...rest) as HTMLSlotElement; }
+export function Select(...rest: TagChild[]): HTMLSelectElement { return tag("select", ...rest); }
+export function Slot(...rest: TagChild[]): HTMLSlotElement { return tag("slot", ...rest); }
 export function Small(...rest: TagChild[]): HTMLElement { return tag("small", ...rest); }
-export function Source(...rest: TagChild[]): HTMLSourceElement { return tag("source", ...rest) as HTMLSourceElement; }
-export function Span(...rest: TagChild[]): HTMLSpanElement { return tag("span", ...rest) as HTMLSpanElement; }
+export function Source(...rest: TagChild[]): HTMLSourceElement { return tag("source", ...rest); }
+export function Span(...rest: TagChild[]): HTMLSpanElement { return tag("span", ...rest); }
 export function Strong(...rest: TagChild[]): HTMLElement { return tag("strong", ...rest); }
 export function Sub(...rest: TagChild[]): HTMLElement { return tag("sub", ...rest); }
 export function Summary(...rest: TagChild[]): HTMLElement { return tag("summary", ...rest); }
 export function Sup(...rest: TagChild[]): HTMLElement { return tag("sup", ...rest); }
-export function Table(...rest: TagChild[]): HTMLTableElement { return tag("table", ...rest) as HTMLTableElement; }
-export function TBody(...rest: TagChild[]): HTMLTableSectionElement { return tag("tbody", ...rest) as HTMLTableSectionElement; }
-export function TD(...rest: TagChild[]): HTMLTableDataCellElement { return tag("td", ...rest) as HTMLTableDataCellElement; }
-export function Template(...rest: TagChild[]): HTMLTemplateElement { return tag("template", ...rest) as HTMLTemplateElement; }
-export function TextArea(...rest: TagChild[]): HTMLTextAreaElement { return tag("textarea", ...rest) as HTMLTextAreaElement; }
-export function TFoot(...rest: TagChild[]): HTMLTableSectionElement { return tag("tfoot", ...rest) as HTMLTableSectionElement; }
-export function TH(...rest: TagChild[]): HTMLTableHeaderCellElement { return tag("th", ...rest) as HTMLTableHeaderCellElement; }
-export function THead(...rest: TagChild[]): HTMLTableSectionElement { return tag("thead", ...rest) as HTMLTableSectionElement; }
-export function Time(...rest: TagChild[]): HTMLTimeElement { return tag("time", ...rest) as HTMLTimeElement; }
-export function Title(...rest: TagChild[]): HTMLTitleElement { return tag("title", ...rest) as HTMLTitleElement; }
-export function TR(...rest: TagChild[]): HTMLTableRowElement { return tag("tr", ...rest) as HTMLTableRowElement; }
-export function Track(...rest: TagChild[]): HTMLTrackElement { return tag("track", ...rest) as HTMLTrackElement; }
+export function Table(...rest: TagChild[]): HTMLTableElement { return tag("table", ...rest); }
+export function TBody(...rest: TagChild[]): HTMLTableSectionElement { return tag("tbody", ...rest); }
+export function TD(...rest: TagChild[]): HTMLTableDataCellElement { return tag("td", ...rest); }
+export function Template(...rest: TagChild[]): HTMLTemplateElement { return tag("template", ...rest); }
+export function TextArea(...rest: TagChild[]): HTMLTextAreaElement { return tag("textarea", ...rest); }
+export function TFoot(...rest: TagChild[]): HTMLTableSectionElement { return tag("tfoot", ...rest); }
+export function TH(...rest: TagChild[]): HTMLTableHeaderCellElement { return tag("th", ...rest); }
+export function THead(...rest: TagChild[]): HTMLTableSectionElement { return tag("thead", ...rest); }
+export function Time(...rest: TagChild[]): HTMLTimeElement { return tag("time", ...rest); }
+export function Title(...rest: TagChild[]): HTMLTitleElement { return tag("title", ...rest); }
+export function TR(...rest: TagChild[]): HTMLTableRowElement { return tag("tr", ...rest); }
+export function Track(...rest: TagChild[]): HTMLTrackElement { return tag("track", ...rest); }
 export function U(...rest: TagChild[]): HTMLElement { return tag("u", ...rest); }
-export function UL(...rest: TagChild[]): HTMLUListElement { return tag("ul", ...rest) as HTMLUListElement; }
+export function UL(...rest: TagChild[]): HTMLUListElement { return tag("ul", ...rest); }
 export function Var(...rest: TagChild[]): HTMLElement { return tag("var", ...rest); }
-export function Video(...rest: TagChild[]): HTMLVideoElement { return tag("video", ...rest) as HTMLVideoElement; }
+export function Video(...rest: TagChild[]): HTMLVideoElement { return tag("video", ...rest); }
 export function WBR(): HTMLElement { return tag("wbr"); }
 
 /**
