@@ -1,3 +1,4 @@
+import { onUserGesture } from "../events/onUserGesture";
 import { isArray, isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
 
 export type AudioVertex = AudioNodeType | AudioParam;
@@ -218,7 +219,10 @@ export const audioReady = new Promise<void>((resolve) => {
                 resolve();
             }
         };
+
         audioCtx.addEventListener("statechange", onReady);
+
+        onUserGesture(() => audioCtx.resume());
     }
 });
 

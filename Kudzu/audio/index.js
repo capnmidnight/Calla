@@ -1,3 +1,4 @@
+import { onUserGesture } from "../events/onUserGesture";
 import { isArray, isDefined, isNullOrUndefined, isNumber } from "../typeChecks";
 const graph = new Map();
 const children = new WeakMap();
@@ -169,6 +170,7 @@ export const audioReady = new Promise((resolve) => {
             }
         };
         audioCtx.addEventListener("statechange", onReady);
+        onUserGesture(() => audioCtx.resume());
     }
 });
 export function isErsatzAudioNode(value) {
