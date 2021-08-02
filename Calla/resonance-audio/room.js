@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Complete room model with early and late reflections.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+// Internal dependencies.
 import { vec3 } from "gl-matrix";
 import { ChannelMerger, connect, disconnect, Gain } from "kudzu/audio";
 import { Dimension } from "./Dimension";

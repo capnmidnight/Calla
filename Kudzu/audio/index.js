@@ -133,7 +133,7 @@ export function print() {
             });
             while (stack.length > 0) {
                 const { pre, node } = stack.pop();
-                const name = names.get(node) ?? "???";
+                const name = names.get(node) || "???";
                 console.log(pre, name, node);
                 if (isAudioNode(node)) {
                     const set = graph.get(node);

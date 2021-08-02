@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Source model to spatialize an audio buffer.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+// Internal dependencies.
 import { vec3 } from "gl-matrix";
 import { connect, disconnect, Gain } from "kudzu/audio";
 import { Attenuation } from './attenuation';

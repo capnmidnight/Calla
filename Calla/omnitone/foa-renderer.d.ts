@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Omnitone FOARenderer. This is user-facing API for the first-order
+ * ambisonic decoder and the optimized binaural renderer.
+ */
 import { mat3, mat4 } from "gl-matrix";
 import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";

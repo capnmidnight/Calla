@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Complete room model with early and late reflections.
+ * @author Andrew Allen <bitllama@google.com>
+ */
 import { vec3 } from "gl-matrix";
 import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";

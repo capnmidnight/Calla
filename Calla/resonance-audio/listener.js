@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Listener model to spatialize sources in an environment.
+ * @author Andrew Allen <bitllama@google.com>
+ */
 import { mat3, vec3 } from "gl-matrix";
 import { connect, disconnect, Gain } from "kudzu/audio";
 import { FOARenderer } from "../omnitone/foa-renderer";
