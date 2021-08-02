@@ -26,6 +26,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     getUserNames(): string[][];
     private getCurrentMediaTrack;
     protected onInputsChanged(evt: DeviceManagerInputsChangedEvent): Promise<void>;
+    get startDevicesImmediately(): boolean;
     toggleAudioMuted(): Promise<boolean>;
     toggleVideoMuted(): Promise<boolean>;
     private isMediaMuted;

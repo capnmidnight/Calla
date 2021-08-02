@@ -8,6 +8,7 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
     localUserID: string;
     localUserName: string;
     roomName: string;
+    startDevicesImmediately: boolean;
     localAudioInput: GainNode;
     useHalfDuplex: boolean;
     halfDuplexMin: number;

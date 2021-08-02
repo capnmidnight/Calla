@@ -1,5 +1,6 @@
 import { Logger } from "kudzu/debugging/Logger";
 import { TypedEventBase } from "kudzu/events/EventBase";
+import { audioReady } from "../Kudzu/audio";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { ConnectionState } from "./ConnectionState";
 export var ClientState;
@@ -36,7 +37,9 @@ export class Calla extends TypedEventBase {
             const user = this.audio.setLocalUserID(evt.userID);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.devices.start();
+            if (!this._tele.startDevicesImmediately) {
+                await this.devices.start();
+            }
         });
         this._tele.addEventListener("conferenceLeft", (evt) => {
             this.audio.setLocalUserID(evt.userID);
@@ -105,6 +108,9 @@ export class Calla extends TypedEventBase {
         window.addEventListener("beforeunload", dispose);
         window.addEventListener("unload", dispose);
         window.addEventListener("pagehide", dispose);
+        if (this._tele.startDevicesImmediately) {
+            audioReady.then(() => this.devices.start());
+        }
         Object.seal(this);
     }
     get connectionState() {
@@ -238,6 +244,9 @@ export class Calla extends TypedEventBase {
             isMuted = await this.toggleVideoMuted();
         }
         return isMuted;
+    }
+    get startDevicesImmediately() {
+        return this._tele.startDevicesImmediately;
     }
     get localAudioInput() {
         return this._tele.localAudioInput;

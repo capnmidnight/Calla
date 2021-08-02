@@ -44,6 +44,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     abstract toggleVideoMuted(): Promise<boolean>;
     abstract getAudioMuted(): Promise<boolean>;
     abstract getVideoMuted(): Promise<boolean>;
+    abstract get startDevicesImmediately(): boolean;
     abstract get localAudioInput(): GainNode;
     abstract get useHalfDuplex(): boolean;
     abstract set useHalfDuplex(v: boolean);

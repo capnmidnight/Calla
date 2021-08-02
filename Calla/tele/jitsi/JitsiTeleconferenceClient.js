@@ -370,6 +370,9 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             await addTask;
         }
     }
+    get startDevicesImmediately() {
+        return false;
+    }
     async toggleAudioMuted() {
         const changeTask = this.getNext("audioMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Audio);

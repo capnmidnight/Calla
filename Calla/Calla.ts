@@ -2,6 +2,7 @@ import { Logger } from "kudzu/debugging/Logger";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
 import type { IDisposable } from "kudzu/using";
+import { audioReady } from "../Kudzu/audio";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioManager } from "./audio/AudioManager";
 import type {
@@ -61,7 +62,9 @@ export class Calla
             const user = this.audio.setLocalUserID(evt.userID);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
-            await this.devices.start();
+            if (!this._tele.startDevicesImmediately) {
+                await this.devices.start();
+            }
         });
 
         this._tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
@@ -151,6 +154,11 @@ export class Calla
         window.addEventListener("beforeunload", dispose);
         window.addEventListener("unload", dispose);
         window.addEventListener("pagehide", dispose);
+
+        if (this._tele.startDevicesImmediately) {
+            audioReady.then(() =>
+                this.devices.start());
+        }
 
         Object.seal(this);
     }
@@ -320,6 +328,10 @@ export class Calla
             isMuted = await this.toggleVideoMuted();
         }
         return isMuted;
+    }
+
+    get startDevicesImmediately() {
+        return this._tele.startDevicesImmediately;
     }
 
     get localAudioInput(): GainNode {

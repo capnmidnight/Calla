@@ -11,6 +11,7 @@ export interface ITeleconferenceClient
     localUserID: string;
     localUserName: string;
     roomName: string;
+    startDevicesImmediately: boolean;
 
     localAudioInput: GainNode;
     useHalfDuplex: boolean;

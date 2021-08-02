@@ -482,6 +482,10 @@ export class JitsiTeleconferenceClient
         }
     }
 
+    get startDevicesImmediately() {
+        return false;
+    }
+
     async toggleAudioMuted() {
         const changeTask = this.getNext("audioMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Audio);

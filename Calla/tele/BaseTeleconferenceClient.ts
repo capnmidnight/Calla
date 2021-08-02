@@ -122,6 +122,8 @@ export abstract class BaseTeleconferenceClient
     abstract getAudioMuted(): Promise<boolean>;
     abstract getVideoMuted(): Promise<boolean>;
 
+    abstract get startDevicesImmediately(): boolean;
+
     abstract get localAudioInput(): GainNode;
 
     abstract get useHalfDuplex(): boolean;
