@@ -15,8 +15,8 @@
  */
 
 import { mat3, mat4, ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
+import { ChannelMerger, ChannelSplitter, disconnect, ErsatzAudioNode, gain, Gain } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 /**
  * @file Sound field rotator for first-order-ambisonics decoding.
@@ -26,8 +26,7 @@ import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * First-order-ambisonic decoder based on gain node network.
  */
-export class FOARotator implements IDisposable {
-    private _context: BaseAudioContext;
+export class FOARotator implements IDisposable, ErsatzAudioNode {
     private _splitter: ChannelSplitterNode;
     private _inX: GainNode;
     private _inY: GainNode;
@@ -45,133 +44,87 @@ export class FOARotator implements IDisposable {
     private _outY: GainNode;
     private _outZ: GainNode;
     private _merger: ChannelMergerNode;
-    input: ChannelSplitterNode;
-    output: ChannelMergerNode;
     /**
      * First-order-ambisonic decoder based on gain node network.
-     * @param context - Associated BaseAudioContext.
      */
-    constructor(context: BaseAudioContext) {
-        this._context = context;
+    constructor() {
 
-        this._splitter = nameVertex("foa-rotator-splitter", this._context.createChannelSplitter(4));
-        this._inX = nameVertex("foa-rotator-inX", this._context.createGain());;
-        this._inY = nameVertex("foa-rotator-inY", this._context.createGain());;
-        this._inZ = nameVertex("foa-rotator-inZ", this._context.createGain());;
-        this._m0 = nameVertex("foa-rotator-m0", this._context.createGain());;
-        this._m1 = nameVertex("foa-rotator-m1", this._context.createGain());;
-        this._m2 = nameVertex("foa-rotator-m2", this._context.createGain());;
-        this._m3 = nameVertex("foa-rotator-m3", this._context.createGain());;
-        this._m4 = nameVertex("foa-rotator-m4", this._context.createGain());;
-        this._m5 = nameVertex("foa-rotator-m5", this._context.createGain());;
-        this._m6 = nameVertex("foa-rotator-m6", this._context.createGain());;
-        this._m7 = nameVertex("foa-rotator-m7", this._context.createGain());;
-        this._m8 = nameVertex("foa-rotator-m8", this._context.createGain());;
-        this._outX = nameVertex("foa-rotator-outX", this._context.createGain());;
-        this._outY = nameVertex("foa-rotator-outY", this._context.createGain());;
-        this._outZ = nameVertex("foa-rotator-outZ", this._context.createGain());;
-        this._merger = nameVertex("foa-rotator-merger", this._context.createChannelMerger(4));
+        this._merger = ChannelMerger("foa-rotator-merger", 4);
 
-        // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
-        // X (from channel 1)
-        connect(this._splitter, this._inX, 1);
-        // Y (from channel 2)
-        connect(this._splitter, this._inY, 2);
-        // Z (from channel 3)
-        connect(this._splitter, this._inZ, 3);
+        this._splitter = ChannelSplitter(
+            "foa-rotator-splitter", 4,
+            [1, this._inX],
+            [2, this._inY],
+            [3, this._inZ],
+            [0, 0, this._merger]);
 
-        this._inX.gain.value = -1;
-        this._inY.gain.value = -1;
-        this._inZ.gain.value = -1;
+        this._outX = Gain("foa-rotator-outX", [0, 1, this._merger]);
+        this._outY = Gain("foa-rotator-outY", [0, 2, this._merger]);
+        this._outZ = Gain("foa-rotator-outZ", [0, 3, this._merger]);
+
+        this._m0 = Gain("foa-rotator-m0", this._outX);
+        this._m1 = Gain("foa-rotator-m1", this._outY);
+        this._m2 = Gain("foa-rotator-m2", this._outZ);
+        this._m3 = Gain("foa-rotator-m3", this._outX);
+        this._m4 = Gain("foa-rotator-m4", this._outY);
+        this._m5 = Gain("foa-rotator-m5", this._outZ);
+        this._m6 = Gain("foa-rotator-m6", this._outX);
+        this._m7 = Gain("foa-rotator-m7", this._outY);
+        this._m8 = Gain("foa-rotator-m8", this._outZ);
 
         // Apply the rotation in the world space.
         // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
         // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
         // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-        connect(this._inX, this._m0);
-        connect(this._inX, this._m1);
-        connect(this._inX, this._m2);
-        connect(this._inY, this._m3);
-        connect(this._inY, this._m4);
-        connect(this._inY, this._m5);
-        connect(this._inZ, this._m6);
-        connect(this._inZ, this._m7);
-        connect(this._inZ, this._m8);
-        connect(this._m0, this._outX);
-        connect(this._m1, this._outY);
-        connect(this._m2, this._outZ);
-        connect(this._m3, this._outX);
-        connect(this._m4, this._outY);
-        connect(this._m5, this._outZ);
-        connect(this._m6, this._outX);
-        connect(this._m7, this._outY);
-        connect(this._m8, this._outZ);
 
-        // Transform 3: world space to audio space.
-        // W -> W (to channel 0)
-        connect(this._splitter, this._merger, 0, 0);
-        // X (to channel 1)
-        connect(this._outX, this._merger, 0, 1);
-        // Y (to channel 2)
-        connect(this._outY, this._merger, 0, 2);
-        // Z (to channel 3)
-        connect(this._outZ, this._merger, 0, 3);
+        this._inX = Gain("foa-rotator-inX",
+            gain(-1),
+            this._m0,
+            this._m1,
+            this._m2);
 
-        this._outX.gain.value = -1;
-        this._outY.gain.value = -1;
-        this._outZ.gain.value = -1;
+        this._inY = Gain("foa-rotator-inY",
+            gain(-1),
+            this._m3,
+            this._m4,
+            this._m5);
+
+        this._inZ = Gain("foa-rotator-inZ",
+            gain(-1),
+            this._m6,
+            this._m7,
+            this._m8);
 
         this.setRotationMatrix3(mat3.identity(mat3.create()));
-
-        // input/output proxy.
-        this.input = this._splitter;
-        this.output = this._merger;
     }
 
+    get input() {
+        return this._splitter;
+    }
+
+    get output() {
+        return this._merger;
+    }
 
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
-            // X (from channel 1)
-            disconnect(this._splitter, this._inX, 1);
-            // Y (from channel 2)
-            disconnect(this._splitter, this._inY, 2);
-            // Z (from channel 3)
-            disconnect(this._splitter, this._inZ, 3);
-
-            // Apply the rotation in the world space.
-            // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
-            // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
-            // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-            disconnect(this._inX, this._m0);
-            disconnect(this._inX, this._m1);
-            disconnect(this._inX, this._m2);
-            disconnect(this._inY, this._m3);
-            disconnect(this._inY, this._m4);
-            disconnect(this._inY, this._m5);
-            disconnect(this._inZ, this._m6);
-            disconnect(this._inZ, this._m7);
-            disconnect(this._inZ, this._m8);
-            disconnect(this._m0, this._outX);
-            disconnect(this._m1, this._outY);
-            disconnect(this._m2, this._outZ);
-            disconnect(this._m3, this._outX);
-            disconnect(this._m4, this._outY);
-            disconnect(this._m5, this._outZ);
-            disconnect(this._m6, this._outX);
-            disconnect(this._m7, this._outY);
-            disconnect(this._m8, this._outZ);
-
-            // Transform 3: world space to audio space.
-            // W -> W (to channel 0)
-            disconnect(this._splitter, this._merger, 0, 0);
-            // X (to channel 1)
-            disconnect(this._outX, this._merger, 0, 1);
-            // Y (to channel 2)
-            disconnect(this._outY, this._merger, 0, 2);
-            // Z (to channel 3)
-            disconnect(this._outZ, this._merger, 0, 3);
+            disconnect(this._splitter);
+            disconnect(this._inX);
+            disconnect(this._inY);
+            disconnect(this._inZ);
+            disconnect(this._m0);
+            disconnect(this._m1);
+            disconnect(this._m2);
+            disconnect(this._m3);
+            disconnect(this._m4);
+            disconnect(this._m5);
+            disconnect(this._m6);
+            disconnect(this._m7);
+            disconnect(this._m8);
+            disconnect(this._outX);
+            disconnect(this._outY);
+            disconnect(this._outZ);
             this.disposed = true;
         }
     }

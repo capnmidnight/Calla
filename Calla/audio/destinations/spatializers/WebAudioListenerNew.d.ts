@@ -9,7 +9,7 @@ export declare class WebAudioListenerNew extends BaseWebAudioListener {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */
-    constructor(audioContext: BaseAudioContext);
+    constructor();
     /**
      * Performs the spatialization operation for the audio source's latest location.
      */
@@ -17,5 +17,5 @@ export declare class WebAudioListenerNew extends BaseWebAudioListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, destination: AudioDestination): BaseEmitter;
 }

@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @file Listener model to spatialize sources in an environment.
- * @author Andrew Allen <bitllama@google.com>
- */
 import { vec3 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
 import type { RenderingMode } from "../omnitone/rendering-mode";
@@ -58,7 +54,7 @@ export declare class Listener implements IDisposable {
     /**
      * Listener model to spatialize sources in an environment.
      */
-    constructor(context: BaseAudioContext, options?: ListenerOptions);
+    constructor(options?: ListenerOptions);
     private disposed;
     dispose(): void;
     getRenderingMode(): string;

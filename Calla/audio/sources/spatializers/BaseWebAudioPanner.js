@@ -1,4 +1,4 @@
-import { connect, nameVertex } from "../../GraphVisualizer";
+import { coneInnerAngle, coneOuterAngle, coneOuterGain, connect, distanceModel, Panner, panningModel } from "kudzu/audio";
 import { BaseEmitter } from "./BaseEmitter";
 /**
  * Base class for spatializers that uses WebAudio's PannerNode
@@ -9,16 +9,13 @@ export class BaseWebAudioPanner extends BaseEmitter {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param audioContext - the output WebAudio context
      */
-    constructor(audioContext, destination) {
-        super(audioContext, destination);
-        this.panner = nameVertex("listener-spatializer", audioContext.createPanner());
-        this.panner.panningModel = "HRTF";
-        this.panner.distanceModel = "inverse";
-        this.panner.coneInnerAngle = 360;
-        this.panner.coneOuterAngle = 0;
-        this.panner.coneOuterGain = 0;
-        this.input = this.output = this.panner;
-        connect(this.output, this.destination);
+    constructor(destination) {
+        super(destination);
+        this.input
+            = this.output
+                = this.panner
+                    = Panner("listener-spatializer", panningModel("HRTF"), distanceModel("inverse"), coneInnerAngle(360), coneOuterAngle(0), coneOuterGain(0));
+        connect(this, this.destination);
     }
     copyAudioProperties(from) {
         super.copyAudioProperties(from);

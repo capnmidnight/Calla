@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { decodeAudioData } from "kudzu/audio";
 import { getArrayBufferFromBase64String } from "./utils";
 
 /**
@@ -46,18 +47,15 @@ export interface BufferListOptions {
  * AudioBuffers from multiple URLs.
  */
 export class BufferList {
-    private _context: BaseAudioContext;
     private _options: { dataType: BufferDataType; verbose: boolean; };
     private _bufferData: string[];
     /**
      * BufferList object mananges the async loading/decoding of multiple
      * AudioBuffers from multiple URLs.
-     * @param context - Associated BaseAudioContext.
      * @param bufferData - An ordered list of URLs.
      * @param options - Options.
      */
-    constructor(context: BaseAudioContext, bufferData: string[], options?: BufferListOptions) {
-        this._context = context;
+    constructor(bufferData: string[], options?: BufferListOptions) {
 
         this._options = Object.assign({}, {
             dataType: BufferDataType.BASE64,
@@ -101,7 +99,7 @@ export class BufferList {
      */
     private async _launchAsyncLoadTask(bData: string): Promise<AudioBuffer> {
         const arrayBuffer = await this._fetch(bData);
-        const audioBuffer = await this._context.decodeAudioData(arrayBuffer);
+        const audioBuffer = await decodeAudioData(arrayBuffer);
         return audioBuffer;
     }
 

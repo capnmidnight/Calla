@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { ErsatzAudioNode } from "kudzu/audio";
+import { IDisposable } from "kudzu/using";
 /**
  * @file A collection of convolvers. Can be used for the optimized HOA binaural
  * rendering. (e.g. SH-MaxRe HRTFs)
@@ -20,8 +22,7 @@
 /**
  * A convolver network for N-channel HOA stream.
  */
-export declare class HOAConvolver {
-    private _context;
+export declare class HOAConvolver implements IDisposable, ErsatzAudioNode {
     private _active;
     private _isBufferLoaded;
     private _ambisonicOrder;
@@ -35,8 +36,6 @@ export declare class HOAConvolver {
     private _inverter;
     private _binauralMerger;
     private _outputGain;
-    input: ChannelSplitterNode;
-    output: GainNode;
     /**
      * A convolver network for N-channel HOA stream.
       * @param context - Associated BaseAudioContext.
@@ -44,15 +43,9 @@ export declare class HOAConvolver {
      * @param [hrirBufferList] - An ordered-list of stereo
      * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
      */
-    constructor(context: BaseAudioContext, ambisonicOrder: number, hrirBufferList?: AudioBuffer[]);
-    /**
-     * Build the internal audio graph.
-     * For TOA convolution:
-     *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
-     *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
-     *                         -[4,5]-> ... (6 more, 8 branches total)
-     */
-    private _buildAudioGraph;
+    constructor(ambisonicOrder: number, hrirBufferList?: AudioBuffer[]);
+    get input(): ChannelSplitterNode;
+    get output(): GainNode;
     dispose(): void;
     /**
      * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo

@@ -3,7 +3,7 @@ import { BaseEmitter } from "./spatializers/BaseEmitter";
 export declare class AudioBufferSpawningSource extends BaseAudioBufferSource {
     private counter;
     private playingSources;
-    constructor(id: string, audioContext: BaseAudioContext, source: AudioBufferSourceNode, spatializer: BaseEmitter);
+    constructor(id: string, source: AudioBufferSourceNode, spatializer: BaseEmitter);
     protected connectSpatializer(): void;
     protected disconnectSpatializer(): void;
     get isPlaying(): boolean;

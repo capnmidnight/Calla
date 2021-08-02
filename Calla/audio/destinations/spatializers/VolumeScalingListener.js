@@ -1,4 +1,4 @@
-import { nameVertex } from "../../GraphVisualizer";
+import { Gain } from "kudzu/audio";
 import { Pose } from "../../positions/Pose";
 import { VolumeScalingNode } from "../../sources/spatializers/VolumeScalingNode";
 import { BaseListener } from "./BaseListener";
@@ -10,10 +10,9 @@ export class VolumeScalingListener extends BaseListener {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */
-    constructor(audioContext) {
-        super(audioContext);
-        const gain = nameVertex("volume-scaler", audioContext.createGain());
-        this.input = this.output = gain;
+    constructor() {
+        super();
+        this.input = this.output = Gain("volume-scaler");
         this.pose = new Pose();
     }
     /**
@@ -25,15 +24,15 @@ export class VolumeScalingListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize, isRemoteStream, audioContext, destination) {
+    createSpatializer(spatialize, isRemoteStream, destination) {
         if (spatialize) {
             const dest = isRemoteStream
                 ? destination.remoteUserInput
                 : destination.spatializedInput;
-            return new VolumeScalingNode(audioContext, dest, this);
+            return new VolumeScalingNode(dest, this);
         }
         else {
-            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, destination);
         }
     }
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import { ChannelMerger, ChannelSplitter, connect, Convolver, disconnect, ErsatzAudioNode, gain, Gain, normalize } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 
 /**
@@ -27,8 +27,7 @@ import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  */
-export class FOAConvolver implements IDisposable {
-    private _context: BaseAudioContext;
+export class FOAConvolver implements IDisposable, ErsatzAudioNode {
     private _active: boolean;
     private _isBufferLoaded: boolean;
     private _splitterWYZX: ChannelSplitterNode;
@@ -41,21 +40,63 @@ export class FOAConvolver implements IDisposable {
     private _inverter: GainNode;
     private _mergerBinaural: ChannelMergerNode;
     private _summingBus: GainNode;
-    input: ChannelSplitterNode;
-    output: GainNode;
 
     /**
      * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
-     * @param context The associated BaseAudioContext.
      * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
      */
-    constructor(context: BaseAudioContext, hrirBufferList?: AudioBuffer[]) {
-        this._context = context;
-
+    constructor(hrirBufferList?: AudioBuffer[]) {
         this._active = false;
         this._isBufferLoaded = false;
 
-        this._buildAudioGraph();
+
+        this._mergerBinaural = ChannelMerger(
+            "foa-convolver-merger-binaural", 2);
+
+        this._inverter = Gain(
+            "foa-convolver-inverter",
+            gain(-1),
+            [0, 1, this._mergerBinaural]);
+
+        this._mergerWY = ChannelMerger(
+            "foa-convolver-merger-wy", 2,
+            this._convolverWY = Convolver(
+                "foa-convolver-convolver-wy",
+                // By default, WebAudio's convolver does the normalization based on IR's
+                // energy. For the precise convolution, it must be disabled before the buffer
+                // assignment.
+                normalize(false),
+                this._splitterWY = ChannelSplitter(
+                    "foa-convolver-splitter-wy", 2,
+                    [0, 0, this._mergerBinaural],
+                    [0, 1, this._mergerBinaural],
+                    [1, 0, this._mergerBinaural],
+                    [1, 0, this._inverter])));
+
+        this._mergerZX = ChannelMerger(
+            "foa-convolver-merger-zx", 2,
+            this._convolverZX = Convolver(
+                "foa-convolver-convolver-zx",
+                // By default, WebAudio's convolver does the normalization based on IR's
+                // energy. For the precise convolution, it must be disabled before the buffer
+                // assignment.
+                normalize(false),
+                this._splitterZX = ChannelSplitter(
+                    "foa-convolver-splitter-zx", 2,
+                    [0, 0, this._mergerBinaural],
+                    [0, 1, this._mergerBinaural],
+                    [1, 0, this._mergerBinaural],
+                    [1, 1, this._mergerBinaural])));
+
+        // Group W and Y, then Z and X.
+        this._splitterWYZX = ChannelSplitter(
+            "foa-convolver-splitter-wyzx", 4,
+            [0, 0, this._splitterWY],
+            [1, 1, this._splitterWY],
+            [2, 0, this._splitterZX],
+            [3, 1, this._splitterZX]);
+
+        this._summingBus = Gain("foa-convolver-summing-bus");
 
         if (hrirBufferList) {
             this.setHRIRBufferList(hrirBufferList);
@@ -64,55 +105,12 @@ export class FOAConvolver implements IDisposable {
         this.enable();
     }
 
+    get input() {
+        return this._splitterWYZX;
+    }
 
-    /**
-     * Build the internal audio graph.
-     */
-    private _buildAudioGraph(): void {
-        this._splitterWYZX = nameVertex("foa-convolver-splitter-wyzx", this._context.createChannelSplitter(4));
-        this._mergerWY = nameVertex("foa-convolver-merger-wy", this._context.createChannelMerger(2));
-        this._mergerZX = nameVertex("foa-convolver-merger-zx", this._context.createChannelMerger(2));
-        this._convolverWY = nameVertex("foa-convolver-convolver-wy", this._context.createConvolver());
-        this._convolverZX = nameVertex("foa-convolver-convolver-zx", this._context.createConvolver());
-        this._splitterWY = nameVertex("foa-convolver-splitter-wy", this._context.createChannelSplitter(2));
-        this._splitterZX = nameVertex("foa-convolver-splitter-zx", this._context.createChannelSplitter(2));
-        this._inverter = nameVertex("foa-convolver-inverter", this._context.createGain());
-        this._mergerBinaural = nameVertex("foa-convolver-merger-binaural", this._context.createChannelMerger(2));
-        this._summingBus = nameVertex("foa-convolver-summing-bus", this._context.createGain());
-
-        // Group W and Y, then Z and X.
-        connect(this._splitterWYZX, this._mergerWY, 0, 0);
-        connect(this._splitterWYZX, this._mergerWY, 1, 1);
-        connect(this._splitterWYZX, this._mergerZX, 2, 0);
-        connect(this._splitterWYZX, this._mergerZX, 3, 1);
-
-        // Create a network of convolvers using splitter/merger.
-        connect(this._mergerWY, this._convolverWY);
-        connect(this._mergerZX, this._convolverZX);
-        connect(this._convolverWY, this._splitterWY);
-        connect(this._convolverZX, this._splitterZX);
-        connect(this._splitterWY, this._mergerBinaural, 0, 0);
-        connect(this._splitterWY, this._mergerBinaural, 0, 1);
-        connect(this._splitterWY, this._mergerBinaural, 1, 0);
-        connect(this._splitterWY, this._inverter, 1, 0);
-        connect(this._inverter, this._mergerBinaural, 0, 1);
-        connect(this._splitterZX, this._mergerBinaural, 0, 0);
-        connect(this._splitterZX, this._mergerBinaural, 0, 1);
-        connect(this._splitterZX, this._mergerBinaural, 1, 0);
-        connect(this._splitterZX, this._mergerBinaural, 1, 1);
-
-        // By default, WebAudio's convolver does the normalization based on IR's
-        // energy. For the precise convolution, it must be disabled before the buffer
-        // assignment.
-        this._convolverWY.normalize = false;
-        this._convolverZX.normalize = false;
-
-        // For asymmetric degree.
-        this._inverter.gain.value = -1;
-
-        // Input/output proxy.
-        this.input = this._splitterWYZX;
-        this.output = this._summingBus;
+    get output() {
+        return this._summingBus;
     }
 
 
@@ -123,26 +121,14 @@ export class FOAConvolver implements IDisposable {
                 this.disable();
             }
 
-            // Group W and Y, then Z and X.
-            disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
-            disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
-            disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
-            disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
-
-            // Create a network of convolvers using splitter/merger.
-            disconnect(this._mergerWY, this._convolverWY);
-            disconnect(this._mergerZX, this._convolverZX);
-            disconnect(this._convolverWY, this._splitterWY);
-            disconnect(this._convolverZX, this._splitterZX);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterWY, this._inverter, 1, 0);
-            disconnect(this._inverter, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
-            disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
+            disconnect(this._splitterWYZX);
+            disconnect(this._mergerWY);
+            disconnect(this._mergerZX);
+            disconnect(this._convolverWY);
+            disconnect(this._convolverZX);
+            disconnect(this._splitterWY);
+            disconnect(this._inverter);
+            disconnect(this._splitterZX);
             this.disposed = true;
         }
     }
@@ -186,7 +172,7 @@ export class FOAConvolver implements IDisposable {
      * audio destination, thus no CPU cycle will be consumed.
      */
     disable(): void {
-        disconnect(this._mergerBinaural, this._summingBus);
+        disconnect(this._mergerBinaural);
         this._active = false;
     }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { channelCount, channelCountMode, channelInterpretation, connect, disconnect, Gain } from "kudzu/audio";
 import { BufferDataType, BufferList } from './buffer-list';
 import { FOAConvolver } from './foa-convolver';
 import { FOARotator } from './foa-rotator';
@@ -25,7 +25,6 @@ import { log } from "./utils";
  * Omnitone FOA renderer class. Uses the optimized convolution technique.
  */
 export class FOARenderer {
-    context;
     config;
     bypass;
     router;
@@ -36,8 +35,7 @@ export class FOARenderer {
     /**
      * Omnitone FOA renderer class. Uses the optimized convolution technique.
      */
-    constructor(context, options) {
-        this.context = context;
+    constructor(options) {
         this.config = Object.assign({
             channelMap: ChannelMap.Default,
             renderingMode: RenderingMode.Ambisonic,
@@ -57,32 +55,26 @@ export class FOARenderer {
      * Builds the internal audio graph.
      */
     buildAudioGraph() {
-        this.input = nameVertex("foa-renderer-input", this.context.createGain());
-        this.output = nameVertex("foa-renderer-output", this.context.createGain());
-        this.bypass = nameVertex("foa-renderer-bypass", this.context.createGain());
-        this.router = new FOARouter(this.context, this.config.channelMap);
-        this.rotator = new FOARotator(this.context);
-        this.convolver = new FOAConvolver(this.context);
-        connect(this.input, this.router.input);
-        connect(this.input, this.bypass);
-        connect(this.router.output, this.rotator.input);
-        connect(this.rotator.output, this.convolver.input);
-        connect(this.convolver.output, this.output);
-        this.input.channelCount = 4;
-        this.input.channelCountMode = 'explicit';
-        this.input.channelInterpretation = 'discrete';
+        this.router = new FOARouter(this.config.channelMap);
+        this.bypass = Gain("foa-renderer-bypass");
+        this.input = Gain("foa-renderer-input", channelCount(4), channelCountMode("explicit"), channelInterpretation("discrete"), this.router, this.bypass);
+        this.output = Gain("foa-renderer-output");
+        this.rotator = new FOARotator();
+        this.convolver = new FOAConvolver();
+        connect(this.router, this.rotator);
+        connect(this.rotator, this.convolver);
+        connect(this.convolver, this.output);
     }
     disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+                disconnect(this.bypass);
             }
-            disconnect(this.input, this.router.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.router.output, this.rotator.input);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
+            disconnect(this.input);
+            disconnect(this.router);
+            disconnect(this.rotator);
+            disconnect(this.convolver);
             this.convolver.dispose();
             this.rotator.dispose();
             this.router.dispose();
@@ -94,8 +86,8 @@ export class FOARenderer {
      */
     async initialize() {
         const bufferList = this.config.hrirPathList
-            ? new BufferList(this.context, this.config.hrirPathList, { dataType: BufferDataType.URL })
-            : new BufferList(this.context, FOAHrirBase64, { dataType: BufferDataType.BASE64 });
+            ? new BufferList(this.config.hrirPathList, { dataType: BufferDataType.URL })
+            : new BufferList(FOAHrirBase64, { dataType: BufferDataType.BASE64 });
         try {
             const hrirBufferList = await bufferList.load();
             this.convolver.setHRIRBufferList(hrirBufferList);

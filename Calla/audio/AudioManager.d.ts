@@ -35,7 +35,6 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private sortedUserIDs;
     localOutput: AudioDestination;
     listener: BaseListener;
-    audioContext: AudioContext;
     private destination;
     private fetcher;
     private _type;

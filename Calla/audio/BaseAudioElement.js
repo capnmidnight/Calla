@@ -1,15 +1,13 @@
-import { nameVertex } from "./GraphVisualizer";
+import { Gain } from "kudzu/audio";
 import { InterpolatedPose } from "./positions/InterpolatedPose";
 export class BaseAudioElement {
     id;
-    audioContext;
     pose = new InterpolatedPose();
     _spatializer = null;
     volumeControl;
-    constructor(id, audioContext) {
+    constructor(id) {
         this.id = id;
-        this.audioContext = audioContext;
-        this.volumeControl = nameVertex("volume-control-" + this.id, audioContext.createGain());
+        this.volumeControl = Gain("volume-control-" + this.id);
     }
     disposed = false;
     dispose() {

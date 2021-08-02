@@ -10,7 +10,7 @@ export declare class ResonanceAudioListener extends BaseListener {
     /**
      * Creates a new audio positioner that uses Google's Resonance Audio library
      */
-    constructor(audioContext: AudioContext);
+    constructor();
     private disposed;
     dispose(): void;
     /**
@@ -20,5 +20,5 @@ export declare class ResonanceAudioListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, destination: AudioDestination): BaseEmitter;
 }

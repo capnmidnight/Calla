@@ -1,7 +1,7 @@
+import { connect } from "kudzu/audio";
 import type { AttenuationRolloff } from "../../../resonance-audio/AttenuationRolloff";
 import type { ResonanceAudio } from "../../../resonance-audio/resonance-audio";
 import type { Source } from "../../../resonance-audio/source";
-import { connect } from "../../GraphVisualizer";
 import type { Pose } from "../../positions/Pose";
 import { BaseEmitter } from "./BaseEmitter";
 
@@ -15,20 +15,20 @@ export class ResonanceAudioNode extends BaseEmitter {
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode, res: ResonanceAudio) {
-        super(audioContext, destination);
+    constructor(destination: AudioNode, res: ResonanceAudio) {
+        super(destination);
         this.resScene = res;
         this.resNode = res.createSource(undefined);
         this.input = this.resNode.input;
         this.output = this.resNode.output;
 
-        connect(this.output, this.destination);
+        connect(this, this.destination);
 
         Object.seal(this);
     }
 
     protected createNew(): ResonanceAudioNode {
-        return new ResonanceAudioNode(this.audioContext, this.destination, this.resScene);
+        return new ResonanceAudioNode(this.destination, this.resScene);
     }
 
     /**

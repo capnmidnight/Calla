@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { mat3, mat4, vec3 } from "gl-matrix";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { ChannelMerger, ChannelSplitter, connect, disconnect, Gain } from "kudzu/audio";
 /**
  * @file Sound field rotator for higher-order-ambisonics decoding.
  */
@@ -228,13 +228,10 @@ function computeHOAMatrices(matrix) {
  *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
  */
 export class HOARotator {
-    _context;
     _ambisonicOrder;
     _splitter;
     _merger;
-    _gainNodeMatrix;
-    input;
-    output;
+    _gainNodeMatrix = new Array();
     /**
      * Higher-order-ambisonic decoder based on gain node network. We expect
      * the order of the channels to conform to ACN ordering. Below are the helper
@@ -248,20 +245,15 @@ export class HOARotator {
      *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
      *  [2b] Corrections to initial publication:
      *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-     * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order.
      */
-    constructor(context, ambisonicOrder) {
-        this._context = context;
+    constructor(ambisonicOrder) {
         this._ambisonicOrder = ambisonicOrder;
         // We need to determine the number of channels K based on the ambisonic order
         // N where K = (N + 1)^2.
         const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
-        this._splitter = nameVertex("hoa-rotator-splitter", this._context.createChannelSplitter(numberOfChannels));
-        this._merger = nameVertex("hoa-rotator-merger", this._context.createChannelMerger(numberOfChannels));
-        // Create a set of per-order rotation matrices using gain nodes.
-        /** @type {GainNode[][]} */
-        this._gainNodeMatrix = [];
+        this._merger = ChannelMerger("hoa-rotator-merger", numberOfChannels);
+        this._splitter = ChannelSplitter("hoa-rotator-splitter", numberOfChannels, [0, 0, this._merger]);
         for (let i = 1; i <= ambisonicOrder; i++) {
             // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
             // matrix. We compute the offset value as the first channel index of the
@@ -272,51 +264,36 @@ export class HOARotator {
             const orderOffset = i * i;
             // Uses row-major indexing.
             const rows = (2 * i + 1);
-            this._gainNodeMatrix[i - 1] = [];
+            this._gainNodeMatrix[i - 1] = new Array();
             for (let j = 0; j < rows; j++) {
                 const inputIndex = orderOffset + j;
                 for (let k = 0; k < rows; k++) {
                     const outputIndex = orderOffset + k;
                     const matrixIndex = j * rows + k;
-                    this._gainNodeMatrix[i - 1][matrixIndex] = nameVertex(`hoa-rotator-matrix-${i}-${matrixIndex}`, this._context.createGain());
+                    this._gainNodeMatrix[i - 1][matrixIndex] = Gain(`hoa-rotator-matrix-${i}-${matrixIndex}`);
                     connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
                     connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                 }
             }
         }
-        // W-channel is not involved in rotation, skip straight to ouput.
-        connect(this._splitter, this._merger, 0, 0);
         // Default Identity matrix.
         this.setRotationMatrix3(mat3.identity(mat3.create()));
-        // Input/Output proxy.
-        this.input = this._splitter;
-        this.output = this._merger;
+    }
+    get input() {
+        return this._splitter;
+    }
+    get output() {
+        return this._merger;
     }
     disposed = false;
     dispose() {
         if (!this.disposed) {
-            for (let i = 1; i <= this._ambisonicOrder; i++) {
-                // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-                // matrix. We compute the offset value as the first channel index of the
-                // current order where
-                //   k_last = l^2 + l + m,
-                // and m = -l
-                //   k_last = l^2
-                const orderOffset = i * i;
-                // Uses row-major indexing.
-                const rows = (2 * i + 1);
-                for (let j = 0; j < rows; j++) {
-                    const inputIndex = orderOffset + j;
-                    for (let k = 0; k < rows; k++) {
-                        const outputIndex = orderOffset + k;
-                        const matrixIndex = j * rows + k;
-                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
-                    }
+            disconnect(this._splitter);
+            for (const nodes of this._gainNodeMatrix) {
+                for (const node of nodes) {
+                    disconnect(node);
                 }
             }
-            // W-channel is not involved in rotation, skip straight to ouput.
-            disconnect(this._splitter, this._merger, 0, 0);
             this.disposed = true;
         }
     }

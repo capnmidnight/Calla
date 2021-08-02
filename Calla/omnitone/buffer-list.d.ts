@@ -40,17 +40,15 @@ export interface BufferListOptions {
  * AudioBuffers from multiple URLs.
  */
 export declare class BufferList {
-    private _context;
     private _options;
     private _bufferData;
     /**
      * BufferList object mananges the async loading/decoding of multiple
      * AudioBuffers from multiple URLs.
-     * @param context - Associated BaseAudioContext.
      * @param bufferData - An ordered list of URLs.
      * @param options - Options.
      */
-    constructor(context: BaseAudioContext, bufferData: string[], options?: BufferListOptions);
+    constructor(bufferData: string[], options?: BufferListOptions);
     /**
      * Starts AudioBuffer loading tasks.
      */

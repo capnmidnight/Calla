@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 /**
  * @file Sound field rotator for first-order-ambisonics decoding.
@@ -21,8 +22,7 @@ import type { IDisposable } from "kudzu/using";
 /**
  * First-order-ambisonic decoder based on gain node network.
  */
-export declare class FOARotator implements IDisposable {
-    private _context;
+export declare class FOARotator implements IDisposable, ErsatzAudioNode {
     private _splitter;
     private _inX;
     private _inY;
@@ -40,13 +40,12 @@ export declare class FOARotator implements IDisposable {
     private _outY;
     private _outZ;
     private _merger;
-    input: ChannelSplitterNode;
-    output: ChannelMergerNode;
     /**
      * First-order-ambisonic decoder based on gain node network.
-     * @param context - Associated BaseAudioContext.
      */
-    constructor(context: BaseAudioContext);
+    constructor();
+    get input(): ChannelSplitterNode;
+    get output(): ChannelMergerNode;
     private disposed;
     dispose(): void;
     /**

@@ -15,8 +15,9 @@
  */
 
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu/using";
+import { BiquadFilter, ChannelMerger, connect, Delay, disconnect, Gain } from "kudzu/audio";
 import { isArray, isGoodNumber } from "kudzu/typeChecks";
+import type { IDisposable } from "kudzu/using";
 import { Direction } from "./Direction";
 import type { Inverters } from "./Inverters";
 import type { ReflectionCoefficients } from "./ReflectionCoefficients";
@@ -36,7 +37,6 @@ import {
     DirectionToAxis,
     DirectionToDimension
 } from "./utils";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 export interface EarlyReflectionsOptions {
 
@@ -102,7 +102,7 @@ export class EarlyReflections implements IDisposable {
     /**
      * Ray-tracing-based early reflections model.
      */
-    constructor(context: BaseAudioContext, options?: Partial<EarlyReflectionsOptions>) {
+    constructor(options?: Partial<EarlyReflectionsOptions>) {
         if (options) {
             if (isGoodNumber(options.speedOfSound)) {
                 this.speedOfSound = options.speedOfSound;
@@ -120,33 +120,33 @@ export class EarlyReflections implements IDisposable {
         }
 
         // Create nodes.
-        this.input = nameVertex("early-reflections-input", context.createGain());
-        this.output = nameVertex("early-reflections-output", context.createGain());
-        this.lowpass = nameVertex("early-reflection-lowpass-filter", context.createBiquadFilter());
-        this.merger = nameVertex("early-reflection-merger", context.createChannelMerger(4)); // First-order encoding only.
+        this.input = Gain("early-reflections-input");
+        this.output = Gain("early-reflections-output");
+        this.lowpass = BiquadFilter("early-reflection-lowpass-filter");
+        this.merger = ChannelMerger("early-reflection-merger", 4); // First-order encoding only.
 
         this.delays = {
-            left: nameVertex("early-reflection-delay-left", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
-            right: nameVertex("early-reflection-delay-right", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
-            front: nameVertex("early-reflection-delay-front", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
-            back: nameVertex("early-reflection-delay-back", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
-            up: nameVertex("early-reflection-delay-up", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION)),
-            down: nameVertex("early-reflection-delay-down", context.createDelay(DEFAULT_REFLECTION_MAX_DURATION))
+            left: Delay("early-reflection-delay-left", DEFAULT_REFLECTION_MAX_DURATION),
+            right: Delay("early-reflection-delay-right", DEFAULT_REFLECTION_MAX_DURATION),
+            front: Delay("early-reflection-delay-front", DEFAULT_REFLECTION_MAX_DURATION),
+            back: Delay("early-reflection-delay-back", DEFAULT_REFLECTION_MAX_DURATION),
+            up: Delay("early-reflection-delay-up", DEFAULT_REFLECTION_MAX_DURATION),
+            down: Delay("early-reflection-delay-down", DEFAULT_REFLECTION_MAX_DURATION)
         };
 
         this.gains = {
-            left: nameVertex("early-reflections-gains-left", context.createGain()),
-            right: nameVertex("early-reflections-gains-right", context.createGain()),
-            front: nameVertex("early-reflections-gains-front", context.createGain()),
-            back: nameVertex("early-reflections-gains-back", context.createGain()),
-            up: nameVertex("early-reflections-gains-up", context.createGain()),
-            down: nameVertex("early-reflections-gains-down", context.createGain())
+            left: Gain("early-reflections-gains-left"),
+            right: Gain("early-reflections-gains-right"),
+            front: Gain("early-reflections-gains-front"),
+            back: Gain("early-reflections-gains-back"),
+            up: Gain("early-reflections-gains-up"),
+            down: Gain("early-reflections-gains-down")
         };
 
         this.inverters = {
-            right: nameVertex("early-reflections-inverters-right", context.createGain()),
-            back: nameVertex("early-reflections-inverters-back", context.createGain()),
-            down: nameVertex("early-reflections-inverters-down", context.createGain())
+            right: Gain("early-reflections-inverters-right"),
+            back: Gain("early-reflections-inverters-back"),
+            down: Gain("early-reflections-inverters-down")
         };
 
         // Connect audio graph for each wall reflection and initialize encoder directions, set delay times and gains to 0.
@@ -210,38 +210,20 @@ export class EarlyReflections implements IDisposable {
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            // Connect nodes.
-            disconnect(this.input, this.lowpass);
+            disconnect(this.input);
+            disconnect(this.lowpass);
+            disconnect(this.merger);
+
             for (const property of Object.values(Direction)) {
-                const delay = this.delays[property];
-                const gain = this.gains[property];
-                disconnect(this.lowpass, delay);
-                disconnect(delay, gain);
-                disconnect(gain, this.merger, 0, 0);
+                disconnect(this.delays[property]);
+                disconnect(this.gains[property]);
+                if (property === "right"
+                    || property === "back"
+                    || property === "down") {
+                    disconnect(this.inverters[property]);
+                }
             }
 
-            // Connect gains to ambisonic channel output.
-            // Left: [1 1 0 0]
-            // Right: [1 -1 0 0]
-            // Up: [1 0 1 0]
-            // Down: [1 0 -1 0]
-            // Front: [1 0 0 1]
-            // Back: [1 0 0 -1]
-            disconnect(this.gains.left, this.merger, 0, 1);
-
-            disconnect(this.gains.right, this.inverters.right);
-            disconnect(this.inverters.right, this.merger, 0, 1);
-
-            disconnect(this.gains.up, this.merger, 0, 2);
-
-            disconnect(this.gains.down, this.inverters.down);
-            disconnect(this.inverters.down, this.merger, 0, 2);
-
-            disconnect(this.gains.front, this.merger, 0, 3);
-
-            disconnect(this.gains.back, this.inverters.back);
-            disconnect(this.inverters.back, this.merger, 0, 3);
-            disconnect(this.merger, this.output);
             this.disposed = true;
         }
     }

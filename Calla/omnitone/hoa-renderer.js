@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { channelCount, channelCountMode, channelInterpretation, connect, disconnect, Gain } from "kudzu/audio";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
 import { HOARotator } from './hoa-rotator';
@@ -27,7 +27,6 @@ const SupportedAmbisonicOrder = [2, 3];
  * Omnitone HOA renderer class. Uses the optimized convolution technique.
  */
 export class HOARenderer {
-    context;
     config;
     input;
     output;
@@ -37,8 +36,7 @@ export class HOARenderer {
     /**
      * Omnitone HOA renderer class. Uses the optimized convolution technique.
      */
-    constructor(context, options) {
-        this.context = context;
+    constructor(options) {
         this.config = Object.assign({
             ambisonicOrder: 3,
             renderingMode: RenderingMode.Ambisonic,
@@ -63,30 +61,23 @@ export class HOARenderer {
      * Builds the internal audio graph.
      */
     _buildAudioGraph() {
-        this.input = nameVertex("hoa-renderer-input", this.context.createGain());
-        this.output = nameVertex("hoa-renderer-output", this.context.createGain());
-        this.bypass = nameVertex("hoa-renderer-bypass", this.context.createGain());
-        this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
-        this.convolver =
-            new HOAConvolver(this.context, this.config.ambisonicOrder);
-        connect(this.input, this.rotator.input);
-        connect(this.input, this.bypass);
-        connect(this.rotator.output, this.convolver.input);
-        connect(this.convolver.output, this.output);
-        this.input.channelCount = this.config.numberOfChannels;
-        this.input.channelCountMode = 'explicit';
-        this.input.channelInterpretation = 'discrete';
+        this.output = Gain("hoa-renderer-output");
+        this.rotator = new HOARotator(this.config.ambisonicOrder);
+        this.bypass = Gain("hoa-renderer-bypass");
+        this.input = Gain("hoa-renderer-input", channelCount(this.config.numberOfChannels), channelCountMode("explicit"), channelInterpretation("discrete"), this.rotator, this.bypass);
+        this.convolver = new HOAConvolver(this.config.ambisonicOrder);
+        connect(this.rotator, this.convolver);
+        connect(this.convolver, this);
     }
     disposed = false;
     dispose() {
         if (!this.disposed) {
             if (this.getRenderingMode() === RenderingMode.Bypass) {
-                disconnect(this.bypass, this.output);
+                disconnect(this.bypass);
             }
-            disconnect(this.input, this.rotator.input);
-            disconnect(this.input, this.bypass);
-            disconnect(this.rotator.output, this.convolver.input);
-            disconnect(this.convolver.output, this.output);
+            disconnect(this.input);
+            disconnect(this.rotator);
+            disconnect(this.convolver);
             this.rotator.dispose();
             this.convolver.dispose();
             this.disposed = true;
@@ -99,12 +90,12 @@ export class HOARenderer {
         let bufferList;
         if (this.config.hrirPathList) {
             bufferList =
-                new BufferList(this.context, this.config.hrirPathList, { dataType: BufferDataType.URL });
+                new BufferList(this.config.hrirPathList, { dataType: BufferDataType.URL });
         }
         else {
             bufferList = this.config.ambisonicOrder === 2
-                ? new BufferList(this.context, SOAHrirBase64)
-                : new BufferList(this.context, TOAHrirBase64);
+                ? new BufferList(SOAHrirBase64)
+                : new BufferList(TOAHrirBase64);
         }
         try {
             const hrirBufferList = await bufferList.load();

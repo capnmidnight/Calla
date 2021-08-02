@@ -2,8 +2,8 @@ import { once } from "kudzu/events/once";
 import { BaseAudioBufferSource } from "./BaseAudioBufferSource";
 export class AudioBufferSource extends BaseAudioBufferSource {
     isPlaying = false;
-    constructor(id, audioContext, source, spatializer) {
-        super(id, audioContext, source, spatializer);
+    constructor(id, source, spatializer) {
+        super(id, source, spatializer);
     }
     async play() {
         this.source.start();

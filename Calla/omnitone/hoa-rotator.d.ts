@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 /**
  * Higher-order-ambisonic decoder based on gain node network. We expect
@@ -29,14 +30,11 @@ import type { IDisposable } from "kudzu/using";
  *  [2b] Corrections to initial publication:
  *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
  */
-export declare class HOARotator implements IDisposable {
-    private _context;
+export declare class HOARotator implements IDisposable, ErsatzAudioNode {
     private _ambisonicOrder;
     private _splitter;
     private _merger;
     private _gainNodeMatrix;
-    input: ChannelSplitterNode;
-    output: ChannelMergerNode;
     /**
      * Higher-order-ambisonic decoder based on gain node network. We expect
      * the order of the channels to conform to ACN ordering. Below are the helper
@@ -50,10 +48,11 @@ export declare class HOARotator implements IDisposable {
      *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
      *  [2b] Corrections to initial publication:
      *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-     * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order.
      */
-    constructor(context: BaseAudioContext, ambisonicOrder: number);
+    constructor(ambisonicOrder: number);
+    get input(): ChannelSplitterNode;
+    get output(): ChannelMergerNode;
     private disposed;
     dispose(): void;
     /**

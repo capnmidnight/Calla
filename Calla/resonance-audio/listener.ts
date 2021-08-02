@@ -21,11 +21,10 @@
 
 
 import { mat3, vec3 } from "gl-matrix";
+import { connect, disconnect, Gain } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
-import type { FOARenderer } from "../omnitone/foa-renderer";
-import type { HOARenderer } from "../omnitone/hoa-renderer";
-import { createFOARenderer, createHOARenderer } from "../omnitone/omnitone";
+import { FOARenderer } from "../omnitone/foa-renderer";
+import { HOARenderer } from "../omnitone/hoa-renderer";
 import type { RenderingMode } from "../omnitone/rendering-mode";
 import { Encoder } from "./encoder";
 import {
@@ -82,7 +81,7 @@ export class Listener implements IDisposable {
     /**
      * Listener model to spatialize sources in an environment.
      */
-    constructor(context: BaseAudioContext, options?: ListenerOptions) {
+    constructor(options?: ListenerOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -104,11 +103,11 @@ export class Listener implements IDisposable {
         // Create audio nodes.
 
         if (this.ambisonicOrder == 1) {
-            this.renderer = createFOARenderer(context, {
+            this.renderer = new FOARenderer({
                 renderingMode: options.renderingMode
             });
         } else if (this.ambisonicOrder > 1) {
-            this.renderer = createHOARenderer(context, {
+            this.renderer = new HOARenderer({
                 ambisonicOrder: this.ambisonicOrder,
                 renderingMode: options.renderingMode
             });
@@ -116,20 +115,20 @@ export class Listener implements IDisposable {
 
         // These nodes are created in order to safely asynchronously load Omnitone
         // while the rest of the scene is being created.
-        this.input = nameVertex("listener-input", context.createGain());
-        this.output = nameVertex("listener-output", context.createGain());
-        this.ambisonicOutput = nameVertex("listener-ambisonic-input", context.createGain());
+        this.input = Gain("listener-input");
+        this.output = Gain("listener-output");
+        this.ambisonicOutput = Gain("listener-ambisonic-input");
 
         // Initialize Omnitone (async) and connect to audio graph when complete.
         this.renderer.initialize().then(() => {
             // Connect pre-rotated soundfield to renderer.
-            connect(this.input, this.renderer.input);
+            connect(this.input, this.renderer);
 
             // Connect rotated soundfield to ambisonic output.
-            connect(this.renderer.rotator.output, this.ambisonicOutput);
+            connect(this.renderer.rotator, this.ambisonicOutput);
 
             // Connect binaurally-rendered soundfield to binaural output.
-            connect(this.renderer.output, this.output);
+            connect(this.renderer, this.output);
         });
 
         // Set orientation and update rotation matrix accordingly.
@@ -139,14 +138,9 @@ export class Listener implements IDisposable {
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            // Connect pre-rotated soundfield to renderer.
-            disconnect(this.input, this.renderer.input);
-
-            // Connect rotated soundfield to ambisonic output.
-            disconnect(this.renderer.rotator.output, this.ambisonicOutput);
-
-            // Connect binaurally-rendered soundfield to binaural output.
-            disconnect(this.renderer.output, this.output);
+            disconnect(this.input);
+            disconnect(this.renderer.rotator);
+            disconnect(this.renderer);
 
             this.renderer.dispose();
             this.disposed = true;

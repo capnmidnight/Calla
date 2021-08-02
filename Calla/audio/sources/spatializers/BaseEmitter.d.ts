@@ -9,7 +9,7 @@ export declare abstract class BaseEmitter extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode);
+    constructor(destination: AudioNode);
     private disposed;
     dispose(): void;
     protected copyAudioProperties(from: BaseEmitter): void;

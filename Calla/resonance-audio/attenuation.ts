@@ -19,8 +19,8 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 
+import { ErsatzAudioNode, Gain } from "kudzu/audio";
 import { isGoodNumber } from "kudzu/typeChecks";
-import { nameVertex } from "../audio/GraphVisualizer";
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 import {
     DEFAULT_ATTENUATION_ROLLOFF,
@@ -51,20 +51,18 @@ export interface AttenuationOptions {
 /**
  * Distance-based attenuation filter.
  */
-export class Attenuation {
+export class Attenuation implements ErsatzAudioNode {
     minDistance: number = DEFAULT_MIN_DISTANCE;
     maxDistance: number = DEFAULT_MAX_DISTANCE;
     private rolloff: AttenuationRolloff = DEFAULT_ATTENUATION_ROLLOFF;
 
     private gainNode: GainNode;
-    input: GainNode;
-    output: GainNode;
 
 
     /**
      * Distance-based attenuation filter.
      */
-    constructor(context: BaseAudioContext, options?: Partial<AttenuationOptions>) {
+    constructor(options?: Partial<AttenuationOptions>) {
         if (options) {
             if (isGoodNumber(options.minDistance)) {
                 this.minDistance = options.minDistance;
@@ -83,14 +81,18 @@ export class Attenuation {
         this.setRolloff(this.rolloff);
 
         // Create node.
-        this.gainNode = nameVertex("attenuation", context.createGain());
+        this.gainNode = Gain("attenuation");
 
         // Initialize distance to max distance.
         this.setDistance(this.maxDistance);
+    }
 
-        // Input/Output proxy.
-        this.input = this.gainNode;
-        this.output = this.gainNode;
+    get input() {
+        return this.gainNode;
+    }
+
+    get output() {
+        return this.gainNode;
     }
 
     /**

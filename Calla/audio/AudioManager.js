@@ -1,8 +1,8 @@
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
+import { audioCtx, audioReady, buffer, BufferSource, ChannelMerger, connect, decodeAudioData, hasAudioListener, hasNewAudioListener, hasOldAudioListener, loop as loopAudio, MediaElementSource, MediaStreamDestination, MediaStreamSource, MediaStreamTrackSource } from "kudzu/audio";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
-import { whenAudioContextReady } from "kudzu/events/whenAudioContextReady";
 import { autoPlay, controls, loop, muted, playsInline, src } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
 import { Audio } from "kudzu/html/tags";
@@ -17,7 +17,6 @@ import { ResonanceAudioListener } from "./destinations/spatializers/ResonanceAud
 import { VolumeScalingListener } from "./destinations/spatializers/VolumeScalingListener";
 import { WebAudioListenerNew } from "./destinations/spatializers/WebAudioListenerNew";
 import { WebAudioListenerOld } from "./destinations/spatializers/WebAudioListenerOld";
-import { connect, nameVertex } from "./GraphVisualizer";
 import { AudioBufferSpawningSource } from "./sources/AudioBufferSpawningSource";
 import { AudioElementSource } from "./sources/AudioElementSource";
 import { AudioStreamSource } from "./sources/AudioStreamSource";
@@ -48,11 +47,10 @@ function shouldTry(path) {
     }
     return true;
 }
-let hasAudioContext = "AudioContext" in globalThis;
-let hasAudioListener = "AudioListener" in globalThis;
-let hasOldAudioListener = hasAudioListener && "setPosition" in AudioListener.prototype;
-let hasNewAudioListener = hasAudioListener && "positionX" in AudioListener.prototype;
-let attemptResonanceAPI = hasAudioListener;
+let tryNewAudioListener = hasNewAudioListener;
+let tryOldAudioListener = hasOldAudioListener;
+let tryAudioListener = hasAudioListener;
+let tryResonanceAPI = hasAudioListener;
 export var SpatializerType;
 (function (SpatializerType) {
     SpatializerType["None"] = "none";
@@ -79,7 +77,7 @@ export class AudioManager extends TypedEventBase {
     sortedUserIDs = new Array();
     localOutput = null;
     listener = null;
-    audioContext = null;
+    //audioContext: AudioContext = null;
     destination = null;
     fetcher;
     _type;
@@ -95,15 +93,15 @@ export class AudioManager extends TypedEventBase {
         super();
         this.fetcher = fetcher || new Fetcher();
         this.setLocalUserID(DEFAULT_LOCAL_USER_ID);
-        this.audioContext = new AudioContext();
+        //this.audioContext = new AudioContext();
         if (canChangeAudioOutput) {
-            this.destination = nameVertex("final-destination", this.audioContext.createMediaStreamDestination());
+            this.destination = MediaStreamDestination("final-destination");
         }
         else {
-            this.destination = nameVertex("final-destination", this.audioContext.destination);
+            this.destination = audioCtx.destination;
         }
-        this.localOutput = new AudioDestination(this.audioContext, this.destination);
-        this._ready = whenAudioContextReady(this.audioContext)
+        this.localOutput = new AudioDestination(this.destination);
+        this._ready = audioReady
             .then(async () => {
             if (isMediaStreamAudioDestinationNode(this.destination)) {
                 await this.devices.setDestination(this.destination);
@@ -130,10 +128,10 @@ export class AudioManager extends TypedEventBase {
         return true;
     }
     get isReady() {
-        return this.audioContext.state !== "suspended";
+        return audioCtx.state !== "suspended";
     }
     get isRunning() {
-        return this.audioContext.state === "running";
+        return audioCtx.state === "running";
     }
     update() {
         const t = this.currentTime;
@@ -160,12 +158,12 @@ export class AudioManager extends TypedEventBase {
         // for each step self-contained. It's easier to look at a single step and determine
         // wether or not it is correct, without having to look at previous blocks of code.
         if (type === SpatializerType.High) {
-            if (hasAudioContext && hasAudioListener && attemptResonanceAPI) {
+            if (tryResonanceAPI) {
                 try {
-                    this.listener = new ResonanceAudioListener(this.audioContext);
+                    this.listener = new ResonanceAudioListener();
                 }
                 catch (exp) {
-                    attemptResonanceAPI = false;
+                    tryResonanceAPI = false;
                     type = SpatializerType.Medium;
                     console.warn("Resonance Audio API not available!", exp);
                 }
@@ -175,28 +173,28 @@ export class AudioManager extends TypedEventBase {
             }
         }
         if (type === SpatializerType.Medium) {
-            if (hasAudioContext && hasAudioListener) {
-                if (hasNewAudioListener) {
+            if (!tryResonanceAPI && tryAudioListener) {
+                if (tryNewAudioListener) {
                     try {
-                        this.listener = new WebAudioListenerNew(this.audioContext);
+                        this.listener = new WebAudioListenerNew();
                     }
                     catch (exp) {
-                        hasNewAudioListener = false;
+                        tryNewAudioListener = false;
                         console.warn("No AudioListener.positionX property!", exp);
                     }
                 }
-                if (!hasNewAudioListener && hasOldAudioListener) {
+                if (!tryNewAudioListener && tryOldAudioListener) {
                     try {
-                        this.listener = new WebAudioListenerOld(this.audioContext);
+                        this.listener = new WebAudioListenerOld();
                     }
                     catch (exp) {
-                        hasOldAudioListener = false;
+                        tryOldAudioListener = false;
                         console.warn("No WebAudio API!", exp);
                     }
                 }
-                if (!hasNewAudioListener && !hasOldAudioListener) {
+                if (!tryNewAudioListener && !tryOldAudioListener) {
                     type = SpatializerType.Low;
-                    hasAudioListener = false;
+                    tryAudioListener = false;
                 }
             }
             else {
@@ -204,10 +202,10 @@ export class AudioManager extends TypedEventBase {
             }
         }
         if (type === SpatializerType.Low) {
-            this.listener = new VolumeScalingListener(this.audioContext);
+            this.listener = new VolumeScalingListener();
         }
         else if (type === SpatializerType.None) {
-            this.listener = new NoSpatializationListener(this.audioContext);
+            this.listener = new NoSpatializationListener();
         }
         if (!this.listener) {
             throw new Error("Calla requires a functioning WebAudio system. Could not create one for type: " + inputType);
@@ -230,13 +228,13 @@ export class AudioManager extends TypedEventBase {
      * @param isRemoteStream - whether or not the audio stream is coming from a remote user.
      */
     createSpatializer(spatialize, isRemoteStream) {
-        return this.listener.createSpatializer(spatialize, isRemoteStream, this.audioContext, this.localOutput);
+        return this.listener.createSpatializer(spatialize, isRemoteStream, this.localOutput);
     }
     /**
      * Gets the current playback time.
      */
     get currentTime() {
-        return this.audioContext.currentTime;
+        return audioCtx.currentTime;
     }
     /**
      * Create a new user for audio processing.
@@ -244,7 +242,7 @@ export class AudioManager extends TypedEventBase {
     createUser(id) {
         let user = this.users.get(id);
         if (!user) {
-            user = new AudioStreamSource(id, this.audioContext);
+            user = new AudioStreamSource(id);
             this.users.set(id, user);
             arraySortedInsert(this.sortedUserIDs, id);
             this.updateUserOffsets();
@@ -313,20 +311,18 @@ export class AudioManager extends TypedEventBase {
         const file = URL.createObjectURL(blob);
         const elem = BackgroundAudio(autoPlaying, false, loop(looping), src(file));
         await once(elem, "canplaythrough", "error");
-        const source = nameVertex("audio-element-source-" + id, this.audioContext.createMediaElementSource(elem));
+        const source = MediaElementSource("audio-element-source-" + id, elem);
         if (onProgress) {
             onProgress(1, 1);
         }
-        return new AudioElementSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize, false));
+        return new AudioElementSource("audio-clip-" + id, source, this.createSpatializer(spatialize, false));
     }
     async createAudioBufferSource(id, looping, autoPlaying, spatialize, path, onProgress) {
         let goodBlob = await this.getAudioBlob(path, onProgress);
-        const buffer = await goodBlob.arrayBuffer();
-        const data = await this.audioContext.decodeAudioData(buffer);
-        const source = nameVertex("audio-buffer-source-" + id, this.audioContext.createBufferSource());
-        source.buffer = data;
-        source.loop = looping;
-        const clip = new AudioBufferSpawningSource("audio-clip-" + id, this.audioContext, source, this.createSpatializer(spatialize, false));
+        const b = await goodBlob.arrayBuffer();
+        const data = await decodeAudioData(b);
+        const source = BufferSource("audio-buffer-source-" + id, buffer(data), loopAudio(looping));
+        const clip = new AudioBufferSpawningSource("audio-clip-" + id, source, this.createSpatializer(spatialize, false));
         if (autoPlaying) {
             clip.play();
         }
@@ -401,9 +397,7 @@ export class AudioManager extends TypedEventBase {
     createSourceFromStream(stream) {
         if (useTrackSource) {
             const tracks = stream.getAudioTracks()
-                .map((track) => {
-                return nameVertex("track-source-" + track.id, this.audioContext.createMediaStreamTrackSource(track));
-            });
+                .map((track) => MediaStreamTrackSource("track-source-" + track.id, track));
             if (tracks.length === 0) {
                 throw new Error("No audio tracks!");
             }
@@ -411,7 +405,7 @@ export class AudioManager extends TypedEventBase {
                 return tracks[0];
             }
             else {
-                const merger = nameVertex("track-merger-" + stream.id, this.audioContext.createChannelMerger(tracks.length));
+                const merger = ChannelMerger("track-merger-" + stream.id, tracks.length);
                 for (const track of tracks) {
                     connect(track, merger);
                 }
@@ -423,11 +417,11 @@ export class AudioManager extends TypedEventBase {
             elem.srcObject = stream;
             elem.play();
             if (useElementSourceForUsers) {
-                return nameVertex("media-element-source-" + stream.id, this.audioContext.createMediaElementSource(elem));
+                return MediaElementSource("media-element-source-" + stream.id, elem);
             }
             else {
                 elem.muted = true;
-                return nameVertex("media-stream-source-" + stream.id, this.audioContext.createMediaStreamSource(stream));
+                return MediaStreamSource("media-stream-source-" + stream.id, stream);
             }
         }
     }

@@ -1,10 +1,10 @@
+import { connect, disconnect } from "kudzu/audio";
 import { BaseAudioElement } from "../BaseAudioElement";
-import { connect, disconnect } from "../GraphVisualizer";
 import { NoSpatializationNode } from "./spatializers/NoSpatializationNode";
 export class BaseAudioSource extends BaseAudioElement {
     _source;
-    constructor(id, audioContext) {
-        super(id, audioContext);
+    constructor(id) {
+        super(id);
     }
     disposed2 = false;
     dispose() {
@@ -23,7 +23,7 @@ export class BaseAudioSource extends BaseAudioElement {
     set source(v) {
         if (v !== this.source) {
             if (this._source) {
-                disconnect(this._source, this.volumeControl);
+                disconnect(this._source);
             }
             this._source = v;
             if (this._source) {
@@ -32,10 +32,10 @@ export class BaseAudioSource extends BaseAudioElement {
         }
     }
     disconnectSpatializer() {
-        disconnect(this.volumeControl, this.spatializer.input);
+        disconnect(this.volumeControl);
     }
     connectSpatializer() {
-        connect(this.volumeControl, this.spatializer.input);
+        connect(this.volumeControl, this.spatializer);
     }
 }
 //# sourceMappingURL=BaseAudioSource.js.map

@@ -11,7 +11,7 @@ export declare class ResonanceAudioNode extends BaseEmitter {
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode, res: ResonanceAudio);
+    constructor(destination: AudioNode, res: ResonanceAudio);
     protected createNew(): ResonanceAudioNode;
     /**
      * Performs the spatialization operation for the audio source's latest location.

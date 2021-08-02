@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { vec3 } from "gl-matrix";
+import { ErsatzAudioNode } from "kudzu/audio";
 /**
  * @file Directivity/occlusion filter.
  * @author Andrew Allen <bitllama@google.com>
@@ -36,7 +37,7 @@ export interface DirectivityOptions {
 /**
  * Directivity/occlusion filter.
  **/
-export declare class Directivity {
+export declare class Directivity implements ErsatzAudioNode {
     private alpha;
     private sharpness;
     private context;

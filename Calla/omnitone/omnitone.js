@@ -31,8 +31,8 @@ import { HOARotator } from './hoa-rotator';
  * @return - The promise resolves with an array of
  * AudioBuffer.
  */
-export function createBufferList(context, bufferData, options) {
-    const bufferList = new BufferList(context, bufferData, options || { dataType: BufferDataType.URL });
+export function createBufferList(bufferData, options) {
+    const bufferList = new BufferList(bufferData, options || { dataType: BufferDataType.URL });
     return bufferList.load();
 }
 /**

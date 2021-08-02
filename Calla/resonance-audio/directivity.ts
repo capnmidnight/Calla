@@ -15,7 +15,7 @@
  */
 
 import { vec3 } from "gl-matrix";
-import { nameVertex } from "../audio/GraphVisualizer";
+import { BiquadFilter, ErsatzAudioNode } from "kudzu/audio";
 import {
     DEFAULT_DIRECTIVITY_ALPHA,
     DEFAULT_DIRECTIVITY_SHARPNESS,
@@ -51,7 +51,7 @@ export interface DirectivityOptions {
 /**
  * Directivity/occlusion filter.
  **/
-export class Directivity {
+export class Directivity implements ErsatzAudioNode {
     private alpha: number;
     private sharpness: number;
     private context: BaseAudioContext;
@@ -70,7 +70,7 @@ export class Directivity {
 
         // Create audio node.
         this.context = context;
-        this.lowpass = nameVertex("directivity-lowpass-filter", context.createBiquadFilter());
+        this.lowpass = BiquadFilter("directivity-lowpass-filter");
 
         // Initialize filter coefficients.
         this.lowpass.type = 'lowpass';

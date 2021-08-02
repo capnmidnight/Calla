@@ -5,8 +5,8 @@ import { BaseEmitter } from "./spatializers/BaseEmitter";
 export class AudioBufferSource extends BaseAudioBufferSource {
     public isPlaying = false;
 
-    constructor(id: string, audioContext: BaseAudioContext, source: AudioBufferSourceNode, spatializer: BaseEmitter) {
-        super(id, audioContext, source, spatializer);
+    constructor(id: string, source: AudioBufferSourceNode, spatializer: BaseEmitter) {
+        super(id, source, spatializer);
     }
 
 

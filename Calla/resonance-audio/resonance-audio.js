@@ -19,7 +19,7 @@
  */
 import { vec3 } from "gl-matrix";
 import { arrayRemoveAt } from "kudzu/arrays/arrayRemoveAt";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { connect, disconnect, Gain } from "kudzu/audio";
 import { Encoder } from './encoder';
 import { Listener } from './listener';
 import { Room } from './room';
@@ -66,7 +66,7 @@ export class ResonanceAudio {
             materials: options.materials,
             speedOfSound: options.speedOfSound,
         });
-        this.listener = new Listener(context, {
+        this.listener = new Listener({
             ambisonicOrder: options.ambisonicOrder,
             position: options.listenerPosition,
             forward: options.listenerForward,
@@ -75,12 +75,12 @@ export class ResonanceAudio {
         });
         // Create auxillary audio nodes.
         this.context = context;
-        this.output = nameVertex("resonance-output", context.createGain());
-        this.ambisonicOutput = nameVertex("resonance-ambisonic-output", context.createGain());
+        this.output = Gain("resonance-output");
+        this.ambisonicOutput = Gain("resonance-ambisonic-output");
         this.ambisonicInput = this.listener.input;
         // Connect audio graph.
-        connect(this.room.output, this.listener.input);
-        connect(this.listener.output, this.output);
+        connect(this.room, this.listener);
+        connect(this.listener, this.output);
         connect(this.listener.ambisonicOutput, this.ambisonicOutput);
     }
     getRenderingMode() {
@@ -92,9 +92,9 @@ export class ResonanceAudio {
     disposed = false;
     dispose() {
         if (!this.disposed) {
-            disconnect(this.room.output, this.listener.input);
-            disconnect(this.listener.output, this.output);
-            disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
+            disconnect(this.room);
+            disconnect(this.listener);
+            disconnect(this.listener.ambisonicOutput);
             this.disposed = true;
         }
     }

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { ChannelMerger, ChannelSplitter, connect, Convolver, disconnect, ErsatzAudioNode, gain, Gain } from "kudzu/audio";
+import { IDisposable } from "kudzu/using";
 
 
 /**
@@ -26,23 +27,21 @@ import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 /**
  * A convolver network for N-channel HOA stream.
  */
-export class HOAConvolver {
-    private _context: BaseAudioContext;
+export class HOAConvolver implements IDisposable, ErsatzAudioNode {
     private _active = false;
     private _isBufferLoaded = false;
     private _ambisonicOrder: number;
     private _numberOfChannels: number;
     private _inputSplitter: ChannelSplitterNode;
-    private _stereoMergers: ChannelMergerNode[];
-    private _convolvers: ConvolverNode[];
-    private _stereoSplitters: ChannelSplitterNode[];
+    private _stereoMergers = new Array<ChannelMergerNode>();
+    private _convolvers = new Array<ConvolverNode>();
+    private _stereoSplitters = new Array<ChannelSplitterNode>();
     private _positiveIndexSphericalHarmonics: GainNode;
     private _negativeIndexSphericalHarmonics: GainNode;
     private _inverter: GainNode;
     private _binauralMerger: ChannelMergerNode;
     private _outputGain: GainNode;
-    input: ChannelSplitterNode;
-    output: GainNode;
+
     /**
      * A convolver network for N-channel HOA stream.
       * @param context - Associated BaseAudioContext.
@@ -50,47 +49,38 @@ export class HOAConvolver {
      * @param [hrirBufferList] - An ordered-list of stereo
      * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
      */
-    constructor(context: BaseAudioContext, ambisonicOrder: number, hrirBufferList?: AudioBuffer[]) {
-        this._context = context;
-
+    constructor(ambisonicOrder: number, hrirBufferList?: AudioBuffer[]) {
         // The number of channels K based on the ambisonic order N where K = (N+1)^2.
         this._ambisonicOrder = ambisonicOrder;
         this._numberOfChannels =
             (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
 
-        this._buildAudioGraph();
-        if (hrirBufferList) {
-            this.setHRIRBufferList(hrirBufferList);
-        }
-
-        this.enable();
-    }
-
-
-    /**
-     * Build the internal audio graph.
-     * For TOA convolution:
-     *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
-     *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
-     *                         -[4,5]-> ... (6 more, 8 branches total)
-     */
-    private _buildAudioGraph() {
         const numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
 
-        this._inputSplitter = nameVertex("hoa-convolver-splitter", this._context.createChannelSplitter(this._numberOfChannels));
-        this._stereoMergers = [];
-        this._convolvers = [];
-        this._stereoSplitters = [];
-        this._positiveIndexSphericalHarmonics = nameVertex("foa-convolver-positiveIndexSphericalHarmonics", this._context.createGain());
-        this._negativeIndexSphericalHarmonics = nameVertex("foa-convolver-negativeIndexSphericalHarmonics", this._context.createGain());
-        this._inverter = nameVertex("foa-convolver-inverter", this._context.createGain());
-        this._binauralMerger = nameVertex("hoa-convolver-merger", this._context.createChannelMerger(2));
-        this._outputGain = nameVertex("foa-convolver-outputGain", this._context.createGain());
+        this._inputSplitter = ChannelSplitter("hoa-convolver-splitter", this._numberOfChannels);
+        this._binauralMerger = ChannelMerger("hoa-convolver-merger", 2);
+
+        this._inverter = Gain(
+            "foa-convolver-inverter",
+            gain(-1),
+            [0, 1, this._binauralMerger])
+
+        this._positiveIndexSphericalHarmonics = Gain(
+            "foa-convolver-positiveIndexSphericalHarmonics",
+            [0, 0, this._binauralMerger],
+            [0, 1, this._binauralMerger]);
+
+        this._negativeIndexSphericalHarmonics = Gain(
+            "foa-convolver-negativeIndexSphericalHarmonics",
+            this._inverter,
+            [0, 0, this._binauralMerger]);
+
+        this._outputGain = Gain("foa-convolver-outputGain",);
 
         for (let i = 0; i < numberOfStereoChannels; ++i) {
-            this._stereoMergers[i] = nameVertex("hoa-convolver-stereo-merger-" + i, this._context.createChannelMerger(2));
-            this._convolvers[i] = nameVertex("hoa-convolver-stereo-convolver-" + i, this._context.createConvolver());
-            this._stereoSplitters[i] = nameVertex("hoa-convolver-stereo-splitter" + i, this._context.createChannelSplitter(2));
+            this._stereoMergers[i] = ChannelMerger("hoa-convolver-stereo-merger-" + i, 2);
+            this._convolvers[i] = Convolver("hoa-convolver-stereo-convolver-" + i,);
+            this._stereoSplitters[i] = ChannelSplitter("hoa-convolver-stereo-splitter" + i, 2);
             this._convolvers[i].normalize = false;
         }
 
@@ -120,18 +110,19 @@ export class HOAConvolver {
             }
         }
 
-        connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-        connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
-        connect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-        connect(this._negativeIndexSphericalHarmonics, this._inverter);
-        connect(this._inverter, this._binauralMerger, 0, 1);
+        if (hrirBufferList) {
+            this.setHRIRBufferList(hrirBufferList);
+        }
 
-        // For asymmetric index.
-        this._inverter.gain.value = -1;
+        this.enable();
+    }
 
-        // Input/Output proxy.
-        this.input = this._inputSplitter;
-        this.output = this._outputGain;
+    get input() {
+        return this._inputSplitter;
+    }
+
+    get output() {
+        return this._outputGain;
     }
 
     dispose(): void {
@@ -139,39 +130,22 @@ export class HOAConvolver {
             this.disable();
         }
 
+        disconnect(this._inputSplitter);
+        disconnect(this._positiveIndexSphericalHarmonics);
+        disconnect(this._negativeIndexSphericalHarmonics);
+        disconnect(this._inverter);
 
-        for (let l = 0; l <= this._ambisonicOrder; ++l) {
-            for (let m = -l; m <= l; m++) {
-                // We compute the ACN index (k) of ambisonics channel using the degree (l)
-                // and index (m): k = l^2 + l + m
-                const acnIndex = l * l + l + m;
-                const stereoIndex = Math.floor(acnIndex / 2);
-
-                // Split channels from input into array of stereo convolvers.
-                // Then create a network of mergers that produces the stereo output.
-                disconnect(this._inputSplitter,
-                    this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                disconnect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
-                disconnect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
-
-                // Positive index (m >= 0) spherical harmonics are symmetrical around the
-                // front axis, while negative index (m < 0) spherical harmonics are
-                // anti-symmetrical around the front axis. We will exploit this symmetry
-                // to reduce the number of convolutions required when rendering to a
-                // symmetrical binaural renderer.
-                if (m >= 0) {
-                    disconnect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
-                } else {
-                    disconnect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
-                }
-            }
+        for (const node of this._stereoMergers) {
+            disconnect(node);
         }
 
-        disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-        disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
-        disconnect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
-        disconnect(this._negativeIndexSphericalHarmonics, this._inverter);
-        disconnect(this._inverter, this._binauralMerger, 0, 1);
+        for (const node of this._convolvers) {
+            disconnect(node);
+        }
+
+        for (const node of this._stereoSplitters) {
+            disconnect(node);
+        }
 
     }
 
@@ -216,7 +190,7 @@ export class HOAConvolver {
      * audio destination, thus no CPU cycle will be consumed.
      */
     disable(): void {
-        disconnect(this._binauralMerger, this._outputGain);
+        disconnect(this._binauralMerger);
         this._active = false;
     }
 }

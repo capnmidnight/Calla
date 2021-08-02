@@ -6,7 +6,7 @@ export type AudioStreamSourceNode = MediaStreamTrackAudioSourceNode | ChannelMer
 export class AudioStreamSource extends BaseAudioSource<AudioStreamSourceNode> {
     streams = new Map<StreamType, MediaStream>();
 
-    constructor(id: string, audioContext: BaseAudioContext) {
-        super(id, audioContext);
+    constructor(id: string) {
+        super(id);
     }
 }

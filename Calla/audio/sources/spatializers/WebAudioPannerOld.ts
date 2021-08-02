@@ -9,15 +9,15 @@ export class WebAudioPannerOld extends BaseWebAudioPanner {
     /**
      * Creates a new positioner that uses the WebAudio API's old setPosition method.
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode) {
-        super(audioContext, destination);
+    constructor(destination: AudioNode) {
+        super(destination);
 
         Object.seal(this);
     }
 
 
     protected createNew(): WebAudioPannerOld {
-        return new WebAudioPannerOld(this.audioContext, this.destination);
+        return new WebAudioPannerOld(this.destination);
     }
 
     /**

@@ -1,14 +1,14 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
+import { buffer, BufferSource, loop } from "kudzu/audio";
 import { once } from "kudzu/events/once";
-import { nameVertex } from "../GraphVisualizer";
 import { AudioBufferSource } from "./AudioBufferSource";
 import { BaseAudioBufferSource } from "./BaseAudioBufferSource";
 export class AudioBufferSpawningSource extends BaseAudioBufferSource {
     counter = 0;
     playingSources = new Array();
-    constructor(id, audioContext, source, spatializer) {
-        super(id, audioContext, source, spatializer);
+    constructor(id, source, spatializer) {
+        super(id, source, spatializer);
     }
     connectSpatializer() {
         // do nothing, this node doesn't play on its own
@@ -25,11 +25,9 @@ export class AudioBufferSpawningSource extends BaseAudioBufferSource {
         return false;
     }
     async play() {
-        const newBuffer = nameVertex("buffer-source-" + this.id, this.source.context.createBufferSource());
-        newBuffer.buffer = this.source.buffer;
-        newBuffer.loop = this.source.loop;
+        const newBuffer = BufferSource("buffer-source-" + this.id, buffer(this.source.buffer), loop(this.source.loop));
         const newSpatializer = this.spatializer.clone();
-        const newSource = new AudioBufferSource(`${this.id}-${this.counter++}`, this.audioContext, newBuffer, newSpatializer);
+        const newSource = new AudioBufferSource(`${this.id}-${this.counter++}`, newBuffer, newSpatializer);
         newSource.spatializer = newSpatializer;
         this.playingSources.push(newSource);
         newSource.play();

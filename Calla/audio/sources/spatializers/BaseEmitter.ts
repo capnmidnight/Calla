@@ -1,5 +1,5 @@
+import { disconnect } from "kudzu/audio";
 import { BaseSpatializer } from "../../BaseSpatializer";
-import { disconnect } from "../../GraphVisualizer";
 
 /**
  * Base class providing functionality for audio listeners.
@@ -13,15 +13,15 @@ export abstract class BaseEmitter
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext, protected destination: AudioNode) {
-        super(audioContext);
+    constructor(protected destination: AudioNode) {
+        super();
     }
 
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
             if (this.output !== this.destination) {
-                disconnect(this.output, this.destination);
+                disconnect(this);
             }
             this.disposed = true;
         }

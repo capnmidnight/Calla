@@ -6,8 +6,8 @@ export abstract class BaseAudioBufferSource
     extends BaseAudioSource<AudioBufferSourceNode>
     implements IPlayableSource {
 
-    constructor(id: string, audioContext: BaseAudioContext, source: AudioBufferSourceNode, spatializer: BaseEmitter) {
-        super(id, audioContext);
+    constructor(id: string, source: AudioBufferSourceNode, spatializer: BaseEmitter) {
+        super(id);
 
         this.source = source;
         this.spatializer = spatializer;

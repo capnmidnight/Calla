@@ -1,8 +1,8 @@
 import { once } from "kudzu/events/once";
 import { BaseAudioSource } from "./BaseAudioSource";
 export class AudioElementSource extends BaseAudioSource {
-    constructor(id, audioContext, source, spatializer) {
-        super(id, audioContext);
+    constructor(id, source, spatializer) {
+        super(id);
         this.source = source;
         this.spatializer = spatializer;
     }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 /**
  * @file A collection of convolvers. Can be used for the optimized FOA binaural
@@ -21,8 +22,7 @@ import type { IDisposable } from "kudzu/using";
 /**
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  */
-export declare class FOAConvolver implements IDisposable {
-    private _context;
+export declare class FOAConvolver implements IDisposable, ErsatzAudioNode {
     private _active;
     private _isBufferLoaded;
     private _splitterWYZX;
@@ -35,18 +35,13 @@ export declare class FOAConvolver implements IDisposable {
     private _inverter;
     private _mergerBinaural;
     private _summingBus;
-    input: ChannelSplitterNode;
-    output: GainNode;
     /**
      * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
-     * @param context The associated BaseAudioContext.
      * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
      */
-    constructor(context: BaseAudioContext, hrirBufferList?: AudioBuffer[]);
-    /**
-     * Build the internal audio graph.
-     */
-    private _buildAudioGraph;
+    constructor(hrirBufferList?: AudioBuffer[]);
+    get input(): ChannelSplitterNode;
+    get output(): GainNode;
     private disposed;
     dispose(): void;
     /**

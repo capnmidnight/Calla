@@ -1,7 +1,7 @@
 import { BaseAudioSource } from "./BaseAudioSource";
 export class BaseAudioBufferSource extends BaseAudioSource {
-    constructor(id, audioContext, source, spatializer) {
-        super(id, audioContext);
+    constructor(id, source, spatializer) {
+        super(id);
         this.source = source;
         this.spatializer = spatializer;
     }

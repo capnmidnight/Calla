@@ -8,7 +8,7 @@ export declare abstract class BaseWebAudioPanner extends BaseEmitter {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param audioContext - the output WebAudio context
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode);
+    constructor(destination: AudioNode);
     copyAudioProperties(from: BaseWebAudioPanner): void;
     /**
      * Sets parameters that alter spatialization.

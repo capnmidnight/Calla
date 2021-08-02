@@ -14,19 +14,19 @@ export abstract class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of position
      */
-    constructor(audioContext: BaseAudioContext) {
-        super(audioContext);
+    constructor() {
+        super();
     }
 
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, _isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
+    createSpatializer(spatialize: boolean, _isRemoteStream: boolean, destination: AudioDestination): BaseEmitter {
         if (spatialize) {
             throw new Error("Can't spatialize with the base listener.");
         }
 
-        return new NoSpatializationNode(audioContext, destination.nonSpatializedInput);
+        return new NoSpatializationNode(destination.nonSpatializedInput);
     }
 }
 

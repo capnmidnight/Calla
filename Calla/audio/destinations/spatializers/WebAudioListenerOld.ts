@@ -11,8 +11,8 @@ export class WebAudioListenerOld extends BaseWebAudioListener {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */
-    constructor(audioContext: BaseAudioContext) {
-        super(audioContext);
+    constructor() {
+        super();
         Object.seal(this);
     }
 
@@ -28,15 +28,15 @@ export class WebAudioListenerOld extends BaseWebAudioListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize: boolean, isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter {
+    createSpatializer(spatialize: boolean, isRemoteStream: boolean, destination: AudioDestination): BaseEmitter {
         if (spatialize) {
             const dest = isRemoteStream
                 ? destination.remoteUserInput
                 : destination.spatializedInput;
-            return new WebAudioPannerOld(audioContext, dest);
+            return new WebAudioPannerOld(dest);
         }
         else {
-            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, destination);
         }
     }
 }

@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @file Complete room model with early and late reflections.
- * @author Andrew Allen <bitllama@google.com>
- */
 import { vec3 } from "gl-matrix";
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 import { EarlyReflections } from './early-reflections';
 import { LateReflections } from './late-reflections';
@@ -46,7 +43,7 @@ export interface RoomOptions {
  * Model that manages early and late reflections using acoustic
  * properties and listener position relative to a rectangular room.
  **/
-export declare class Room implements IDisposable {
+export declare class Room implements IDisposable, ErsatzAudioNode {
     early: EarlyReflections;
     late: LateReflections;
     speedOfSound: number;
@@ -54,6 +51,7 @@ export declare class Room implements IDisposable {
     private _merger;
     constructor(context: BaseAudioContext, options?: RoomOptions);
     dispose(): void;
+    get input(): GainNode;
     /**
      * Set the room's dimensions and wall materials.
      * @param dimensions Room dimensions (in meters). Defaults to

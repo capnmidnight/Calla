@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @file Omnitone FOARenderer. This is user-facing API for the first-order
- * ambisonic decoder and the optimized binaural renderer.
- */
 import { mat3, mat4 } from "gl-matrix";
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 import { FOARotator } from './foa-rotator';
 import { ChannelMap } from './foa-router';
@@ -33,8 +30,7 @@ export interface FOARendererOptions {
 /**
  * Omnitone FOA renderer class. Uses the optimized convolution technique.
  */
-export declare class FOARenderer implements IDisposable {
-    private context;
+export declare class FOARenderer implements IDisposable, ErsatzAudioNode {
     private config;
     private bypass;
     private router;
@@ -45,7 +41,7 @@ export declare class FOARenderer implements IDisposable {
     /**
      * Omnitone FOA renderer class. Uses the optimized convolution technique.
      */
-    constructor(context: BaseAudioContext, options: FOARendererOptions);
+    constructor(options: FOARendererOptions);
     /**
      * Builds the internal audio graph.
      */

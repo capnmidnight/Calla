@@ -1,16 +1,16 @@
+import { connect, disconnect, Gain } from "kudzu/audio";
 import { BaseAudioElement } from "../BaseAudioElement";
-import { connect, disconnect, nameVertex } from "../GraphVisualizer";
 import { NoSpatializationListener } from "./spatializers/NoSpatializationListener";
 export class AudioDestination extends BaseAudioElement {
     _remoteUserInput;
     _spatializedInput;
     _nonSpatializedInput;
     _trueDestination;
-    constructor(audioContext, destination) {
-        super("final", audioContext);
-        this._remoteUserInput = nameVertex("remote-user-input", audioContext.createGain());
-        this._spatializedInput = nameVertex("spatialized-input", audioContext.createGain());
-        this._nonSpatializedInput = nameVertex("non-spatialized-input", audioContext.createGain());
+    constructor(destination) {
+        super("final");
+        this._remoteUserInput = Gain("remote-user-input");
+        this._spatializedInput = Gain("spatialized-input");
+        this._nonSpatializedInput = Gain("non-spatialized-input", this.volumeControl);
         connect(this._nonSpatializedInput, this.volumeControl);
         this.setDestination(destination);
     }
@@ -18,7 +18,7 @@ export class AudioDestination extends BaseAudioElement {
     dispose() {
         if (!this.disposed2) {
             this.setDestination(null);
-            disconnect(this._nonSpatializedInput, this.volumeControl);
+            disconnect(this._nonSpatializedInput);
             super.dispose();
             this.disposed2 = true;
         }
@@ -41,7 +41,7 @@ export class AudioDestination extends BaseAudioElement {
     setDestination(v) {
         if (v !== this._trueDestination) {
             if (this._trueDestination) {
-                disconnect(this.volumeControl, this._trueDestination);
+                disconnect(this.volumeControl);
             }
             this._trueDestination = v;
             if (this._trueDestination) {
@@ -50,14 +50,14 @@ export class AudioDestination extends BaseAudioElement {
         }
     }
     disconnectSpatializer() {
-        disconnect(this.spatializer.output, this.volumeControl);
-        disconnect(this.spatializedInput, this.spatializer.input);
-        disconnect(this.remoteUserInput, this.spatializedInput);
+        disconnect(this.spatializer);
+        disconnect(this.spatializedInput);
+        disconnect(this.remoteUserInput);
     }
     connectSpatializer() {
         connect(this.remoteUserInput, this.spatializedInput);
-        connect(this.spatializedInput, this.spatializer.input);
-        connect(this.spatializer.output, this.volumeControl);
+        connect(this.spatializedInput, this.spatializer);
+        connect(this.spatializer, this.volumeControl);
     }
 }
 //# sourceMappingURL=AudioDestination.js.map

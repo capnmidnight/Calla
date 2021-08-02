@@ -3,7 +3,7 @@ import { BaseEmitter } from "../../sources/spatializers/BaseEmitter";
 import { AudioDestination } from "../AudioDestination";
 import { BaseListener } from "./BaseListener";
 export declare class NoSpatializationListener extends BaseListener {
-    constructor(audioContext: BaseAudioContext);
+    constructor();
     /**
      * Do nothing
      */
@@ -11,5 +11,5 @@ export declare class NoSpatializationListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(_spatialize: boolean, _isRemoteStream: boolean, audioContext: BaseAudioContext, destination: AudioDestination): BaseEmitter;
+    createSpatializer(_spatialize: boolean, _isRemoteStream: boolean, destination: AudioDestination): BaseEmitter;
 }

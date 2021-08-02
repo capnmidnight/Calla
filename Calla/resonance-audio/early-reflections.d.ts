@@ -58,7 +58,7 @@ export declare class EarlyReflections implements IDisposable {
     /**
      * Ray-tracing-based early reflections model.
      */
-    constructor(context: BaseAudioContext, options?: Partial<EarlyReflectionsOptions>);
+    constructor(options?: Partial<EarlyReflectionsOptions>);
     private disposed;
     dispose(): void;
     /**

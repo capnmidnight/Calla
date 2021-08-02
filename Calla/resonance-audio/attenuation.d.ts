@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file Distance-based attenuation filter.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 export interface AttenuationOptions {
     /**
@@ -31,17 +36,17 @@ export interface AttenuationOptions {
 /**
  * Distance-based attenuation filter.
  */
-export declare class Attenuation {
+export declare class Attenuation implements ErsatzAudioNode {
     minDistance: number;
     maxDistance: number;
     private rolloff;
     private gainNode;
-    input: GainNode;
-    output: GainNode;
     /**
      * Distance-based attenuation filter.
      */
-    constructor(context: BaseAudioContext, options?: Partial<AttenuationOptions>);
+    constructor(options?: Partial<AttenuationOptions>);
+    get input(): GainNode;
+    get output(): GainNode;
     /**
      * Set distance from the listener.
      * @param distance Distance (in meters).

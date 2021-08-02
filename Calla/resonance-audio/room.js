@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @file Complete room model with early and late reflections.
- * @author Andrew Allen <bitllama@google.com>
- */
-// Internal dependencies.
 import { vec3 } from "gl-matrix";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+import { ChannelMerger, connect, disconnect, Gain } from "kudzu/audio";
 import { Dimension } from "./Dimension";
 import { Direction } from "./Direction";
 import { EarlyReflections } from './early-reflections';
@@ -204,7 +199,7 @@ export class Room {
         const reflectionCoefficients = _computeReflectionCoefficients(absorptionCoefficients);
         const durations = _getDurationsFromProperties(options.dimensions, absorptionCoefficients, options.speedOfSound);
         // Construct submodules for early and late reflections.
-        this.early = new EarlyReflections(context, {
+        this.early = new EarlyReflections({
             dimensions: options.dimensions,
             coefficients: reflectionCoefficients,
             speedOfSound: options.speedOfSound,
@@ -215,16 +210,19 @@ export class Room {
         });
         this.speedOfSound = options.speedOfSound;
         // Construct auxillary audio nodes.
-        this.output = nameVertex("room-output", context.createGain());
-        connect(this.early.output, this.output);
-        this._merger = nameVertex("room-merger", context.createChannelMerger(4));
-        connect(this.late.output, this._merger, 0, 0);
+        this.output = Gain("room-output");
+        connect(this.early, this.output);
+        this._merger = ChannelMerger("room-merger", 4);
+        connect(this.late, this._merger, 0, 0);
         connect(this._merger, this.output);
     }
     dispose() {
-        disconnect(this.early.output, this.output);
-        disconnect(this.late.output, this._merger, 0, 0);
-        disconnect(this._merger, this.output);
+        disconnect(this.early);
+        disconnect(this.late);
+        disconnect(this._merger);
+    }
+    get input() {
+        return this.early.input;
     }
     /**
      * Set the room's dimensions and wall materials.

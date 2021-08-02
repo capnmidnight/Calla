@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import { connect, Convolver, Delay, disconnect, Gain } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 import {
     DEFAULT_REVERB_BANDWIDTH,
     DEFAULT_REVERB_DURATIONS,
@@ -108,10 +108,10 @@ export class LateReflections implements IDisposable {
 
         // Create nodes.
         this.context = context;
-        this.input = nameVertex("late-reflections-input", context.createGain());
-        this.predelay = nameVertex("late-reflections-predelay", context.createDelay(delaySecs));
-        this.convolver = nameVertex("late-reflections-convolver", context.createConvolver());
-        this.output = nameVertex("late-reflections-output", context.createGain());
+        this.input = Gain("late-reflections-input");
+        this.predelay = Delay("late-reflections-predelay", delaySecs);
+        this.convolver = Convolver("late-reflections-convolver");
+        this.output = Gain("late-reflections-output");
 
         // Set reverb attenuation.
         this.output.gain.value = options.gain;
@@ -131,9 +131,9 @@ export class LateReflections implements IDisposable {
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            disconnect(this.input, this.predelay);
-            disconnect(this.predelay, this.convolver);
-            disconnect(this.convolver, this.output);
+            disconnect(this.input);
+            disconnect(this.predelay);
+            disconnect(this.convolver);
             this.disposed = true;
         }
     }

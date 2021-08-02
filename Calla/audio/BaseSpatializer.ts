@@ -12,7 +12,7 @@ export abstract class BaseSpatializer implements IDisposable {
     protected algorithm = "logarithmic";
     protected transitionTime = 0.1;
 
-    constructor(protected audioContext: BaseAudioContext) {
+    constructor() {
     }
 
     dispose(): void {

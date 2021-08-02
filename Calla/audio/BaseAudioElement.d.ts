@@ -9,11 +9,10 @@ export interface AudioElement extends IDisposable, IPoseable {
 }
 export declare abstract class BaseAudioElement<T extends BaseSpatializer> implements AudioElement {
     id: string;
-    protected audioContext: BaseAudioContext;
     pose: InterpolatedPose;
     private _spatializer;
     protected volumeControl: GainNode;
-    constructor(id: string, audioContext: BaseAudioContext);
+    constructor(id: string);
     private disposed;
     dispose(): void;
     abstract get spatialized(): boolean;

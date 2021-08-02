@@ -15,8 +15,8 @@
  */
 
 import { mat3, mat4, ReadonlyMat3, ReadonlyMat4, vec3 } from "gl-matrix";
+import { ChannelMerger, ChannelSplitter, connect, disconnect, ErsatzAudioNode, Gain } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 
 /**
@@ -79,18 +79,18 @@ function getCenteredElement(matrix: GainNode[][], l: number, i: number, j: numbe
  */
 function getP(matrix: GainNode[][], i: number, a: number, b: number, l: number): number {
     if (b === l) {
-        return getCenteredElement(matrix, 1,     i,      1) *
-               getCenteredElement(matrix, l - 1, a,  l - 1) -
-               getCenteredElement(matrix, 1,     i,     -1) *
-               getCenteredElement(matrix, l - 1, a, -l + 1);
+        return getCenteredElement(matrix, 1, i, 1) *
+            getCenteredElement(matrix, l - 1, a, l - 1) -
+            getCenteredElement(matrix, 1, i, -1) *
+            getCenteredElement(matrix, l - 1, a, -l + 1);
     } else if (b === -l) {
-        return getCenteredElement(matrix, 1,     i,      1) *
-               getCenteredElement(matrix, l - 1, a, -l + 1) +
-               getCenteredElement(matrix, 1,     i,     -1) *
-               getCenteredElement(matrix, l - 1, a,  l - 1);
+        return getCenteredElement(matrix, 1, i, 1) *
+            getCenteredElement(matrix, l - 1, a, -l + 1) +
+            getCenteredElement(matrix, 1, i, -1) *
+            getCenteredElement(matrix, l - 1, a, l - 1);
     } else {
-        return getCenteredElement(matrix, 1,     i, 0) *
-               getCenteredElement(matrix, l - 1, a, b);
+        return getCenteredElement(matrix, 1, i, 0) *
+            getCenteredElement(matrix, l - 1, a, b);
     }
 }
 
@@ -129,11 +129,11 @@ function getU(matrix: GainNode[][], m: number, n: number, l: number): number {
 function getV(matrix: GainNode[][], m: number, n: number, l: number): number {
     if (m === 0) {
         return getP(matrix, 1, 1, n, l) +
-               getP(matrix, -1, -1, n, l);
+            getP(matrix, -1, -1, n, l);
     } else if (m > 0) {
         const d = getKroneckerDelta(m, 1);
-        return getP(matrix,  1,  m - 1, n, l) * Math.sqrt(1 + d) -
-               getP(matrix, -1, -m + 1, n, l) * (1 - d);
+        return getP(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
+            getP(matrix, -1, -m + 1, n, l) * (1 - d);
     } else {
         // Note there is apparent errata in [1,2,2b] dealing with this particular
         // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
@@ -141,8 +141,8 @@ function getV(matrix: GainNode[][], m: number, n: number, l: number): number {
         // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
         // parallels the case where m > 0.
         const d = getKroneckerDelta(m, -1);
-        return getP(matrix,  1,  m + 1, n, l) * (1 - d) +
-               getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
+        return getP(matrix, 1, m + 1, n, l) * (1 - d) +
+            getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
     }
 }
 
@@ -259,14 +259,11 @@ function computeHOAMatrices(matrix: GainNode[][]): void {
  *  [2b] Corrections to initial publication:
  *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
  */
-export class HOARotator implements IDisposable {
-    private _context: BaseAudioContext;
+export class HOARotator implements IDisposable, ErsatzAudioNode {
     private _ambisonicOrder: number;
     private _splitter: ChannelSplitterNode;
     private _merger: ChannelMergerNode;
-    private _gainNodeMatrix: GainNode[][];
-    input: ChannelSplitterNode;
-    output: ChannelMergerNode;
+    private _gainNodeMatrix = new Array<GainNode[]>();
 
     /**
      * Higher-order-ambisonic decoder based on gain node network. We expect
@@ -281,23 +278,21 @@ export class HOARotator implements IDisposable {
      *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
      *  [2b] Corrections to initial publication:
      *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-     * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order.
      */
-    constructor(context: BaseAudioContext, ambisonicOrder: number) {
-        this._context = context;
+    constructor(ambisonicOrder: number) {
         this._ambisonicOrder = ambisonicOrder;
 
         // We need to determine the number of channels K based on the ambisonic order
         // N where K = (N + 1)^2.
         const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
-        this._splitter = nameVertex("hoa-rotator-splitter", this._context.createChannelSplitter(numberOfChannels));
-        this._merger = nameVertex("hoa-rotator-merger", this._context.createChannelMerger(numberOfChannels));
+        this._merger = ChannelMerger("hoa-rotator-merger", numberOfChannels);
+        this._splitter = ChannelSplitter(
+            "hoa-rotator-splitter",
+            numberOfChannels,
+            [0, 0, this._merger]);
 
-        // Create a set of per-order rotation matrices using gain nodes.
-        /** @type {GainNode[][]} */
-        this._gainNodeMatrix = [];
 
         for (let i = 1; i <= ambisonicOrder; i++) {
             // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
@@ -311,58 +306,41 @@ export class HOARotator implements IDisposable {
             // Uses row-major indexing.
             const rows = (2 * i + 1);
 
-            this._gainNodeMatrix[i - 1] = [];
+            this._gainNodeMatrix[i - 1] = new Array<GainNode>();
             for (let j = 0; j < rows; j++) {
                 const inputIndex = orderOffset + j;
                 for (let k = 0; k < rows; k++) {
                     const outputIndex = orderOffset + k;
                     const matrixIndex = j * rows + k;
-                    this._gainNodeMatrix[i - 1][matrixIndex] = nameVertex(`hoa-rotator-matrix-${i}-${matrixIndex}`, this._context.createGain());
+                    this._gainNodeMatrix[i - 1][matrixIndex] = Gain(`hoa-rotator-matrix-${i}-${matrixIndex}`,);
                     connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
                     connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                 }
             }
         }
 
-        // W-channel is not involved in rotation, skip straight to ouput.
-        connect(this._splitter, this._merger, 0, 0);
-
         // Default Identity matrix.
         this.setRotationMatrix3(mat3.identity(mat3.create()));
+    }
 
-        // Input/Output proxy.
-        this.input = this._splitter;
-        this.output = this._merger;
+    get input() {
+        return this._splitter;
+    }
+
+    get output() {
+        return this._merger;
     }
 
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            for (let i = 1; i <= this._ambisonicOrder; i++) {
-                // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-                // matrix. We compute the offset value as the first channel index of the
-                // current order where
-                //   k_last = l^2 + l + m,
-                // and m = -l
-                //   k_last = l^2
-                const orderOffset = i * i;
-
-                // Uses row-major indexing.
-                const rows = (2 * i + 1);
-
-                for (let j = 0; j < rows; j++) {
-                    const inputIndex = orderOffset + j;
-                    for (let k = 0; k < rows; k++) {
-                        const outputIndex = orderOffset + k;
-                        const matrixIndex = j * rows + k;
-                        disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                        disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
-                    }
+            disconnect(this._splitter);
+            for (const nodes of this._gainNodeMatrix) {
+                for (const node of nodes) {
+                    disconnect(node);
                 }
             }
 
-            // W-channel is not involved in rotation, skip straight to ouput.
-            disconnect(this._splitter, this._merger, 0, 0);
             this.disposed = true;
         }
     }

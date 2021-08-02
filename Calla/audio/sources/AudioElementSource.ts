@@ -8,8 +8,8 @@ export class AudioElementSource
     extends BaseAudioSource<MediaElementAudioSourceNode>
     implements IPlayableSource {
 
-    constructor(id: string, audioContext: BaseAudioContext, source: MediaElementAudioSourceNode, spatializer: BaseEmitter) {
-        super(id, audioContext);
+    constructor(id: string, source: MediaElementAudioSourceNode, spatializer: BaseEmitter) {
+        super(id);
 
         this.source = source;
         this.spatializer = spatializer;

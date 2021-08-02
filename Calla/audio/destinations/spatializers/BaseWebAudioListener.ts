@@ -1,4 +1,4 @@
-import { nameVertex } from "../../GraphVisualizer";
+import { gain, Gain } from "kudzu/audio";
 import { BaseListener } from "./BaseListener";
 
 /**
@@ -10,12 +10,12 @@ export abstract class BaseWebAudioListener extends BaseListener {
     /**
      * Creates a new spatializer that uses WebAudio's PannerNode.
      */
-    constructor(audioContext: BaseAudioContext) {
-        super(audioContext);
-        const gain = nameVertex("listener-volume-correction", audioContext.createGain());
-        gain.gain.value = 0.75;
-        this.input = this.output = gain;
-        this.listener = audioContext.listener;
+    constructor() {
+        super();
+        this.input
+            = this.output
+            = Gain("listener-volume-correction", gain(0.75));
+        this.listener = this.input.context.listener;
     }
 
     private disposed2 = false;

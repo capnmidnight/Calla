@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import { ChannelMerger, ChannelSplitter, connect, disconnect, ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
 
 /**
  * @file An audio channel router to resolve different channel layouts between
@@ -44,8 +44,7 @@ const ChannelMaps = {
 /**
  * Channel router for FOA stream.
  */
-export class FOARouter implements IDisposable {
-    private _context: BaseAudioContext;
+export class FOARouter implements IDisposable, ErsatzAudioNode {
     private _splitter: ChannelSplitterNode;
     private _merger: ChannelMergerNode;
     input: ChannelSplitterNode;
@@ -53,18 +52,11 @@ export class FOARouter implements IDisposable {
     private _channelMap: number[];
     /**
      * Channel router for FOA stream.
-     * @param context - Associated BaseAudioContext.
      * @param channelMap - Routing destination array.
      */
-    constructor(context: BaseAudioContext, channelMap: ChannelMap|number[]) {
-        this._context = context;
-
-        this._splitter = nameVertex("foa-router-splitter", this._context.createChannelSplitter(4));
-        this._merger = nameVertex("foa-router-merger", this._context.createChannelMerger(4));
-
-        // input/output proxy.
-        this.input = this._splitter;
-        this.output = this._merger;
+    constructor(channelMap: ChannelMap|number[]) {
+        this.input = this._splitter = ChannelSplitter("foa-router-splitter", 4);
+        this.output = this._merger = ChannelMerger("foa-router-merger", 4);
 
         this.setChannelMap(channelMap || ChannelMap.Default);
     }
@@ -82,20 +74,16 @@ export class FOARouter implements IDisposable {
             this._channelMap = ChannelMaps[channelMap];
         }
 
-        connect(this._splitter, this._merger, 0, this._channelMap[0]);
-        connect(this._splitter, this._merger, 1, this._channelMap[1]);
-        connect(this._splitter, this._merger, 2, this._channelMap[2]);
-        connect(this._splitter, this._merger, 3, this._channelMap[3]);
+        for (let i = 0; i < this._channelMap.length; ++i) {
+            connect(this._splitter, this._merger, i, this._channelMap[i]);
+        }
     }
 
 
     private disposed = false;
     dispose(): void {
         if (!this.disposed) {
-            disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
-            disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
-            disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
-            disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
+            disconnect(this._splitter);
             this.disposed = true;
         }
     }

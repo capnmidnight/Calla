@@ -4,13 +4,12 @@ import type { Pose } from "./positions/Pose";
  * Base class providing functionality for spatializers.
  */
 export declare abstract class BaseSpatializer implements IDisposable {
-    protected audioContext: BaseAudioContext;
     minDistance: number;
     maxDistance: number;
     protected rolloff: number;
     protected algorithm: string;
     protected transitionTime: number;
-    constructor(audioContext: BaseAudioContext);
+    constructor();
     dispose(): void;
     abstract get input(): AudioNode;
     abstract get output(): AudioNode;

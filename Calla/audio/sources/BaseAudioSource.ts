@@ -1,5 +1,5 @@
+import { connect, disconnect } from "kudzu/audio";
 import { BaseAudioElement } from "../BaseAudioElement";
-import { connect, disconnect } from "../GraphVisualizer";
 import { BaseEmitter } from "./spatializers/BaseEmitter";
 import { NoSpatializationNode } from "./spatializers/NoSpatializationNode";
 
@@ -7,8 +7,8 @@ export abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElem
 
     private _source: T;
 
-    constructor(id: string, audioContext: BaseAudioContext) {
-        super(id, audioContext);
+    constructor(id: string) {
+        super(id);
     }
 
     private disposed2 = false;
@@ -31,7 +31,7 @@ export abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElem
     set source(v: T) {
         if (v !== this.source) {
             if (this._source) {
-                disconnect(this._source, this.volumeControl);
+                disconnect(this._source);
             }
             this._source = v;
             if (this._source) {
@@ -41,10 +41,10 @@ export abstract class BaseAudioSource<T extends AudioNode> extends BaseAudioElem
     }
 
     protected disconnectSpatializer() {
-        disconnect(this.volumeControl, this.spatializer.input);
+        disconnect(this.volumeControl);
     }
 
     protected connectSpatializer() {
-        connect(this.volumeControl, this.spatializer.input);
+        connect(this.volumeControl, this.spatializer);
     }
 }

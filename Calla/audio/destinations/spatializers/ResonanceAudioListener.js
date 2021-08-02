@@ -1,3 +1,4 @@
+import { audioCtx } from "kudzu/audio";
 import { RenderingMode } from "../../../omnitone/rendering-mode";
 import { Direction } from "../../../resonance-audio/Direction";
 import { ResonanceAudio } from "../../../resonance-audio/resonance-audio";
@@ -12,9 +13,9 @@ export class ResonanceAudioListener extends BaseListener {
     /**
      * Creates a new audio positioner that uses Google's Resonance Audio library
      */
-    constructor(audioContext) {
-        super(audioContext);
-        const scene = new ResonanceAudio(audioContext, {
+    constructor() {
+        super();
+        const scene = new ResonanceAudio(audioCtx, {
             ambisonicOrder: 1,
             renderingMode: RenderingMode.Bypass
         });
@@ -56,15 +57,15 @@ export class ResonanceAudioListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(spatialize, isRemoteStream, audioContext, destination) {
+    createSpatializer(spatialize, isRemoteStream, destination) {
         if (spatialize) {
             const dest = isRemoteStream
                 ? destination.remoteUserInput
                 : destination.spatializedInput;
-            return new ResonanceAudioNode(audioContext, dest, this.scene);
+            return new ResonanceAudioNode(dest, this.scene);
         }
         else {
-            return super.createSpatializer(spatialize, isRemoteStream, audioContext, destination);
+            return super.createSpatializer(spatialize, isRemoteStream, destination);
         }
     }
 }

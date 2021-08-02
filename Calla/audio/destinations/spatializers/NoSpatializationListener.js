@@ -1,12 +1,10 @@
-import { nameVertex } from "../../GraphVisualizer";
+import { gain, Gain } from "kudzu/audio";
 import { NoSpatializationNode } from "../../sources/spatializers/NoSpatializationNode";
 import { BaseListener } from "./BaseListener";
 export class NoSpatializationListener extends BaseListener {
-    constructor(audioContext) {
-        super(audioContext);
-        const gain = nameVertex("listener-volume-correction", audioContext.createGain());
-        gain.gain.value = 0.1;
-        this.input = this.output = gain;
+    constructor() {
+        super();
+        this.input = this.output = Gain("listener-volume-correction", gain(0.1));
     }
     /**
      * Do nothing
@@ -16,8 +14,8 @@ export class NoSpatializationListener extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      */
-    createSpatializer(_spatialize, _isRemoteStream, audioContext, destination) {
-        return new NoSpatializationNode(audioContext, destination.nonSpatializedInput);
+    createSpatializer(_spatialize, _isRemoteStream, destination) {
+        return new NoSpatializationNode(destination.nonSpatializedInput);
     }
 }
 //# sourceMappingURL=NoSpatializationListener.js.map

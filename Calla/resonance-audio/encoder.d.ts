@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @file Spatially encodes input using weighted spherical harmonics.
- * @author Andrew Allen <bitllama@google.com>
- */
 import type { IDisposable } from "kudzu/using";
 export interface EncoderOptions {
     /**
@@ -43,7 +39,6 @@ export interface EncoderOptions {
  * Spatially encodes input using weighted spherical harmonics.
  */
 export declare class Encoder implements IDisposable {
-    private context;
     private channelGain;
     private merger;
     private ambisonicOrder;
@@ -61,7 +56,7 @@ export declare class Encoder implements IDisposable {
     /**
      * Spatially encodes input using weighted spherical harmonics.
      */
-    constructor(context: BaseAudioContext, options?: EncoderOptions);
+    constructor(options?: EncoderOptions);
     /**
      * Set the desired ambisonic order.
      * @param ambisonicOrder Desired ambisonic order.

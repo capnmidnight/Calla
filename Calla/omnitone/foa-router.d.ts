@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { ErsatzAudioNode } from "kudzu/audio";
 import type { IDisposable } from "kudzu/using";
 /**
  * @file An audio channel router to resolve different channel layouts between
@@ -26,8 +27,7 @@ export declare enum ChannelMap {
 /**
  * Channel router for FOA stream.
  */
-export declare class FOARouter implements IDisposable {
-    private _context;
+export declare class FOARouter implements IDisposable, ErsatzAudioNode {
     private _splitter;
     private _merger;
     input: ChannelSplitterNode;
@@ -35,10 +35,9 @@ export declare class FOARouter implements IDisposable {
     private _channelMap;
     /**
      * Channel router for FOA stream.
-     * @param context - Associated BaseAudioContext.
      * @param channelMap - Routing destination array.
      */
-    constructor(context: BaseAudioContext, channelMap: ChannelMap | number[]);
+    constructor(channelMap: ChannelMap | number[]);
     /**
      * Sets channel map.
      * @param channelMap - A new channel map for FOA stream.

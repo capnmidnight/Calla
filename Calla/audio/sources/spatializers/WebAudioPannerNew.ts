@@ -9,14 +9,14 @@ export class WebAudioPannerNew extends BaseWebAudioPanner {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      */
-    constructor(audioContext: BaseAudioContext, destination: AudioNode) {
-        super(audioContext, destination);
+    constructor(destination: AudioNode) {
+        super(destination);
 
         Object.seal(this);
     }
 
     protected createNew(): WebAudioPannerNew {
-        return new WebAudioPannerNew(this.audioContext, this.destination);
+        return new WebAudioPannerNew(this.destination);
     }
 
     /**

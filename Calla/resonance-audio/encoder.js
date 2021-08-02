@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { connect, disconnect, nameVertex } from "../audio/GraphVisualizer";
+/**
+ * @file Spatially encodes input using weighted spherical harmonics.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+import { ChannelMerger, connect, disconnect, Gain } from "kudzu/audio";
 import { MAX_RE_WEIGHTS, SPHERICAL_HARMONICS, SPHERICAL_HARMONICS_MAX_ORDER } from "./tables";
 import { DEFAULT_AMBISONIC_ORDER, DEFAULT_AZIMUTH, DEFAULT_ELEVATION, DEFAULT_SOURCE_WIDTH, log } from "./utils";
 /**
  * Spatially encodes input using weighted spherical harmonics.
  */
 export class Encoder {
-    context;
     channelGain = new Array();
     merger = null;
     ambisonicOrder;
@@ -52,7 +55,7 @@ export class Encoder {
     /**
      * Spatially encodes input using weighted spherical harmonics.
      */
-    constructor(context, options) {
+    constructor(options) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,
@@ -60,10 +63,9 @@ export class Encoder {
             elevation: DEFAULT_ELEVATION,
             sourceWidth: DEFAULT_SOURCE_WIDTH
         }, options);
-        this.context = context;
         // Create I/O nodes.
-        this.input = nameVertex("encoder-input", context.createGain());
-        this.output = nameVertex("encoder-output", context.createGain());
+        this.input = Gain("encoder-input");
+        this.output = Gain("encoder-output");
         // Set initial order, angle and source width.
         this.setAmbisonicOrder(options.ambisonicOrder);
         this.azimuth = options.azimuth;
@@ -79,10 +81,10 @@ export class Encoder {
         this.dispose();
         // Create audio graph.
         let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
-        this.merger = nameVertex("encoder-merger", this.context.createChannelMerger(numChannels));
+        this.merger = ChannelMerger("encoder-merger", numChannels);
         this.channelGain = new Array(numChannels);
         for (let i = 0; i < numChannels; i++) {
-            this.channelGain[i] = nameVertex("encoder-channel-" + i, this.context.createGain());
+            this.channelGain[i] = Gain("encoder-channel-" + i);
             connect(this.input, this.channelGain[i]);
             connect(this.channelGain[i], this.merger, 0, i);
         }
@@ -91,14 +93,12 @@ export class Encoder {
     disposed = false;
     dispose() {
         if (!this.disposed) {
-            for (let i = 0; i < this.channelGain.length; i++) {
-                disconnect(this.input, this.channelGain[i]);
-                if (this.merger) {
-                    disconnect(this.channelGain[i], this.merger, 0, i);
-                }
+            disconnect(this.input);
+            for (const node of this.channelGain) {
+                disconnect(node);
             }
             if (this.merger) {
-                disconnect(this.merger, this.output);
+                disconnect(this.merger);
             }
             this.disposed = true;
         }
