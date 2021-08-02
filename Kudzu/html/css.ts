@@ -2,7 +2,7 @@ export class CssProp {
     public readonly name: string;
     constructor(
         public readonly key: string,
-        public readonly value: string) {
+        public readonly value: string | 0) {
         this.name = key.replace(/[A-Z]/g, (m) => {
             return "-" + m.toLocaleLowerCase();
         });
@@ -127,8 +127,8 @@ export function borderTopLeftRadius(v: string) { return new CssProp("borderTopLe
 export function borderTopRightRadius(v: string) { return new CssProp("borderTopRightRadius", v); }
 export function borderTopStyle(v: string) { return new CssProp("borderTopStyle", v); }
 export function borderTopWidth(v: string) { return new CssProp("borderTopWidth", v); }
-export function borderWidth(v: string) { return new CssProp("borderWidth", v); }
-export function bottom(v: string) { return new CssProp("bottom", v); }
+export function borderWidth(v: string | 0) { return new CssProp("borderWidth", v); }
+export function bottom(v: string | 0) { return new CssProp("bottom", v); }
 export function boxShadow(v: string) { return new CssProp("boxShadow", v); }
 export function boxSizing(v: string) { return new CssProp("boxSizing", v); }
 export function breakAfter(v: string) { return new CssProp("breakAfter", v); }
@@ -226,7 +226,7 @@ export function gridTemplate(v: string) { return new CssProp("gridTemplate", v);
 export function gridTemplateAreas(v: string) { return new CssProp("gridTemplateAreas", v); }
 export function gridTemplateColumns(v: string) { return new CssProp("gridTemplateColumns", v); }
 export function gridTemplateRows(v: string) { return new CssProp("gridTemplateRows", v); }
-export function height(v: string) { return new CssProp("height", v); }
+export function height(v: string | 0) { return new CssProp("height", v); }
 export function hyphens(v: string) { return new CssProp("hyphens", v); }
 export function imageOrientation(v: string) { return new CssProp("imageOrientation", v); }
 export function imageRendering(v: string) { return new CssProp("imageRendering", v); }
@@ -235,7 +235,7 @@ export function isolation(v: string) { return new CssProp("isolation", v); }
 export function justifyContent(v: string) { return new CssProp("justifyContent", v); }
 export function justifyItems(v: string) { return new CssProp("justifyItems", v); }
 export function justifySelf(v: string) { return new CssProp("justifySelf", v); }
-export function left(v: string) { return new CssProp("left", v); }
+export function left(v: string | 0) { return new CssProp("left", v); }
 export function letterSpacing(v: string) { return new CssProp("letterSpacing", v); }
 export function lightingColor(v: string) { return new CssProp("lightingColor", v); }
 export function lineBreak(v: string) { return new CssProp("lineBreak", v); }
@@ -244,15 +244,15 @@ export function listStyle(v: string) { return new CssProp("listStyle", v); }
 export function listStyleImage(v: string) { return new CssProp("listStyleImage", v); }
 export function listStylePosition(v: string) { return new CssProp("listStylePosition", v); }
 export function listStyleType(v: string) { return new CssProp("listStyleType", v); }
-export function margin(v: string) { return new CssProp("margin", v); }
+export function margin(v: string | 0) { return new CssProp("margin", v); }
 export function marginBlockEnd(v: string) { return new CssProp("marginBlockEnd", v); }
 export function marginBlockStart(v: string) { return new CssProp("marginBlockStart", v); }
-export function marginBottom(v: string) { return new CssProp("marginBottom", v); }
+export function marginBottom(v: string | 0) { return new CssProp("marginBottom", v); }
 export function marginInlineEnd(v: string) { return new CssProp("marginInlineEnd", v); }
 export function marginInlineStart(v: string) { return new CssProp("marginInlineStart", v); }
-export function marginLeft(v: string) { return new CssProp("marginLeft", v); }
-export function marginRight(v: string) { return new CssProp("marginRight", v); }
-export function marginTop(v: string) { return new CssProp("marginTop", v); }
+export function marginLeft(v: string | 0) { return new CssProp("marginLeft", v); }
+export function marginRight(v: string | 0) { return new CssProp("marginRight", v); }
+export function marginTop(v: string | 0) { return new CssProp("marginTop", v); }
 export function marker(v: string) { return new CssProp("marker", v); }
 export function markerEnd(v: string) { return new CssProp("markerEnd", v); }
 export function markerMid(v: string) { return new CssProp("markerMid", v); }
@@ -260,14 +260,14 @@ export function markerStart(v: string) { return new CssProp("markerStart", v); }
 export function mask(v: string) { return new CssProp("mask", v); }
 export function maskType(v: string) { return new CssProp("maskType", v); }
 export function maxBlockSize(v: string) { return new CssProp("maxBlockSize", v); }
-export function maxHeight(v: string) { return new CssProp("maxHeight", v); }
+export function maxHeight(v: string | 0) { return new CssProp("maxHeight", v); }
 export function maxInlineSize(v: string) { return new CssProp("maxInlineSize", v); }
-export function maxWidth(v: string) { return new CssProp("maxWidth", v); }
+export function maxWidth(v: string | 0) { return new CssProp("maxWidth", v); }
 export function maxZoom(v: string) { return new CssProp("maxZoom", v); }
 export function minBlockSize(v: string) { return new CssProp("minBlockSize", v); }
-export function minHeight(v: string) { return new CssProp("minHeight", v); }
+export function minHeight(v: string | 0) { return new CssProp("minHeight", v); }
 export function minInlineSize(v: string) { return new CssProp("minInlineSize", v); }
-export function minWidth(v: string) { return new CssProp("minWidth", v); }
+export function minWidth(v: string | 0) { return new CssProp("minWidth", v); }
 export function minZoom(v: string) { return new CssProp("minZoom", v); }
 export function mixBlendMode(v: string) { return new CssProp("mixBlendMode", v); }
 export function objectFit(v: string) { return new CssProp("objectFit", v); }
@@ -284,7 +284,7 @@ export function outline(v: string) { return new CssProp("outline", v); }
 export function outlineColor(v: string) { return new CssProp("outlineColor", v); }
 export function outlineOffset(v: string) { return new CssProp("outlineOffset", v); }
 export function outlineStyle(v: string) { return new CssProp("outlineStyle", v); }
-export function outlineWidth(v: string) { return new CssProp("outlineWidth", v); }
+export function outlineWidth(v: string | 0) { return new CssProp("outlineWidth", v); }
 export function overflow(v: string) { return new CssProp("overflow", v); }
 export function overflowAnchor(v: string) { return new CssProp("overflowAnchor", v); }
 export function overflowWrap(v: string) { return new CssProp("overflowWrap", v); }
@@ -295,15 +295,15 @@ export function overscrollBehaviorBlock(v: string) { return new CssProp("overscr
 export function overscrollBehaviorInline(v: string) { return new CssProp("overscrollBehaviorInline", v); }
 export function overscrollBehaviorX(v: string) { return new CssProp("overscrollBehaviorX", v); }
 export function overscrollBehaviorY(v: string) { return new CssProp("overscrollBehaviorY", v); }
-export function padding(v: string) { return new CssProp("padding", v); }
+export function padding(v: string | 0) { return new CssProp("padding", v); }
 export function paddingBlockEnd(v: string) { return new CssProp("paddingBlockEnd", v); }
 export function paddingBlockStart(v: string) { return new CssProp("paddingBlockStart", v); }
-export function paddingBottom(v: string) { return new CssProp("paddingBottom", v); }
+export function paddingBottom(v: string | 0) { return new CssProp("paddingBottom", v); }
 export function paddingInlineEnd(v: string) { return new CssProp("paddingInlineEnd", v); }
 export function paddingInlineStart(v: string) { return new CssProp("paddingInlineStart", v); }
-export function paddingLeft(v: string) { return new CssProp("paddingLeft", v); }
-export function paddingRight(v: string) { return new CssProp("paddingRight", v); }
-export function paddingTop(v: string) { return new CssProp("paddingTop", v); }
+export function paddingLeft(v: string | 0) { return new CssProp("paddingLeft", v); }
+export function paddingRight(v: string | 0) { return new CssProp("paddingRight", v); }
+export function paddingTop(v: string | 0) { return new CssProp("paddingTop", v); }
 export function pageBreakAfter(v: string) { return new CssProp("pageBreakAfter", v); }
 export function pageBreakBefore(v: string) { return new CssProp("pageBreakBefore", v); }
 export function pageBreakInside(v: string) { return new CssProp("pageBreakInside", v); }
@@ -318,34 +318,34 @@ export function position(v: string) { return new CssProp("position", v); }
 export function quotes(v: string) { return new CssProp("quotes", v); }
 export function r(v: string) { return new CssProp("r", v); }
 export function resize(v: string) { return new CssProp("resize", v); }
-export function right(v: string) { return new CssProp("right", v); }
-export function rowGap(v: string) { return new CssProp("rowGap", v); }
+export function right(v: string | 0) { return new CssProp("right", v); }
+export function rowGap(v: string | 0) { return new CssProp("rowGap", v); }
 export function rubyPosition(v: string) { return new CssProp("rubyPosition", v); }
 export function rx(v: string) { return new CssProp("rx", v); }
 export function ry(v: string) { return new CssProp("ry", v); }
 export function scrollBehavior(v: string) { return new CssProp("scrollBehavior", v); }
-export function scrollMargin(v: string) { return new CssProp("scrollMargin", v); }
+export function scrollMargin(v: string | 0) { return new CssProp("scrollMargin", v); }
 export function scrollMarginBlock(v: string) { return new CssProp("scrollMarginBlock", v); }
 export function scrollMarginBlockEnd(v: string) { return new CssProp("scrollMarginBlockEnd", v); }
 export function scrollMarginBlockStart(v: string) { return new CssProp("scrollMarginBlockStart", v); }
-export function scrollMarginBottom(v: string) { return new CssProp("scrollMarginBottom", v); }
+export function scrollMarginBottom(v: string | 0) { return new CssProp("scrollMarginBottom", v); }
 export function scrollMarginInline(v: string) { return new CssProp("scrollMarginInline", v); }
 export function scrollMarginInlineEnd(v: string) { return new CssProp("scrollMarginInlineEnd", v); }
 export function scrollMarginInlineStart(v: string) { return new CssProp("scrollMarginInlineStart", v); }
-export function scrollMarginLeft(v: string) { return new CssProp("scrollMarginLeft", v); }
-export function scrollMarginRight(v: string) { return new CssProp("scrollMarginRight", v); }
-export function scrollMarginTop(v: string) { return new CssProp("scrollMarginTop", v); }
-export function scrollPadding(v: string) { return new CssProp("scrollPadding", v); }
+export function scrollMarginLeft(v: string | 0) { return new CssProp("scrollMarginLeft", v); }
+export function scrollMarginRight(v: string | 0) { return new CssProp("scrollMarginRight", v); }
+export function scrollMarginTop(v: string | 0) { return new CssProp("scrollMarginTop", v); }
+export function scrollPadding(v: string | 0) { return new CssProp("scrollPadding", v); }
 export function scrollPaddingBlock(v: string) { return new CssProp("scrollPaddingBlock", v); }
 export function scrollPaddingBlockEnd(v: string) { return new CssProp("scrollPaddingBlockEnd", v); }
 export function scrollPaddingBlockStart(v: string) { return new CssProp("scrollPaddingBlockStart", v); }
-export function scrollPaddingBottom(v: string) { return new CssProp("scrollPaddingBottom", v); }
+export function scrollPaddingBottom(v: string | 0) { return new CssProp("scrollPaddingBottom", v); }
 export function scrollPaddingInline(v: string) { return new CssProp("scrollPaddingInline", v); }
 export function scrollPaddingInlineEnd(v: string) { return new CssProp("scrollPaddingInlineEnd", v); }
 export function scrollPaddingInlineStart(v: string) { return new CssProp("scrollPaddingInlineStart", v); }
-export function scrollPaddingLeft(v: string) { return new CssProp("scrollPaddingLeft", v); }
-export function scrollPaddingRight(v: string) { return new CssProp("scrollPaddingRight", v); }
-export function scrollPaddingTop(v: string) { return new CssProp("scrollPaddingTop", v); }
+export function scrollPaddingLeft(v: string | 0) { return new CssProp("scrollPaddingLeft", v); }
+export function scrollPaddingRight(v: string | 0) { return new CssProp("scrollPaddingRight", v); }
+export function scrollPaddingTop(v: string | 0) { return new CssProp("scrollPaddingTop", v); }
 export function scrollSnapAlign(v: string) { return new CssProp("scrollSnapAlign", v); }
 export function scrollSnapStop(v: string) { return new CssProp("scrollSnapStop", v); }
 export function scrollSnapType(v: string) { return new CssProp("scrollSnapType", v); }
@@ -363,7 +363,7 @@ export function strokeLinecap(v: string) { return new CssProp("strokeLinecap", v
 export function strokeLinejoin(v: string) { return new CssProp("strokeLinejoin", v); }
 export function strokeMiterlimit(v: string) { return new CssProp("strokeMiterlimit", v); }
 export function strokeOpacity(v: string) { return new CssProp("strokeOpacity", v); }
-export function strokeWidth(v: string) { return new CssProp("strokeWidth", v); }
+export function strokeWidth(v: string | 0) { return new CssProp("strokeWidth", v); }
 export function tabSize(v: string) { return new CssProp("tabSize", v); }
 export function tableLayout(v: string) { return new CssProp("tableLayout", v); }
 export function textAlign(v: string) { return new CssProp("textAlign", v); }
@@ -383,15 +383,15 @@ export function textShadow(v: string) { return new CssProp("textShadow", v); }
 export function textSizeAdjust(v: string) { return new CssProp("textSizeAdjust", v); }
 export function textTransform(v: string) { return new CssProp("textTransform", v); }
 export function textUnderlinePosition(v: string) { return new CssProp("textUnderlinePosition", v); }
-export function top(v: string) { return new CssProp("top", v); }
+export function top(v: string | 0) { return new CssProp("top", v); }
 export function touchAction(v: string) { return new CssProp("touchAction", v); }
 export function transform(v: string) { return new CssProp("transform", v); }
 export function transformBox(v: string) { return new CssProp("transformBox", v); }
 export function transformOrigin(v: string) { return new CssProp("transformOrigin", v); }
 export function transformStyle(v: string) { return new CssProp("transformStyle", v); }
 export function transition(v: string) { return new CssProp("transition", v); }
-export function transitionDelay(v: string) { return new CssProp("transitionDelay", v); }
-export function transitionDuration(v: string) { return new CssProp("transitionDuration", v); }
+export function transitionDelay(v: string | 0) { return new CssProp("transitionDelay", v); }
+export function transitionDuration(v: string | 0) { return new CssProp("transitionDuration", v); }
 export function transitionProperty(v: string) { return new CssProp("transitionProperty", v); }
 export function transitionTimingFunction(v: string) { return new CssProp("transitionTimingFunction", v); }
 export function unicodeBidi(v: string) { return new CssProp("unicodeBidi", v); }
@@ -403,14 +403,14 @@ export function verticalAlign(v: string) { return new CssProp("verticalAlign", v
 export function visibility(v: string) { return new CssProp("visibility", v); }
 export function whiteSpace(v: string) { return new CssProp("whiteSpace", v); }
 export function widows(v: string) { return new CssProp("widows", v); }
-export function width(v: string) { return new CssProp("width", v); }
+export function width(v: string | 0) { return new CssProp("width", v); }
 export function willChange(v: string) { return new CssProp("willChange", v); }
 export function wordBreak(v: string) { return new CssProp("wordBreak", v); }
 export function wordSpacing(v: string) { return new CssProp("wordSpacing", v); }
 export function wordWrap(v: string) { return new CssProp("wordWrap", v); }
 export function writingMode(v: string) { return new CssProp("writingMode", v); }
-export function x(v: string) { return new CssProp("x", v); }
-export function y(v: string) { return new CssProp("y", v); }
+export function x(v: string | 0) { return new CssProp("x", v); }
+export function y(v: string | 0) { return new CssProp("y", v); }
 export function zIndex(v: number) { return new CssProp("zIndex", v.toFixed(0)); }
 export function zoom(v: number) { return new CssProp("zoom", v.toFixed(0)); }
 

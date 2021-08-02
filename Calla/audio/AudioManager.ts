@@ -240,6 +240,9 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
                 type = SpatializerType.Medium;
             }
         }
+        else {
+            tryResonanceAPI = false;
+        }
 
         if (type === SpatializerType.Medium) {
             if (!tryResonanceAPI && tryAudioListener) {
