@@ -27,6 +27,10 @@ export async function fileToImage(file) {
 }
 function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) {
     return new Promise((resolve, reject) => {
+        let prevDone = !prevTask;
+        if (prevTask) {
+            prevTask.then(() => prevDone = true);
+        }
         let done = false;
         let loaded = skipLoading;
         function maybeResolve() {
@@ -35,27 +39,31 @@ function trackXHRProgress(name, xhr, target, onProgress, skipLoading, prevTask) 
             }
         }
         async function onError() {
-            await prevTask;
-            reject(xhr.status);
+            if (prevDone) {
+                reject(xhr.status);
+            }
         }
-        target.addEventListener("loadstart", async () => {
-            await prevTask;
-            onProgress(0, 1, name);
-        });
-        target.addEventListener("progress", async (ev) => {
-            const evt = ev;
-            await prevTask;
-            onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
-            if (evt.loaded === evt.total) {
-                loaded = true;
-                maybeResolve();
+        target.addEventListener("loadstart", () => {
+            if (prevDone && !done) {
+                onProgress(0, 1, name);
             }
         });
-        target.addEventListener("load", async () => {
-            await prevTask;
-            onProgress(1, 1, name);
-            done = true;
-            maybeResolve();
+        target.addEventListener("progress", (ev) => {
+            if (prevDone && !done) {
+                const evt = ev;
+                onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
+                if (evt.loaded === evt.total) {
+                    loaded = true;
+                    maybeResolve();
+                }
+            }
+        });
+        target.addEventListener("load", () => {
+            if (prevDone && !done) {
+                onProgress(1, 1, name);
+                done = true;
+                maybeResolve();
+            }
         });
         target.addEventListener("error", onError);
         target.addEventListener("abort", onError);
@@ -81,7 +89,7 @@ export class Fetcher {
     async getXHR(path, xhrType, headers, onProgress) {
         onProgress = onProgress || dumpProgress;
         const xhr = new XMLHttpRequest();
-        const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
+        const download = trackXHRProgress("downloading: " + path, xhr, xhr, onProgress, true);
         setXHRHeaders(xhr, "GET", path, xhrType, headers);
         xhr.send();
         await download;
@@ -91,7 +99,7 @@ export class Fetcher {
         onProgress = onProgress || dumpProgress;
         const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
         const xhr = new XMLHttpRequest();
-        const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
+        const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false);
         const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
         let body = null;
         if (!(obj instanceof FormData)

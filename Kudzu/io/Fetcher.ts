@@ -33,8 +33,13 @@ export async function fileToImage(file: string) {
     return img;
 }
 
-function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
+function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask?: Promise<void>): Promise<void> {
     return new Promise((resolve: () => void, reject: (status: number) => void) => {
+        let prevDone = !prevTask;
+        if (prevTask) {
+            prevTask.then(() => prevDone = true);
+        }
+
         let done = false;
         let loaded = skipLoading;
         function maybeResolve() {
@@ -44,30 +49,34 @@ function trackXHRProgress(name: string, xhr: XMLHttpRequest, target: (XMLHttpReq
         }
 
         async function onError() {
-            await prevTask;
-            reject(xhr.status);
+            if (prevDone) {
+                reject(xhr.status);
+            }
         }
 
-        target.addEventListener("loadstart", async () => {
-            await prevTask;
-            onProgress(0, 1, name);
-        });
-
-        target.addEventListener("progress", async (ev: Event) => {
-            const evt = ev as ProgressEvent<XMLHttpRequestEventTarget>;
-            await prevTask;
-            onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
-            if (evt.loaded === evt.total) {
-                loaded = true;
-                maybeResolve();
+        target.addEventListener("loadstart", () => {
+            if (prevDone && !done) {
+                onProgress(0, 1, name);
             }
         });
 
-        target.addEventListener("load", async () => {
-            await prevTask;
-            onProgress(1, 1, name);
-            done = true;
-            maybeResolve();
+        target.addEventListener("progress", (ev: Event) => {
+            if (prevDone && !done) {
+                const evt = ev as ProgressEvent<XMLHttpRequestEventTarget>;
+                onProgress(evt.loaded, Math.max(evt.loaded, evt.total), name);
+                if (evt.loaded === evt.total) {
+                    loaded = true;
+                    maybeResolve();
+                }
+            }
+        });
+
+        target.addEventListener("load", () => {
+            if (prevDone && !done) {
+                onProgress(1, 1, name);
+                done = true;
+                maybeResolve();
+            }
         });
 
         target.addEventListener("error", onError);
@@ -101,7 +110,7 @@ export class Fetcher implements IFetcher {
 
         const xhr = new XMLHttpRequest();
 
-        const download = trackXHRProgress("downloading", xhr, xhr, onProgress, true, Promise.resolve());
+        const download = trackXHRProgress("downloading: " + path, xhr, xhr, onProgress, true);
 
         setXHRHeaders(xhr, "GET", path, xhrType, headers);
 
@@ -118,7 +127,7 @@ export class Fetcher implements IFetcher {
         const [upProg, downProg] = splitProgress(onProgress, [1, 1]);
         const xhr = new XMLHttpRequest();
 
-        const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false, Promise.resolve());
+        const upload = trackXHRProgress("uploading", xhr, xhr.upload, upProg, false);
         const download = trackXHRProgress("saving", xhr, xhr, downProg, true, upload);
 
         let body: BodyInit = null;
