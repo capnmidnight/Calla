@@ -338,6 +338,10 @@ export class Calla
         return this._tele.localAudioInput;
     }
 
+    get localAudioOutput(): GainNode {
+        return this.audio.localOutput.volumeControl;
+    }
+
     get useHalfDuplex(): boolean {
         return this._tele.useHalfDuplex;
     }

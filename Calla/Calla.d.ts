@@ -62,6 +62,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     setVideoMuted(muted: boolean): Promise<boolean>;
     get startDevicesImmediately(): boolean;
     get localAudioInput(): GainNode;
+    get localAudioOutput(): GainNode;
     get useHalfDuplex(): boolean;
     set useHalfDuplex(v: boolean);
     get halfDuplexMin(): number;

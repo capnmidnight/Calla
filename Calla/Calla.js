@@ -251,6 +251,9 @@ export class Calla extends TypedEventBase {
     get localAudioInput() {
         return this._tele.localAudioInput;
     }
+    get localAudioOutput() {
+        return this.audio.localOutput.volumeControl;
+    }
     get useHalfDuplex() {
         return this._tele.useHalfDuplex;
     }

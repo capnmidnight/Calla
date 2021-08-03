@@ -15,7 +15,7 @@ export abstract class BaseAudioElement<T extends BaseSpatializer>
     implements AudioElement {
     pose = new InterpolatedPose();
     private _spatializer: T = null;
-    protected volumeControl: GainNode;
+    volumeControl: GainNode;
 
     constructor(public id: string) {
         this.volumeControl = Gain("volume-control-" + this.id);
