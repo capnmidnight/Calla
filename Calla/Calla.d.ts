@@ -70,10 +70,16 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     set halfDuplexMax(v: number);
     get halfDuplexThreshold(): number;
     set halfDuplexThreshold(v: number);
-    get halfDuplexDelay(): number;
-    set halfDuplexDelay(v: number);
+    get halfDuplexAttack(): number;
+    set halfDuplexAttack(v: number);
+    get halfDuplexDecay(): number;
+    set halfDuplexDecay(v: number);
     get halfDuplexSustain(): number;
     set halfDuplexSustain(v: number);
+    get halfDuplexHold(): number;
+    set halfDuplexHold(v: number);
+    get halfDuplexRelease(): number;
+    set halfDuplexRelease(v: number);
     get halfDuplexLevel(): number;
     get remoteActivityLevel(): number;
 }

@@ -442,16 +442,34 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     set halfDuplexThreshold(_v) {
         console.info("Half-duplex is not available on Jitsi");
     }
-    get halfDuplexDelay() {
+    get halfDuplexAttack() {
         return 0;
     }
-    set halfDuplexDelay(_v) {
+    set halfDuplexAttack(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexDecay() {
+        return 0;
+    }
+    set halfDuplexDecay(_v) {
         console.info("Half-duplex is not available on Jitsi");
     }
     get halfDuplexSustain() {
         return 0;
     }
     set halfDuplexSustain(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexHold() {
+        return 0;
+    }
+    set halfDuplexHold(_v) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+    get halfDuplexRelease() {
+        return 0;
+    }
+    set halfDuplexRelease(_v) {
         console.info("Half-duplex is not available on Jitsi");
     }
     get halfDuplexLevel() {

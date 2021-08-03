@@ -18,8 +18,11 @@ export interface ITeleconferenceClient
     halfDuplexMin: number;
     halfDuplexMax: number;
     halfDuplexThreshold: number;
-    halfDuplexDelay: number;
+    halfDuplexAttack: number;
+    halfDuplexDecay: number;
     halfDuplexSustain: number;
+    halfDuplexHold: number;
+    halfDuplexRelease: number;
     halfDuplexLevel: number;
     remoteActivityLevel: number;
 

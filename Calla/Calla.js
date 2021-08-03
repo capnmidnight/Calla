@@ -275,17 +275,35 @@ export class Calla extends TypedEventBase {
     set halfDuplexThreshold(v) {
         this._tele.halfDuplexThreshold = v;
     }
-    get halfDuplexDelay() {
-        return this._tele.halfDuplexDelay;
+    get halfDuplexAttack() {
+        return this._tele.halfDuplexAttack;
     }
-    set halfDuplexDelay(v) {
-        this._tele.halfDuplexDelay = v;
+    set halfDuplexAttack(v) {
+        this._tele.halfDuplexAttack = v;
+    }
+    get halfDuplexDecay() {
+        return this._tele.halfDuplexDecay;
+    }
+    set halfDuplexDecay(v) {
+        this._tele.halfDuplexDecay = v;
     }
     get halfDuplexSustain() {
         return this._tele.halfDuplexSustain;
     }
     set halfDuplexSustain(v) {
         this._tele.halfDuplexSustain = v;
+    }
+    get halfDuplexHold() {
+        return this._tele.halfDuplexHold;
+    }
+    set halfDuplexHold(v) {
+        this._tele.halfDuplexHold = v;
+    }
+    get halfDuplexRelease() {
+        return this._tele.halfDuplexRelease;
+    }
+    set halfDuplexRelease(v) {
+        this._tele.halfDuplexRelease = v;
     }
     get halfDuplexLevel() {
         return this._tele.halfDuplexLevel;

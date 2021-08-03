@@ -41,10 +41,16 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     set halfDuplexMax(_v: number);
     get halfDuplexThreshold(): number;
     set halfDuplexThreshold(_v: number);
-    get halfDuplexDelay(): number;
-    set halfDuplexDelay(_v: number);
+    get halfDuplexAttack(): number;
+    set halfDuplexAttack(_v: number);
+    get halfDuplexDecay(): number;
+    set halfDuplexDecay(_v: number);
     get halfDuplexSustain(): number;
     set halfDuplexSustain(_v: number);
+    get halfDuplexHold(): number;
+    set halfDuplexHold(_v: number);
+    get halfDuplexRelease(): number;
+    set halfDuplexRelease(_v: number);
     get halfDuplexLevel(): number;
     get remoteActivityLevel(): number;
 }

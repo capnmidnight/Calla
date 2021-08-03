@@ -370,12 +370,20 @@ export class Calla
         this._tele.halfDuplexThreshold = v;
     }
 
-    get halfDuplexDelay(): number {
-        return this._tele.halfDuplexDelay;
+    get halfDuplexAttack(): number {
+        return this._tele.halfDuplexAttack;
     }
 
-    set halfDuplexDelay(v: number) {
-        this._tele.halfDuplexDelay = v;
+    set halfDuplexAttack(v: number) {
+        this._tele.halfDuplexAttack = v;
+    }
+
+    get halfDuplexDecay(): number {
+        return this._tele.halfDuplexDecay;
+    }
+
+    set halfDuplexDecay(v: number) {
+        this._tele.halfDuplexDecay = v;
     }
 
     get halfDuplexSustain(): number {
@@ -384,6 +392,22 @@ export class Calla
 
     set halfDuplexSustain(v: number) {
         this._tele.halfDuplexSustain = v;
+    }
+
+    get halfDuplexHold(): number {
+        return this._tele.halfDuplexHold;
+    }
+
+    set halfDuplexHold(v: number) {
+        this._tele.halfDuplexHold = v;
+    }
+
+    get halfDuplexRelease(): number {
+        return this._tele.halfDuplexRelease;
+    }
+
+    set halfDuplexRelease(v: number) {
+        this._tele.halfDuplexRelease = v;
     }
 
     get halfDuplexLevel(): number {

@@ -571,11 +571,19 @@ export class JitsiTeleconferenceClient
         console.info("Half-duplex is not available on Jitsi");
     }
 
-    get halfDuplexDelay(): number {
+    get halfDuplexAttack(): number {
         return 0;
     }
 
-    set halfDuplexDelay(_v: number) {
+    set halfDuplexAttack(_v: number) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+
+    get halfDuplexDecay(): number {
+        return 0;
+    }
+
+    set halfDuplexDecay(_v: number) {
         console.info("Half-duplex is not available on Jitsi");
     }
 
@@ -584,6 +592,22 @@ export class JitsiTeleconferenceClient
     }
 
     set halfDuplexSustain(_v: number) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+
+    get halfDuplexHold(): number {
+        return 0;
+    }
+
+    set halfDuplexHold(_v: number) {
+        console.info("Half-duplex is not available on Jitsi");
+    }
+
+    get halfDuplexRelease(): number {
+        return 0;
+    }
+
+    set halfDuplexRelease(_v: number) {
         console.info("Half-duplex is not available on Jitsi");
     }
 
