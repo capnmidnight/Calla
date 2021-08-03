@@ -16,9 +16,9 @@ export class BaseJitsiClientLoader extends BaseClientLoader {
     async onload(fetcher, onProgress) {
         if (!this.loaded) {
             console.info("Connecting to:", this.host);
-            const progs = splitProgress(onProgress, [1, 3]);
-            await fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-            await fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
+            const [jQueryProg, jitsiProg] = splitProgress(onProgress, [1, 3]);
+            await fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, jQueryProg);
+            await fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, jitsiProg);
             if (process.env.NODE_ENV === "development") {
                 JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
             }
