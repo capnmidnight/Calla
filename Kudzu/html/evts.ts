@@ -1,3 +1,4 @@
+import { progressCallback } from "../tasks/progressCallback";
 import { isFunction, isHTMLElement } from "../typeChecks";
 
 type EventListenerOpts = boolean | AddEventListenerOptions;
@@ -13,6 +14,13 @@ export function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void)
             callback(evt);
         }
     };
+}
+
+export function makeProgress(element: HTMLInputElement): progressCallback {
+    return (soFar: number, total: number) => {
+        element.max = total.toFixed(0);
+        element.value = soFar.toFixed(0);
+    }
 }
 
 /**

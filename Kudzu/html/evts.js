@@ -11,6 +11,12 @@ export function makeEnterKeyEventHandler(callback) {
         }
     };
 }
+export function makeProgress(element) {
+    return (soFar, total) => {
+        element.max = total.toFixed(0);
+        element.value = soFar.toFixed(0);
+    };
+}
 /**
  * A setter functor for HTML element events.
  **/

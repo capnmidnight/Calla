@@ -1,5 +1,7 @@
+import { progressCallback } from "../tasks/progressCallback";
 declare type EventListenerOpts = boolean | AddEventListenerOptions;
 export declare function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void): (ev: Event) => void;
+export declare function makeProgress(element: HTMLInputElement): progressCallback;
 /**
  * A setter functor for HTML element events.
  **/
