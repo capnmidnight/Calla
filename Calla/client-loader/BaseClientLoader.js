@@ -36,7 +36,5 @@ export class BaseClientLoader {
         const m = this.createMetadataClient(f, a, t);
         return Promise.resolve(new Calla(f, t, m));
     }
-    async onload(_fetcher, _onProgress) {
-    }
 }
 //# sourceMappingURL=BaseClientLoader.js.map

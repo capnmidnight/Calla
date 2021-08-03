@@ -14,7 +14,7 @@ export declare abstract class BaseClientLoader<TeleT extends ITeleconferenceClie
     load(fetcher: IFetcher, onProgress: progressCallback): Promise<Calla>;
     load(fetcher: IFetcher, audio: AudioManager): Promise<Calla>;
     load(fetcher: IFetcher, audio: AudioManager, onProgress: progressCallback): Promise<Calla>;
-    protected onload(_fetcher: IFetcher, _onProgress?: progressCallback): Promise<void>;
+    protected abstract onload(_fetcher: IFetcher, _onProgress?: progressCallback): Promise<void>;
     protected abstract createTeleconferenceClient(fetcher: IFetcher, audio: AudioManager): TeleT;
     protected abstract createMetadataClient(fetcher: IFetcher, audio: AudioManager, tele: TeleT): IMetadataClientExt;
 }

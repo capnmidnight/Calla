@@ -59,9 +59,7 @@ export abstract class BaseClientLoader<TeleT extends ITeleconferenceClientExt> i
         return Promise.resolve(new Calla(f, t, m));
     }
 
-    protected async onload(_fetcher: IFetcher, _onProgress?: progressCallback): Promise<void> {
-    }
-
+    protected abstract onload(_fetcher: IFetcher, _onProgress?: progressCallback): Promise<void>;
     protected abstract createTeleconferenceClient(fetcher: IFetcher, audio: AudioManager): TeleT;
     protected abstract createMetadataClient(fetcher: IFetcher, audio: AudioManager, tele: TeleT): IMetadataClientExt;
 }
