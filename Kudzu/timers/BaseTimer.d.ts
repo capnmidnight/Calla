@@ -1,17 +1,6 @@
 import { TypedEventBase } from "../events/EventBase";
-export declare class TimerTickEvent extends Event {
-    t: number;
-    dt: number;
-    sdt: number;
-    constructor();
-    copy(evt: TimerTickEvent): void;
-    set(t: number, dt: number): void;
-}
-interface TimerEvents {
-    stopped: Event;
-    tick: TimerTickEvent;
-}
-export declare abstract class BaseTimer<TimerT> extends TypedEventBase<TimerEvents> {
+import { ITimer, TimerEvents } from "./ITimer";
+export declare abstract class BaseTimer<TimerT> extends TypedEventBase<TimerEvents> implements ITimer {
     protected _timer: TimerT | null;
     protected _onTick: (t: number) => void;
     protected _frameTime: number;
@@ -24,4 +13,3 @@ export declare abstract class BaseTimer<TimerT> extends TypedEventBase<TimerEven
     get targetFrameRate(): number;
     set targetFrameRate(fps: number);
 }
-export {};

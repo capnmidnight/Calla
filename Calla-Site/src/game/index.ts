@@ -8,7 +8,7 @@ import { sleep } from "kudzu/events/sleep";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
 import { Fetcher } from "kudzu/io/Fetcher";
-import { TimerTickEvent } from "kudzu/timers/BaseTimer";
+import { TimerTickEvent } from "kudzu/timers/ITimer";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { audioClips, emojiFont, JITSI_HOST, JVB_HOST, JVB_MUC, rooms } from "../configuration";
 import { AvatarMode } from "./avatars/AvatarMode";
