@@ -55,7 +55,7 @@ function coallesceOptions(options, isProduction) {
     return options;
 }
 
-function clean(name, input, outputDir) {
+function clean(name, outputDir) {
     const paths = [
         `${outputDir}/${name}.js`,
         `${outputDir}/${name}.js.map`,
@@ -170,7 +170,7 @@ module.exports.makeBundles = function makeBundles(name, inputFile, outputDir, fo
 
         if (isClean) {
             console.log("\Cleaning:", name);
-            clean(name, inputFile, outputDir);
+            clean(name, outputDir);
         }
     }
     return tasks;
