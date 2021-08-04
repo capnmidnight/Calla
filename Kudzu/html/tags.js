@@ -20,20 +20,39 @@ export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
 export function elementIsDisplayed(elem) {
     return elem.style.display !== "none";
 }
-export function elementAppend(parent, ...children) {
-    const arr = new Array();
-    for (const child of children) {
-        if (isErsatzElement(child)) {
-            arr.push(child.element);
-        }
-        else if (isErsatzElements(child)) {
-            arr.push(...child.elements);
-        }
-        else {
-            arr.push(child);
+export function elementApply(elem, ...children) {
+    for (let child of children) {
+        if (child != null) {
+            if (child instanceof CssPropSet) {
+                child.apply(elem.style);
+            }
+            else if (isString(child)
+                || isNumber(child)
+                || isBoolean(child)
+                || child instanceof Date
+                || child instanceof Node
+                || isErsatzElement(child)) {
+                if (isErsatzElement(child)) {
+                    child = child.element;
+                }
+                else if (!(child instanceof Node)) {
+                    child = document.createTextNode(child.toLocaleString());
+                }
+                elem.appendChild(child);
+            }
+            else if (isErsatzElements(child)) {
+                elem.append(...child.elements);
+            }
+            else {
+                if (child instanceof Function) {
+                    child = child(true);
+                }
+                if (!(child instanceof Attr) || child.key !== "selector") {
+                    child.apply(elem);
+                }
+            }
         }
     }
-    parent.append(...arr);
 }
 export function getElement(selector) {
     return document.querySelector(selector);
@@ -77,38 +96,7 @@ export function tag(name, ...rest) {
     if (elem == null) {
         elem = document.createElement(name);
     }
-    for (let x of rest) {
-        if (x != null) {
-            if (x instanceof CssPropSet) {
-                x.apply(elem.style);
-            }
-            else if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date
-                || x instanceof Node
-                || isErsatzElement(x)) {
-                if (isErsatzElement(x)) {
-                    x = x.element;
-                }
-                else if (!(x instanceof Node)) {
-                    x = document.createTextNode(x.toLocaleString());
-                }
-                elem.appendChild(x);
-            }
-            else if (isErsatzElements(x)) {
-                elem.append(...x.elements);
-            }
-            else {
-                if (x instanceof Function) {
-                    x = x(true);
-                }
-                if (!(x instanceof Attr) || x.key !== "selector") {
-                    x.apply(elem);
-                }
-            }
-        }
-    }
+    elementApply(elem, ...rest);
     return elem;
 }
 export function isDisableable(element) {
