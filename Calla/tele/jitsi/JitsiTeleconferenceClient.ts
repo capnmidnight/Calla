@@ -1,4 +1,5 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
+import { disconnect, Gain, MediaStreamSource } from "kudzu/audio";
 import { Logger } from "kudzu/debugging/Logger";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
@@ -75,9 +76,13 @@ export class JitsiTeleconferenceClient
 
     private tracks = new Map<string, Map<StreamType, JitsiLocalTrack | JitsiRemoteTrack>>();
     private listenersForObjs = new Map<ErsatzEventTarget, Map<string, Function[]>>();
+    private _localAudioInput: GainNode;
+    private curStreamNode: AudioNode = null;
 
     constructor(fetcher: IFetcher, audio: AudioManager, private host: string, private bridgeHost: string, private bridgeMUC: string) {
         super(fetcher, audio);
+
+        this._localAudioInput = Gain("local-mic-tap");
     }
 
     private _on(obj: ErsatzEventTarget, evtName: string, handler: Function): void {
@@ -471,10 +476,19 @@ export class JitsiTeleconferenceClient
             }
 
             const tracks = await JitsiMeetJS.createLocalTracks(opts);
-
             for (const track of tracks) {
-                const stream = track.getOriginalStream() as MediaStream;
-                this.devices.currentStream = stream;
+                if (track.getType() === "audio") {
+                    const stream = track.getOriginalStream() as MediaStream;
+                    this.devices.currentStream = stream;
+                    if (this.curStreamNode) {
+                        disconnect(this.curStreamNode);
+                    }
+                    this.curStreamNode = MediaStreamSource(
+                        "local-mic",
+                        stream,
+                        this.localAudioInput);
+
+                }
                 this.conference.addTrack(track);
             }
 
@@ -535,8 +549,9 @@ export class JitsiTeleconferenceClient
         return this.isMediaMuted(StreamType.Video);
     }
 
+
     get localAudioInput(): GainNode {
-        return null;
+        return this._localAudioInput;
     }
 
     get useHalfDuplex(): boolean {

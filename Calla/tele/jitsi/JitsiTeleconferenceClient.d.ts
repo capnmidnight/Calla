@@ -13,6 +13,8 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     conference: JitsiConference;
     private tracks;
     private listenersForObjs;
+    private _localAudioInput;
+    private curStreamNode;
     constructor(fetcher: IFetcher, audio: AudioManager, host: string, bridgeHost: string, bridgeMUC: string);
     private _on;
     private _off;

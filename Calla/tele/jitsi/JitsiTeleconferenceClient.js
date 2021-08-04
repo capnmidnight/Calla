@@ -1,4 +1,5 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
+import { disconnect, Gain, MediaStreamSource } from "kudzu/audio";
 import { Logger } from "kudzu/debugging/Logger";
 import { once } from "kudzu/events/once";
 import { sleep } from "kudzu/events/sleep";
@@ -39,11 +40,14 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     conference = null;
     tracks = new Map();
     listenersForObjs = new Map();
+    _localAudioInput;
+    curStreamNode = null;
     constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
         super(fetcher, audio);
         this.host = host;
         this.bridgeHost = bridgeHost;
         this.bridgeMUC = bridgeMUC;
+        this._localAudioInput = Gain("local-mic-tap");
     }
     _on(obj, evtName, handler) {
         let objListeners = this.listenersForObjs.get(obj);
@@ -363,8 +367,14 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             }
             const tracks = await JitsiMeetJS.createLocalTracks(opts);
             for (const track of tracks) {
-                const stream = track.getOriginalStream();
-                this.devices.currentStream = stream;
+                if (track.getType() === "audio") {
+                    const stream = track.getOriginalStream();
+                    this.devices.currentStream = stream;
+                    if (this.curStreamNode) {
+                        disconnect(this.curStreamNode);
+                    }
+                    this.curStreamNode = MediaStreamSource("local-mic", stream, this.localAudioInput);
+                }
                 this.conference.addTrack(track);
             }
             await addTask;
@@ -416,7 +426,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         return this.isMediaMuted(StreamType.Video);
     }
     get localAudioInput() {
-        return null;
+        return this._localAudioInput;
     }
     get useHalfDuplex() {
         return false;
