@@ -1,6 +1,6 @@
 import { isModifierless } from "../events/isModifierless";
 import { backgroundColor, color, columnGap, display, getMonospaceFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
-import { Div, elementClearChildren, elementSetDisplay, TextNode } from "../html/tags";
+import { Div, elementApply, elementClearChildren, elementToggleDisplay, TextNode } from "../html/tags";
 import { assertNever } from "../typeChecks";
 import { isWorkerLoggerMessageData, MessageType } from "./models";
 function track(a, b) {
@@ -9,15 +9,15 @@ function track(a, b) {
 export class WindowLogger {
     logs = new Map();
     rows = new Map();
-    container;
+    element;
     grid;
     workerCount = 0;
     constructor() {
-        this.container = Div(styles(position("fixed"), display("none"), top("0"), left("0"), width("100%"), height("100%"), zIndex(9001), padding("1em"), opacity("0.5"), backgroundColor("black"), color("white"), overflow("hidden"), pointerEvents("none")), this.grid = Div(styles(display("grid"), overflowY("auto"), columnGap("0.5em"), gridAutoFlow("row"))));
-        document.body.appendChild(this.container);
+        this.element = Div(styles(position("fixed"), display("none"), top("0"), left("0"), width("100%"), height("100%"), zIndex(9001), padding("1em"), opacity("0.5"), backgroundColor("black"), color("white"), overflow("hidden"), pointerEvents("none")), this.grid = Div(styles(display("grid"), overflowY("auto"), columnGap("0.5em"), gridAutoFlow("row"))));
+        elementApply(document.body, this);
         window.addEventListener("keypress", (evt) => {
             if (isModifierless(evt) && evt.key === '`') {
-                elementSetDisplay(this.container, this.container.style.display === "none");
+                elementToggleDisplay(this);
             }
         });
     }

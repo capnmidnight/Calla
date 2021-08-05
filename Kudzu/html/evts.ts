@@ -1,5 +1,6 @@
 import { progressCallback } from "../tasks/progressCallback";
 import { isFunction, isHTMLElement } from "../typeChecks";
+import { IElementAppliable } from "./tags";
 
 type EventListenerOpts = boolean | AddEventListenerOptions;
 
@@ -26,7 +27,8 @@ export function makeProgress(element: HTMLInputElement): progressCallback {
 /**
  * A setter functor for HTML element events.
  **/
-export class HtmlEvt {
+export class HtmlEvt
+implements IElementAppliable {
     opts?: EventListenerOpts;
 
     /**

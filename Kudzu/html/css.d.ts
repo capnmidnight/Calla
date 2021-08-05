@@ -56,7 +56,7 @@ export declare function backgroundRepeatY(v: string): CssProp;
 export declare function backgroundSize(v: string): CssProp;
 export declare function baselineShift(v: string): CssProp;
 export declare function blockSize(v: string): CssProp;
-export declare function border(v: string): CssProp;
+export declare function border(v: string | 0): CssProp;
 export declare function borderBlockEnd(v: string): CssProp;
 export declare function borderBlockEndColor(v: string): CssProp;
 export declare function borderBlockEndStyle(v: string): CssProp;

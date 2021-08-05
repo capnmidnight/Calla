@@ -79,7 +79,7 @@ export function backgroundRepeatY(v: string) { return new CssProp("backgroundRep
 export function backgroundSize(v: string) { return new CssProp("backgroundSize", v); }
 export function baselineShift(v: string) { return new CssProp("baselineShift", v); }
 export function blockSize(v: string) { return new CssProp("blockSize", v); }
-export function border(v: string) { return new CssProp("border", v); }
+export function border(v: string | 0) { return new CssProp("border", v); }
 export function borderBlockEnd(v: string) { return new CssProp("borderBlockEnd", v); }
 export function borderBlockEndColor(v: string) { return new CssProp("borderBlockEndColor", v); }
 export function borderBlockEndStyle(v: string) { return new CssProp("borderBlockEndStyle", v); }

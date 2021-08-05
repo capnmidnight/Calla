@@ -6,7 +6,7 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { autoPlay, controls, loop, muted, playsInline, src } from "kudzu/html/attrs";
 import { display, styles } from "kudzu/html/css";
-import type { HTMLAudioElementWithSinkID, TagChild } from "kudzu/html/tags";
+import type { HTMLAudioElementWithSinkID, ElementChild } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
 import { Fetcher } from "kudzu/io/Fetcher";
 import type { IFetcher } from "kudzu/io/IFetcher";
@@ -33,7 +33,7 @@ import { AudioStreamSource } from "./sources/AudioStreamSource";
 import type { IPlayableSource } from "./sources/IPlayableSource";
 import { BaseEmitter } from "./sources/spatializers/BaseEmitter";
 
-function BackgroundAudio(autoplay: boolean, mute: boolean, ...rest: TagChild[]): HTMLAudioElementWithSinkID {
+function BackgroundAudio(autoplay: boolean, mute: boolean, ...rest: ElementChild[]): HTMLAudioElementWithSinkID {
     return Audio(
         playsInline(true),
         controls(false),

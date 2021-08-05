@@ -1,5 +1,6 @@
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { CanvasTypes, Context2D } from "../html/canvas";
+import { ErsatzElement } from "../html/tags";
 interface CanvasImageEvents {
     redrawn: TypedEvent<"redrawn">;
 }
@@ -14,11 +15,12 @@ export interface CanvasImageOptions {
     scale: number;
 }
 export declare function isCanvasImage(obj: any): obj is ICanvasImage;
-export declare abstract class CanvasImage<T> extends TypedEventBase<CanvasImageEvents & T> implements ICanvasImage {
+export declare abstract class CanvasImage<T> extends TypedEventBase<CanvasImageEvents & T> implements ICanvasImage, ErsatzElement {
     private _canvas;
     private _scale;
     private _g;
     private redrawnEvt;
+    readonly element: HTMLCanvasElement;
     constructor(width: number, height: number, options?: Partial<CanvasImageOptions>);
     protected fillRect(color: string, x: number, y: number, width: number, height: number, margin: number): void;
     protected drawText(text: string, x: number, y: number, align: CanvasTextAlign): void;

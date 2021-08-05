@@ -1,6 +1,6 @@
 import { isModifierless } from "../events/isModifierless";
 import { backgroundColor, color, columnGap, display, getMonospaceFamily, gridAutoFlow, gridColumn, height, left, opacity, overflow, overflowY, padding, pointerEvents, position, styles, top, width, zIndex } from "../html/css";
-import { Div, elementClearChildren, elementSetDisplay, TextNode } from "../html/tags";
+import { Div, elementApply, elementClearChildren, elementToggleDisplay, ErsatzElement, TextNode } from "../html/tags";
 import { assertNever } from "../typeChecks";
 import { ILogger, isWorkerLoggerMessageData, MessageType } from "./models";
 
@@ -10,15 +10,15 @@ function track(a: number, b: number) {
         getMonospaceFamily());
 }
 
-export class WindowLogger implements ILogger {
+export class WindowLogger implements ILogger, ErsatzElement {
     private logs = new Map<string, Array<any>>();
     private rows = new Map<string, HTMLElement[]>();
-    private container: HTMLElement;
+    readonly element: HTMLElement;
     private grid: HTMLElement;
     private workerCount = 0;
 
     constructor() {
-        this.container = Div(
+        this.element = Div(
             styles(
                 position("fixed"),
                 display("none"),
@@ -40,13 +40,11 @@ export class WindowLogger implements ILogger {
                     columnGap("0.5em"),
                     gridAutoFlow("row"))));
 
-        document.body.appendChild(this.container);
+        elementApply(document.body, this);
 
         window.addEventListener("keypress", (evt) => {
             if (isModifierless(evt) && evt.key === '`') {
-                elementSetDisplay(
-                    this.container,
-                    this.container.style.display === "none");
+                elementToggleDisplay(this);
             }
         });
     }

@@ -1,6 +1,7 @@
-import { isDefined } from "../typeChecks";
 import { TypedEvent, TypedEventBase } from "../events/EventBase";
-import { CanvasTypes, Context2D, createUtilityCanvas, isCanvas } from "../html/canvas";
+import { CanvasTypes, Context2D, createUICanvas, isCanvas, isHTMLCanvas } from "../html/canvas";
+import { ErsatzElement } from "../html/tags";
+import { isDefined } from "../typeChecks";
 
 interface CanvasImageEvents {
     redrawn: TypedEvent<"redrawn">;
@@ -25,13 +26,14 @@ export function isCanvasImage(obj: any): obj is ICanvasImage {
 
 export abstract class CanvasImage<T>
     extends TypedEventBase<CanvasImageEvents & T>
-    implements ICanvasImage {
+    implements ICanvasImage, ErsatzElement {
 
     private _canvas: CanvasTypes;
     private _scale = 250;
     private _g: Context2D;
 
     private redrawnEvt = new TypedEvent("redrawn");
+    readonly element: HTMLCanvasElement = null;
 
     constructor(width: number, height: number, options?: Partial<CanvasImageOptions>) {
         super();
@@ -44,8 +46,12 @@ export abstract class CanvasImage<T>
 
         }
 
-        this._canvas = createUtilityCanvas(width, height);
+        this._canvas = createUICanvas(width, height);
         this._g = this.canvas.getContext("2d");
+
+        if (isHTMLCanvas(this._canvas)) {
+            this.element = this._canvas;
+        }
     }
 
     protected fillRect(color: string, x: number, y: number, width: number, height: number, margin: number) {

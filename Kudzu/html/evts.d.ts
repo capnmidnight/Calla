@@ -1,11 +1,12 @@
 import { progressCallback } from "../tasks/progressCallback";
+import { IElementAppliable } from "./tags";
 declare type EventListenerOpts = boolean | AddEventListenerOptions;
 export declare function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void): (ev: Event) => void;
 export declare function makeProgress(element: HTMLInputElement): progressCallback;
 /**
  * A setter functor for HTML element events.
  **/
-export declare class HtmlEvt {
+export declare class HtmlEvt implements IElementAppliable {
     name: string;
     callback: EventListenerOrEventListenerObject;
     opts?: EventListenerOpts;

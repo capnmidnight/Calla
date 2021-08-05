@@ -1,12 +1,12 @@
 import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
 import { Attr, type } from "./attrs";
 import { CssPropSet, margin, styles } from "./css";
-function isErsatzElement(obj) {
+export function isErsatzElement(obj) {
     return isObject(obj)
         && "element" in obj
         && obj.element instanceof Node;
 }
-function isErsatzElements(obj) {
+export function isErsatzElements(obj) {
     return isObject(obj)
         && "elements" in obj
         && obj.elements instanceof Array;
@@ -15,36 +15,47 @@ export function isFocusable(elem) {
     return "focus" in elem && isFunction(elem.focus);
 }
 export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
+    if (isErsatzElement(elem)) {
+        elem = elem.element;
+    }
     elem.style.display = visible ? visibleDisplayType : "none";
 }
 export function elementIsDisplayed(elem) {
+    if (isErsatzElement(elem)) {
+        elem = elem.element;
+    }
     return elem.style.display !== "none";
 }
+export function elementToggleDisplay(elem, visibleDisplayType = "block") {
+    elementSetDisplay(elem, !elementIsDisplayed(elem), visibleDisplayType);
+}
 export function elementApply(elem, ...children) {
+    if (isErsatzElement(elem)) {
+        elem = elem.element;
+    }
     for (let child of children) {
         if (child != null) {
+            if (isErsatzElement(child)) {
+                child = child.element;
+            }
             if (child instanceof CssPropSet) {
                 child.apply(elem.style);
+            }
+            else if (isErsatzElements(child)) {
+                elem.append(...child.elements);
             }
             else if (isString(child)
                 || isNumber(child)
                 || isBoolean(child)
                 || child instanceof Date
-                || child instanceof Node
-                || isErsatzElement(child)) {
-                if (isErsatzElement(child)) {
-                    child = child.element;
-                }
-                else if (!(child instanceof Node)) {
+                || child instanceof Node) {
+                if (!(child instanceof HTMLElement)) {
                     child = document.createTextNode(child.toLocaleString());
                 }
                 elem.appendChild(child);
             }
-            else if (isErsatzElements(child)) {
-                elem.append(...child.elements);
-            }
             else {
-                if (child instanceof Function) {
+                if (isFunction(child)) {
                     child = child(true);
                 }
                 if (!(child instanceof Attr) || child.key !== "selector") {
@@ -99,19 +110,25 @@ export function tag(name, ...rest) {
     elementApply(elem, ...rest);
     return elem;
 }
-export function isDisableable(element) {
-    return "disabled" in element
-        && typeof element.disabled === "boolean";
+export function isDisableable(obj) {
+    return "disabled" in obj
+        && typeof obj.disabled === "boolean";
 }
 /**
  * Empty an element of all children. This is faster than setting `innerHTML = ""`.
  */
 export function elementClearChildren(elem) {
+    if (isErsatzElement(elem)) {
+        elem = elem.element;
+    }
     while (elem.lastChild) {
         elem.lastChild.remove();
     }
 }
 export function elementSetText(elem, text) {
+    if (isErsatzElement(elem)) {
+        elem = elem.element;
+    }
     elementClearChildren(elem);
     elem.appendChild(TextNode(text));
 }

@@ -1,8 +1,9 @@
+import { ErsatzElement } from "../html/tags";
 import { ILogger } from "./models";
-export declare class WindowLogger implements ILogger {
+export declare class WindowLogger implements ILogger, ErsatzElement {
     private logs;
     private rows;
-    private container;
+    readonly element: HTMLElement;
     private grid;
     private workerCount;
     constructor();

@@ -12,7 +12,8 @@ export declare function isWebXRWebGLRenderingContext(ctx: any): ctx is WebXRWebG
 export declare function drawImageBitmapToCanvas2D(canv: CanvasTypes, img: ImageBitmap): void;
 export declare function copyImageBitmapToCanvas(canv: CanvasTypes, img: ImageBitmap): void;
 export declare const hasOffscreenCanvasRenderingContext2D: boolean;
-export declare const createUtilityCanvas: typeof createOffscreenCanvas | typeof createCanvas;
+export declare const createUtilityCanvas: typeof createCanvas | typeof createOffscreenCanvas;
+export declare const createUICanvas: typeof createCanvas | typeof createOffscreenCanvas;
 export declare const hasOffscreenCanvasRenderingContext3D: boolean;
 export declare const hasImageBitmapRenderingContext: boolean;
 export declare const drawImageBitmapToCanvas: typeof copyImageBitmapToCanvas;

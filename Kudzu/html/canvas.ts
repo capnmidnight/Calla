@@ -57,6 +57,10 @@ export const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
         ? null
         : createCanvas;
 
+export const createUICanvas = hasHTMLCanvas
+    ? createCanvas
+    : createUtilityCanvas;
+
 function testOffscreen3D() {
     try {
         const canv = new OffscreenCanvas(1, 1);
