@@ -1,33 +1,10 @@
-import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
+import { isBoolean, isDate, isDefined, isFunction, isNumber, isObject, isString } from "../typeChecks";
 import { Attr, type } from "./attrs";
-import { CSSInJSRule, CssPropSet, margin, styles } from "./css";
+import { CSSInJSRule, margin, styles } from "./css";
 
 export interface ErsatzElement {
     element: HTMLElement;
 }
-
-export interface ErsatzElements {
-    elements: HTMLElement[];
-}
-
-export type Elements = HTMLElement | ErsatzElement;
-
-export interface IElementAppliable {
-    apply(x: any): any;
-}
-
-export type makesIElementAppliable = (v: any) => IElementAppliable;
-
-export type ElementChild = Node
-    | Elements
-    | ErsatzElements
-    | IElementAppliable
-    | makesIElementAppliable 
-    | string
-    | number
-    | boolean
-    | Date
-    | CssPropSet;
 
 export function isErsatzElement(obj: any): obj is ErsatzElement {
     return isObject(obj)
@@ -35,10 +12,46 @@ export function isErsatzElement(obj: any): obj is ErsatzElement {
         && (obj as any).element instanceof Node;
 }
 
+export interface ErsatzElements {
+    elements: HTMLElement[];
+}
+
 export function isErsatzElements(obj: any): obj is ErsatzElements {
     return isObject(obj)
         && "elements" in obj
         && (obj as any).elements instanceof Array;
+}
+
+export type Elements = HTMLElement | ErsatzElement;
+
+export interface IElementAppliable {
+    applyToElement(x: Elements): void;
+}
+
+export function isIElementAppliable(obj: any): obj is IElementAppliable {
+    return isObject(obj)
+        && "applyToElement" in obj
+        && isFunction((obj as any).applyToElement);
+}
+
+export type ElementChild = Node
+    | Elements
+    | ErsatzElements
+    | IElementAppliable
+    | string
+    | number
+    | boolean
+    | Date;
+
+export function isElementChild(obj: any): obj is ElementChild {
+    return obj instanceof Node
+        || isErsatzElement(obj)
+        || isErsatzElements(obj)
+        || isIElementAppliable(obj)
+        || isString(obj)
+        || isNumber(obj)
+        || isBoolean(obj)
+        || isDate(obj);
 }
 
 export interface IFocusable {
@@ -75,37 +88,21 @@ export function elementApply(elem: Elements, ...children: ElementChild[]) {
     }
 
     for (let child of children) {
-        if (child != null) {
-            if (isErsatzElement(child)) {
-                child = child.element;
+        if (isDefined(child)) {
+            if (child instanceof Node) {
+                elem.append(child);
             }
-
-            if (child instanceof CssPropSet) {
-                child.apply(elem.style);
+            else if (isErsatzElement(child)) {
+                elem.append(child.element);
             }
             else if (isErsatzElements(child)) {
                 elem.append(...child.elements);
             }
-            else if (isString(child)
-                || isNumber(child)
-                || isBoolean(child)
-                || child instanceof Date
-                || child instanceof Node) {
-
-                if (!(child instanceof HTMLElement)) {
-                    child = document.createTextNode(child.toLocaleString());
-                }
-
-                elem.appendChild(child);
+            else if (isIElementAppliable(child)) {
+                child.applyToElement(elem);
             }
             else {
-                if (isFunction(child)) {
-                    child = child(true);
-                }
-
-                if (!(child instanceof Attr) || child.key !== "selector") {
-                    child.apply(elem);
-                }
+                elem.append(document.createTextNode(child.toLocaleString()));
             }
         }
     }
@@ -145,15 +142,9 @@ export function tag<T extends HTMLElement>(name: string, ...rest: ElementChild[]
     let elem: T = null;
 
     for (const attr of rest) {
-        if (attr instanceof Attr) {
-            if (attr.key === "id") {
-                elem = document.getElementById(attr.value) as T;
-                break;
-            }
-            else if (attr.key === "selector") {
-                elem = document.querySelector<T>(attr.value);
-                break;
-            }
+        if (attr instanceof Attr && attr.key === "id") {
+            elem = document.getElementById(attr.value) as T;
+            break;
         }
     }
 

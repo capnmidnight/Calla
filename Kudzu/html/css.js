@@ -13,8 +13,8 @@ export class CssProp {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem) {
-        elem[this.key] = this.value;
+    applyToElement(elem) {
+        elem.style[this.key] = this.value;
     }
 }
 export class CssPropSet {
@@ -26,9 +26,9 @@ export class CssPropSet {
      * Set the attribute value on an HTMLElement
      * @param style - the element on which to set the attribute.
      */
-    apply(style) {
+    applyToElement(elem) {
         for (const prop of this.rest) {
-            prop.apply(style);
+            prop.applyToElement(elem);
         }
     }
 }

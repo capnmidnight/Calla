@@ -1,6 +1,6 @@
-import { isBoolean, isFunction, isNumber, isObject, isString } from "../typeChecks";
+import { isBoolean, isDate, isDefined, isFunction, isNumber, isObject, isString } from "../typeChecks";
 import { Attr, type } from "./attrs";
-import { CssPropSet, margin, styles } from "./css";
+import { margin, styles } from "./css";
 export function isErsatzElement(obj) {
     return isObject(obj)
         && "element" in obj
@@ -10,6 +10,21 @@ export function isErsatzElements(obj) {
     return isObject(obj)
         && "elements" in obj
         && obj.elements instanceof Array;
+}
+export function isIElementAppliable(obj) {
+    return isObject(obj)
+        && "applyToElement" in obj
+        && isFunction(obj.applyToElement);
+}
+export function isElementChild(obj) {
+    return obj instanceof Node
+        || isErsatzElement(obj)
+        || isErsatzElements(obj)
+        || isIElementAppliable(obj)
+        || isString(obj)
+        || isNumber(obj)
+        || isBoolean(obj)
+        || isDate(obj);
 }
 export function isFocusable(elem) {
     return "focus" in elem && isFunction(elem.focus);
@@ -34,33 +49,21 @@ export function elementApply(elem, ...children) {
         elem = elem.element;
     }
     for (let child of children) {
-        if (child != null) {
-            if (isErsatzElement(child)) {
-                child = child.element;
+        if (isDefined(child)) {
+            if (child instanceof Node) {
+                elem.append(child);
             }
-            if (child instanceof CssPropSet) {
-                child.apply(elem.style);
+            else if (isErsatzElement(child)) {
+                elem.append(child.element);
             }
             else if (isErsatzElements(child)) {
                 elem.append(...child.elements);
             }
-            else if (isString(child)
-                || isNumber(child)
-                || isBoolean(child)
-                || child instanceof Date
-                || child instanceof Node) {
-                if (!(child instanceof HTMLElement)) {
-                    child = document.createTextNode(child.toLocaleString());
-                }
-                elem.appendChild(child);
+            else if (isIElementAppliable(child)) {
+                child.applyToElement(elem);
             }
             else {
-                if (isFunction(child)) {
-                    child = child(true);
-                }
-                if (!(child instanceof Attr) || child.key !== "selector") {
-                    child.apply(elem);
-                }
+                elem.append(document.createTextNode(child.toLocaleString()));
             }
         }
     }
@@ -93,15 +96,9 @@ export function getCanvas(selector) {
 export function tag(name, ...rest) {
     let elem = null;
     for (const attr of rest) {
-        if (attr instanceof Attr) {
-            if (attr.key === "id") {
-                elem = document.getElementById(attr.value);
-                break;
-            }
-            else if (attr.key === "selector") {
-                elem = document.querySelector(attr.value);
-                break;
-            }
+        if (attr instanceof Attr && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+            break;
         }
     }
     if (elem == null) {

@@ -17,7 +17,7 @@ export declare class HtmlEvt implements IElementAppliable {
      * @param opts - additional attach options.
      */
     constructor(name: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOpts);
-    apply(elem: HTMLElement | CSSStyleDeclaration): void;
+    applyToElement(elem: HTMLElement): void;
     /**
      * Add the encapsulate callback as an event listener to the give HTMLElement
      */

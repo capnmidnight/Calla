@@ -24,7 +24,7 @@ export class Attr {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem) {
+    applyToElement(elem) {
         const isDataSet = this.key.startsWith("data-");
         const isValid = this.tags.length === 0
             || this.tags.indexOf(elem.tagName) > -1
@@ -649,10 +649,6 @@ export function scoped(value) { return new Attr("scoped", value, false, "style")
  * Defines a value which will be selected on page load.
   **/
 export function selected(value) { return new Attr("selected", value, false, "option"); }
-/**
- * An ersatz attribute for selecting existing elements by query selector.
- */
-export function selector(value) { return new Attr("selector", value, false); }
 /**
  * The shape attribute
   **/

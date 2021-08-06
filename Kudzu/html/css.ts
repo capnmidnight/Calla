@@ -1,4 +1,6 @@
-export class CssProp {
+import { IElementAppliable } from "./tags";
+
+export class CssProp implements IElementAppliable {
     public readonly name: string;
     constructor(
         public readonly key: string,
@@ -12,12 +14,12 @@ export class CssProp {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: CSSStyleDeclaration) {
-        (elem as any)[this.key] = this.value;
+    applyToElement(elem: HTMLElement) {
+        (elem.style as any)[this.key] = this.value;
     }
 }
 
-export class CssPropSet {
+export class CssPropSet implements IElementAppliable {
     private rest: (CssProp | CssPropSet)[];
     constructor(...rest: (CssProp | CssPropSet)[]) {
         this.rest = rest;
@@ -27,9 +29,9 @@ export class CssPropSet {
      * Set the attribute value on an HTMLElement
      * @param style - the element on which to set the attribute.
      */
-    apply(style: CSSStyleDeclaration) {
+    applyToElement(elem: HTMLElement) {
         for (const prop of this.rest) {
-            prop.apply(style);
+            prop.applyToElement(elem);
         }
     }
 }

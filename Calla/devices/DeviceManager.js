@@ -73,7 +73,7 @@ export class DeviceManager extends TypedEventBase {
         super();
         this.needsVideoDevice = needsVideoDevice;
         if (canChangeAudioOutput) {
-            this.element = Audio(id("Calla-Device-Manager"), playsInline, autoPlay, styles(display("none")));
+            this.element = Audio(id("Calla-Device-Manager"), playsInline(true), autoPlay(true), styles(display("none")));
             document.body.appendChild(this.element);
         }
     }

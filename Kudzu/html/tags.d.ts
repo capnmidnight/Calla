@@ -1,18 +1,19 @@
-import { CSSInJSRule, CssPropSet } from "./css";
+import { CSSInJSRule } from "./css";
 export interface ErsatzElement {
     element: HTMLElement;
 }
+export declare function isErsatzElement(obj: any): obj is ErsatzElement;
 export interface ErsatzElements {
     elements: HTMLElement[];
 }
+export declare function isErsatzElements(obj: any): obj is ErsatzElements;
 export declare type Elements = HTMLElement | ErsatzElement;
 export interface IElementAppliable {
-    apply(x: any): any;
+    applyToElement(x: Elements): void;
 }
-export declare type makesIElementAppliable = (v: any) => IElementAppliable;
-export declare type ElementChild = Node | Elements | ErsatzElements | IElementAppliable | makesIElementAppliable | string | number | boolean | Date | CssPropSet;
-export declare function isErsatzElement(obj: any): obj is ErsatzElement;
-export declare function isErsatzElements(obj: any): obj is ErsatzElements;
+export declare function isIElementAppliable(obj: any): obj is IElementAppliable;
+export declare type ElementChild = Node | Elements | ErsatzElements | IElementAppliable | string | number | boolean | Date;
+export declare function isElementChild(obj: any): obj is ElementChild;
 export interface IFocusable {
     focus(): void;
 }

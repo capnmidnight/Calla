@@ -39,7 +39,7 @@ export class HtmlEvt {
         this.opts = opts;
         Object.freeze(this);
     }
-    apply(elem) {
+    applyToElement(elem) {
         if (isHTMLElement(elem)) {
             this.add(elem);
         }

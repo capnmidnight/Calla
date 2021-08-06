@@ -46,7 +46,7 @@ implements IElementAppliable {
         Object.freeze(this);
     }
 
-    apply(elem: HTMLElement | CSSStyleDeclaration) {
+    applyToElement(elem: HTMLElement) {
         if (isHTMLElement(elem)) {
             this.add(elem);
         }

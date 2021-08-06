@@ -92,8 +92,8 @@ export class DeviceManager
         if (canChangeAudioOutput) {
             this.element = Audio(
                 id("Calla-Device-Manager"),
-                playsInline,
-                autoPlay,
+                playsInline(true),
+                autoPlay(true),
                 styles(
                     display("none")));
 

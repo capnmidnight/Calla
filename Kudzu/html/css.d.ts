@@ -1,4 +1,5 @@
-export declare class CssProp {
+import { IElementAppliable } from "./tags";
+export declare class CssProp implements IElementAppliable {
     readonly key: string;
     readonly value: string | 0;
     readonly name: string;
@@ -7,16 +8,16 @@ export declare class CssProp {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: CSSStyleDeclaration): void;
+    applyToElement(elem: HTMLElement): void;
 }
-export declare class CssPropSet {
+export declare class CssPropSet implements IElementAppliable {
     private rest;
     constructor(...rest: (CssProp | CssPropSet)[]);
     /**
      * Set the attribute value on an HTMLElement
      * @param style - the element on which to set the attribute.
      */
-    apply(style: CSSStyleDeclaration): void;
+    applyToElement(elem: HTMLElement): void;
 }
 /**
  * Combine style properties.

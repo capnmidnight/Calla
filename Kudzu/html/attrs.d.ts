@@ -17,7 +17,7 @@ export declare class Attr {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement): void;
+    applyToElement(elem: HTMLElement): void;
 }
 /**
  * a list of types the server accepts, typically a file type.
@@ -612,10 +612,6 @@ export declare function scoped(value: boolean): Attr;
  * Defines a value which will be selected on page load.
   **/
 export declare function selected(value: boolean): Attr;
-/**
- * An ersatz attribute for selecting existing elements by query selector.
- */
-export declare function selector(value: string): Attr;
 /**
  * The shape attribute
   **/
