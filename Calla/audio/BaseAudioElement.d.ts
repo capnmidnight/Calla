@@ -11,7 +11,7 @@ export declare abstract class BaseAudioElement<T extends BaseSpatializer> implem
     id: string;
     pose: InterpolatedPose;
     private _spatializer;
-    protected volumeControl: GainNode;
+    volumeControl: GainNode;
     constructor(id: string);
     private disposed;
     dispose(): void;
