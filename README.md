@@ -1,4 +1,7 @@
-﻿# Calla
+# THIS PROJECT HAS BEEN ARCHIVED. IT IS NO LONGER ACTIVELY DEVELOPED.
+
+
+# Calla
 
 A wrapper library for Jitsi Meet that adds audio spatialization, to be able to create virtual meeting rooms.
 
